@@ -66,6 +66,7 @@ export interface HydrationProfile {
   // 7. Optional Data
   weeklyVolume?: number;
   sleepQuality?: number;
+  sleepHours?: number;
   otherNotes?: string;
 }
 
@@ -101,4 +102,6 @@ export interface AIEnhancedInsights {
   risk_factors: string;
   confidence_level: 'high' | 'medium' | 'low';
   professional_recommendation: string;
+  performance_comparison: string;
+  optimization_tips: string[];
 }

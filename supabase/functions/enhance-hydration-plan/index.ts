@@ -31,7 +31,9 @@ Provide brief, actionable insights (2-3 sentences each) that:
 1. Explain WHY specific recommendations were made based on their profile
 2. Highlight any concerning factors that increase dehydration risk
 3. Give confidence levels based on data completeness
-4. Suggest professional testing when appropriate`;
+4. Compare their hydration needs to typical athletes in similar disciplines
+5. Provide specific optimization tips tailored to their profile
+6. Suggest professional testing when appropriate`;
 
     const userPrompt = `Analyze this athlete's hydration profile and plan:
 
@@ -43,6 +45,9 @@ PROFILE:
 - Daily salt intake: ${profile.dailySaltIntake}
 ${profile.crampTiming && profile.crampTiming !== 'none' ? `- Cramping: ${profile.crampTiming}` : ''}
 ${profile.elevationGain ? `- Elevation gain: ${profile.elevationGain}m` : ''}
+${profile.sleepHours ? `- Sleep: ${profile.sleepHours} hours/night` : ''}
+${profile.sleepQuality ? `- Sleep quality: ${profile.sleepQuality}/10` : ''}
+${profile.restingHeartRate ? `- Resting HR: ${profile.restingHeartRate} bpm` : ''}
 
 PLAN:
 - PRE: ${plan.preActivity.water}ml water + ${plan.preActivity.electrolytes} Supplme sachet
@@ -55,8 +60,10 @@ Provide:
 2. risk_factors: Any concerning factors that increase dehydration risk (1-2 sentences)
 3. confidence_level: high/medium/low based on data completeness
 4. professional_recommendation: When to seek sweat testing or sports nutritionist (1 sentence)
+5. performance_comparison: Compare this athlete's hydration needs to typical ${profile.disciplines?.[0] || 'endurance'} athletes (2 sentences)
+6. optimization_tips: Array of 3-4 specific, actionable tips to optimize hydration based on their unique profile (each tip 1 sentence)
 
-Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_level": "", "professional_recommendation": ""}`;
+Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_level": "", "professional_recommendation": "", "performance_comparison": "", "optimization_tips": []}`;
 
     const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
       method: 'POST',

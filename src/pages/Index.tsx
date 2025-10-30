@@ -487,6 +487,38 @@ const Index = () => {
                 />
               </div>
 
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center">
+                    <Label htmlFor="sleepHours">Average Sleep (hours)</Label>
+                    <InfoTooltip content="Sleep duration affects recovery and hydration needs. Track via Garmin, Apple Watch, Whoop, Oura Ring, or Coros. Aim for 7-9 hours for optimal athletic performance." />
+                  </div>
+                  <Input
+                    id="sleepHours"
+                    type="number"
+                    step="0.5"
+                    value={profile.sleepHours || ''}
+                    onChange={(e) => updateProfile({ sleepHours: parseFloat(e.target.value) })}
+                    placeholder="hours/night"
+                  />
+                </div>
+                <div>
+                  <div className="flex items-center">
+                    <Label htmlFor="sleepQuality">Sleep Quality (1-10)</Label>
+                    <InfoTooltip content="Rate your sleep quality from 1 (poor) to 10 (excellent). Many wearables provide a sleep score. Poor sleep impacts recovery and may increase hydration needs." />
+                  </div>
+                  <Input
+                    id="sleepQuality"
+                    type="number"
+                    min="1"
+                    max="10"
+                    value={profile.sleepQuality || ''}
+                    onChange={(e) => updateProfile({ sleepQuality: parseInt(e.target.value) })}
+                    placeholder="1-10"
+                  />
+                </div>
+              </div>
+
               <div>
                 <Label htmlFor="healthConditions">Known Health Conditions</Label>
                 <Input

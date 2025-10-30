@@ -353,11 +353,32 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
               </span>
             </div>
             
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div>
                 <h4 className="font-medium text-sm text-muted-foreground mb-1">Why These Numbers?</h4>
                 <p className="text-sm leading-relaxed">{aiInsights.personalized_insight}</p>
               </div>
+
+              {aiInsights.performance_comparison && (
+                <div className="bg-accent/50 border border-accent p-3 rounded-lg">
+                  <h4 className="font-medium text-sm text-muted-foreground mb-1">Performance Comparison</h4>
+                  <p className="text-sm leading-relaxed">{aiInsights.performance_comparison}</p>
+                </div>
+              )}
+
+              {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Optimization Tips</h4>
+                  <ul className="space-y-2">
+                    {aiInsights.optimization_tips.map((tip, index) => (
+                      <li key={index} className="flex gap-2 text-sm">
+                        <span className="text-primary">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
               
               {aiInsights.risk_factors && (
                 <Alert>
