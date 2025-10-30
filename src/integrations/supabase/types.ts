@@ -14,13 +14,54 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      hydration_profiles: {
+        Row: {
+          consent_given: boolean
+          consent_timestamp: string | null
+          created_at: string
+          data_retention_expires_at: string | null
+          has_smartwatch_data: boolean | null
+          id: string
+          ip_address: unknown
+          plan_data: Json | null
+          profile_data: Json
+          user_agent: string | null
+          user_email: string | null
+        }
+        Insert: {
+          consent_given?: boolean
+          consent_timestamp?: string | null
+          created_at?: string
+          data_retention_expires_at?: string | null
+          has_smartwatch_data?: boolean | null
+          id?: string
+          ip_address?: unknown
+          plan_data?: Json | null
+          profile_data: Json
+          user_agent?: string | null
+          user_email?: string | null
+        }
+        Update: {
+          consent_given?: boolean
+          consent_timestamp?: string | null
+          created_at?: string
+          data_retention_expires_at?: string | null
+          has_smartwatch_data?: boolean | null
+          id?: string
+          ip_address?: unknown
+          plan_data?: Json | null
+          profile_data?: Json
+          user_agent?: string | null
+          user_email?: string | null
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      delete_expired_hydration_profiles: { Args: never; Returns: undefined }
     }
     Enums: {
       [_ in never]: never

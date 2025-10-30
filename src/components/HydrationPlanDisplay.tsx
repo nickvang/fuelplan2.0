@@ -45,6 +45,51 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
     fetchAIInsights();
   }, [plan, profile, hasSmartWatchData]);
 
+  const downloadCSV = () => {
+    // Prepare CSV data
+    const csvRows = [
+      ['Supplme Hydration Guide - Your Results', ''],
+      ['Generated', new Date().toLocaleString()],
+      ['', ''],
+      ['PROFILE DATA', ''],
+      ['Age', profile.age || 'N/A'],
+      ['Sex', profile.sex || 'N/A'],
+      ['Weight (kg)', profile.weight || 'N/A'],
+      ['Height (cm)', profile.height || 'N/A'],
+      ['Primary Discipline', profile.disciplines?.[0] || 'N/A'],
+      ['Session Duration (hours)', profile.sessionDuration || 'N/A'],
+      ['', ''],
+      ['HYDRATION PLAN', ''],
+      ['Pre-Activity Water (ml)', plan.preActivity.water],
+      ['Pre-Activity Electrolytes (sachets)', plan.preActivity.electrolytes],
+      ['During Activity Water/Hour (ml)', plan.duringActivity.waterPerHour],
+      ['During Activity Electrolytes/Hour (sachets)', plan.duringActivity.electrolytesPerHour],
+      ['Post-Activity Water (ml)', plan.postActivity.water],
+      ['Post-Activity Electrolytes (sachets)', plan.postActivity.electrolytes],
+      ['Total Fluid Loss (liters)', (plan.totalFluidLoss / 1000).toFixed(1)],
+      ['', ''],
+      ['RECOMMENDATIONS', ''],
+      ...plan.recommendations.map(rec => ['', rec]),
+    ];
+
+    const csvContent = csvRows.map(row => row.join(',')).join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `supplme-hydration-plan-${new Date().getTime()}.csv`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Download Complete",
+      description: "Your hydration plan has been downloaded as CSV.",
+    });
+  };
+
   const getConfidenceBadgeColor = (level: string) => {
     switch (level) {
       case 'high': return 'bg-green-500/10 text-green-700 border-green-500/20';
@@ -502,22 +547,18 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
       </Card>
 
       {/* Bottom Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
+      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
+        <Button onClick={downloadCSV} variant="default" size="lg" className="gap-2 w-full sm:w-auto">
           <Download className="w-4 h-4" />
-          Download Plan
+          Download CSV
         </Button>
-        <Button variant="default" size="lg" asChild>
+        <Button onClick={onReset} variant="outline" size="lg" className="w-full sm:w-auto">
+          Start New Plan
+        </Button>
+        <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
           <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
             Buy Supplme
           </a>
-        </Button>
-      </div>
-
-      {/* Final action button */}
-      <div className="flex justify-center">
-        <Button onClick={onReset} variant="outline" size="lg">
-          Create New Plan
         </Button>
       </div>
 

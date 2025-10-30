@@ -2,3 +2,6 @@ project_id = "bepotbhwdxlznkohaevv"
 
 [functions.enhance-hydration-plan]
 verify_jwt = false
+
+[functions.save-hydration-profile]
+verify_jwt = false
