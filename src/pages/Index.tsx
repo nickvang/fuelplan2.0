@@ -14,7 +14,7 @@ import { Textarea } from '@/components/ui/textarea';
 import supplmeLogo from '@/assets/supplme-logo-2.svg';
 
 const Index = () => {
-  const [step, setStep] = useState(-1);
+  const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const [smartwatchData, setSmartWatchData] = useState<File | null>(null);
@@ -42,8 +42,6 @@ const Index = () => {
 
   const isStepValid = (): boolean => {
     switch (step) {
-      case -1:
-        return true; // Smartwatch upload is always optional
       case 0:
         return consentGiven;
       case 1:
@@ -71,7 +69,7 @@ const Index = () => {
   };
 
   const handleReset = () => {
-    setStep(-1);
+    setStep(0);
     setShowPlan(false);
     setConsentGiven(false);
     setSmartWatchData(null);
@@ -121,11 +119,6 @@ const Index = () => {
           <h1 className="text-3xl font-bold tracking-tight">
             Supplme Hydration Guide
           </h1>
-          {step === -1 && (
-            <p className="text-lg text-muted-foreground">
-              Get started with your personalized hydration plan
-            </p>
-          )}
           {step === 0 && (
             <p className="text-lg text-muted-foreground">
               Your personalized hydration plan
@@ -145,64 +138,12 @@ const Index = () => {
           </div>
         )}
 
-        {/* STEP -1: Smartwatch Data Upload (Optional) */}
-        {step === -1 && (
-          <QuestionnaireStep
-            title="Upload Smartwatch Data (Optional)"
-            description="Upload data from your Whoop, Garmin, Apple Watch, Coros, or other fitness tracker to pre-fill your profile"
-            onNext={() => setStep(0)}
-            isValid={isStepValid()}
-          >
-            <div className="space-y-4">
-              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
-                <h4 className="font-medium">Supported Devices:</h4>
-                <ul className="text-sm text-muted-foreground space-y-1">
-                  <li>• Whoop (export from app)</li>
-                  <li>• Garmin (FIT files or activity exports)</li>
-                  <li>• Apple Watch (Health app export)</li>
-                  <li>• Coros (training data export)</li>
-                  <li>• Other fitness trackers (CSV or JSON format)</li>
-                </ul>
-              </div>
-              
-              <div>
-                <Label htmlFor="smartwatch-upload">Upload Data File</Label>
-                <Input
-                  id="smartwatch-upload"
-                  type="file"
-                  accept=".fit,.csv,.json,.xml"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSmartWatchData(file);
-                      // In a real implementation, parse the file and pre-fill profile
-                    }
-                  }}
-                  className="mt-2"
-                />
-                {smartwatchData && (
-                  <p className="text-sm text-muted-foreground mt-2">
-                    File uploaded: {smartwatchData.name}
-                  </p>
-                )}
-              </div>
-
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 rounded-lg">
-                <p className="text-sm text-muted-foreground">
-                  💡 Don't have your data file? No problem! Skip this step and fill out the questionnaire manually.
-                </p>
-              </div>
-            </div>
-          </QuestionnaireStep>
-        )}
-
         {/* STEP 0: Welcome & Consent */}
         {step === 0 && (
           <QuestionnaireStep
             title="Welcome"
             description="Get a science-backed hydration plan tailored to your physiology, activity, and environment."
             onNext={() => setStep(1)}
-            onBack={() => setStep(-1)}
             isValid={isStepValid()}
           >
             <div className="py-6 space-y-6">
@@ -218,6 +159,38 @@ const Index = () => {
                 <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">POST</p>
                   <p className="text-sm text-muted-foreground">Recovery</p>
+                </div>
+              </div>
+
+              {/* Optional Smartwatch Upload */}
+              <div className="bg-blue-50 dark:bg-blue-950/30 p-6 rounded-lg space-y-4">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <h4 className="font-medium">Have Smartwatch Data? (Optional)</h4>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Upload from Whoop, Garmin, Apple Watch, Coros to pre-fill your profile
+                    </p>
+                  </div>
+                </div>
+                <div>
+                  <Input
+                    id="smartwatch-upload"
+                    type="file"
+                    accept=".fit,.csv,.json,.xml"
+                    onChange={(e) => {
+                      const file = e.target.files?.[0];
+                      if (file) {
+                        setSmartWatchData(file);
+                        // In a real implementation, parse the file and pre-fill profile
+                      }
+                    }}
+                    className="cursor-pointer"
+                  />
+                  {smartwatchData && (
+                    <p className="text-sm text-green-600 dark:text-green-400 mt-2">
+                      ✓ File uploaded: {smartwatchData.name}
+                    </p>
+                  )}
                 </div>
               </div>
               
