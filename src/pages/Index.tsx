@@ -7,6 +7,8 @@ import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import { ValidationWarning, getValidationWarnings } from '@/components/ValidationWarning';
+import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { useLanguage } from '@/contexts/LanguageContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -18,6 +20,7 @@ import { toast } from 'sonner';
 import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
+  const { t } = useLanguage();
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -25,6 +28,7 @@ const Index = () => {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzedData, setAnalyzedData] = useState<Partial<HydrationProfile> | null>(null);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
+  const [honeypot, setHoneypot] = useState(''); // Bot protection
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
     indoorOutdoor: 'outdoor',
@@ -190,6 +194,12 @@ const Index = () => {
 
   const handleComplete = async () => {
     if (isStepValid()) {
+      // Bot protection - if honeypot field is filled, it's a bot
+      if (honeypot) {
+        toast.error('Spam detected. Please try again.');
+        return;
+      }
+      
       try {
         // Validate and sanitize profile data before submission
         const validatedProfile = validateAndSanitizeProfile(profile);
@@ -280,16 +290,37 @@ const Index = () => {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header - Shows on all steps */}
         <div className="text-center space-y-3">
+          <div className="flex justify-end mb-4">
+            <LanguageSwitcher />
+          </div>
           <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto" />
           <h1 className="text-3xl font-bold tracking-tight">
-            Supplme Hydration Guide
+            {t('app.title')}
           </h1>
           {step === 0 && (
             <p className="text-lg text-muted-foreground">
-              Your personalized hydration plan
+              {t('app.subtitle')}
             </p>
           )}
         </div>
+
+        {/* Honeypot field - hidden from real users, visible to bots */}
+        <input
+          type="text"
+          name="website"
+          value={honeypot}
+          onChange={(e) => setHoneypot(e.target.value)}
+          tabIndex={-1}
+          autoComplete="off"
+          style={{
+            position: 'absolute',
+            left: '-9999px',
+            width: '1px',
+            height: '1px',
+            opacity: 0,
+          }}
+          aria-hidden="true"
+        />
 
         {/* Progress */}
         {step > 0 && !isAnalyzing && <ProgressBar currentStep={step} totalSteps={6} />}
@@ -339,8 +370,8 @@ const Index = () => {
         {/* STEP 0: Welcome & Consent */}
         {step === 0 && !isAnalyzing && (
           <QuestionnaireStep
-            title="Welcome"
-            description="Get a science-backed hydration plan tailored to your physiology, activity, and environment."
+            title={t('app.title')}
+            description={t('app.subtitle')}
             onNext={handleNextStep}
             isValid={isStepValid()}
           >
@@ -348,24 +379,24 @@ const Index = () => {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">PRE</p>
-                  <p className="text-sm text-muted-foreground">Preparation</p>
+                  <p className="text-sm text-muted-foreground">{t('plan.preActivity')}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-primary text-primary-foreground">
                   <p className="text-2xl font-bold mb-1">DURING</p>
-                  <p className="text-sm opacity-90">Performance</p>
+                  <p className="text-sm opacity-90">{t('plan.duringActivity')}</p>
                 </div>
                 <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">POST</p>
-                  <p className="text-sm text-muted-foreground">Recovery</p>
+                  <p className="text-sm text-muted-foreground">{t('plan.postActivity')}</p>
                 </div>
               </div>
 
               {/* Optional Smartwatch Upload */}
               <div className="bg-blue-50 dark:bg-blue-950/30 p-4 sm:p-6 rounded-lg space-y-4">
                 <div>
-                  <h4 className="font-medium text-sm sm:text-base">Have Smartwatch Data? <span className="text-blue-600">(Recommended for enhanced results)</span></h4>
+                  <h4 className="font-medium text-sm sm:text-base">{t('upload.title')} <span className="text-blue-600">({t('common.optional')})</span></h4>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                    Upload files from Whoop, Garmin, Apple Watch, Coros to pre-fill your profile
+                    {t('upload.description')}
                   </p>
                 </div>
                 
@@ -486,7 +517,7 @@ const Index = () => {
                     htmlFor="consent"
                     className="text-xs sm:text-sm font-medium leading-relaxed cursor-pointer"
                   >
-                    I have read and agree to the data privacy notice above. I consent to Supplme collecting and processing my anonymized data for product development purposes in accordance with GDPR regulations.
+                    {t('consent.gdpr')}
                   </label>
                 </div>
               </div>
