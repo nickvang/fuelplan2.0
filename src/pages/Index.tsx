@@ -665,7 +665,7 @@ const Index = () => {
               <div>
                 <Label>{t('body.sex')} *</Label>
                 <RadioGroup
-                  value={profile.sex || 'male'}
+                  value={profile.sex || ''}
                   onValueChange={(value) => updateProfile({ sex: value as 'male' | 'female' | 'other' })}
                 >
                   <div className="flex items-center space-x-2">
