@@ -34,11 +34,9 @@ const Index = () => {
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [honeypot, setHoneypot] = useState(''); // Bot protection
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
-    sex: 'male',
-    indoorOutdoor: 'outdoor',
     primaryGoal: 'performance',
     disciplines: [],
-    // Simple mode defaults
+    // Simple mode defaults (hidden from user)
     trainingTempRange: { min: 15, max: 20 },
     humidity: 50,
     altitude: 'sea-level',
@@ -181,15 +179,23 @@ const Index = () => {
       
       setIsGenerating(true);
       
+      // Apply defaults for Simple mode before calculations
+      const completeProfile = { ...profile };
+      if (version === 'simple') {
+        // Apply default values that are hidden from user in Simple mode
+        if (!completeProfile.sex) completeProfile.sex = 'male';
+        if (!completeProfile.indoorOutdoor) completeProfile.indoorOutdoor = 'outdoor';
+      }
+      
       try {
         // Validate and sanitize profile data before submission
-        const validatedProfile = validateAndSanitizeProfile(profile);
+        const validatedProfile = validateAndSanitizeProfile(completeProfile);
         
         // Save profile data to backend with GDPR compliance
         const { data, error } = await supabase.functions.invoke('save-hydration-profile', {
           body: {
             profile: validatedProfile,
-            plan: calculateHydrationPlan(profile as HydrationProfile),
+            plan: calculateHydrationPlan(completeProfile as HydrationProfile),
             hasSmartWatchData: !!analyzedData && smartwatchData.length > 0,
             consentGiven,
             userEmail: null // Optional: could add email field for users who want to save
@@ -220,6 +226,9 @@ const Index = () => {
         toast.error('Failed to save profile. Your hydration plan will still be displayed.');
       }
       
+      // Update profile with complete values before showing plan
+      setProfile(completeProfile);
+      
       // Add a minimum delay for smooth transition
       setTimeout(() => {
         setIsGenerating(false);
@@ -239,8 +248,6 @@ const Index = () => {
     setRawSmartWatchData(null);
     setIsAnalyzing(false);
     setProfile({
-      sex: 'male',
-      indoorOutdoor: 'outdoor',
       sweatRate: 'medium',
       sweatSaltiness: 'medium',
       dailySaltIntake: 'medium',
@@ -380,7 +387,7 @@ const Index = () => {
                 <li>• Activity: {profile.disciplines.join(', ')}{analyzedData?.disciplines ? ' (from your data - you still choose your guide)' : ''}</li>
               )}
               {profile.sessionDuration && <li>• Duration: {profile.sessionDuration} hours</li>}
-              {profile.indoorOutdoor && <li>• Environment: {profile.indoorOutdoor}</li>}
+              {version === 'pro' && profile.indoorOutdoor && <li>• Environment: {profile.indoorOutdoor}</li>}
               
               {/* Environmental (Pro mode) */}
               {version === 'pro' && profile.trainingTempRange && (
