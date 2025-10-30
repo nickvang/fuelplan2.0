@@ -1,10 +1,18 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Validation schema
+const requestSchema = z.object({
+  confirmDelete: z.boolean().refine(val => val === true, {
+    message: "Deletion must be confirmed"
+  })
+});
 
 serve(async (req) => {
   // Handle CORS preflight requests
@@ -13,10 +21,39 @@ serve(async (req) => {
   }
 
   try {
-    const { requestDeletion } = await req.json();
+    const body = await req.json();
+    
+    // Validate input
+    const validationResult = requestSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('[Validation] Invalid request data:', validationResult.error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid request data',
+          code: 'VALIDATION_ERROR',
+          success: false
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
 
-    if (!requestDeletion) {
-      throw new Error('Deletion request not confirmed');
+    const { confirmDelete } = validationResult.data;
+
+    if (!confirmDelete) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'Deletion must be confirmed',
+          code: 'CONFIRMATION_REQUIRED',
+          success: false
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
     }
 
     // Initialize Supabase client
@@ -34,19 +71,31 @@ serve(async (req) => {
     // This is a best-effort approach for anonymous users
     const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
 
-    const { error } = await supabase
+    const { error, data } = await supabase
       .from('hydration_profiles')
       .delete()
       .eq('ip_address', ipAddress)
       .eq('user_agent', userAgent)
-      .gte('created_at', oneDayAgo);
+      .gte('created_at', oneDayAgo)
+      .select();
 
     if (error) {
-      console.error('Error deleting data:', error);
-      throw error;
+      console.error('[Internal] Database error deleting data:', error);
+      return new Response(
+        JSON.stringify({ 
+          error: 'Unable to delete data. Please try again later.',
+          code: 'DELETE_FAILED',
+          success: false,
+          message: 'Please contact info@supplme.com for manual data deletion'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
     }
 
-    console.log('Data deletion completed for IP:', ipAddress);
+    console.log(`[Success] Deleted ${data?.length || 0} records for IP:`, ipAddress);
 
     return new Response(
       JSON.stringify({ 
@@ -59,19 +108,18 @@ serve(async (req) => {
       }
     );
   } catch (error) {
-    console.error('Error in delete-user-data function:', error);
-    
-    const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred';
+    console.error('[Internal] Error in delete-user-data function:', error);
     
     return new Response(
       JSON.stringify({ 
-        error: errorMessage,
+        error: 'An unexpected error occurred. Please try again later.',
+        code: 'INTERNAL_ERROR',
         success: false,
         message: 'Please contact info@supplme.com for manual data deletion'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-        status: 400,
+        status: 500,
       }
     );
   }
