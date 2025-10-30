@@ -25,6 +25,7 @@ const Index = () => {
   const [version, setVersion] = useState<'simple' | 'pro' | null>('simple'); // Version selection - Quick mode by default
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
+  const [isGenerating, setIsGenerating] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const [smartwatchData, setSmartWatchData] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -178,6 +179,8 @@ const Index = () => {
         return;
       }
       
+      setIsGenerating(true);
+      
       try {
         // Validate and sanitize profile data before submission
         const validatedProfile = validateAndSanitizeProfile(profile);
@@ -210,13 +213,18 @@ const Index = () => {
         // Show validation error to user
         if (error instanceof Error) {
           toast.error(error.message);
+          setIsGenerating(false);
           return; // Don't show plan if validation fails
         }
         
         toast.error('Failed to save profile. Your hydration plan will still be displayed.');
       }
       
-      setShowPlan(true);
+      // Add a minimum delay for smooth transition
+      setTimeout(() => {
+        setIsGenerating(false);
+        setShowPlan(true);
+      }, 1500);
     }
   };
 
@@ -224,6 +232,7 @@ const Index = () => {
     setVersion(null);
     setStep(0);
     setShowPlan(false);
+    setIsGenerating(false);
     setConsentGiven(false);
     setSmartWatchData([]);
     setAnalyzedData(null);
@@ -254,6 +263,30 @@ const Index = () => {
       updateProfile({ disciplines: [...current, discipline] });
     }
   };
+
+  // Show generating animation
+  if (isGenerating) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center px-4">
+        <div className="text-center space-y-6 animate-fade-in">
+          <img 
+            src={supplmeLogo} 
+            alt="Supplme" 
+            className="h-32 mx-auto animate-pulse" 
+          />
+          <div className="space-y-2">
+            <h2 className="text-2xl font-bold">Generating Your Complete Hydration Guide</h2>
+            <p className="text-muted-foreground">by Supplme</p>
+          </div>
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   if (showPlan && profile as HydrationProfile) {
     const plan = calculateHydrationPlan(profile as HydrationProfile, rawSmartWatchData);
@@ -327,21 +360,43 @@ const Index = () => {
           </div>
         )}
 
-        {/* Data Analysis Complete */}
-        {analyzedData && step > 0 && (
-          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
-            <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-              {t('analysis.complete')}
+        {/* Profile Progress Indicator */}
+        {step > 0 && !isGenerating && (
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 animate-fade-in">
+            <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
+              ✓ {analyzedData ? 'Data analysis complete! We pre-filled:' : 'Profile progress:'}
             </p>
-            <ul className="text-xs text-green-600 dark:text-green-400 mt-2 space-y-1">
-              {analyzedData.age && <li>{t('analysis.ageMetrics')}</li>}
-              {analyzedData.restingHeartRate && <li>{t('analysis.restingHR')}</li>}
-              {analyzedData.hrv && <li>{t('analysis.hrv')}</li>}
-              {analyzedData.disciplines && <li>{t('analysis.activityData')}</li>}
+            <ul className="text-xs text-green-600 dark:text-green-400 space-y-1">
+              {/* Body & Physiology */}
+              {profile.age && <li>• Age: {profile.age} years</li>}
+              {profile.sex && <li>• Sex: {profile.sex}</li>}
+              {profile.height && <li>• Height: {profile.height} cm</li>}
+              {profile.weight && <li>• Weight: {profile.weight} kg</li>}
+              {profile.restingHeartRate && <li>• Resting heart rate: {profile.restingHeartRate} bpm</li>}
+              {profile.hrv && <li>• Heart rate variability: {profile.hrv} ms</li>}
+              
+              {/* Activity */}
+              {profile.disciplines && profile.disciplines.length > 0 && (
+                <li>• Activity: {profile.disciplines.join(', ')}{analyzedData?.disciplines ? ' (from your data - you still choose your guide)' : ''}</li>
+              )}
+              {profile.sessionDuration && <li>• Duration: {profile.sessionDuration} hours</li>}
+              {profile.indoorOutdoor && <li>• Environment: {profile.indoorOutdoor}</li>}
+              
+              {/* Environmental (Pro mode) */}
+              {version === 'pro' && profile.trainingTempRange && (
+                <li>• Temperature: {profile.trainingTempRange.min}-{profile.trainingTempRange.max}°C</li>
+              )}
+              {version === 'pro' && profile.altitude && <li>• Altitude: {profile.altitude}</li>}
+              
+              {/* Sweat Profile (Pro mode) */}
+              {version === 'pro' && profile.sweatRate && <li>• Sweat rate: {profile.sweatRate}</li>}
+              {version === 'pro' && profile.sweatSaltiness && <li>• Sweat saltiness: {profile.sweatSaltiness}</li>}
             </ul>
-            <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-              {t('analysis.skipping')}
-            </p>
+            {analyzedData && (
+              <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+                {t('analysis.skipping')}
+              </p>
+            )}
           </div>
         )}
 
