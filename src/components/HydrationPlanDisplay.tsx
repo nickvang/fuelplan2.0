@@ -1,13 +1,17 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { HydrationPlan, HydrationProfile, AIEnhancedInsights } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download } from 'lucide-react';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, Share2, Info } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
+import { Tooltip as InfoTooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import supplmeLogo from '@/assets/supplme-logo-2.svg';
+import jsPDF from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -18,6 +22,8 @@ interface HydrationPlanDisplayProps {
 export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
+  const [isGeneratingPDF, setIsGeneratingPDF] = useState(false);
+  const contentRef = useRef<HTMLDivElement>(null);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -53,8 +59,111 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
     }
   };
 
+  const handleShare = async () => {
+    const shareData = {
+      title: 'My Supplme Hydration Plan',
+      text: `Check out my personalized hydration plan from Supplme! Estimated fluid loss: ${(plan.totalFluidLoss / 1000).toFixed(1)}L over ${profile.sessionDuration} hours.`,
+      url: window.location.href,
+    };
+
+    try {
+      if (navigator.share) {
+        await navigator.share(shareData);
+        toast({
+          title: "Shared successfully!",
+          description: "Your hydration plan has been shared.",
+        });
+      } else {
+        await navigator.clipboard.writeText(`${shareData.text}\n\nView at: ${shareData.url}`);
+        toast({
+          title: "Link copied!",
+          description: "Share link copied to clipboard.",
+        });
+      }
+    } catch (error) {
+      console.error('Error sharing:', error);
+    }
+  };
+
+  const handleDownloadPDF = async () => {
+    if (!contentRef.current) return;
+    
+    setIsGeneratingPDF(true);
+    toast({
+      title: "Generating PDF...",
+      description: "Please wait while we prepare your hydration plan.",
+    });
+
+    try {
+      const shareButtons = contentRef.current.querySelectorAll('[data-no-pdf]');
+      shareButtons.forEach(el => (el as HTMLElement).style.display = 'none');
+
+      const canvas = await html2canvas(contentRef.current, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+        backgroundColor: '#ffffff',
+      });
+
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF({
+        orientation: 'portrait',
+        unit: 'mm',
+        format: 'a4',
+      });
+
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 10;
+
+      let heightLeft = imgHeight * ratio;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft >= 0) {
+        position = heightLeft - imgHeight * ratio;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`supplme-hydration-plan-${new Date().toISOString().split('T')[0]}.pdf`);
+      
+      shareButtons.forEach(el => (el as HTMLElement).style.display = '');
+
+      toast({
+        title: "PDF Downloaded!",
+        description: "Your hydration plan has been saved.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Error generating PDF",
+        description: "Please try again or use the browser print function.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsGeneratingPDF(false);
+    }
+  };
+
+  const graphData = Array.from({ length: Math.ceil(profile.sessionDuration * 4) + 1 }).map((_, i) => {
+    const hours = i / 4;
+    const fluidLoss = (plan.totalFluidLoss / profile.sessionDuration) * hours;
+    return {
+      time: hours.toFixed(1),
+      loss: Math.round(fluidLoss),
+    };
+  });
+
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
+    <div ref={contentRef} className="space-y-8 animate-in fade-in duration-700">
       {/* Header with Logo */}
       <div className="text-center space-y-4 py-4">
         <div className="inline-flex items-center justify-center">
@@ -103,17 +212,41 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           
           <div className="space-y-3 py-4">
             <div>
-              <p className="text-sm text-muted-foreground">Water</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-sm text-muted-foreground">Water</p>
+                <TooltipProvider>
+                  <InfoTooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Drink this amount 2 hours before your activity. Sip slowly over 30 minutes to allow proper absorption.</p>
+                    </TooltipContent>
+                  </InfoTooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-xl font-semibold">{plan.preActivity.water} ml</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Supplme Sachet (30ml)</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-sm text-muted-foreground">Supplme Sachet (30ml)</p>
+                <TooltipProvider>
+                  <InfoTooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Take {plan.preActivity.electrolytes > 1 ? 'these sachets' : 'this sachet'} alongside your pre-activity water. Consume directly - no mixing required.</p>
+                    </TooltipContent>
+                  </InfoTooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-xl font-semibold">{plan.preActivity.electrolytes}x sachet</p>
             </div>
           </div>
 
           <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Pre-hydration establishes optimal fluid balance before activity begins
+            Pre-hydration establishes optimal fluid balance before activity begins. Start 2 hours before to allow time for absorption and bathroom breaks.
           </p>
         </Card>
 
@@ -129,7 +262,19 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           
           <div className="space-y-3 py-4">
             <div>
-              <p className="text-sm text-muted-foreground">Water per hour</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-sm text-muted-foreground">Water per hour</p>
+                <TooltipProvider>
+                  <InfoTooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Divide this hourly amount into small sips every 15-20 minutes. Don't wait until you're thirsty - maintain consistent intake throughout your activity.</p>
+                    </TooltipContent>
+                  </InfoTooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-xl font-semibold">
                 {plan.duringActivity.waterPerHour > 0 
                   ? `${plan.duringActivity.waterPerHour} ml` 
@@ -137,7 +282,19 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
               </p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Supplme per hour</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-sm text-muted-foreground">Supplme per hour</p>
+                <TooltipProvider>
+                  <InfoTooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Space out your Supplme sachets evenly during activity. Each sachet provides sodium and electrolytes to match your sweat losses.</p>
+                    </TooltipContent>
+                  </InfoTooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-xl font-semibold">
                 {plan.duringActivity.electrolytesPerHour > 0 
                   ? `${plan.duringActivity.electrolytesPerHour}x sachet` 
@@ -147,7 +304,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           </div>
 
           <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Replace 60-80% of sweat losses to maintain performance (PMID 38732589)
+            This targets replacing 60-80% of sweat losses - the scientifically optimal range to maintain performance without GI distress (PMID 38732589)
           </p>
         </Card>
 
@@ -163,26 +320,62 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           
           <div className="space-y-3 py-4">
             <div>
-              <p className="text-sm text-muted-foreground">Water (150% of loss)</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-sm text-muted-foreground">Water (150% of loss)</p>
+                <TooltipProvider>
+                  <InfoTooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Drink 150% of your estimated fluid loss over the next 4-6 hours. The extra 50% accounts for ongoing urine losses during recovery. Spread it out - don't chug it all at once.</p>
+                    </TooltipContent>
+                  </InfoTooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-xl font-semibold">{plan.postActivity.water} ml</p>
+              <p className="text-xs text-muted-foreground mt-1">Drink gradually over 4-6 hours post-activity</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Supplme Sachet</p>
+              <div className="flex items-center gap-1 mb-1">
+                <p className="text-sm text-muted-foreground">Supplme Sachet</p>
+                <TooltipProvider>
+                  <InfoTooltip>
+                    <TooltipTrigger>
+                      <Info className="w-3 h-3 text-muted-foreground" />
+                    </TooltipTrigger>
+                    <TooltipContent className="max-w-xs">
+                      <p>Take within 30 minutes of finishing. Sodium helps your body retain the water you drink, improving rehydration efficiency.</p>
+                    </TooltipContent>
+                  </InfoTooltip>
+                </TooltipProvider>
+              </div>
               <p className="text-xl font-semibold">{plan.postActivity.electrolytes}x sachet</p>
+              <p className="text-xs text-muted-foreground mt-1">Take within 30 min of finishing activity</p>
             </div>
           </div>
 
           <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Recovery hydration replaces deficit and accelerates muscle function recovery
+            Recovery hydration replaces deficit and accelerates muscle function recovery. The 150% target accounts for ongoing fluid losses during the recovery period.
           </p>
         </Card>
       </div>
 
       {/* Action Buttons - Right under the plan */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center">
-        <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
+      <div className="flex flex-col sm:flex-row gap-4 justify-center" data-no-pdf>
+        <Button 
+          onClick={handleDownloadPDF} 
+          variant="default" 
+          size="lg" 
+          className="gap-2"
+          disabled={isGeneratingPDF}
+        >
           <Download className="w-4 h-4" />
-          Download Plan
+          {isGeneratingPDF ? 'Generating PDF...' : 'Download Plan'}
+        </Button>
+        <Button onClick={handleShare} variant="outline" size="lg" className="gap-2">
+          <Share2 className="w-4 h-4" />
+          Share Plan
         </Button>
       </div>
 
@@ -284,53 +477,55 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
         </div>
       )}
 
-      {/* Fluid Loss Line Graph */}
+      {/* Fluid Loss Graph - Improved with Recharts */}
       <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-6">Fluid Loss Rate (Training)</h3>
-        <div className="space-y-4">
-          <div className="relative h-64 bg-muted/30 rounded-lg p-6">
-            <svg width="100%" height="100%" viewBox="0 0 600 200" className="overflow-visible">
-              {/* Grid lines */}
-              <line x1="50" y1="180" x2="550" y2="180" stroke="currentColor" strokeOpacity="0.2" />
-              <line x1="50" y1="135" x2="550" y2="135" stroke="currentColor" strokeOpacity="0.2" />
-              <line x1="50" y1="90" x2="550" y2="90" stroke="currentColor" strokeOpacity="0.2" />
-              <line x1="50" y1="45" x2="550" y2="45" stroke="currentColor" strokeOpacity="0.2" />
-              
-              {/* Axes */}
-              <line x1="50" y1="10" x2="50" y2="180" stroke="currentColor" strokeWidth="2" />
-              <line x1="50" y1="180" x2="550" y2="180" stroke="currentColor" strokeWidth="2" />
-              
-              {/* Y-axis labels */}
-              <text x="40" y="185" textAnchor="end" fontSize="12" fill="currentColor">0</text>
-              <text x="40" y="140" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration / 4)}ml</text>
-              <text x="40" y="95" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration / 2)}ml</text>
-              <text x="40" y="50" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration * 0.75)}ml</text>
-              <text x="40" y="15" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml</text>
-              
-              {/* X-axis labels */}
-              {Array.from({ length: Math.ceil(profile.sessionDuration) + 1 }).map((_, i) => (
-                <text key={i} x={50 + (i * 500 / profile.sessionDuration)} y="195" textAnchor="middle" fontSize="12" fill="currentColor">
-                  {i}h
-                </text>
-              ))}
-              
-              {/* Line graph */}
-              <polyline
-                points={Array.from({ length: Math.ceil(profile.sessionDuration * 4) + 1 })
-                  .map((_, i) => {
-                    const x = 50 + (i * 500 / (profile.sessionDuration * 4));
-                    const y = 180 - ((Math.round(plan.totalFluidLoss / profile.sessionDuration) / Math.round(plan.totalFluidLoss / profile.sessionDuration)) * 170 * (i / (profile.sessionDuration * 4)));
-                    return `${x},${y}`;
-                  })
-                  .join(' ')}
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="3"
+        <h3 className="text-xl font-semibold mb-2">Fluid Loss Over Time</h3>
+        <p className="text-sm text-muted-foreground mb-6">
+          Cumulative fluid loss during your {profile.sessionDuration}-hour activity: <strong>{(plan.totalFluidLoss / 1000).toFixed(2)}L total</strong>
+        </p>
+        <div className="h-80 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={graphData} margin={{ top: 10, right: 30, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorLoss" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="hsl(var(--primary))" stopOpacity={0.3}/>
+                  <stop offset="95%" stopColor="hsl(var(--primary))" stopOpacity={0}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" opacity={0.3} />
+              <XAxis 
+                dataKey="time" 
+                label={{ value: 'Hours', position: 'insideBottom', offset: -5 }}
+                stroke="hsl(var(--muted-foreground))"
               />
-            </svg>
-          </div>
-          <p className="text-sm text-center text-muted-foreground">
-            Cumulative fluid loss over {profile.sessionDuration} hours: <strong>{(plan.totalFluidLoss / 1000).toFixed(2)}L</strong>
+              <YAxis 
+                label={{ value: 'Fluid Loss (ml)', angle: -90, position: 'insideLeft' }}
+                stroke="hsl(var(--muted-foreground))"
+              />
+              <Tooltip 
+                contentStyle={{ 
+                  backgroundColor: 'hsl(var(--background))',
+                  border: '1px solid hsl(var(--border))',
+                  borderRadius: '8px'
+                }}
+                labelFormatter={(value) => `Time: ${value}h`}
+                formatter={(value: number) => [`${value}ml`, 'Fluid Loss']}
+              />
+              <Area 
+                type="monotone" 
+                dataKey="loss" 
+                stroke="hsl(var(--primary))" 
+                strokeWidth={3}
+                fillOpacity={1} 
+                fill="url(#colorLoss)" 
+              />
+            </AreaChart>
+          </ResponsiveContainer>
+        </div>
+        <div className="mt-4 p-4 bg-muted/30 rounded-lg">
+          <p className="text-sm text-muted-foreground">
+            This graph shows your estimated cumulative fluid loss over time. The rate is based on your sweat rate ({profile.sweatRate}), 
+            environmental conditions ({profile.temperature}°C, {profile.humidity}% humidity), and activity intensity.
           </p>
         </div>
       </Card>
@@ -443,9 +638,24 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
         </div>
       </Card>
 
-      {/* Final action button */}
-      <div className="flex justify-center">
-        <Button onClick={onReset} variant="outline" size="lg">
+      {/* Bottom Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center items-center" data-no-pdf>
+        <Button 
+          onClick={handleDownloadPDF} 
+          variant="default" 
+          size="lg" 
+          className="gap-2 w-full sm:w-auto"
+          disabled={isGeneratingPDF}
+        >
+          <Download className="w-4 h-4" />
+          {isGeneratingPDF ? 'Generating PDF...' : 'Download Plan'}
+        </Button>
+        <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
+          <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
+            Buy Supplme
+          </a>
+        </Button>
+        <Button onClick={onReset} variant="outline" size="lg" className="w-full sm:w-auto">
           Create New Plan
         </Button>
       </div>
