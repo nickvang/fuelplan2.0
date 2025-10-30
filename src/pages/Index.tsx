@@ -676,21 +676,23 @@ const Index = () => {
                 </RadioGroup>
               </div>
 
-              <div>
-                <Label htmlFor="raceDistance">Typical Race Distance</Label>
-                <Input
-                  id="raceDistance"
-                  value={profile.raceDistance || ''}
-                  onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                  placeholder="e.g., Ironman 70.3, Ultra 50K, Marathon"
-                />
-              </div>
+              {profile.disciplines?.[0] !== 'Football' && (
+                <div>
+                  <Label htmlFor="raceDistance">Typical Race Distance</Label>
+                  <Input
+                    id="raceDistance"
+                    value={profile.raceDistance || ''}
+                    onChange={(e) => updateProfile({ raceDistance: e.target.value })}
+                    placeholder="e.g., Ironman 70.3, Ultra 50K, Marathon"
+                  />
+                </div>
+              )}
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="sessionDuration">Session Duration (hours) *</Label>
-                    <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
+                    <Label htmlFor="sessionDuration">{profile.disciplines?.[0] === 'Football' ? 'Match/Training Duration (hours) *' : 'Session Duration (hours) *'}</Label>
+                    <InfoTooltip content={profile.disciplines?.[0] === 'Football' ? "Full match is typically 1.5 hours (90 min). Training sessions are usually 1-2 hours." : "How long is your typical training session or race? Include warm-up and cool-down time."} />
                   </div>
                   <Input
                     id="sessionDuration"
@@ -698,11 +700,11 @@ const Index = () => {
                     step="0.5"
                     value={profile.sessionDuration || ''}
                     onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
-                    placeholder="Average"
+                    placeholder={profile.disciplines?.[0] === 'Football' ? "1.5 for match" : "Average"}
                   />
                 </div>
                 <div>
-                  <Label htmlFor="longestSession">Longest Session (hours)</Label>
+                  <Label htmlFor="longestSession">{profile.disciplines?.[0] === 'Football' ? 'Longest Match/Training (hours)' : 'Longest Session (hours)'}</Label>
                   <Input
                     id="longestSession"
                     type="number"
@@ -714,7 +716,73 @@ const Index = () => {
                 </div>
               </div>
 
-              {profile.disciplines?.[0] === 'Triathlon' ? (
+              {profile.disciplines?.[0] === 'Football' ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="position">Playing Position *</Label>
+                    <RadioGroup
+                      value={profile.position || ''}
+                      onValueChange={(value) => updateProfile({ position: value })}
+                    >
+                      {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map((pos) => (
+                        <div key={pos} className="flex items-center space-x-2">
+                          <RadioGroupItem value={pos} id={`pos-${pos}`} />
+                          <Label htmlFor={`pos-${pos}`} className="font-normal">{pos}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="matchesPerWeek">Matches per Week</Label>
+                    <Input
+                      id="matchesPerWeek"
+                      type="number"
+                      value={profile.matchesPerWeek || ''}
+                      onChange={(e) => updateProfile({ matchesPerWeek: parseInt(e.target.value) })}
+                      placeholder="e.g., 1-2"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="playingLevel">Playing Level</Label>
+                    <RadioGroup
+                      value={profile.playingLevel || ''}
+                      onValueChange={(value) => updateProfile({ playingLevel: value })}
+                    >
+                      {['Amateur/Recreational', 'Semi-Professional', 'Professional'].map((level) => (
+                        <div key={level} className="flex items-center space-x-2">
+                          <RadioGroupItem value={level} id={`level-${level}`} />
+                          <Label htmlFor={`level-${level}`} className="font-normal">{level}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="playingSurface">Playing Surface</Label>
+                    <RadioGroup
+                      value={profile.playingSurface || ''}
+                      onValueChange={(value) => updateProfile({ playingSurface: value })}
+                    >
+                      {['Natural Grass', 'Artificial Turf', 'Both'].map((surface) => (
+                        <div key={surface} className="flex items-center space-x-2">
+                          <RadioGroupItem value={surface} id={`surface-${surface}`} />
+                          <Label htmlFor={`surface-${surface}`} className="font-normal">{surface}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="avgDistanceCovered">Average Distance Covered per Match (km)</Label>
+                    <Input
+                      id="avgDistanceCovered"
+                      type="number"
+                      step="0.1"
+                      value={profile.avgDistanceCovered || ''}
+                      onChange={(e) => updateProfile({ avgDistanceCovered: parseFloat(e.target.value) })}
+                      placeholder="e.g., 10-12 km for outfield players"
+                    />
+                  </div>
+                </div>
+              ) : profile.disciplines?.[0] === 'Triathlon' ? (
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="swimPace">Swim Pace</Label>
@@ -776,19 +844,21 @@ const Index = () => {
                 </div>
               )}
 
-              <div>
-                <div className="flex items-center">
-                  <Label htmlFor="elevationGain">Elevation Gain per Session (m)</Label>
-                  <InfoTooltip content="Total uphill climbing during your activity. More climbing = higher energy demand and fluid loss. Check your GPS watch or route profile." />
+              {profile.disciplines?.[0] !== 'Football' && (
+                <div>
+                  <div className="flex items-center">
+                    <Label htmlFor="elevationGain">Elevation Gain per Session (m)</Label>
+                    <InfoTooltip content="Total uphill climbing during your activity. More climbing = higher energy demand and fluid loss. Check your GPS watch or route profile." />
+                  </div>
+                  <Input
+                    id="elevationGain"
+                    type="number"
+                    value={profile.elevationGain || ''}
+                    onChange={(e) => updateProfile({ elevationGain: parseInt(e.target.value) })}
+                    placeholder="Meters"
+                  />
                 </div>
-                <Input
-                  id="elevationGain"
-                  type="number"
-                  value={profile.elevationGain || ''}
-                  onChange={(e) => updateProfile({ elevationGain: parseInt(e.target.value) })}
-                  placeholder="Meters"
-                />
-              </div>
+              )}
 
               <div>
                 <Label htmlFor="trainingFrequency">Training Frequency per Week</Label>

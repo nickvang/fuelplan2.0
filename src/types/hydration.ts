@@ -23,6 +23,13 @@ export interface HydrationProfile {
   trainingFrequency?: number;
   indoorOutdoor: 'indoor' | 'outdoor' | 'both';
   
+  // Football-specific fields
+  position?: string;
+  matchesPerWeek?: number;
+  playingLevel?: string;
+  playingSurface?: string;
+  avgDistanceCovered?: number;
+  
   // 3. Environment Data
   trainingTempRange: { min: number; max: number };
   raceTempRange?: { min: number; max: number };
