@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { HydrationProfile } from '@/types/hydration';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
+import { validateAndSanitizeProfile } from '@/utils/profileValidation';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
@@ -13,6 +14,7 @@ import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
@@ -189,10 +191,13 @@ const Index = () => {
   const handleComplete = async () => {
     if (isStepValid()) {
       try {
+        // Validate and sanitize profile data before submission
+        const validatedProfile = validateAndSanitizeProfile(profile);
+        
         // Save profile data to backend with GDPR compliance
         const { error } = await supabase.functions.invoke('save-hydration-profile', {
           body: {
-            profile,
+            profile: validatedProfile,
             plan: calculateHydrationPlan(profile as HydrationProfile),
             hasSmartWatchData: !!analyzedData && smartwatchData.length > 0,
             consentGiven,
@@ -201,12 +206,23 @@ const Index = () => {
         });
 
         if (error) {
-          console.error('Error saving profile:', error);
-          // Continue showing plan even if save fails
+          if (import.meta.env.DEV) {
+            console.error('Error saving profile:', error);
+          }
+          toast.error('Failed to save profile. Your hydration plan will still be displayed.');
         }
       } catch (error) {
-        console.error('Failed to save profile:', error);
-        // Continue showing plan even if save fails
+        if (import.meta.env.DEV) {
+          console.error('Failed to save profile:', error);
+        }
+        
+        // Show validation error to user
+        if (error instanceof Error) {
+          toast.error(error.message);
+          return; // Don't show plan if validation fails
+        }
+        
+        toast.error('Failed to save profile. Your hydration plan will still be displayed.');
       }
       
       setShowPlan(true);

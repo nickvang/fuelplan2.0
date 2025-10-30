@@ -112,7 +112,7 @@ export default function Admin() {
       ['Exported', new Date().toLocaleString()],
       ['Total Records', profiles.length],
       ['', ''],
-      ['ID', 'Created At', 'Email', 'IP Address', 'Consent', 'Smartwatch Data', 'Age', 'Sex', 'Weight', 'Height', 'Discipline', 'Session Duration', 'Pre-Water', 'During-Water/Hr', 'Post-Water'],
+      ['ID', 'Created At', 'Email', 'Consent', 'Smartwatch Data', 'Age', 'Sex', 'Weight', 'Height', 'Discipline', 'Session Duration', 'Pre-Water', 'During-Water/Hr', 'Post-Water'],
     ];
 
     profiles.forEach(profile => {
@@ -123,7 +123,6 @@ export default function Admin() {
         profile.id,
         new Date(profile.created_at).toLocaleString(),
         profile.user_email || 'Anonymous',
-        profile.ip_address || 'N/A',
         profile.consent_given ? 'Yes' : 'No',
         profile.has_smartwatch_data ? 'Yes' : 'No',
         pd.age || 'N/A',
