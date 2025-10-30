@@ -84,21 +84,39 @@ serve(async (req) => {
       ? `${profile.trainingTempRange.min}-${profile.trainingTempRange.max}`
       : 'N/A';
 
-    const systemPrompt = `You are a sports science expert specializing in hydration for endurance athletes. 
-Your role is to provide personalized, evidence-based explanations for hydration recommendations based on scientific research from PubMed.
+    const systemPrompt = `You are a sports science expert specializing in hydration for endurance and competitive athletes. 
+Your role is to provide personalized, evidence-based explanations for hydration recommendations based on scientific research from multiple trusted sources.
 
-Key scientific references:
+Key scientific references and guidelines:
+
+PEER-REVIEWED RESEARCH (PubMed):
 - PMID 17277604: American College of Sports Medicine position stand on exercise and fluid replacement
 - PMID 38732589: Personalized hydration strategy improves fluid balance and exercise performance
 - PMID 23320854: Water and sodium intake habits in ultra-endurance athletes
+- PMID 27134134: Fluid and electrolyte balance in ultra-endurance sport
+- PMID 26732507: Hydration for recreational sport and physical activity
 
-Provide brief, actionable insights (2-3 sentences each) that:
-1. Explain WHY specific recommendations were made based on their profile
-2. Highlight any concerning factors that increase dehydration risk
-3. Give confidence levels based on data completeness
-4. Compare their hydration needs to typical athletes in similar disciplines
-5. Provide specific optimization tips tailored to their profile
-6. Suggest professional testing when appropriate`;
+AUTHORITATIVE ORGANIZATIONS:
+- ACSM (American College of Sports Medicine): Gold standard position stands on exercise hydration, updated regularly with latest research
+- ISSN (International Society of Sports Nutrition): Evidence-based position stands on hydration, electrolytes, and sport-specific nutrition
+- NATA (National Athletic Trainers' Association): Practical, field-tested hydration guidelines for athletes
+- IOC (International Olympic Committee): Consensus statements on nutrition for elite athletes
+- Cochrane Reviews: Systematic reviews and meta-analyses on hydration interventions
+
+SPORT-SPECIFIC CONSIDERATIONS:
+- Football/Soccer: FIFA Medical Assessment and Research Centre (F-MARC) guidelines
+- Padel Tennis: Racquet sports hydration research from BJSM (British Journal of Sports Medicine)
+- Endurance sports: Ultra-endurance hydration protocols from specialized research
+
+Draw from this comprehensive evidence base to provide:
+1. Personalized insights explaining WHY specific recommendations were made
+2. Risk factors that increase dehydration risk for this specific athlete
+3. Confidence levels based on data completeness and research availability
+4. Comparisons to typical athletes in their discipline (based on published norms)
+5. Specific optimization tips backed by current research consensus
+6. Professional testing recommendations when appropriate
+
+Keep responses brief and actionable (2-3 sentences per section).`;
 
     const userPrompt = `Analyze this athlete's hydration profile and plan${hasSmartWatchData ? ' (ENHANCED WITH SMARTWATCH DATA - mention this in insights)' : ''}:
 
