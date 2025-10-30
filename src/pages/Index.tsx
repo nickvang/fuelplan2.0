@@ -368,7 +368,7 @@ const Index = () => {
               <div className="space-y-4">
                 <Label className="text-base font-semibold">{t('version.select')}</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  {/* Simple Version Button */}
+                  {/* Quick Version Button */}
                   <button
                     type="button"
                     onClick={() => setVersion('simple')}
@@ -379,10 +379,7 @@ const Index = () => {
                     }`}
                   >
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="text-2xl">⚡</div>
-                        <h3 className="text-xl font-bold">{t('version.simple.title')}</h3>
-                      </div>
+                      <h3 className="text-xl font-bold">{t('version.simple.title')}</h3>
                       <p className="text-sm text-muted-foreground">
                         {t('version.simple.description')}
                       </p>
@@ -403,10 +400,7 @@ const Index = () => {
                     }`}
                   >
                     <div className="space-y-2">
-                      <div className="flex items-center gap-2">
-                        <div className="text-2xl">🎯</div>
-                        <h3 className="text-xl font-bold">{t('version.pro.title')}</h3>
-                      </div>
+                      <h3 className="text-xl font-bold">{t('version.pro.title')}</h3>
                       <p className="text-sm text-muted-foreground">
                         {t('version.pro.description')}
                       </p>
@@ -418,16 +412,16 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
-                <div className="p-4 rounded-lg bg-muted">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pointer-events-none">
+                <div className="p-4 rounded-lg border border-border bg-card">
                   <p className="text-2xl font-bold mb-1">PRE</p>
                   <p className="text-sm text-muted-foreground">{t('plan.preActivity')}</p>
                 </div>
-                <div className="p-4 rounded-lg bg-primary text-primary-foreground">
-                  <p className="text-2xl font-bold mb-1">DURING</p>
-                  <p className="text-sm opacity-90">{t('plan.duringActivity')}</p>
+                <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
+                  <p className="text-2xl font-bold mb-1 text-primary">DURING</p>
+                  <p className="text-sm text-muted-foreground">{t('plan.duringActivity')}</p>
                 </div>
-                <div className="p-4 rounded-lg bg-muted">
+                <div className="p-4 rounded-lg border border-border bg-card">
                   <p className="text-2xl font-bold mb-1">POST</p>
                   <p className="text-sm text-muted-foreground">{t('plan.postActivity')}</p>
                 </div>

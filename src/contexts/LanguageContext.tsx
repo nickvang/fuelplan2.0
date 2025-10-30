@@ -33,12 +33,12 @@ export const translations = {
     
     // Version Selection
     'version.select': 'Choose Your Experience',
-    'version.simple.title': 'Simple',
+    'version.simple.title': 'Quick',
     'version.simple.description': 'Quick hydration plan with essential info only. Perfect for getting started fast.',
-    'version.simple.time': '⏱️ 2 minutes',
+    'version.simple.time': '2 minutes',
     'version.pro.title': 'Pro (Advanced)',
     'version.pro.description': 'Comprehensive analysis with environmental factors, sweat profile, and smartwatch integration.',
-    'version.pro.time': '⏱️ 5-7 minutes',
+    'version.pro.time': '5-7 minutes',
     'common.yes': 'Yes',
     'common.no': 'No',
     'common.optional': 'Optional',
@@ -206,12 +206,12 @@ export const translations = {
     
     // Version Selection
     'version.select': 'Vælg Din Oplevelse',
-    'version.simple.title': 'Simpel',
+    'version.simple.title': 'Hurtig',
     'version.simple.description': 'Hurtig hydrationsplan med kun det nødvendige. Perfekt til at komme hurtigt i gang.',
-    'version.simple.time': '⏱️ 2 minutter',
+    'version.simple.time': '2 minutter',
     'version.pro.title': 'Pro (Avanceret)',
     'version.pro.description': 'Omfattende analyse med miljøfaktorer, svedprofil og smartwatch-integration.',
-    'version.pro.time': '⏱️ 5-7 minutter',
+    'version.pro.time': '5-7 minutter',
     'common.yes': 'Ja',
     'common.no': 'Nej',
     'common.optional': 'Valgfri',
