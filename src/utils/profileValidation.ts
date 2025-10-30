@@ -41,6 +41,7 @@ export const profileSchema = z.object({
   
   // Goals & Events
   primaryGoal: z.enum(['performance', 'endurance', 'recovery', 'weight-loss', 'general-health']).optional(),
+  hasUpcomingRace: z.boolean().optional(),
   upcomingEvent: z.string().max(200, "Event description too long").optional(),
   concerns: z.string().max(500, "Concerns text too long").optional(),
   
@@ -62,6 +63,9 @@ export const sanitizeString = (str: string | undefined): string | undefined => {
 // Validate and sanitize profile before submission
 export const validateAndSanitizeProfile = (profile: any) => {
   // Sanitize string fields
+  if (profile.upcomingEvents) {
+    profile.upcomingEvents = sanitizeString(profile.upcomingEvents);
+  }
   if (profile.upcomingEvent) {
     profile.upcomingEvent = sanitizeString(profile.upcomingEvent);
   }

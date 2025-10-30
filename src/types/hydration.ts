@@ -74,6 +74,7 @@ export interface HydrationProfile {
   performanceGoal?: string;
   pastIssues?: string;
   primaryGoal: 'performance' | 'health' | 'weight-loss' | 'endurance';
+  hasUpcomingRace?: boolean;
   upcomingEvents?: string;
   specificConcerns?: string;
   

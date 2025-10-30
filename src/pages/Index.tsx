@@ -875,6 +875,42 @@ const Index = () => {
                 </div>
               </div>
 
+              {/* Race Planning Section */}
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
+                <h3 className="font-semibold text-sm">Race Day Planning</h3>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="hasUpcomingRace"
+                    checked={profile.hasUpcomingRace || false}
+                    onCheckedChange={(checked) => {
+                      updateProfile({ hasUpcomingRace: checked as boolean });
+                      if (!checked) {
+                        updateProfile({ upcomingEvents: '' });
+                      }
+                    }}
+                  />
+                  <Label htmlFor="hasUpcomingRace" className="font-normal">
+                    I want a race-specific hydration guide
+                  </Label>
+                </div>
+                
+                {profile.hasUpcomingRace && (
+                  <div>
+                    <Label htmlFor="upcomingEvents">Your Upcoming Race</Label>
+                    <Input
+                      id="upcomingEvents"
+                      value={profile.upcomingEvents || ''}
+                      onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
+                      placeholder="e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 100K"
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      We'll create a specialized race day hydration strategy based on your event
+                    </p>
+                  </div>
+                )}
+              </div>
+
               {profile.disciplines?.[0] === 'Padel Tennis' ? (
                 <div className="space-y-4">
                   <div>
