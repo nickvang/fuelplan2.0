@@ -22,6 +22,7 @@ import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
   const { t } = useLanguage();
+  const [version, setVersion] = useState<'simple' | 'pro' | null>(null); // Version selection
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -36,6 +37,16 @@ const Index = () => {
     indoorOutdoor: 'outdoor',
     primaryGoal: 'performance',
     disciplines: [],
+    // Simple mode defaults
+    trainingTempRange: { min: 15, max: 20 },
+    humidity: 50,
+    altitude: 'sea-level',
+    sunExposure: 'partial',
+    windConditions: 'calm',
+    clothingType: 'light',
+    sweatRate: 'medium',
+    sweatSaltiness: 'medium',
+    dailySaltIntake: 'medium',
   });
 
   const updateProfile = (updates: Partial<HydrationProfile>) => {
@@ -71,24 +82,42 @@ const Index = () => {
     }
   };
 
-  // Determine which steps to skip based on analyzed data
+  // Determine which steps to skip based on analyzed data and version
   const shouldSkipStep = (stepNumber: number): boolean => {
     if (!analyzedData) return false;
     
+    // Simple mode only has steps 1 (body) and 2 (activity)
+    if (version === 'simple') {
+      return false; // Never skip in simple mode
+    }
+    
+    // Pro mode step skipping
     switch (stepNumber) {
-      case 1: // Body & Physiology
-        return !!(analyzedData.age && analyzedData.weight && analyzedData.height && analyzedData.sex);
-      case 2: // Activity & Terrain - NEVER SKIP, user must choose
+      case 1: // Body & Physiology - skip if we have all data
+        return !!(analyzedData.age && analyzedData.restingHeartRate);
+      case 2: // Activity & Terrain - NEVER SKIP
         return false;
-      case 4: // Sweat Profile
+      case 3: // Environmental Conditions - skip if we have data
+        return false; // Never skip, user must choose
+      case 4: // Sweat Profile - skip if we have inferred data
         return !!(analyzedData.sweatRate && analyzedData.sweatSaltiness);
       default:
         return false;
     }
   };
 
-  // Get next non-skipped step
+  // Get next non-skipped step based on version
   const getNextStep = (currentStep: number): number => {
+    if (version === 'simple') {
+      // Simple mode: 0 (consent) -> 1 (body) -> 2 (activity) -> complete
+      const simpleSteps = [0, 1, 2];
+      const currentIndex = simpleSteps.indexOf(currentStep);
+      return currentIndex >= 0 && currentIndex < simpleSteps.length - 1 
+        ? simpleSteps[currentIndex + 1] 
+        : 999; // Complete
+    }
+    
+    // Pro mode: skip based on smartwatch data
     let nextStep = currentStep + 1;
     while (nextStep <= 6 && shouldSkipStep(nextStep)) {
       nextStep++;
@@ -99,10 +128,15 @@ const Index = () => {
   const isStepValid = (): boolean => {
     switch (step) {
       case 0:
-        return consentGiven;
+        return version !== null && consentGiven;
       case 1:
         return !!(profile.age && profile.sex && profile.height && profile.weight);
       case 2:
+        // Simple mode: just need basic activity info
+        if (version === 'simple') {
+          return !!(profile.disciplines && profile.disciplines.length > 0 && profile.sessionDuration);
+        }
+        // Pro mode: need full activity details
         return !!(profile.disciplines && profile.disciplines.length > 0 && profile.sessionDuration && profile.indoorOutdoor);
       case 3:
         return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
@@ -126,7 +160,13 @@ const Index = () => {
       updateProfile(data);
       setStep(getNextStep(0));
     } else {
-      setStep(getNextStep(step));
+      const nextStep = getNextStep(step);
+      if (nextStep === 999) {
+        // Simple mode complete
+        handleComplete();
+      } else {
+        setStep(nextStep);
+      }
     }
   };
 
@@ -181,11 +221,13 @@ const Index = () => {
   };
 
   const handleReset = () => {
+    setVersion(null);
     setStep(0);
     setShowPlan(false);
     setConsentGiven(false);
     setSmartWatchData([]);
     setAnalyzedData(null);
+    setRawSmartWatchData(null);
     setIsAnalyzing(false);
     setProfile({
       sex: 'male',
@@ -195,6 +237,12 @@ const Index = () => {
       dailySaltIntake: 'medium',
       primaryGoal: 'performance',
       disciplines: [],
+      trainingTempRange: { min: 15, max: 20 },
+      humidity: 50,
+      altitude: 'sea-level',
+      sunExposure: 'partial',
+      windConditions: 'calm',
+      clothingType: 'light',
     });
   };
 
@@ -262,7 +310,7 @@ const Index = () => {
         />
 
         {/* Progress */}
-        {step > 0 && !isAnalyzing && <ProgressBar currentStep={step} totalSteps={6} />}
+        {step > 0 && !isAnalyzing && <ProgressBar currentStep={step} totalSteps={version === 'simple' ? 2 : 6} />}
 
         {/* Analyzing Indicator */}
         {isAnalyzing && (
@@ -306,7 +354,7 @@ const Index = () => {
           </div>
         )}
 
-        {/* STEP 0: Welcome & Consent */}
+        {/* STEP 0: Version Selection & Consent */}
         {step === 0 && !isAnalyzing && (
           <QuestionnaireStep
             title={t('app.title')}
@@ -316,6 +364,60 @@ const Index = () => {
             nextButtonText={t('common.start')}
           >
             <div className="py-6 space-y-6">
+              {/* Version Selection */}
+              <div className="space-y-4">
+                <Label className="text-base font-semibold">{t('version.select')}</Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Simple Version Button */}
+                  <button
+                    type="button"
+                    onClick={() => setVersion('simple')}
+                    className={`p-6 rounded-lg border-2 transition-all text-left ${
+                      version === 'simple'
+                        ? 'border-primary bg-primary/5 shadow-md'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-2xl">⚡</div>
+                        <h3 className="text-xl font-bold">{t('version.simple.title')}</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {t('version.simple.description')}
+                      </p>
+                      <div className="text-xs text-muted-foreground mt-3">
+                        <strong>{t('version.simple.time')}</strong>
+                      </div>
+                    </div>
+                  </button>
+
+                  {/* Pro Version Button */}
+                  <button
+                    type="button"
+                    onClick={() => setVersion('pro')}
+                    className={`p-6 rounded-lg border-2 transition-all text-left ${
+                      version === 'pro'
+                        ? 'border-primary bg-primary/5 shadow-md'
+                        : 'border-border hover:border-primary/50'
+                    }`}
+                  >
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-2">
+                        <div className="text-2xl">🎯</div>
+                        <h3 className="text-xl font-bold">{t('version.pro.title')}</h3>
+                      </div>
+                      <p className="text-sm text-muted-foreground">
+                        {t('version.pro.description')}
+                      </p>
+                      <div className="text-xs text-muted-foreground mt-3">
+                        <strong>{t('version.pro.time')}</strong>
+                      </div>
+                    </div>
+                  </button>
+                </div>
+              </div>
+
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">PRE</p>
@@ -331,8 +433,9 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Optional Smartwatch Upload */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 sm:p-6 rounded-lg space-y-4">
+              {/* Optional Smartwatch Upload - Pro version only */}
+              {version === 'pro' && (
+                <div className="bg-blue-50 dark:bg-blue-950/30 p-4 sm:p-6 rounded-lg space-y-4">
                 <div>
                   <h4 className="font-medium text-sm sm:text-base">{t('upload.title')} <span className="text-blue-600">({t('common.optional')})</span></h4>
                   <p className="text-xs sm:text-sm text-muted-foreground mt-1">
@@ -409,6 +512,7 @@ const Index = () => {
                   )}
                 </div>
               </div>
+              )}
               
               <div className="bg-muted/50 p-4 sm:p-6 rounded-lg space-y-4">
                 <h3 className="font-medium text-base sm:text-lg">{t('gdpr.title')}</h3>
