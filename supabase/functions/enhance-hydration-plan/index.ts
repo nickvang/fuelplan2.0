@@ -11,8 +11,8 @@ serve(async (req) => {
   }
 
   try {
-    const { profile, plan } = await req.json();
-    console.log('Enhancing hydration plan with AI...');
+    const { profile, plan, hasSmartWatchData } = await req.json();
+    console.log('Enhancing hydration plan with AI...', hasSmartWatchData ? '(with smartwatch data)' : '');
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -35,7 +35,7 @@ Provide brief, actionable insights (2-3 sentences each) that:
 5. Provide specific optimization tips tailored to their profile
 6. Suggest professional testing when appropriate`;
 
-    const userPrompt = `Analyze this athlete's hydration profile and plan:
+    const userPrompt = `Analyze this athlete's hydration profile and plan${hasSmartWatchData ? ' (ENHANCED WITH SMARTWATCH DATA - mention this in insights)' : ''}:
 
 PROFILE:
 - Weight: ${profile.weight}kg, Age: ${profile.age}, Sex: ${profile.sex}

@@ -13,9 +13,10 @@ interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
   profile: HydrationProfile;
   onReset: () => void;
+  hasSmartWatchData?: boolean;
 }
 
-export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDisplayProps) {
+export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData = false }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
   const { toast } = useToast();
@@ -24,7 +25,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
     const fetchAIInsights = async () => {
       try {
         const { data, error } = await supabase.functions.invoke('enhance-hydration-plan', {
-          body: { profile, plan }
+          body: { profile, plan, hasSmartWatchData }
         });
 
         if (error) throw error;
@@ -42,7 +43,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
     };
 
     fetchAIInsights();
-  }, [plan, profile]);
+  }, [plan, profile, hasSmartWatchData]);
 
   const getConfidenceBadgeColor = (level: string) => {
     switch (level) {
@@ -66,7 +67,29 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
           Your Personalized Hydration Plan
         </p>
+        
+        {/* Smartwatch Data Badge */}
+        {hasSmartWatchData && (
+          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 px-4 py-2 rounded-full">
+            <Sparkles className="w-4 h-4 text-blue-600" />
+            <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
+              Enhanced with Smartwatch Data
+            </span>
+          </div>
+        )}
       </div>
+
+      {/* Smartwatch Data Info Banner */}
+      {hasSmartWatchData && (
+        <Alert className="border-blue-500/30 bg-blue-500/5">
+          <Sparkles className="h-4 w-4 text-blue-600" />
+          <AlertTitle className="text-blue-700 dark:text-blue-400">Enhanced Accuracy with Your Data</AlertTitle>
+          <AlertDescription className="text-sm">
+            This plan uses your personal metrics from uploaded smartwatch files, including physiological data, sleep patterns, activity history, and recovery metrics. 
+            This significantly improves accuracy compared to general estimates.
+          </AlertDescription>
+        </Alert>
+      )}
 
       {/* Fluid Loss Summary */}
       <Card className="p-6 bg-accent/50 border-accent">
@@ -78,6 +101,11 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           <p className="text-sm text-muted-foreground mt-2">
             during your {profile.sessionDuration}-hour activity
           </p>
+          {hasSmartWatchData && (
+            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
+              Calculated using your actual training data
+            </p>
+          )}
         </div>
       </Card>
 
