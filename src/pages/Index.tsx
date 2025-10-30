@@ -1091,7 +1091,7 @@ const Index = () => {
                   <InfoTooltip content="Low: minimal processed foods, no added salt. Medium: normal diet with some salt. High: salty foods regularly, add salt to meals." />
                 </div>
                 <RadioGroup
-                  value={profile.dailySaltIntake || 'medium'}
+                  value={profile.dailySaltIntake || ''}
                   onValueChange={(value) => updateProfile({ dailySaltIntake: value as 'low' | 'medium' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">

@@ -294,7 +294,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
                     <ul className="space-y-2 text-sm">
                       <li>• <strong>Swim:</strong> Pre-loaded from pre-race sachet</li>
                       <li>• <strong>T1 Transition:</strong> Take 1 Supplme sachet</li>
-                      <li>• <strong>Bike:</strong> 1 sachet every 45-60 minutes + {Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour</li>
+                      <li>• <strong>Bike:</strong> 1 sachet every 45-60 minutes{plan.duringActivity.waterPerHour > 0 ? ` + ${Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour` : ''}</li>
                       <li>• <strong>T2 Transition:</strong> Take 1 Supplme sachet</li>
                       <li>• <strong>Run:</strong> 1 sachet every 30-45 minutes at aid stations + water as tolerated</li>
                     </ul>
@@ -302,20 +302,26 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
                 ) : profile.disciplines?.[0] === 'Run' ? (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>Every 30 minutes:</strong> 1 Supplme sachet at aid station</li>
-                    <li>• Drink {Math.round(plan.duringActivity.waterPerHour / 2)}ml water every 15 minutes</li>
+                    {plan.duringActivity.waterPerHour > 0 && (
+                      <li>• Drink {Math.round(plan.duringActivity.waterPerHour / 2)}ml water every 15 minutes</li>
+                    )}
                     <li>• For marathons: Aim for 3-4 sachets total during race</li>
                     <li>• For ultras: 1 sachet per hour minimum</li>
                   </ul>
                 ) : profile.disciplines?.[0] === 'Bike' ? (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>Every 45-60 minutes:</strong> 1 Supplme sachet</li>
-                    <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour in small sips</li>
+                    {plan.duringActivity.waterPerHour > 0 && (
+                      <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour in small sips</li>
+                    )}
                     <li>• Keep sachets in jersey pocket or bike bag for easy access</li>
                   </ul>
                 ) : (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>Every 30-45 minutes:</strong> 1 Supplme sachet</li>
-                    <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour</li>
+                    {plan.duringActivity.waterPerHour > 0 && (
+                      <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour</li>
+                    )}
                     <li>• Adjust based on aid station availability</li>
                   </ul>
                 )}
