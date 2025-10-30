@@ -331,9 +331,9 @@ const Index = () => {
             <div className="flex items-center justify-center gap-3">
               <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
               <div className="space-y-1">
-                <p className="font-semibold text-primary">Analyzing Your Data...</p>
+                <p className="font-semibold text-primary">{t('analyzing.title')}</p>
                 <p className="text-sm text-muted-foreground">
-                  Processing {smartwatchData.length} file(s) to extract your health metrics
+                  {t('analyzing.processing').replace('{count}', smartwatchData.length.toString())}
                 </p>
               </div>
             </div>
@@ -344,16 +344,16 @@ const Index = () => {
         {analyzedData && step > 0 && (
           <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-              ✓ Data analysis complete! We pre-filled:
+              {t('analysis.complete')}
             </p>
             <ul className="text-xs text-green-600 dark:text-green-400 mt-2 space-y-1">
-              {analyzedData.age && <li>• Age and body metrics</li>}
-              {analyzedData.restingHeartRate && <li>• Resting heart rate</li>}
-              {analyzedData.hrv && <li>• Heart rate variability</li>}
-              {analyzedData.disciplines && <li>• Activity data (for reference - you still choose your guide)</li>}
+              {analyzedData.age && <li>{t('analysis.ageMetrics')}</li>}
+              {analyzedData.restingHeartRate && <li>{t('analysis.restingHR')}</li>}
+              {analyzedData.hrv && <li>{t('analysis.hrv')}</li>}
+              {analyzedData.disciplines && <li>{t('analysis.activityData')}</li>}
             </ul>
             <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-              Skipping questions we could answer from your data.
+              {t('analysis.skipping')}
             </p>
           </div>
         )}
@@ -404,7 +404,7 @@ const Index = () => {
                   {/* Multiple Files Upload */}
                   <div>
                     <Label htmlFor="smartwatch-files" className="text-sm font-medium mb-2 block">
-                      Upload Multiple Files
+                      {t('smartwatch.multipleFiles')}
                     </Label>
                     <Input
                       id="smartwatch-files"
@@ -425,7 +425,7 @@ const Index = () => {
                   {/* Folder Upload */}
                   <div>
                     <Label htmlFor="smartwatch-folder" className="text-sm font-medium mb-2 block">
-                      Or Upload Entire Folder
+                      {t('smartwatch.uploadFolder')}
                     </Label>
                     <Input
                       id="smartwatch-folder"
@@ -448,7 +448,7 @@ const Index = () => {
                   {smartwatchData.length > 0 && (
                     <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
                       <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
-                        ✓ {smartwatchData.length} file(s) uploaded:
+                        {t('smartwatch.uploaded').replace('{count}', smartwatchData.length.toString())}
                       </p>
                       <div className="max-h-32 overflow-y-auto space-y-1">
                         {smartwatchData.map((file, index) => (
@@ -458,6 +458,7 @@ const Index = () => {
                               type="button"
                               onClick={() => setSmartWatchData(prev => prev.filter((_, i) => i !== index))}
                               className="ml-2 text-red-500 hover:text-red-700"
+                              aria-label={t('smartwatch.remove')}
                             >
                               ✕
                             </button>
@@ -470,37 +471,37 @@ const Index = () => {
               </div>
               
               <div className="bg-muted/50 p-4 sm:p-6 rounded-lg space-y-4">
-                <h3 className="font-medium text-base sm:text-lg">Data Privacy & GDPR Compliance</h3>
+                <h3 className="font-medium text-base sm:text-lg">{t('gdpr.title')}</h3>
                 
                 <div className="space-y-3 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   <div>
-                    <p className="font-semibold text-foreground mb-1">🤖 AI-Powered Recommendations</p>
-                    <p>This tool uses artificial intelligence to generate personalized hydration recommendations based on peer-reviewed scientific research from PubMed.</p>
+                    <p className="font-semibold text-foreground mb-1">{t('gdpr.ai.title')}</p>
+                    <p>{t('gdpr.ai.description')}</p>
                   </div>
 
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="gdpr-details" className="border-none">
                       <AccordionTrigger className="text-sm font-semibold text-foreground hover:no-underline py-2">
-                        🇪🇺 GDPR Compliance - See more
+                        {t('gdpr.compliance.title')}
                       </AccordionTrigger>
                       <AccordionContent className="space-y-3 pt-2">
-                        <p>We comply with EU GDPR and Danish data protection laws:</p>
+                        <p>{t('gdpr.compliance.intro')}</p>
                         <ul className="list-disc pl-5 space-y-1">
-                          <li><strong>Data Collection:</strong> Your data is collected anonymously with explicit consent (GDPR Art. 6(1)(a))</li>
-                          <li><strong>Purpose:</strong> Data used solely for product development and improving hydration recommendations</li>
-                          <li><strong>Storage:</strong> Data stored securely for max 2 years, then automatically deleted (GDPR Art. 5(1)(e))</li>
-                          <li><strong>Your Rights:</strong> You can request data deletion at any time by contacting us</li>
-                          <li><strong>No Third Parties:</strong> Data never sold or shared with third parties</li>
-                          <li><strong>Anonymization:</strong> All data anonymized - no personally identifiable information stored unless you choose to provide email</li>
+                          <li><strong>{t('gdpr.dataCollection')}:</strong> {t('gdpr.dataCollection.text')}</li>
+                          <li><strong>{t('gdpr.purpose')}:</strong> {t('gdpr.purpose.text')}</li>
+                          <li><strong>{t('gdpr.storage')}:</strong> {t('gdpr.storage.text')}</li>
+                          <li><strong>{t('gdpr.rights')}:</strong> {t('gdpr.rights.text')}</li>
+                          <li><strong>{t('gdpr.noThirdParties')}:</strong> {t('gdpr.noThirdParties.text')}</li>
+                          <li><strong>{t('gdpr.anonymization')}:</strong> {t('gdpr.anonymization.text')}</li>
                         </ul>
 
                         <div className="pt-2">
-                          <p className="font-semibold text-foreground mb-1">🔒 Security</p>
-                          <p>Data encrypted in transit and at rest. Compliant with industry standards.</p>
+                          <p className="font-semibold text-foreground mb-1">{t('gdpr.security.title')}</p>
+                          <p>{t('gdpr.security.text')}</p>
                         </div>
 
                         <div className="text-xs text-muted-foreground pt-2 border-t">
-                          <p>Contact: For data deletion requests or privacy questions, email info@supplme.com</p>
+                          <p>{t('gdpr.contact')}</p>
                         </div>
                       </AccordionContent>
                     </AccordionItem>
@@ -532,7 +533,7 @@ const Index = () => {
         {/* STEP 1: Body & Physiology */}
         {step === 1 && !isAnalyzing && (
           <QuestionnaireStep
-            title="1. Body & Physiology"
+            title={t('step.1.title')}
             description={analyzedData ? "Complete any missing information" : "Basic information to calculate your hydration needs"}
             onNext={handleNextStep}
             onBack={() => setStep(0)}
@@ -701,7 +702,7 @@ const Index = () => {
         {/* STEP 2: Activity & Terrain */}
         {step === 2 && !isAnalyzing && (
           <QuestionnaireStep
-            title="2. Activity & Terrain"
+            title={t('step.2.title')}
             description="Choose which activity guide you want"
             onNext={handleNextStep}
             onBack={() => setStep(1)}
@@ -1034,7 +1035,7 @@ const Index = () => {
         {/* STEP 3: Environment Data */}
         {step === 3 && !isAnalyzing && (
           <QuestionnaireStep
-            title="3. Environment Data"
+            title={t('step.3.title')}
             description="Training conditions affect your hydration needs"
             onNext={handleNextStep}
             onBack={() => setStep(2)}
@@ -1211,7 +1212,7 @@ const Index = () => {
         {/* STEP 4: Sweat Profile */}
         {step === 4 && !isAnalyzing && (
           <QuestionnaireStep
-            title="4. Sweat Profile"
+            title={t('step.4.title')}
             description={analyzedData ? "Complete any missing information" : "Understanding your sweat rate and saltiness helps optimize electrolyte intake"}
             onNext={handleNextStep}
             onBack={() => setStep(3)}
@@ -1333,7 +1334,7 @@ const Index = () => {
         {/* STEP 5: Dietary Habits */}
         {step === 5 && !isAnalyzing && (
           <QuestionnaireStep
-            title="5. Dietary Habits"
+            title={t('step.5.title')}
             description="Your everyday nutrition affects hydration needs"
             onNext={handleNextStep}
             onBack={() => setStep(4)}
@@ -1417,7 +1418,7 @@ const Index = () => {
         {/* STEP 6: Goals & Events */}
         {step === 6 && !isAnalyzing && (
           <QuestionnaireStep
-            title="6. Goals & Events"
+            title={t('step.6.title')}
             description="Help us tailor your plan to your objectives"
             onNext={handleComplete}
             onBack={() => setStep(5)}
