@@ -27,7 +27,7 @@ export interface HydrationProfile {
   altitude: 'sea-level' | 'moderate' | 'high';
   sunExposure: 'shade' | 'partial' | 'full-sun';
   windConditions: 'calm' | 'moderate' | 'windy';
-  clothingType: 'light' | 'compression' | 'layers';
+  clothingType: 'minimal' | 'light' | 'moderate' | 'heavy';
   climate?: string;
   
   // 4. Hydration & Sweat Data
@@ -35,8 +35,9 @@ export interface HydrationProfile {
   sweatSaltiness: 'low' | 'medium' | 'high';
   fluidIntake?: number;
   urineColor?: number;
-  crampTiming?: 'during' | 'after' | 'night' | 'none';
+  crampTiming?: 'none' | 'early' | 'mid' | 'late' | 'post';
   dehydrationSymptoms?: string[];
+  hydrationStrategy?: string;
   
   // 5. Nutrition & Fueling
   fuelingStrategy?: string;
@@ -44,6 +45,10 @@ export interface HydrationProfile {
   recoveryWindow?: number;
   caffeineStrategy?: 'pre' | 'mid' | 'post' | 'none';
   dailySaltIntake: 'low' | 'medium' | 'high';
+  dailyWaterIntake?: number;
+  caffeineIntake?: number;
+  dietType?: string;
+  nutritionNotes?: string;
   otherSupplements?: string;
   specialDiet?: string;
   
@@ -51,7 +56,9 @@ export interface HydrationProfile {
   targetEvents?: string;
   performanceGoal?: string;
   pastIssues?: string;
-  primaryGoal: 'performance' | 'recovery' | 'daily-hydration' | 'completion';
+  primaryGoal: 'performance' | 'health' | 'weight-loss' | 'endurance';
+  upcomingEvents?: string;
+  specificConcerns?: string;
   
   // 7. Optional Data
   weeklyVolume?: number;

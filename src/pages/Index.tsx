@@ -4,16 +4,18 @@ import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
+import { InfoTooltip } from '@/components/InfoTooltip';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import { Droplets } from 'lucide-react';
+import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
+  const [consentGiven, setConsentGiven] = useState(false);
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
     indoorOutdoor: 'outdoor',
@@ -35,7 +37,7 @@ const Index = () => {
   const isStepValid = (): boolean => {
     switch (step) {
       case 0:
-        return true; // Welcome
+        return consentGiven;
       case 1:
         return !!(profile.age && profile.sex && profile.height && profile.weight);
       case 2:
@@ -63,6 +65,7 @@ const Index = () => {
   const handleReset = () => {
     setStep(0);
     setShowPlan(false);
+    setConsentGiven(false);
     setProfile({
       sex: 'male',
       indoorOutdoor: 'outdoor',
@@ -103,27 +106,26 @@ const Index = () => {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-            <Droplets className="w-8 h-8 text-primary" />
+          <div className="inline-flex items-center justify-center mb-4">
+            <img src={supplmeLogo} alt="SUPPLME" className="h-20" />
           </div>
-          <h1 className="text-4xl font-bold tracking-tight">SUPPLME</h1>
           <p className="text-xl text-muted-foreground">
-            Endurance & Trail Hydration Profile
+            Your personalized hydration plan
           </p>
         </div>
 
         {/* Progress */}
         {step > 0 && <ProgressBar currentStep={step} totalSteps={6} />}
 
-        {/* STEP 0: Welcome */}
+        {/* STEP 0: Welcome & Consent */}
         {step === 0 && (
           <QuestionnaireStep
-            title="Master Your Hydration Strategy"
+            title="Welcome"
             description="Get a science-backed hydration plan tailored to your physiology, activity, and environment."
             onNext={() => setStep(1)}
-            isValid={true}
+            isValid={isStepValid()}
           >
-            <div className="py-6 space-y-4">
+            <div className="py-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
                 <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">PRE</p>
@@ -138,7 +140,32 @@ const Index = () => {
                   <p className="text-sm text-muted-foreground">Recovery</p>
                 </div>
               </div>
-              <p className="text-center text-sm text-muted-foreground pt-4">
+              
+              <div className="bg-muted/50 p-6 rounded-lg space-y-4">
+                <h3 className="font-medium text-lg">Data Usage & AI Notice</h3>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  This tool uses artificial intelligence to generate personalized hydration recommendations based on peer-reviewed scientific research from PubMed.
+                </p>
+                <p className="text-sm text-muted-foreground leading-relaxed">
+                  By continuing, you agree to share your data anonymously with Supplme. This data will be used to develop and improve our products and recommendations.
+                </p>
+                
+                <div className="flex items-start space-x-3 pt-4">
+                  <Checkbox 
+                    id="consent" 
+                    checked={consentGiven}
+                    onCheckedChange={(checked) => setConsentGiven(checked === true)}
+                  />
+                  <label
+                    htmlFor="consent"
+                    className="text-sm font-medium leading-relaxed cursor-pointer"
+                  >
+                    I agree to share my data anonymously with Supplme for product development and improvement
+                  </label>
+                </div>
+              </div>
+              
+              <p className="text-center text-sm text-muted-foreground pt-2">
                 Designed for endurance athletes: trail runners, triathletes, and ultra competitors
               </p>
             </div>
@@ -167,7 +194,10 @@ const Index = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="weight">Weight (kg) *</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="weight">Weight (kg) *</Label>
+                    <InfoTooltip content="Your body weight affects fluid requirements. Heavier athletes typically need more hydration." />
+                  </div>
                   <Input
                     id="weight"
                     type="number"
@@ -234,7 +264,10 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="hrv">HRV / Recovery Index</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="hrv">HRV / Recovery Index</Label>
+                  <InfoTooltip content="Heart Rate Variability measures recovery status. Found in fitness watches (Garmin, Apple Watch, Whoop). Low HRV = poor recovery, may need extra hydration. Normal range varies by individual - check your baseline." />
+                </div>
                 <Input
                   id="hrv"
                   value={profile.hrv || ''}
@@ -254,7 +287,10 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="sweatSodiumTest">Sweat Sodium Test (mmol/L)</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="sweatSodiumTest">Sweat Sodium Test (mmol/L)</Label>
+                  <InfoTooltip content="A sweat sodium test measures the concentration of sodium in your sweat. Normal range is 20-80 mmol/L. High sodium loss (>60 mmol/L) means you need more electrolytes. Can be done at sports labs or with at-home test kits." />
+                </div>
                 <Input
                   id="sweatSodiumTest"
                   type="number"
@@ -305,7 +341,10 @@ const Index = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="sessionDuration">Session Duration (hours) *</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="sessionDuration">Session Duration (hours) *</Label>
+                    <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
+                  </div>
                   <Input
                     id="sessionDuration"
                     type="number"
@@ -339,7 +378,10 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="elevationGain">Elevation Gain per Session (m)</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="elevationGain">Elevation Gain per Session (m)</Label>
+                  <InfoTooltip content="Total uphill climbing during your activity. More climbing = higher energy demand and fluid loss. Check your GPS watch or route profile." />
+                </div>
                 <Input
                   id="elevationGain"
                   type="number"
@@ -361,7 +403,10 @@ const Index = () => {
               </div>
 
               <div>
-                <Label>Indoor or Outdoor *</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Indoor or Outdoor *</Label>
+                  <InfoTooltip content="Indoor environments typically have lower fluid loss due to controlled temperature and airflow." />
+                </div>
                 <RadioGroup
                   value={profile.indoorOutdoor || 'outdoor'}
                   onValueChange={(value) => updateProfile({ indoorOutdoor: value as 'indoor' | 'outdoor' | 'both' })}
@@ -451,50 +496,59 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="humidity">Humidity Level (%) *</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="humidity">Humidity Level (%) *</Label>
+                  <InfoTooltip content="High humidity (>70%) reduces sweat evaporation, increasing heat stress and fluid needs. Check weather apps for humidity levels." />
+                </div>
                 <Input
                   id="humidity"
                   type="number"
                   value={profile.humidity || ''}
                   onChange={(e) => updateProfile({ humidity: parseInt(e.target.value) })}
-                  placeholder="Average humidity"
+                  placeholder="e.g., 60"
                 />
               </div>
 
               <div>
-                <Label>Altitude *</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Altitude *</Label>
+                  <InfoTooltip content="Sea-level: 0-1000m, Moderate: 1000-2500m, High: >2500m. Higher altitude increases respiratory fluid loss and dehydration risk." />
+                </div>
                 <RadioGroup
                   value={profile.altitude || 'sea-level'}
                   onValueChange={(value) => updateProfile({ altitude: value as 'sea-level' | 'moderate' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="sea-level" id="sea-level" />
-                    <Label htmlFor="sea-level" className="font-normal">Sea Level (0-500m)</Label>
+                    <Label htmlFor="sea-level" className="font-normal">Sea Level (0-1000m)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="moderate" id="moderate" />
-                    <Label htmlFor="moderate" className="font-normal">Moderate (500-1500m)</Label>
+                    <Label htmlFor="moderate" className="font-normal">Moderate (1000-2500m)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="high" />
-                    <Label htmlFor="high" className="font-normal">High (1500m+)</Label>
+                    <Label htmlFor="high" className="font-normal">High (&gt;2500m)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label>Sun Exposure *</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Sun Exposure *</Label>
+                  <InfoTooltip content="Direct sun exposure increases body temperature and sweat rate significantly compared to shade." />
+                </div>
                 <RadioGroup
                   value={profile.sunExposure || 'partial'}
                   onValueChange={(value) => updateProfile({ sunExposure: value as 'shade' | 'partial' | 'full-sun' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="shade" id="shade" />
-                    <Label htmlFor="shade" className="font-normal">Shade</Label>
+                    <Label htmlFor="shade" className="font-normal">Mostly Shade</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="partial" id="partial" />
-                    <Label htmlFor="partial" className="font-normal">Partial</Label>
+                    <Label htmlFor="partial" className="font-normal">Partial Sun</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="full-sun" id="full-sun" />
@@ -528,267 +582,220 @@ const Index = () => {
                 <Label>Clothing Type *</Label>
                 <RadioGroup
                   value={profile.clothingType || 'light'}
-                  onValueChange={(value) => updateProfile({ clothingType: value as 'light' | 'compression' | 'layers' })}
+                  onValueChange={(value) => updateProfile({ clothingType: value as 'minimal' | 'light' | 'moderate' | 'heavy' })}
                 >
                   <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="minimal" id="minimal" />
+                    <Label htmlFor="minimal" className="font-normal">Minimal (singlet/shorts)</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
                     <RadioGroupItem value="light" id="light" />
-                    <Label htmlFor="light" className="font-normal">Light</Label>
+                    <Label htmlFor="light" className="font-normal">Light (typical running gear)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="compression" id="compression" />
-                    <Label htmlFor="compression" className="font-normal">Compression</Label>
+                    <RadioGroupItem value="moderate" id="moderate-cloth" />
+                    <Label htmlFor="moderate-cloth" className="font-normal">Moderate (long sleeves)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="layers" id="layers" />
-                    <Label htmlFor="layers" className="font-normal">Layers</Label>
+                    <RadioGroupItem value="heavy" id="heavy" />
+                    <Label htmlFor="heavy" className="font-normal">Heavy (jacket/layers)</Label>
                   </div>
                 </RadioGroup>
-              </div>
-
-              <div>
-                <Label htmlFor="climate">Season or Climate</Label>
-                <Input
-                  id="climate"
-                  value={profile.climate || ''}
-                  onChange={(e) => updateProfile({ climate: e.target.value })}
-                  placeholder="e.g., Nordic winter, Mediterranean summer"
-                />
               </div>
             </div>
           </QuestionnaireStep>
         )}
 
-        {/* STEP 4: Hydration & Sweat Data */}
+        {/* STEP 4: Sweat Profile */}
         {step === 4 && (
           <QuestionnaireStep
-            title="4. Hydration & Sweat Data"
-            description="Understanding your sweat helps optimize electrolyte replacement"
+            title="4. Sweat Profile"
+            description="Your individual sweat characteristics"
             onNext={() => setStep(5)}
             onBack={() => setStep(3)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
               <div>
-                <Label>Sweat Rate *</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Sweat Rate *</Label>
+                  <InfoTooltip content="Your sweat rate affects hydration needs. If you're unsure, choose 'medium'. High sweat rate = clothing soaked during exercise. Low = minimal sweating even during hard efforts." />
+                </div>
                 <RadioGroup
                   value={profile.sweatRate || 'medium'}
                   onValueChange={(value) => updateProfile({ sweatRate: value as 'low' | 'medium' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="sweat-low" />
-                    <Label htmlFor="sweat-low" className="font-normal">Low (Minimal sweating)</Label>
+                    <Label htmlFor="sweat-low" className="font-normal">Low (minimal sweating)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="medium" id="sweat-medium" />
-                    <Label htmlFor="sweat-medium" className="font-normal">Medium (Moderate sweating)</Label>
+                    <Label htmlFor="sweat-medium" className="font-normal">Medium (moderate sweating)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="sweat-high" />
-                    <Label htmlFor="sweat-high" className="font-normal">High (Heavy sweating)</Label>
+                    <Label htmlFor="sweat-high" className="font-normal">High (heavy sweating)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label>Sweat Saltiness *</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Sweat Saltiness *</Label>
+                  <InfoTooltip content="Salty sweat = white residue on skin/clothing after exercise. This indicates higher sodium loss. Can be measured with a sweat sodium test at sports labs or with at-home kits." />
+                </div>
                 <RadioGroup
                   value={profile.sweatSaltiness || 'medium'}
                   onValueChange={(value) => updateProfile({ sweatSaltiness: value as 'low' | 'medium' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="salt-low" />
-                    <Label htmlFor="salt-low" className="font-normal">Low (No visible salt residue)</Label>
+                    <Label htmlFor="salt-low" className="font-normal">Low (no white residue)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="medium" id="salt-medium" />
-                    <Label htmlFor="salt-medium" className="font-normal">Medium (Some salt stains)</Label>
+                    <Label htmlFor="salt-medium" className="font-normal">Medium (some residue)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="salt-high" />
-                    <Label htmlFor="salt-high" className="font-normal">High (Heavy salt crusting)</Label>
+                    <Label htmlFor="salt-high" className="font-normal">High (significant white residue)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label htmlFor="fluidIntake">Fluid Intake During Sessions (ml/hour)</Label>
-                <Input
-                  id="fluidIntake"
-                  type="number"
-                  value={profile.fluidIntake || ''}
-                  onChange={(e) => updateProfile({ fluidIntake: parseInt(e.target.value) })}
-                  placeholder="Estimated or measured"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="urineColor">Urine Color (1-8 scale)</Label>
-                <Input
-                  id="urineColor"
-                  type="number"
-                  min="1"
-                  max="8"
-                  value={profile.urineColor || ''}
-                  onChange={(e) => updateProfile({ urineColor: parseInt(e.target.value) })}
-                  placeholder="1=clear, 8=dark"
-                />
-              </div>
-
-              <div>
-                <Label>Cramp Timing</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Cramping During Exercise</Label>
+                  <InfoTooltip content="Exercise-associated muscle cramps often indicate electrolyte imbalance, particularly sodium and magnesium deficiency." />
+                </div>
                 <RadioGroup
                   value={profile.crampTiming || 'none'}
-                  onValueChange={(value) => updateProfile({ crampTiming: value as 'during' | 'after' | 'night' | 'none' })}
+                  onValueChange={(value) => updateProfile({ crampTiming: value as 'none' | 'early' | 'mid' | 'late' | 'post' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="none" id="cramp-none" />
-                    <Label htmlFor="cramp-none" className="font-normal">No cramping</Label>
+                    <Label htmlFor="cramp-none" className="font-normal">None</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="during" id="cramp-during" />
-                    <Label htmlFor="cramp-during" className="font-normal">During activity</Label>
+                    <RadioGroupItem value="early" id="cramp-early" />
+                    <Label htmlFor="cramp-early" className="font-normal">Early in activity</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="after" id="cramp-after" />
-                    <Label htmlFor="cramp-after" className="font-normal">After activity</Label>
+                    <RadioGroupItem value="mid" id="cramp-mid" />
+                    <Label htmlFor="cramp-mid" className="font-normal">Mid-activity</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="night" id="cramp-night" />
-                    <Label htmlFor="cramp-night" className="font-normal">At night</Label>
+                    <RadioGroupItem value="late" id="cramp-late" />
+                    <Label htmlFor="cramp-late" className="font-normal">Late in activity</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="post" id="cramp-post" />
+                    <Label htmlFor="cramp-post" className="font-normal">Post-activity</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label htmlFor="dehydrationSymptoms">Common Dehydration Symptoms</Label>
+                <Label htmlFor="hydrationStrategy">Current Hydration Strategy</Label>
                 <Textarea
-                  id="dehydrationSymptoms"
-                  value={profile.dehydrationSymptoms?.join(', ') || ''}
-                  onChange={(e) => updateProfile({ dehydrationSymptoms: e.target.value.split(',').map(s => s.trim()) })}
-                  placeholder="e.g., cramps, headaches, dizziness"
+                  id="hydrationStrategy"
+                  value={profile.hydrationStrategy || ''}
+                  onChange={(e) => updateProfile({ hydrationStrategy: e.target.value })}
+                  placeholder="Describe what you currently drink during training/races"
+                  rows={3}
                 />
               </div>
             </div>
           </QuestionnaireStep>
         )}
 
-        {/* STEP 5: Nutrition & Fueling */}
+        {/* STEP 5: Dietary Habits */}
         {step === 5 && (
           <QuestionnaireStep
-            title="5. Nutrition & Fueling"
-            description="Your nutrition strategy impacts hydration needs"
+            title="5. Dietary Habits"
+            description="Your everyday nutrition affects hydration needs"
             onNext={() => setStep(6)}
             onBack={() => setStep(4)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
               <div>
-                <Label htmlFor="fuelingStrategy">Fueling Strategy During Training/Races</Label>
-                <Input
-                  id="fuelingStrategy"
-                  value={profile.fuelingStrategy || ''}
-                  onChange={(e) => updateProfile({ fuelingStrategy: e.target.value })}
-                  placeholder="e.g., 60g carbs/hr, gels + bars"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="preMealTiming">Pre-Event Meal Timing (hours before)</Label>
-                <Input
-                  id="preMealTiming"
-                  type="number"
-                  step="0.5"
-                  value={profile.preMealTiming || ''}
-                  onChange={(e) => updateProfile({ preMealTiming: parseFloat(e.target.value) })}
-                  placeholder="Hours"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="recoveryWindow">Recovery Nutrition Window (minutes)</Label>
-                <Input
-                  id="recoveryWindow"
-                  type="number"
-                  value={profile.recoveryWindow || ''}
-                  onChange={(e) => updateProfile({ recoveryWindow: parseInt(e.target.value) })}
-                  placeholder="Minutes post-activity"
-                />
-              </div>
-
-              <div>
-                <Label>Caffeine Strategy</Label>
-                <RadioGroup
-                  value={profile.caffeineStrategy || 'none'}
-                  onValueChange={(value) => updateProfile({ caffeineStrategy: value as 'pre' | 'mid' | 'post' | 'none' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="none" id="caff-none" />
-                    <Label htmlFor="caff-none" className="font-normal">None</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="pre" id="caff-pre" />
-                    <Label htmlFor="caff-pre" className="font-normal">Pre-activity</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="mid" id="caff-mid" />
-                    <Label htmlFor="caff-mid" className="font-normal">Mid-activity</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="post" id="caff-post" />
-                    <Label htmlFor="caff-post" className="font-normal">Post-activity</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label>Daily Salt Intake *</Label>
+                <div className="flex items-center mb-2">
+                  <Label>Daily Salt Intake *</Label>
+                  <InfoTooltip content="Low: minimal processed foods, no added salt. Medium: normal diet with some salt. High: salty foods regularly, add salt to meals." />
+                </div>
                 <RadioGroup
                   value={profile.dailySaltIntake || 'medium'}
                   onValueChange={(value) => updateProfile({ dailySaltIntake: value as 'low' | 'medium' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="salt-intake-low" />
-                    <Label htmlFor="salt-intake-low" className="font-normal">Low (avoid added salt)</Label>
+                    <Label htmlFor="salt-intake-low" className="font-normal">Low (little added salt)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="medium" id="salt-intake-medium" />
-                    <Label htmlFor="salt-intake-medium" className="font-normal">Medium (normal diet)</Label>
+                    <Label htmlFor="salt-intake-medium" className="font-normal">Medium (moderate salt)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="salt-intake-high" />
-                    <Label htmlFor="salt-intake-high" className="font-normal">High (salt foods regularly)</Label>
+                    <Label htmlFor="salt-intake-high" className="font-normal">High (regular salt use)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label htmlFor="otherSupplements">Other Supplements Used</Label>
+                <Label htmlFor="dailyWaterIntake">Daily Water Intake (liters)</Label>
                 <Input
-                  id="otherSupplements"
-                  value={profile.otherSupplements || ''}
-                  onChange={(e) => updateProfile({ otherSupplements: e.target.value })}
-                  placeholder="e.g., vitamins, BCAAs"
+                  id="dailyWaterIntake"
+                  type="number"
+                  step="0.5"
+                  value={profile.dailyWaterIntake || ''}
+                  onChange={(e) => updateProfile({ dailyWaterIntake: parseFloat(e.target.value) })}
+                  placeholder="e.g., 2.5"
                 />
               </div>
 
               <div>
-                <Label htmlFor="specialDiet">Special Diets</Label>
+                <Label htmlFor="caffeineIntake">Daily Caffeine Intake (mg)</Label>
                 <Input
-                  id="specialDiet"
-                  value={profile.specialDiet || ''}
-                  onChange={(e) => updateProfile({ specialDiet: e.target.value })}
-                  placeholder="e.g., low-carb, plant-based"
+                  id="caffeineIntake"
+                  type="number"
+                  value={profile.caffeineIntake || ''}
+                  onChange={(e) => updateProfile({ caffeineIntake: parseInt(e.target.value) })}
+                  placeholder="e.g., 200 (about 2 cups of coffee)"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="dietType">Diet Type</Label>
+                <Input
+                  id="dietType"
+                  value={profile.dietType || ''}
+                  onChange={(e) => updateProfile({ dietType: e.target.value })}
+                  placeholder="e.g., omnivore, vegetarian, keto"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="nutritionNotes">Additional Nutrition Notes</Label>
+                <Textarea
+                  id="nutritionNotes"
+                  value={profile.nutritionNotes || ''}
+                  onChange={(e) => updateProfile({ nutritionNotes: e.target.value })}
+                  placeholder="Any other relevant information about your diet or supplements"
+                  rows={3}
                 />
               </div>
             </div>
           </QuestionnaireStep>
         )}
 
-        {/* STEP 6: Goals & Performance + Optional Data */}
+        {/* STEP 6: Goals & Events */}
         {step === 6 && (
           <QuestionnaireStep
-            title="6. Goals & Performance"
-            description="Your objectives and additional information"
+            title="6. Goals & Events"
+            description="Help us tailor your plan to your objectives"
             onNext={handleComplete}
             onBack={() => setStep(5)}
             isValid={isStepValid()}
@@ -798,95 +805,47 @@ const Index = () => {
                 <Label>Primary Goal *</Label>
                 <RadioGroup
                   value={profile.primaryGoal || 'performance'}
-                  onValueChange={(value) => updateProfile({ primaryGoal: value as 'performance' | 'recovery' | 'daily-hydration' | 'completion' })}
+                  onValueChange={(value) => updateProfile({ primaryGoal: value as 'performance' | 'health' | 'weight-loss' | 'endurance' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="performance" id="goal-performance" />
-                    <Label htmlFor="goal-performance" className="font-normal">Performance (maximize results)</Label>
+                    <Label htmlFor="goal-performance" className="font-normal">Performance Optimization</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="completion" id="goal-completion" />
-                    <Label htmlFor="goal-completion" className="font-normal">Completion (finish strong)</Label>
+                    <RadioGroupItem value="health" id="goal-health" />
+                    <Label htmlFor="goal-health" className="font-normal">Health & Wellness</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="recovery" id="goal-recovery" />
-                    <Label htmlFor="goal-recovery" className="font-normal">Recovery (optimize adaptation)</Label>
+                    <RadioGroupItem value="weight-loss" id="goal-weight" />
+                    <Label htmlFor="goal-weight" className="font-normal">Weight Management</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="daily-hydration" id="goal-daily" />
-                    <Label htmlFor="goal-daily" className="font-normal">Daily Hydration</Label>
+                    <RadioGroupItem value="endurance" id="goal-endurance" />
+                    <Label htmlFor="goal-endurance" className="font-normal">Endurance Building</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label htmlFor="targetEvents">Target Events or Upcoming Races</Label>
-                <Input
-                  id="targetEvents"
-                  value={profile.targetEvents || ''}
-                  onChange={(e) => updateProfile({ targetEvents: e.target.value })}
-                  placeholder="Event name and date"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="performanceGoal">Performance Goal</Label>
-                <Input
-                  id="performanceGoal"
-                  value={profile.performanceGoal || ''}
-                  onChange={(e) => updateProfile({ performanceGoal: e.target.value })}
-                  placeholder="e.g., sub-3 hour, top 10 placement"
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="pastIssues">Past Hydration or Cramping Issues</Label>
+                <Label htmlFor="upcomingEvents">Upcoming Events</Label>
                 <Textarea
-                  id="pastIssues"
-                  value={profile.pastIssues || ''}
-                  onChange={(e) => updateProfile({ pastIssues: e.target.value })}
-                  placeholder="Describe any issues from past events"
+                  id="upcomingEvents"
+                  value={profile.upcomingEvents || ''}
+                  onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
+                  placeholder="List any races or events you're training for"
+                  rows={3}
                 />
               </div>
 
-              <div className="pt-6 border-t">
-                <p className="text-sm font-semibold mb-3">Optional Data</p>
-                
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="weeklyVolume">Weekly Training Volume (hrs/week)</Label>
-                    <Input
-                      id="weeklyVolume"
-                      type="number"
-                      value={profile.weeklyVolume || ''}
-                      onChange={(e) => updateProfile({ weeklyVolume: parseFloat(e.target.value) })}
-                      placeholder="Hours"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="sleepQuality">Average Sleep Quality (1-10)</Label>
-                    <Input
-                      id="sleepQuality"
-                      type="number"
-                      min="1"
-                      max="10"
-                      value={profile.sleepQuality || ''}
-                      onChange={(e) => updateProfile({ sleepQuality: parseInt(e.target.value) })}
-                      placeholder="1=poor, 10=excellent"
-                    />
-                  </div>
-
-                  <div>
-                    <Label htmlFor="otherNotes">Other Notes</Label>
-                    <Textarea
-                      id="otherNotes"
-                      value={profile.otherNotes || ''}
-                      onChange={(e) => updateProfile({ otherNotes: e.target.value })}
-                      placeholder="Any additional information"
-                    />
-                  </div>
-                </div>
+              <div>
+                <Label htmlFor="specificConcerns">Specific Hydration Concerns</Label>
+                <Textarea
+                  id="specificConcerns"
+                  value={profile.specificConcerns || ''}
+                  onChange={(e) => updateProfile({ specificConcerns: e.target.value })}
+                  placeholder="Any particular challenges or questions about hydration?"
+                  rows={3}
+                />
               </div>
             </div>
           </QuestionnaireStep>

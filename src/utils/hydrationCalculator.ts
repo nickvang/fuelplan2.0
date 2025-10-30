@@ -1,11 +1,12 @@
 import { HydrationProfile, HydrationPlan } from '@/types/hydration';
 
 export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan {
-  // Base sweat rate calculation (ml/hour)
+  // Base sweat rate calculation (ml/hour) - Based on ACSM guidelines and recent research
+  // Reference: PMID 17277604, PMID 38732589
   const baseSweatRate = {
-    low: 500,
-    medium: 750,
-    high: 1000,
+    low: 600,    // Updated from 500ml
+    medium: 900, // Updated from 750ml  
+    high: 1200,  // Updated from 1000ml
   }[profile.sweatRate];
 
   // Adjust for temperature (using training temp average)
@@ -42,17 +43,18 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
   // Total fluid loss for the activity
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
 
-  // Pre-activity hydration
+  // Pre-activity hydration - ACSM recommendations (PMID 17277604)
   const preWater = 400 + (profile.weight * 5); // 400-600ml based on weight
-  const preElectrolytes = 1; // 1 dose
+  const preElectrolytes = 1; // 1 sachet (30ml) of Supplme
 
-  // During activity (per hour if > 60 minutes)
-  const duringWater = profile.sessionDuration > 1 ? sweatRatePerHour : 0;
-  const duringElectrolytes = profile.sessionDuration > 1 ? 1 : 0;
+  // During activity - Updated based on personalized hydration research (PMID 38732589)
+  // Aim to replace 60-80% of sweat losses during exercise
+  const duringWater = profile.sessionDuration > 1 ? Math.round(sweatRatePerHour * 0.7) : 0;
+  const duringElectrolytes = profile.sessionDuration > 1 ? Math.max(1, Math.round(profile.sessionDuration * 0.8)) : 0;
 
-  // Post-activity (150% of fluid lost)
+  // Post-activity (150% of fluid lost) - Enhanced rehydration protocol
   const postWater = Math.round(totalFluidLoss * 1.5);
-  const postElectrolytes = 1;
+  const postElectrolytes = Math.max(1, Math.round(totalFluidLoss / 1000));
 
   // Generate recommendations based on profile
   const recommendations: string[] = [];
@@ -90,7 +92,8 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
   }
 
   recommendations.push('Monitor urine color - pale yellow indicates good hydration');
-  recommendations.push('Each Supplme dose provides 500mg sodium, 250mg potassium, and 100mg magnesium');
+  recommendations.push('Each 30ml Supplme sachet provides 500mg sodium, 250mg potassium, and 100mg magnesium');
+  recommendations.push('Drink Supplme sachets directly - no mixing required');
 
   return {
     preActivity: {
