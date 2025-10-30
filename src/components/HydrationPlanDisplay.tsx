@@ -58,7 +58,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header */}
       <div className="text-center space-y-4 py-4">
-        <img src={supplmeLogo} alt="Supplme" className="h-50 mx-auto mb-2" />
+        <img src={supplmeLogo} alt="Supplme" className="h-30 mx-auto" />
         <h1 className="text-4xl font-bold tracking-tight">
           Supplme Hydration Guide
         </h1>
