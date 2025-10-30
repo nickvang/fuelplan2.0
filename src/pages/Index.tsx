@@ -923,12 +923,12 @@ const Index = () => {
                   <div className="flex items-center space-x-2">
                     <Checkbox
                       id="hasUpcomingRace"
-                      checked={profile.hasUpcomingRace === true}
+                      checked={!!profile.hasUpcomingRace}
                       onCheckedChange={(checked) => {
-                        updateProfile({ hasUpcomingRace: checked === true });
-                        if (!checked) {
-                          updateProfile({ upcomingEvents: '' });
-                        }
+                        updateProfile({ 
+                          hasUpcomingRace: Boolean(checked),
+                          ...(checked === false && { upcomingEvents: '' })
+                        });
                       }}
                     />
                     <Label htmlFor="hasUpcomingRace" className="font-normal">
