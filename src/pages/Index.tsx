@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { HydrationProfile } from '@/types/hydration';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import { validateAndSanitizeProfile } from '@/utils/profileValidation';
+import { parseGarminFiles, mapGarminDataToProfile } from '@/utils/garminDataParser';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
@@ -47,90 +48,24 @@ const Index = () => {
   const analyzeSmartWatchFiles = async (files: File[]): Promise<Partial<HydrationProfile>> => {
     setIsAnalyzing(true);
     
-    // Simulate file parsing - in real implementation, parse FIT/CSV/JSON files
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    
-    const extractedData: Partial<HydrationProfile> = {};
-    
-    for (const file of files) {
-      const fileName = file.name.toLowerCase();
+    try {
+      // Parse Garmin CSV files
+      const parsedData = await parseGarminFiles(files);
+      const extractedData = mapGarminDataToProfile(parsedData);
       
-      try {
-        const fileContent = await file.text();
-        
-        // Enhanced parsing logic for various data types
-        if (fileName.includes('physiological') || fileName.includes('metrics') || fileName.includes('health')) {
-          // Extract comprehensive body metrics
-          extractedData.age = 32;
-          extractedData.weight = 75;
-          extractedData.height = 180;
-          extractedData.restingHeartRate = 52;
-          extractedData.hrv = '65ms';
-          extractedData.bodyFat = 15;
-        }
-        
-        if (fileName.includes('sleep') || fileName.includes('recovery')) {
-          // Extract sleep and recovery metrics
-          extractedData.hrv = '65ms';
-          extractedData.sleepHours = 7.5;
-          extractedData.sleepQuality = 8;
-        }
-        
-        if (fileName.includes('workout') || fileName.includes('activity') || fileName.includes('training')) {
-          // Extract comprehensive activity data
-          extractedData.disciplines = ['Run'];
-          extractedData.sessionDuration = 1.5;
-          extractedData.trainingFrequency = 5;
-          extractedData.weeklyVolume = 12;
-          extractedData.longestSession = 3;
-        }
-        
-        if (fileName.includes('sweat') || fileName.includes('sodium')) {
-          // Extract sweat analysis data
-          extractedData.sweatRate = 'high';
-          extractedData.sweatSaltiness = 'medium';
-          extractedData.sweatSodiumTest = 55;
-        }
-        
-        if (fileName.includes('environment') || fileName.includes('weather')) {
-          // Extract environmental data
-          extractedData.trainingTempRange = { min: 18, max: 28 };
-          extractedData.humidity = 65;
-        }
-        
-        if (fileName.includes('performance') || fileName.includes('race')) {
-          // Extract performance and race data
-          extractedData.avgPace = '5:15/km';
-          extractedData.elevationGain = 450;
-          extractedData.targetEvents = 'Marathon';
-        }
-        
-        // Parse JSON files more intelligently
-        if (fileName.endsWith('.json')) {
-          try {
-            const jsonData = JSON.parse(fileContent);
-            // Extract from common JSON structures
-            if (jsonData.metrics) {
-              if (jsonData.metrics.weight) extractedData.weight = jsonData.metrics.weight;
-              if (jsonData.metrics.restingHeartRate) extractedData.restingHeartRate = jsonData.metrics.restingHeartRate;
-              if (jsonData.metrics.hrv) extractedData.hrv = String(jsonData.metrics.hrv);
-            }
-            if (jsonData.sleep) {
-              if (jsonData.sleep.duration) extractedData.sleepHours = jsonData.sleep.duration;
-              if (jsonData.sleep.quality) extractedData.sleepQuality = jsonData.sleep.quality;
-            }
-          } catch (e) {
-            console.log('Could not parse JSON:', e);
-          }
-        }
-        
-      } catch (error) {
-        console.error(`Error reading file ${file.name}:`, error);
+      setIsAnalyzing(false);
+      
+      if (Object.keys(extractedData).length > 0) {
+        toast.success('Garmin data analyzed successfully!');
       }
+      
+      return extractedData;
+    } catch (error) {
+      console.error('Error analyzing smartwatch files:', error);
+      toast.error('Error analyzing smartwatch data');
+      setIsAnalyzing(false);
+      return {};
     }
-    
-    setIsAnalyzing(false);
-    return extractedData;
   };
 
   // Determine which steps to skip based on analyzed data
