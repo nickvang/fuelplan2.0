@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
   const [step, setStep] = useState(0);
@@ -237,6 +238,7 @@ const Index = () => {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header - Shows on all steps */}
         <div className="text-center space-y-3">
+          <img src={supplmeLogo} alt="Supplme" className="h-12 mx-auto mb-2" />
           <h1 className="text-3xl font-bold tracking-tight">
             Supplme Hydration Guide
           </h1>

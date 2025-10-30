@@ -7,6 +7,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import supplmeLogo from '@/assets/supplme-logo.png';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -57,6 +58,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header */}
       <div className="text-center space-y-4 py-4">
+        <img src={supplmeLogo} alt="Supplme" className="h-12 mx-auto mb-2" />
         <h1 className="text-4xl font-bold tracking-tight">
           Supplme Hydration Guide
         </h1>
