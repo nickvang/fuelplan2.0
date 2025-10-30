@@ -450,7 +450,7 @@ const Index = () => {
                         </div>
 
                         <div className="text-xs text-muted-foreground pt-2 border-t">
-                          <p>Contact: For data deletion requests or privacy questions, email privacy@supplme.com</p>
+                          <p>Contact: For data deletion requests or privacy questions, email info@supplme.com</p>
                         </div>
                       </AccordionContent>
                     </AccordionItem>

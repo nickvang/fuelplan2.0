@@ -67,7 +67,7 @@ serve(async (req) => {
       JSON.stringify({ 
         error: errorMessage,
         success: false,
-        message: 'Please contact privacy@supplme.com for manual data deletion'
+        message: 'Please contact info@supplme.com for manual data deletion'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

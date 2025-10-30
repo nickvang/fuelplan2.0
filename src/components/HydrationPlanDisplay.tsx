@@ -68,7 +68,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
       console.error('Failed to delete data:', error);
       toast({
         title: "Deletion Failed",
-        description: "Please contact privacy@supplme.com for manual data deletion.",
+        description: "Please contact info@supplme.com for manual data deletion.",
         variant: "destructive"
       });
     }
