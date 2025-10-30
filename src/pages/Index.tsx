@@ -835,7 +835,13 @@ const Index = () => {
                     id="raceDistance"
                     value={profile.raceDistance || ''}
                     onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                    placeholder="e.g., Ironman 70.3, Ultra 50K, Marathon"
+                    placeholder={
+                      profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
+                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 25 miles, 50 miles, 100 miles (Century)' :
+                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1500m, 5K, 10K' :
+                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
+                      'e.g., Half Marathon, Marathon, 50K'
+                    }
                   />
                 </div>
               )}
