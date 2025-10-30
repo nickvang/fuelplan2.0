@@ -667,7 +667,7 @@ const Index = () => {
                   value={profile.disciplines?.[0] || ''}
                   onValueChange={(value) => updateProfile({ disciplines: [value] })}
                 >
-                  {['Run', 'Swim', 'Bike', 'Triathlon', 'Football'].map((disc) => (
+                  {['Run', 'Swim', 'Bike', 'Triathlon', 'Football', 'Padel Tennis'].map((disc) => (
                     <div key={disc} className="flex items-center space-x-2">
                       <RadioGroupItem value={disc} id={`disc-${disc}`} />
                       <Label htmlFor={`disc-${disc}`} className="font-normal">{disc === 'Football' ? 'Football (Soccer)' : disc}</Label>
@@ -676,7 +676,7 @@ const Index = () => {
                 </RadioGroup>
               </div>
 
-              {profile.disciplines?.[0] !== 'Football' && (
+              {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
                 <div>
                   <Label htmlFor="raceDistance">Typical Race Distance</Label>
                   <Input
@@ -691,8 +691,18 @@ const Index = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="sessionDuration">{profile.disciplines?.[0] === 'Football' ? 'Match/Training Duration (hours) *' : 'Session Duration (hours) *'}</Label>
-                    <InfoTooltip content={profile.disciplines?.[0] === 'Football' ? "Full match is typically 1.5 hours (90 min). Training sessions are usually 1-2 hours." : "How long is your typical training session or race? Include warm-up and cool-down time."} />
+                    <Label htmlFor="sessionDuration">
+                      {profile.disciplines?.[0] === 'Football' ? 'Match/Training Duration (hours) *' : 
+                       profile.disciplines?.[0] === 'Padel Tennis' ? 'Match Duration (hours) *' :
+                       'Session Duration (hours) *'}
+                    </Label>
+                    <InfoTooltip content={
+                      profile.disciplines?.[0] === 'Football' ? 
+                        "Full match is typically 1.5 hours (90 min). Training sessions are usually 1-2 hours." :
+                      profile.disciplines?.[0] === 'Padel Tennis' ?
+                        "Standard padel match is 1-1.5 hours. Can go up to 2-3 hours for competitive matches." :
+                        "How long is your typical training session or race? Include warm-up and cool-down time."
+                    } />
                   </div>
                   <Input
                     id="sessionDuration"
@@ -700,11 +710,19 @@ const Index = () => {
                     step="0.5"
                     value={profile.sessionDuration || ''}
                     onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
-                    placeholder={profile.disciplines?.[0] === 'Football' ? "1.5 for match" : "Average"}
+                    placeholder={
+                      profile.disciplines?.[0] === 'Football' ? "1.5 for match" :
+                      profile.disciplines?.[0] === 'Padel Tennis' ? "1.5 typical" :
+                      "Average"
+                    }
                   />
                 </div>
                 <div>
-                  <Label htmlFor="longestSession">{profile.disciplines?.[0] === 'Football' ? 'Longest Match/Training (hours)' : 'Longest Session (hours)'}</Label>
+                  <Label htmlFor="longestSession">
+                    {profile.disciplines?.[0] === 'Football' ? 'Longest Match/Training (hours)' :
+                     profile.disciplines?.[0] === 'Padel Tennis' ? 'Longest Match (hours)' :
+                     'Longest Session (hours)'}
+                  </Label>
                   <Input
                     id="longestSession"
                     type="number"
@@ -716,7 +734,72 @@ const Index = () => {
                 </div>
               </div>
 
-              {profile.disciplines?.[0] === 'Football' ? (
+              {profile.disciplines?.[0] === 'Padel Tennis' ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="padelPlayingLevel">Playing Level *</Label>
+                    <RadioGroup
+                      value={profile.padelPlayingLevel || ''}
+                      onValueChange={(value) => updateProfile({ padelPlayingLevel: value })}
+                    >
+                      {['Recreational', 'Club Level', 'Competitive/Tournament', 'Professional'].map((level) => (
+                        <div key={level} className="flex items-center space-x-2">
+                          <RadioGroupItem value={level} id={`padel-level-${level}`} />
+                          <Label htmlFor={`padel-level-${level}`} className="font-normal">{level}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="padelCourtType">Court Type</Label>
+                    <RadioGroup
+                      value={profile.padelCourtType || ''}
+                      onValueChange={(value) => updateProfile({ padelCourtType: value })}
+                    >
+                      {['Indoor', 'Outdoor', 'Both'].map((type) => (
+                        <div key={type} className="flex items-center space-x-2">
+                          <RadioGroupItem value={type} id={`court-${type}`} />
+                          <Label htmlFor={`court-${type}`} className="font-normal">{type}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="padelPlayingStyle">Playing Style</Label>
+                    <RadioGroup
+                      value={profile.padelPlayingStyle || ''}
+                      onValueChange={(value) => updateProfile({ padelPlayingStyle: value })}
+                    >
+                      {['Defensive', 'Offensive', 'All-round'].map((style) => (
+                        <div key={style} className="flex items-center space-x-2">
+                          <RadioGroupItem value={style} id={`style-${style}`} />
+                          <Label htmlFor={`style-${style}`} className="font-normal">{style}</Label>
+                        </div>
+                      ))}
+                    </RadioGroup>
+                  </div>
+                  <div>
+                    <Label htmlFor="padelMatchesPerWeek">Matches per Week</Label>
+                    <Input
+                      id="padelMatchesPerWeek"
+                      type="number"
+                      value={profile.padelMatchesPerWeek || ''}
+                      onChange={(e) => updateProfile({ padelMatchesPerWeek: parseInt(e.target.value) })}
+                      placeholder="e.g., 2-3"
+                    />
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <Checkbox
+                      id="padelTournamentPlay"
+                      checked={profile.padelTournamentPlay || false}
+                      onCheckedChange={(checked) => updateProfile({ padelTournamentPlay: checked as boolean })}
+                    />
+                    <Label htmlFor="padelTournamentPlay" className="font-normal">
+                      Participate in tournaments regularly
+                    </Label>
+                  </div>
+                </div>
+              ) : profile.disciplines?.[0] === 'Football' ? (
                 <div className="space-y-4">
                   <div>
                     <Label htmlFor="position">Playing Position *</Label>
@@ -844,7 +927,7 @@ const Index = () => {
                 </div>
               )}
 
-              {profile.disciplines?.[0] !== 'Football' && (
+              {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
                 <div>
                   <div className="flex items-center">
                     <Label htmlFor="elevationGain">Elevation Gain per Session (m)</Label>

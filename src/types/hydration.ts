@@ -30,6 +30,13 @@ export interface HydrationProfile {
   playingSurface?: string;
   avgDistanceCovered?: number;
   
+  // Padel Tennis-specific fields
+  padelPlayingLevel?: string;
+  padelCourtType?: string;
+  padelPlayingStyle?: string;
+  padelMatchesPerWeek?: number;
+  padelTournamentPlay?: boolean;
+  
   // 3. Environment Data
   trainingTempRange: { min: number; max: number };
   raceTempRange?: { min: number; max: number };
