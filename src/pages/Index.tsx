@@ -238,7 +238,7 @@ const Index = () => {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header - Shows on all steps */}
         <div className="text-center space-y-3">
-          <img src={supplmeLogo} alt="Supplme" className="h-30 mx-auto" />
+          <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto" />
           <h1 className="text-3xl font-bold tracking-tight">
             Supplme Hydration Guide
           </h1>
