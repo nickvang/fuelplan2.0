@@ -710,7 +710,7 @@ const Index = () => {
           >
             <div className="space-y-4">
               <div>
-                <Label>Primary Discipline *</Label>
+                <Label>{t('activity.primaryDiscipline')} *</Label>
                 <p className="text-sm text-muted-foreground mb-2">
                   Select the activity you want a hydration guide for
                 </p>
@@ -729,7 +729,7 @@ const Index = () => {
 
               {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
                 <div>
-                  <Label htmlFor="raceDistance">Typical Race Distance</Label>
+                  <Label htmlFor="raceDistance">{t('activity.raceDistance')}</Label>
                   <Input
                     id="raceDistance"
                     value={profile.raceDistance || ''}
@@ -745,7 +745,7 @@ const Index = () => {
                     <Label htmlFor="sessionDuration">
                       {profile.disciplines?.[0] === 'Football' ? 'Match/Training Duration (hours) *' : 
                        profile.disciplines?.[0] === 'Padel Tennis' ? 'Match Duration (hours) *' :
-                       'Session Duration (hours) *'}
+                       t('activity.sessionDuration')} *
                     </Label>
                     <InfoTooltip content={
                       profile.disciplines?.[0] === 'Football' ? 
@@ -772,7 +772,7 @@ const Index = () => {
                   <Label htmlFor="longestSession">
                     {profile.disciplines?.[0] === 'Football' ? 'Longest Match/Training (hours)' :
                      profile.disciplines?.[0] === 'Padel Tennis' ? 'Longest Match (hours)' :
-                     'Longest Session (hours)'}
+                     t('activity.longestSession')}
                   </Label>
                   <Input
                     id="longestSession"
@@ -981,7 +981,7 @@ const Index = () => {
               {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="elevationGain">Elevation Gain per Session (m)</Label>
+                    <Label htmlFor="elevationGain">{t('activity.elevationGain')}</Label>
                     <InfoTooltip content="Total uphill climbing during your activity. More climbing = higher energy demand and fluid loss. Check your GPS watch or route profile." />
                   </div>
                   <Input
@@ -995,7 +995,7 @@ const Index = () => {
               )}
 
               <div>
-                <Label htmlFor="trainingFrequency">Training Frequency per Week</Label>
+                <Label htmlFor="trainingFrequency">{t('activity.trainingFrequency')}</Label>
                 <Input
                   id="trainingFrequency"
                   type="number"
@@ -1007,7 +1007,7 @@ const Index = () => {
 
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Indoor or Outdoor *</Label>
+                  <Label>{t('activity.location')} *</Label>
                   <InfoTooltip content="Indoor environments typically have lower fluid loss due to controlled temperature and airflow." />
                 </div>
                 <RadioGroup
@@ -1016,15 +1016,15 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="indoor" id="indoor" />
-                    <Label htmlFor="indoor" className="font-normal">Indoor</Label>
+                    <Label htmlFor="indoor" className="font-normal">{t('activity.indoor')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="outdoor" id="outdoor" />
-                    <Label htmlFor="outdoor" className="font-normal">Outdoor</Label>
+                    <Label htmlFor="outdoor" className="font-normal">{t('activity.outdoor')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="both" id="both" />
-                    <Label htmlFor="both" className="font-normal">Both</Label>
+                    <Label htmlFor="both" className="font-normal">{t('activity.both')}</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -1054,7 +1054,7 @@ const Index = () => {
                         max: profile.trainingTempRange?.max || 25 
                       } 
                     })}
-                    placeholder="Min"
+                    placeholder={t('env.tempMin')}
                   />
                   <Input
                     type="number"
@@ -1065,7 +1065,7 @@ const Index = () => {
                         max: parseInt(e.target.value) 
                       } 
                     })}
-                    placeholder="Max"
+                    placeholder={t('env.tempMax')}
                   />
                 </div>
               </div>
@@ -1100,7 +1100,7 @@ const Index = () => {
 
               <div>
                 <div className="flex items-center">
-                  <Label htmlFor="humidity">Humidity Level (%) *</Label>
+                  <Label htmlFor="humidity">{t('env.humidity')} *</Label>
                   <InfoTooltip content="High humidity (>70%) reduces sweat evaporation, increasing heat stress and fluid needs. Check weather apps for humidity levels." />
                 </div>
                 <Input
@@ -1114,7 +1114,7 @@ const Index = () => {
 
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Altitude *</Label>
+                  <Label>{t('env.altitude')} *</Label>
                   <InfoTooltip content="Sea-level: 0-1000m, Moderate: 1000-2500m, High: >2500m. Higher altitude increases respiratory fluid loss and dehydration risk." />
                 </div>
                 <RadioGroup
@@ -1123,22 +1123,22 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="sea-level" id="sea-level" />
-                    <Label htmlFor="sea-level" className="font-normal">Sea Level (0-1000m)</Label>
+                    <Label htmlFor="sea-level" className="font-normal">{t('env.seaLevel')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="moderate" id="moderate" />
-                    <Label htmlFor="moderate" className="font-normal">Moderate (1000-2500m)</Label>
+                    <Label htmlFor="moderate" className="font-normal">{t('env.moderateAltitude')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="high" />
-                    <Label htmlFor="high" className="font-normal">High (&gt;2500m)</Label>
+                    <Label htmlFor="high" className="font-normal">{t('env.highAltitude')}</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Sun Exposure *</Label>
+                  <Label>{t('env.sunExposure')} *</Label>
                   <InfoTooltip content="Direct sun exposure increases body temperature and sweat rate significantly compared to shade." />
                 </div>
                 <RadioGroup
@@ -1147,61 +1147,61 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="shade" id="shade" />
-                    <Label htmlFor="shade" className="font-normal">Mostly Shade</Label>
+                    <Label htmlFor="shade" className="font-normal">{t('env.shade')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="partial" id="partial" />
-                    <Label htmlFor="partial" className="font-normal">Partial Sun</Label>
+                    <Label htmlFor="partial" className="font-normal">{t('env.partial')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="full-sun" id="full-sun" />
-                    <Label htmlFor="full-sun" className="font-normal">Full Sun</Label>
+                    <Label htmlFor="full-sun" className="font-normal">{t('env.fullSun')}</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label>Wind Conditions *</Label>
+                <Label>{t('env.wind')} *</Label>
                 <RadioGroup
                   value={profile.windConditions || ''}
                   onValueChange={(value) => updateProfile({ windConditions: value as 'calm' | 'moderate' | 'windy' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="calm" id="calm" />
-                    <Label htmlFor="calm" className="font-normal">Calm</Label>
+                    <Label htmlFor="calm" className="font-normal">{t('env.calm')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="moderate" id="moderate-wind" />
-                    <Label htmlFor="moderate-wind" className="font-normal">Moderate</Label>
+                    <Label htmlFor="moderate-wind" className="font-normal">{t('env.moderateWind')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="windy" id="windy" />
-                    <Label htmlFor="windy" className="font-normal">Windy</Label>
+                    <Label htmlFor="windy" className="font-normal">{t('env.windy')}</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label>Clothing Type *</Label>
+                <Label>{t('env.clothing')} *</Label>
                 <RadioGroup
                   value={profile.clothingType || ''}
                   onValueChange={(value) => updateProfile({ clothingType: value as 'minimal' | 'light' | 'moderate' | 'heavy' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="minimal" id="minimal" />
-                    <Label htmlFor="minimal" className="font-normal">Minimal (singlet/shorts)</Label>
+                    <Label htmlFor="minimal" className="font-normal">{t('env.minimal')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="light" id="light" />
-                    <Label htmlFor="light" className="font-normal">Light (typical running gear)</Label>
+                    <Label htmlFor="light" className="font-normal">{t('env.light')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="moderate" id="moderate-cloth" />
-                    <Label htmlFor="moderate-cloth" className="font-normal">Moderate (long sleeves)</Label>
+                    <Label htmlFor="moderate-cloth" className="font-normal">{t('env.moderateClothing')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="heavy" id="heavy" />
-                    <Label htmlFor="heavy" className="font-normal">Heavy (jacket/layers)</Label>
+                    <Label htmlFor="heavy" className="font-normal">{t('env.heavy')}</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -1229,7 +1229,7 @@ const Index = () => {
               </div>
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Sweat Rate *</Label>
+                  <Label>{t('sweat.rate')} *</Label>
                   <InfoTooltip content="Your sweat rate affects hydration needs. If you're unsure, choose 'medium'. High sweat rate = clothing soaked during exercise. Low = minimal sweating even during hard efforts." />
                 </div>
                 {analyzedData?.sweatRate && (
@@ -1243,22 +1243,22 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="sweat-low" />
-                    <Label htmlFor="sweat-low" className="font-normal">Low (minimal sweating)</Label>
+                    <Label htmlFor="sweat-low" className="font-normal">{t('sweat.low')} (minimal sweating)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="medium" id="sweat-medium" />
-                    <Label htmlFor="sweat-medium" className="font-normal">Medium (moderate sweating)</Label>
+                    <Label htmlFor="sweat-medium" className="font-normal">{t('sweat.medium')} (moderate sweating)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="sweat-high" />
-                    <Label htmlFor="sweat-high" className="font-normal">High (heavy sweating)</Label>
+                    <Label htmlFor="sweat-high" className="font-normal">{t('sweat.high')} (heavy sweating)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Sweat Saltiness *</Label>
+                  <Label>{t('sweat.saltiness')} *</Label>
                   <InfoTooltip content="Salty sweat = white residue on skin/clothing after exercise. This indicates higher sodium loss. Can be measured with a sweat sodium test at sports labs or with at-home kits." />
                 </div>
                 {analyzedData?.sweatSaltiness && (
@@ -1272,22 +1272,22 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="salt-low" />
-                    <Label htmlFor="salt-low" className="font-normal">Low (no white residue)</Label>
+                    <Label htmlFor="salt-low" className="font-normal">{t('sweat.low')} (no white residue)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="medium" id="salt-medium" />
-                    <Label htmlFor="salt-medium" className="font-normal">Medium (some residue)</Label>
+                    <Label htmlFor="salt-medium" className="font-normal">{t('sweat.medium')} (some residue)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="salt-high" />
-                    <Label htmlFor="salt-high" className="font-normal">High (significant white residue)</Label>
+                    <Label htmlFor="salt-high" className="font-normal">{t('sweat.high')} (significant white residue)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Cramping During Exercise</Label>
+                  <Label>{t('sweat.cramping')}</Label>
                   <InfoTooltip content="Exercise-associated muscle cramps often indicate electrolyte imbalance, particularly sodium and magnesium deficiency." />
                 </div>
                 <RadioGroup
@@ -1296,23 +1296,23 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="none" id="cramp-none" />
-                    <Label htmlFor="cramp-none" className="font-normal">None</Label>
+                    <Label htmlFor="cramp-none" className="font-normal">{t('sweat.none')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="early" id="cramp-early" />
-                    <Label htmlFor="cramp-early" className="font-normal">Early in activity</Label>
+                    <Label htmlFor="cramp-early" className="font-normal">{t('sweat.early')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="mid" id="cramp-mid" />
-                    <Label htmlFor="cramp-mid" className="font-normal">Mid-activity</Label>
+                    <Label htmlFor="cramp-mid" className="font-normal">{t('sweat.mid')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="late" id="cramp-late" />
-                    <Label htmlFor="cramp-late" className="font-normal">Late in activity</Label>
+                    <Label htmlFor="cramp-late" className="font-normal">{t('sweat.late')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="post" id="cramp-post" />
-                    <Label htmlFor="cramp-post" className="font-normal">Post-activity</Label>
+                    <Label htmlFor="cramp-post" className="font-normal">{t('sweat.post')}</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -1343,7 +1343,7 @@ const Index = () => {
             <div className="space-y-4">
               <div>
                 <div className="flex items-center mb-2">
-                  <Label>Daily Salt Intake *</Label>
+                  <Label>{t('nutrition.saltIntake')} *</Label>
                   <InfoTooltip content="Low: minimal processed foods, no added salt. Medium: normal diet with some salt. High: salty foods regularly, add salt to meals." />
                 </div>
                 <RadioGroup
@@ -1352,21 +1352,21 @@ const Index = () => {
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="low" id="salt-intake-low" />
-                    <Label htmlFor="salt-intake-low" className="font-normal">Low (little added salt)</Label>
+                    <Label htmlFor="salt-intake-low" className="font-normal">{t('sweat.low')} (little added salt)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="medium" id="salt-intake-medium" />
-                    <Label htmlFor="salt-intake-medium" className="font-normal">Medium (moderate salt)</Label>
+                    <Label htmlFor="salt-intake-medium" className="font-normal">{t('sweat.medium')} (moderate salt)</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="high" id="salt-intake-high" />
-                    <Label htmlFor="salt-intake-high" className="font-normal">High (regular salt use)</Label>
+                    <Label htmlFor="salt-intake-high" className="font-normal">{t('sweat.high')} (regular salt use)</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label htmlFor="dailyWaterIntake">Daily Water Intake (liters)</Label>
+                <Label htmlFor="dailyWaterIntake">{t('nutrition.waterIntake')}</Label>
                 <Input
                   id="dailyWaterIntake"
                   type="number"
@@ -1379,7 +1379,7 @@ const Index = () => {
 
               <div>
                 <div className="flex items-center">
-                  <Label htmlFor="caffeineIntake">Daily Caffeine Intake (mg)</Label>
+                  <Label htmlFor="caffeineIntake">{t('nutrition.caffeine')}</Label>
                   <InfoTooltip content="Caffeine can have a mild diuretic effect at high doses (>300mg/day), potentially increasing fluid needs. However, regular caffeine users develop tolerance. 1 cup coffee ≈ 95mg, 1 espresso ≈ 64mg, 1 energy drink ≈ 80mg." />
                 </div>
                 <Input
@@ -1392,7 +1392,7 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="dietType">Diet Type</Label>
+                <Label htmlFor="dietType">{t('nutrition.diet')}</Label>
                 <Input
                   id="dietType"
                   value={profile.dietType || ''}
@@ -1426,32 +1426,32 @@ const Index = () => {
           >
             <div className="space-y-4">
               <div>
-                <Label>Primary Goal *</Label>
+                <Label>{t('goals.primary')} *</Label>
                 <RadioGroup
                   value={profile.primaryGoal || 'performance'}
                   onValueChange={(value) => updateProfile({ primaryGoal: value as 'performance' | 'health' | 'weight-loss' | 'endurance' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="performance" id="goal-performance" />
-                    <Label htmlFor="goal-performance" className="font-normal">Performance Optimization</Label>
+                    <Label htmlFor="goal-performance" className="font-normal">{t('goals.performance')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="health" id="goal-health" />
-                    <Label htmlFor="goal-health" className="font-normal">Health & Wellness</Label>
+                    <Label htmlFor="goal-health" className="font-normal">{t('goals.health')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="weight-loss" id="goal-weight" />
-                    <Label htmlFor="goal-weight" className="font-normal">Weight Management</Label>
+                    <Label htmlFor="goal-weight" className="font-normal">{t('goals.weightLoss')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="endurance" id="goal-endurance" />
-                    <Label htmlFor="goal-endurance" className="font-normal">Endurance Building</Label>
+                    <Label htmlFor="goal-endurance" className="font-normal">{t('goals.endurance')}</Label>
                   </div>
                 </RadioGroup>
               </div>
 
               <div>
-                <Label htmlFor="upcomingEvents">Upcoming Events</Label>
+                <Label htmlFor="upcomingEvents">{t('goals.upcomingEvents')}</Label>
                 <Textarea
                   id="upcomingEvents"
                   value={profile.upcomingEvents || ''}
@@ -1462,7 +1462,7 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="specificConcerns">Specific Hydration Concerns</Label>
+                <Label htmlFor="specificConcerns">{t('goals.concerns')}</Label>
                 <Textarea
                   id="specificConcerns"
                   value={profile.specificConcerns || ''}
