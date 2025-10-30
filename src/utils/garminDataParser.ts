@@ -365,7 +365,10 @@ function mapWhoopDataToProfile(parsedData: ParsedWhoopData): Partial<HydrationPr
   return profile;
 }
 
-export async function parseSmartWatchFiles(files: File[]): Promise<Partial<HydrationProfile>> {
+export async function parseSmartWatchFiles(files: File[]): Promise<{ 
+  profile: Partial<HydrationProfile>, 
+  rawData: ParsedGarminData | ParsedWhoopData 
+}> {
   // Detect file type based on filenames
   const fileNames = files.map(f => f.name.toLowerCase());
   
@@ -382,11 +385,17 @@ export async function parseSmartWatchFiles(files: File[]): Promise<Partial<Hydra
   
   if (isWhoop) {
     const whoopData = await parseWhoopFiles(files);
-    return mapWhoopDataToProfile(whoopData);
+    return {
+      profile: mapWhoopDataToProfile(whoopData),
+      rawData: whoopData
+    };
   } else if (isGarmin) {
     const garminData = await parseGarminFiles(files);
-    return mapGarminDataToProfile(garminData);
+    return {
+      profile: mapGarminDataToProfile(garminData),
+      rawData: garminData
+    };
   }
   
-  return {};
+  return { profile: {}, rawData: {} };
 }

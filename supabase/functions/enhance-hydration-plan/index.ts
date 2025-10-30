@@ -34,7 +34,8 @@ const planSchema = z.object({
 const requestSchema = z.object({
   profile: profileSchema,
   plan: planSchema,
-  hasSmartWatchData: z.boolean().optional()
+  hasSmartWatchData: z.boolean().optional(),
+  rawSmartWatchData: z.any().optional()
 });
 
 serve(async (req) => {
@@ -61,8 +62,37 @@ serve(async (req) => {
       );
     }
 
-    const { profile, plan, hasSmartWatchData } = validationResult.data;
+    const { profile, plan, hasSmartWatchData, rawSmartWatchData } = validationResult.data;
     console.log('[Info] Enhancing hydration plan with AI...', hasSmartWatchData ? '(with smartwatch data)' : '');
+    
+    // Extract smartwatch insights if available
+    let smartWatchInsights = '';
+    if (rawSmartWatchData && hasSmartWatchData) {
+      if (rawSmartWatchData.physiologicalCycles && rawSmartWatchData.physiologicalCycles.length > 0) {
+        const recent = rawSmartWatchData.physiologicalCycles.slice(-7);
+        const avgRecovery = recent.reduce((sum: number, c: any) => sum + c.recoveryScore, 0) / recent.length;
+        const avgHRV = recent.reduce((sum: number, c: any) => sum + c.hrv, 0) / recent.length;
+        const avgSleep = recent.reduce((sum: number, c: any) => sum + c.sleepDuration, 0) / recent.length / 60;
+        const avgSleepPerf = recent.reduce((sum: number, c: any) => sum + c.sleepPerformance, 0) / recent.length;
+        
+        smartWatchInsights += `\nSMARTWATCH DATA (Last 7 days):\n`;
+        smartWatchInsights += `- Recovery Score: ${avgRecovery.toFixed(0)}% (avg)\n`;
+        smartWatchInsights += `- HRV: ${avgHRV.toFixed(0)}ms (avg)\n`;
+        smartWatchInsights += `- Sleep: ${avgSleep.toFixed(1)}h/night, ${avgSleepPerf.toFixed(0)}% quality\n`;
+        
+        if (rawSmartWatchData.workouts && rawSmartWatchData.workouts.length > 0) {
+          const recentWorkouts = rawSmartWatchData.workouts.slice(-5);
+          const avgStrain = recentWorkouts.reduce((sum: number, w: any) => sum + w.strain, 0) / recentWorkouts.length;
+          const avgHR = recentWorkouts.reduce((sum: number, w: any) => sum + w.avgHR, 0) / recentWorkouts.length;
+          const maxHR = Math.max(...recentWorkouts.map((w: any) => w.maxHR));
+          
+          smartWatchInsights += `- Workout Strain: ${avgStrain.toFixed(1)} (avg recent)\n`;
+          smartWatchInsights += `- Exercise HR: ${avgHR.toFixed(0)} bpm avg, ${maxHR} bpm max\n`;
+        }
+        
+        smartWatchInsights += `\nKEY INSIGHT: This real data allows for MUCH more accurate hydration recommendations. Use it to explain why this athlete may need MORE or LESS hydration than typical calculations suggest.\n`;
+      }
+    }
 
     const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
     if (!LOVABLE_API_KEY) {
@@ -118,7 +148,7 @@ Draw from this comprehensive evidence base to provide:
 
 Keep responses brief and actionable (2-3 sentences per section).`;
 
-    const userPrompt = `Analyze this athlete's hydration profile and plan${hasSmartWatchData ? ' (ENHANCED WITH SMARTWATCH DATA - mention this in insights)' : ''}:
+    const userPrompt = `Analyze this athlete's hydration profile and plan${hasSmartWatchData ? ' (ENHANCED WITH SMARTWATCH DATA - this gives you REAL physiological data to work with!)' : ''}:
 
 PROFILE:
 - Weight: ${profile.weight}kg, Age: ${profile.age}, Sex: ${profile.sex}
@@ -131,6 +161,7 @@ ${profile.elevationGain ? `- Elevation gain: ${profile.elevationGain}m` : ''}
 ${profile.sleepHours ? `- Sleep: ${profile.sleepHours} hours/night` : ''}
 ${profile.sleepQuality ? `- Sleep quality: ${profile.sleepQuality}/10` : ''}
 ${profile.restingHeartRate ? `- Resting HR: ${profile.restingHeartRate} bpm` : ''}
+${smartWatchInsights}
 
 PLAN:
 - PRE: ${plan.preActivity.water}ml water + ${plan.preActivity.electrolytes} Supplme sachet
@@ -138,13 +169,15 @@ PLAN:
 - POST: ${plan.postActivity.water}ml water + ${plan.postActivity.electrolytes} sachets
 - Total fluid loss: ${plan.totalFluidLoss}ml
 
+${hasSmartWatchData ? 'IMPORTANT: Use the smartwatch data to provide SPECIFIC insights about this athlete\'s actual physiological state (recovery, HRV, sleep, workout strain). Explain how these REAL metrics affect their hydration needs differently than a generic calculation.' : ''}
+
 Provide:
-1. personalized_insight: Why these numbers make sense for THIS athlete (2-3 sentences)
-2. risk_factors: Any concerning factors that increase dehydration risk (1-2 sentences)
-3. confidence_level: high/medium/low based on data completeness
+1. personalized_insight: Why these numbers make sense for THIS athlete based on their ${hasSmartWatchData ? 'ACTUAL smartwatch data' : 'profile'} (2-3 sentences)
+2. risk_factors: Any concerning factors from ${hasSmartWatchData ? 'their smartwatch metrics' : 'their profile'} that increase dehydration risk (1-2 sentences)
+3. confidence_level: ${hasSmartWatchData ? '"high" (real data available)' : 'high/medium/low based on data completeness'}
 4. professional_recommendation: When to seek sweat testing or sports nutritionist (1 sentence)
-5. performance_comparison: Compare this athlete's hydration needs to typical ${profile.disciplines?.[0] || 'endurance'} athletes (2 sentences)
-6. optimization_tips: Array of 3-4 specific, actionable tips to optimize hydration based on their unique profile (each tip 1 sentence)
+5. performance_comparison: Compare this athlete's hydration needs to typical ${profile.disciplines?.[0] || 'endurance'} athletes${hasSmartWatchData ? ', considering their recovery and strain data' : ''} (2 sentences)
+6. optimization_tips: Array of 3-4 specific, actionable tips to optimize hydration based on their ${hasSmartWatchData ? 'actual physiological metrics' : 'profile'} (each tip 1 sentence)
 
 Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_level": "", "professional_recommendation": "", "performance_comparison": "", "optimization_tips": []}`;
 

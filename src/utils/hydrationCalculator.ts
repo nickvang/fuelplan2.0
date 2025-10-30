@@ -1,6 +1,6 @@
 import { HydrationProfile, HydrationPlan } from '@/types/hydration';
 
-export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan {
+export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
   // Base sweat rate calculation (ml/hour) - Based on ACSM guidelines and recent research
   // Reference: PMID 17277604, PMID 38732589
   const baseSweatRate = {
@@ -12,6 +12,46 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
   // Store calculation details for transparency
   const calculationSteps: string[] = [];
   calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate})`);
+  
+  // Enhanced adjustments using smartwatch data if available
+  let smartWatchAdjustments = 1.0;
+  
+  if (rawSmartWatchData) {
+    // Whoop data adjustments
+    if (rawSmartWatchData.physiologicalCycles && rawSmartWatchData.physiologicalCycles.length > 0) {
+      const recent = rawSmartWatchData.physiologicalCycles.slice(-7); // Last week
+      const avgRecovery = recent.reduce((sum: number, c: any) => sum + c.recoveryScore, 0) / recent.length;
+      const avgHRV = recent.reduce((sum: number, c: any) => sum + c.hrv, 0) / recent.length;
+      
+      // Low recovery or low HRV = higher hydration need
+      if (avgRecovery < 50) {
+        smartWatchAdjustments *= 1.15;
+        calculationSteps.push(`Low recovery score (${avgRecovery.toFixed(0)}%) → +15% hydration need`);
+      }
+      if (avgHRV < 50) {
+        smartWatchAdjustments *= 1.1;
+        calculationSteps.push(`Low HRV (${avgHRV.toFixed(0)}ms) → +10% hydration need`);
+      }
+      
+      // Poor sleep quality = higher hydration need
+      const avgSleepPerf = recent.reduce((sum: number, c: any) => sum + c.sleepPerformance, 0) / recent.length;
+      if (avgSleepPerf < 70) {
+        smartWatchAdjustments *= 1.1;
+        calculationSteps.push(`Poor sleep quality (${avgSleepPerf.toFixed(0)}%) → +10% hydration need`);
+      }
+    }
+    
+    // Workout strain adjustments
+    if (rawSmartWatchData.workouts && rawSmartWatchData.workouts.length > 0) {
+      const recentWorkouts = rawSmartWatchData.workouts.slice(-5);
+      const avgStrain = recentWorkouts.reduce((sum: number, w: any) => sum + w.strain, 0) / recentWorkouts.length;
+      
+      if (avgStrain > 15) {
+        smartWatchAdjustments *= 1.2;
+        calculationSteps.push(`High workout strain (${avgStrain.toFixed(1)}) → +20% hydration need`);
+      }
+    }
+  }
 
   // Adjust for temperature (using training temp average)
   const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
@@ -43,7 +83,7 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
   // Calculate total sweat rate
   const sweatRatePerHour = Math.round(
     baseSweatRate * tempMultiplier * humidityMultiplier * 
-    altitudeMultiplier * sunMultiplier * environmentMultiplier
+    altitudeMultiplier * sunMultiplier * environmentMultiplier * smartWatchAdjustments
   );
   calculationSteps.push(`Final sweat rate: ${sweatRatePerHour}ml/hour (after all adjustments)`);
 

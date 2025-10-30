@@ -14,9 +14,10 @@ interface HydrationPlanDisplayProps {
   profile: HydrationProfile;
   onReset: () => void;
   hasSmartWatchData?: boolean;
+  rawSmartWatchData?: any;
 }
 
-export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData = false }: HydrationPlanDisplayProps) {
+export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
   const { toast } = useToast();
@@ -25,7 +26,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
     const fetchAIInsights = async () => {
       try {
         const { data, error } = await supabase.functions.invoke('enhance-hydration-plan', {
-          body: { profile, plan, hasSmartWatchData }
+          body: { profile, plan, hasSmartWatchData, rawSmartWatchData }
         });
 
         if (error) throw error;
@@ -43,7 +44,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
     };
 
     fetchAIInsights();
-  }, [plan, profile, hasSmartWatchData]);
+  }, [plan, profile, hasSmartWatchData, rawSmartWatchData]);
 
   const handleDeleteMyData = async () => {
     if (!confirm('Are you sure you want to delete all your data? This action cannot be undone.')) {

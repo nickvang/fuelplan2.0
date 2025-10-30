@@ -28,6 +28,7 @@ const Index = () => {
   const [smartwatchData, setSmartWatchData] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzedData, setAnalyzedData] = useState<Partial<HydrationProfile> | null>(null);
+  const [rawSmartWatchData, setRawSmartWatchData] = useState<any>(null);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [honeypot, setHoneypot] = useState(''); // Bot protection
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
@@ -50,7 +51,10 @@ const Index = () => {
     
     try {
       // Parse smartwatch files (Garmin or Whoop)
-      const extractedData = await parseSmartWatchFiles(files);
+      const { profile: extractedData, rawData } = await parseSmartWatchFiles(files);
+      
+      // Store raw data for enhanced calculations
+      setRawSmartWatchData(rawData);
       
       setIsAnalyzing(false);
       
@@ -204,7 +208,7 @@ const Index = () => {
   };
 
   if (showPlan && profile as HydrationProfile) {
-    const plan = calculateHydrationPlan(profile as HydrationProfile);
+    const plan = calculateHydrationPlan(profile as HydrationProfile, rawSmartWatchData);
     return (
       <div className="min-h-screen bg-background py-12 px-4">
         <div className="max-w-5xl mx-auto">
@@ -213,6 +217,7 @@ const Index = () => {
             profile={profile as HydrationProfile} 
             onReset={handleReset}
             hasSmartWatchData={!!analyzedData && smartwatchData.length > 0}
+            rawSmartWatchData={rawSmartWatchData}
           />
         </div>
       </div>
