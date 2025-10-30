@@ -367,8 +367,8 @@ const Index = () => {
           </div>
         )}
 
-        {/* Profile Progress Indicator */}
-        {step > 0 && !isGenerating && (
+        {/* Profile Progress Indicator - Only show in Pro mode */}
+        {step > 0 && !isGenerating && version === 'pro' && (
           <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 animate-fade-in">
             <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
               ✓ {analyzedData ? 'Data analysis complete! We pre-filled:' : 'Profile progress:'}
