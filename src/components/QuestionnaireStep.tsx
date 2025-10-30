@@ -1,6 +1,7 @@
 import { ReactNode } from 'react';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface QuestionnaireStepProps {
   title: string;
@@ -19,6 +20,8 @@ export function QuestionnaireStep({
   onBack,
   isValid,
 }: QuestionnaireStepProps) {
+  const { t } = useLanguage();
+  
   return (
     <Card className="p-8 space-y-6 border-border">
       <div className="space-y-2">
@@ -37,7 +40,7 @@ export function QuestionnaireStep({
             variant="outline"
             className="flex-1"
           >
-            Back
+            {t('common.back')}
           </Button>
         )}
         <Button
@@ -45,7 +48,7 @@ export function QuestionnaireStep({
           disabled={!isValid}
           className="flex-1"
         >
-          {onBack ? 'Continue' : 'Get Started'}
+          {onBack ? t('common.next') : t('common.next')}
         </Button>
       </div>
     </Card>

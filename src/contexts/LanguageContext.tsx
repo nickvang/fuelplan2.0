@@ -41,25 +41,49 @@ export const translations = {
     'body.height': 'Height (cm)',
     'body.male': 'Male',
     'body.female': 'Female',
+    'body.other': 'Other',
+    'body.bodyFat': 'Body Fat %',
+    'body.restingHR': 'Resting HR',
+    'body.hrv': 'HRV / Recovery Index',
+    'body.avgSleep': 'Average Sleep (hours)',
+    'body.sleepQuality': 'Sleep Quality (1-10)',
+    'body.healthConditions': 'Known Health Conditions',
+    'body.sweatSodiumTest': 'Sweat Sodium Test (mmol/L)',
+    'body.tooltip.weight': 'Your body weight affects fluid requirements. Heavier athletes typically need more hydration.',
     
     // Activity fields
-    'activity.discipline': 'Sport/Discipline',
-    'activity.sessionDuration': 'Typical Session Duration (hours)',
+    'activity.primaryDiscipline': 'Primary Discipline',
+    'activity.raceDistance': 'Typical Race Distance',
+    'activity.sessionDuration': 'Session Duration (hours)',
+    'activity.longestSession': 'Longest Session (hours)',
     'activity.indoor': 'Indoor',
     'activity.outdoor': 'Outdoor',
     'activity.both': 'Both',
+    'activity.location': 'Training Location',
+    'activity.elevationGain': 'Elevation Gain (meters)',
+    'activity.trainingFrequency': 'Training Frequency (times per week)',
     
     // Environment
-    'env.temperature': 'Training Temperature',
+    'env.tempMin': 'Minimum Temperature (°C)',
+    'env.tempMax': 'Maximum Temperature (°C)',
     'env.humidity': 'Humidity (%)',
+    'env.altitude': 'Altitude',
+    'env.seaLevel': 'Sea Level',
+    'env.moderateAltitude': 'Moderate (1000-2000m)',
+    'env.highAltitude': 'High (>2000m)',
     'env.sunExposure': 'Sun Exposure',
     'env.shade': 'Shade',
     'env.partial': 'Partial Sun',
     'env.fullSun': 'Full Sun',
     'env.wind': 'Wind Conditions',
     'env.calm': 'Calm',
-    'env.moderate': 'Moderate',
+    'env.moderateWind': 'Moderate',
     'env.windy': 'Windy',
+    'env.clothing': 'Clothing Type',
+    'env.minimal': 'Minimal',
+    'env.light': 'Light',
+    'env.moderateClothing': 'Moderate',
+    'env.heavy': 'Heavy',
     
     // Sweat Profile
     'sweat.rate': 'Sweat Rate',
@@ -68,6 +92,12 @@ export const translations = {
     'sweat.medium': 'Medium',
     'sweat.high': 'High',
     'sweat.cramping': 'Do you experience cramping?',
+    'sweat.crampTiming': 'Cramp Timing',
+    'sweat.none': 'None',
+    'sweat.early': 'Early (first hour)',
+    'sweat.mid': 'Mid-session',
+    'sweat.late': 'Late (last hour)',
+    'sweat.post': 'Post-activity',
     
     // Nutrition
     'nutrition.saltIntake': 'Daily Salt Intake',
@@ -83,6 +113,7 @@ export const translations = {
     'goals.weightLoss': 'Weight Loss',
     'goals.health': 'General Health',
     'goals.concerns': 'Specific Concerns',
+    'goals.upcomingEvents': 'Upcoming Events',
     
     // Consent & GDPR
     'consent.gdpr': 'I have read and agree to the data privacy notice above. I consent to Supplme collecting and processing my anonymized data for product development purposes in accordance with GDPR regulations.',
@@ -107,10 +138,16 @@ export const translations = {
     'gdpr.security.title': '🔒 Security',
     'gdpr.security.text': 'Data encrypted in transit and at rest. Compliant with industry standards.',
     'gdpr.contact': 'Contact: For data deletion requests or privacy questions, email info@supplme.com',
+    
+    // File Upload
+    'upload.title': 'Upload Smartwatch Data',
+    'upload.description': 'Upload training files from your smartwatch for more accurate analysis',
     'smartwatch.uploaded': '✓ {count} file(s) uploaded',
     'smartwatch.remove': 'Remove',
     'smartwatch.multipleFiles': 'Upload Multiple Files',
     'smartwatch.uploadFolder': 'Or Upload Entire Folder',
+    
+    // Analysis
     'analyzing.title': 'Analyzing Your Data...',
     'analyzing.processing': 'Processing {count} file(s) to extract your health metrics',
     'analysis.complete': '✓ Data analysis complete! We pre-filled:',
@@ -128,23 +165,6 @@ export const translations = {
     'step.5.title': '5. Dietary Habits',
     'step.6.title': '6. Goals & Events',
     
-    // File Upload
-    'upload.title': 'Upload Smartwatch Data',
-    'upload.description': 'Upload training files from your smartwatch for more accurate analysis',
-    'upload.drop': 'Drop files here or click to upload',
-    'upload.formats': 'Supported formats: FIT, TCX, GPX',
-    
-    // Validation
-    'validation.ageRequired': 'Age is required',
-    'validation.weightRequired': 'Weight is required',
-    'validation.disciplineRequired': 'Please select at least one discipline',
-    'validation.sessionRequired': 'Session duration is required',
-    
-    // Buttons
-    'button.startNew': 'Start New Plan',
-    'button.download': 'Download Plan',
-    'button.share': 'Share Results',
-    
     // Plan
     'plan.title': 'Your Personalized Hydration Plan',
     'plan.fluidLoss': 'Estimated Fluid Loss',
@@ -153,10 +173,6 @@ export const translations = {
     'plan.postActivity': 'POST-ACTIVITY',
     'plan.water': 'Water',
     'plan.electrolytes': 'Electrolytes',
-    
-    // Footer
-    'footer.disclaimer': 'This hydration guide is for informational purposes only and should not replace professional medical advice.',
-    'footer.contact': 'Contact',
   },
   da: {
     // Header
@@ -188,25 +204,49 @@ export const translations = {
     'body.height': 'Højde (cm)',
     'body.male': 'Mand',
     'body.female': 'Kvinde',
+    'body.other': 'Andet',
+    'body.bodyFat': 'Fedtprocent %',
+    'body.restingHR': 'Hvilepuls',
+    'body.hrv': 'HRV / Restituerings Index',
+    'body.avgSleep': 'Gennemsnitlig Søvn (timer)',
+    'body.sleepQuality': 'Søvnkvalitet (1-10)',
+    'body.healthConditions': 'Kendte Helbredstilstande',
+    'body.sweatSodiumTest': 'Sved Natrium Test (mmol/L)',
+    'body.tooltip.weight': 'Din kropsvægt påvirker væskebehov. Tungere atleter har typisk behov for mere væske.',
     
     // Activity fields
-    'activity.discipline': 'Sport/Disciplin',
-    'activity.sessionDuration': 'Typisk Sessionslængde (timer)',
+    'activity.primaryDiscipline': 'Primær Disciplin',
+    'activity.raceDistance': 'Typisk Løbsdistance',
+    'activity.sessionDuration': 'Sessionslængde (timer)',
+    'activity.longestSession': 'Længste Session (timer)',
     'activity.indoor': 'Indendørs',
     'activity.outdoor': 'Udendørs',
     'activity.both': 'Begge',
+    'activity.location': 'Træningssted',
+    'activity.elevationGain': 'Højdeforskel (meter)',
+    'activity.trainingFrequency': 'Træningsfrekvens (gange per uge)',
     
     // Environment
-    'env.temperature': 'Træningstemperatur',
+    'env.tempMin': 'Minimumtemperatur (°C)',
+    'env.tempMax': 'Maksimumtemperatur (°C)',
     'env.humidity': 'Fugtighed (%)',
+    'env.altitude': 'Højde',
+    'env.seaLevel': 'Havniveau',
+    'env.moderateAltitude': 'Moderat (1000-2000m)',
+    'env.highAltitude': 'Høj (>2000m)',
     'env.sunExposure': 'Soleksponering',
     'env.shade': 'Skygge',
     'env.partial': 'Delvis Sol',
     'env.fullSun': 'Fuld Sol',
     'env.wind': 'Vindforhold',
     'env.calm': 'Stille',
-    'env.moderate': 'Moderat',
+    'env.moderateWind': 'Moderat',
     'env.windy': 'Blæsende',
+    'env.clothing': 'Beklædningstype',
+    'env.minimal': 'Minimal',
+    'env.light': 'Let',
+    'env.moderateClothing': 'Moderat',
+    'env.heavy': 'Tung',
     
     // Sweat Profile
     'sweat.rate': 'Svedhastighed',
@@ -215,6 +255,12 @@ export const translations = {
     'sweat.medium': 'Mellem',
     'sweat.high': 'Høj',
     'sweat.cramping': 'Oplever du kramper?',
+    'sweat.crampTiming': 'Krampe Timing',
+    'sweat.none': 'Ingen',
+    'sweat.early': 'Tidligt (første time)',
+    'sweat.mid': 'Midt-session',
+    'sweat.late': 'Sent (sidste time)',
+    'sweat.post': 'Efter-aktivitet',
     
     // Nutrition
     'nutrition.saltIntake': 'Dagligt Saltindtag',
@@ -230,6 +276,7 @@ export const translations = {
     'goals.weightLoss': 'Vægttab',
     'goals.health': 'Generel Sundhed',
     'goals.concerns': 'Specifikke Bekymringer',
+    'goals.upcomingEvents': 'Kommende Begivenheder',
     
     // Consent & GDPR
     'consent.gdpr': 'Jeg har læst og accepterer databeskyttelsesmeddelelsen ovenfor. Jeg samtykker til, at Supplme indsamler og behandler mine anonymiserede data til produktudviklingsformål i overensstemmelse med GDPR-reglerne.',
@@ -254,10 +301,16 @@ export const translations = {
     'gdpr.security.title': '🔒 Sikkerhed',
     'gdpr.security.text': 'Data krypteres under overførsel og ved opbevaring. Overholder industristandarder.',
     'gdpr.contact': 'Kontakt: For anmodninger om datasletning eller spørgsmål om privatlivets fred, send e-mail til info@supplme.com',
+    
+    // File Upload
+    'upload.title': 'Upload Smartwatch Data',
+    'upload.description': 'Upload træningsfiler fra dit smartwatch for mere præcis analyse',
     'smartwatch.uploaded': '✓ {count} fil(er) uploadet',
     'smartwatch.remove': 'Fjern',
     'smartwatch.multipleFiles': 'Upload Flere Filer',
     'smartwatch.uploadFolder': 'Eller Upload Hel Mappe',
+    
+    // Analysis
     'analyzing.title': 'Analyserer Dine Data...',
     'analyzing.processing': 'Behandler {count} fil(er) for at udtrække dine sundhedsmålinger',
     'analysis.complete': '✓ Dataanalyse fuldført! Vi har udfyldt:',
@@ -275,23 +328,6 @@ export const translations = {
     'step.5.title': '5. Kostvaner',
     'step.6.title': '6. Mål & Begivenheder',
     
-    // File Upload
-    'upload.title': 'Upload Smartwatch Data',
-    'upload.description': 'Upload træningsfiler fra dit smartwatch for mere præcis analyse',
-    'upload.drop': 'Slip filer her eller klik for at uploade',
-    'upload.formats': 'Understøttede formater: FIT, TCX, GPX',
-    
-    // Validation
-    'validation.ageRequired': 'Alder er påkrævet',
-    'validation.weightRequired': 'Vægt er påkrævet',
-    'validation.disciplineRequired': 'Vælg venligst mindst en disciplin',
-    'validation.sessionRequired': 'Sessionslængde er påkrævet',
-    
-    // Buttons
-    'button.startNew': 'Start Ny Plan',
-    'button.download': 'Download Plan',
-    'button.share': 'Del Resultater',
-    
     // Plan
     'plan.title': 'Din Personlige Væskebalance Plan',
     'plan.fluidLoss': 'Estimeret Væsketab',
@@ -300,10 +336,6 @@ export const translations = {
     'plan.postActivity': 'EFTER AKTIVITET',
     'plan.water': 'Vand',
     'plan.electrolytes': 'Elektrolytter',
-    
-    // Footer
-    'footer.disclaimer': 'Denne væskebalance guide er kun til informationsformål og bør ikke erstatte professionel medicinsk rådgivning.',
-    'footer.contact': 'Kontakt',
   },
 };
 

@@ -542,58 +542,58 @@ const Index = () => {
             <div className="space-y-4">
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="age">Age *</Label>
+                  <Label htmlFor="age">{t('body.age')} *</Label>
                   <Input
                     id="age"
                     type="number"
                     value={profile.age || ''}
                     onChange={(e) => updateProfile({ age: parseInt(e.target.value) })}
-                    placeholder="Age"
+                    placeholder={t('body.age')}
                   />
                 </div>
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="weight">Weight (kg) *</Label>
-                    <InfoTooltip content="Your body weight affects fluid requirements. Heavier athletes typically need more hydration." />
+                    <Label htmlFor="weight">{t('body.weight')} *</Label>
+                    <InfoTooltip content={t('body.tooltip.weight')} />
                   </div>
                   <Input
                     id="weight"
                     type="number"
                     value={profile.weight || ''}
                     onChange={(e) => updateProfile({ weight: parseInt(e.target.value) })}
-                    placeholder="Weight"
+                    placeholder={t('body.weight')}
                   />
                 </div>
               </div>
 
               <div>
-                <Label htmlFor="height">Height (cm) *</Label>
+                <Label htmlFor="height">{t('body.height')} *</Label>
                 <Input
                   id="height"
                   type="number"
                   value={profile.height || ''}
                   onChange={(e) => updateProfile({ height: parseInt(e.target.value) })}
-                  placeholder="Height"
+                  placeholder={t('body.height')}
                 />
               </div>
 
               <div>
-                <Label>Sex *</Label>
+                <Label>{t('body.sex')} *</Label>
                 <RadioGroup
                   value={profile.sex || 'male'}
                   onValueChange={(value) => updateProfile({ sex: value as 'male' | 'female' | 'other' })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="male" id="male" />
-                    <Label htmlFor="male" className="font-normal">Male</Label>
+                    <Label htmlFor="male" className="font-normal">{t('body.male')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="female" id="female" />
-                    <Label htmlFor="female" className="font-normal">Female</Label>
+                    <Label htmlFor="female" className="font-normal">{t('body.female')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="other" id="other" />
-                    <Label htmlFor="other" className="font-normal">Other</Label>
+                    <Label htmlFor="other" className="font-normal">{t('body.other')}</Label>
                   </div>
                 </RadioGroup>
               </div>
@@ -601,7 +601,7 @@ const Index = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="bodyFat">Body Fat %</Label>
+                    <Label htmlFor="bodyFat">{t('body.bodyFat')}</Label>
                     <InfoTooltip content="Body fat percentage affects hydration needs - lower body fat means more body water. Can be measured with smart scales, DEXA scans, or found in Garmin Index, Apple Watch (requires third-party apps), or fitness assessments. Typical athletic range: 6-24% (men), 14-31% (women)." />
                   </div>
                   <Input
@@ -609,12 +609,12 @@ const Index = () => {
                     type="number"
                     value={profile.bodyFat || ''}
                     onChange={(e) => updateProfile({ bodyFat: parseFloat(e.target.value) })}
-                    placeholder="Optional"
+                    placeholder={t('common.optional')}
                   />
                 </div>
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="restingHeartRate">Resting HR</Label>
+                    <Label htmlFor="restingHeartRate">{t('body.restingHR')}</Label>
                     <InfoTooltip content="Resting heart rate (RHR) indicates fitness level and recovery. Lower RHR typically means better cardiovascular fitness. Find it on: Garmin (morning report), Apple Watch (Health app), Coros (training status), Whoop (daily metrics), Oura Ring. Typical athletic range: 40-60 bpm." />
                   </div>
                   <Input
@@ -629,7 +629,7 @@ const Index = () => {
 
               <div>
                 <div className="flex items-center">
-                  <Label htmlFor="hrv">HRV / Recovery Index</Label>
+                  <Label htmlFor="hrv">{t('body.hrv')}</Label>
                   <InfoTooltip content="Heart Rate Variability measures recovery status. Found in fitness watches (Garmin, Apple Watch, Whoop). Low HRV = poor recovery, may need extra hydration. Normal range varies by individual - check your baseline." />
                 </div>
                 <Input
@@ -643,7 +643,7 @@ const Index = () => {
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="sleepHours">Average Sleep (hours)</Label>
+                    <Label htmlFor="sleepHours">{t('body.avgSleep')}</Label>
                     <InfoTooltip content="Sleep duration affects recovery and hydration needs. Track via Garmin, Apple Watch, Whoop, Oura Ring, or Coros. Aim for 7-9 hours for optimal athletic performance." />
                   </div>
                   <Input
@@ -657,7 +657,7 @@ const Index = () => {
                 </div>
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="sleepQuality">Sleep Quality (1-10)</Label>
+                    <Label htmlFor="sleepQuality">{t('body.sleepQuality')}</Label>
                     <InfoTooltip content="Rate your sleep quality from 1 (poor) to 10 (excellent). Many wearables provide a sleep score. Poor sleep impacts recovery and may increase hydration needs." />
                   </div>
                   <Input
@@ -673,7 +673,7 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="healthConditions">Known Health Conditions</Label>
+                <Label htmlFor="healthConditions">{t('body.healthConditions')}</Label>
                 <Input
                   id="healthConditions"
                   value={profile.healthConditions || ''}
@@ -684,7 +684,7 @@ const Index = () => {
 
               <div>
                 <div className="flex items-center">
-                  <Label htmlFor="sweatSodiumTest">Sweat Sodium Test (mmol/L)</Label>
+                  <Label htmlFor="sweatSodiumTest">{t('body.sweatSodiumTest')}</Label>
                   <InfoTooltip content="A sweat sodium test measures the concentration of sodium in your sweat. Normal range is 20-80 mmol/L. High sodium loss (>60 mmol/L) means you need more electrolytes. Can be done at sports labs or with at-home test kits." />
                 </div>
                 <Input
