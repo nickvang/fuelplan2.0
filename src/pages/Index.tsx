@@ -107,7 +107,7 @@ const Index = () => {
         {/* Header */}
         <div className="text-center space-y-4">
           <div className="inline-flex items-center justify-center mb-4">
-            <img src={supplmeLogo} alt="SUPPLME" className="h-20" />
+            <img src={supplmeLogo} alt="SUPPLME" className="h-40" />
           </div>
           <p className="text-xl text-muted-foreground">
             Your personalized hydration plan
