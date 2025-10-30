@@ -914,10 +914,10 @@ const Index = () => {
                         value={profile.upcomingEvents || ''}
                         onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
                         placeholder={
-                          profile.disciplines?.[0] === 'Running' ? 'e.g., Half Marathon, Marathon, Ultra 50K, Ultra 100K' :
-                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., Gran Fondo, Century Ride, Stage Race' :
-                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., Open Water 5K, 10K Swim, Triathlon Swim Leg' :
-                          profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint Triathlon, Olympic Distance, Ironman 70.3, Ironman' :
+                          profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K Ultra' :
+                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 50 Mile Race, Century (100 miles), Gran Fondo, Multi-day Tour' :
+                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5K Open Water, 5K Swim, 10K Marathon Swim' :
+                          profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint Tri, Olympic Tri, Half Ironman (70.3), Full Ironman' :
                           'e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 50K'
                         }
                         className="mt-2"
