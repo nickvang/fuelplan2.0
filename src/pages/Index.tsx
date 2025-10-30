@@ -683,79 +683,84 @@ const Index = () => {
                 </RadioGroup>
               </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="bodyFat">{t('body.bodyFat')}</Label>
-                    <InfoTooltip content="Body fat percentage affects hydration needs - lower body fat means more body water. Can be measured with smart scales, DEXA scans, or found in Garmin Index, Apple Watch (requires third-party apps), or fitness assessments. Typical athletic range: 6-24% (men), 14-31% (women)." />
+              {/* Advanced metrics - Pro mode only */}
+              {version === 'pro' && (
+                <>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center">
+                        <Label htmlFor="bodyFat">{t('body.bodyFat')}</Label>
+                        <InfoTooltip content="Body fat percentage affects hydration needs - lower body fat means more body water. Can be measured with smart scales, DEXA scans, or found in Garmin Index, Apple Watch (requires third-party apps), or fitness assessments. Typical athletic range: 6-24% (men), 14-31% (women)." />
+                      </div>
+                      <Input
+                        id="bodyFat"
+                        type="number"
+                        value={profile.bodyFat || ''}
+                        onChange={(e) => updateProfile({ bodyFat: parseFloat(e.target.value) })}
+                        placeholder={t('common.optional')}
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center">
+                        <Label htmlFor="restingHeartRate">{t('body.restingHR')}</Label>
+                        <InfoTooltip content="Resting heart rate (RHR) indicates fitness level and recovery. Lower RHR typically means better cardiovascular fitness. Find it on: Garmin (morning report), Apple Watch (Health app), Coros (training status), Whoop (daily metrics), Oura Ring. Typical athletic range: 40-60 bpm." />
+                      </div>
+                      <Input
+                        id="restingHeartRate"
+                        type="number"
+                        value={profile.restingHeartRate || ''}
+                        onChange={(e) => updateProfile({ restingHeartRate: parseInt(e.target.value) })}
+                        placeholder="bpm"
+                      />
+                    </div>
                   </div>
-                  <Input
-                    id="bodyFat"
-                    type="number"
-                    value={profile.bodyFat || ''}
-                    onChange={(e) => updateProfile({ bodyFat: parseFloat(e.target.value) })}
-                    placeholder={t('common.optional')}
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="restingHeartRate">{t('body.restingHR')}</Label>
-                    <InfoTooltip content="Resting heart rate (RHR) indicates fitness level and recovery. Lower RHR typically means better cardiovascular fitness. Find it on: Garmin (morning report), Apple Watch (Health app), Coros (training status), Whoop (daily metrics), Oura Ring. Typical athletic range: 40-60 bpm." />
-                  </div>
-                  <Input
-                    id="restingHeartRate"
-                    type="number"
-                    value={profile.restingHeartRate || ''}
-                    onChange={(e) => updateProfile({ restingHeartRate: parseInt(e.target.value) })}
-                    placeholder="bpm"
-                  />
-                </div>
-              </div>
 
-              <div>
-                <div className="flex items-center">
-                  <Label htmlFor="hrv">{t('body.hrv')}</Label>
-                  <InfoTooltip content="Heart Rate Variability measures recovery status. Found in fitness watches (Garmin, Apple Watch, Whoop). Low HRV = poor recovery, may need extra hydration. Normal range varies by individual - check your baseline." />
-                </div>
-                <Input
-                  id="hrv"
-                  value={profile.hrv || ''}
-                  onChange={(e) => updateProfile({ hrv: e.target.value })}
-                  placeholder="If tracked via Garmin/Whoop/Oura"
-                />
-              </div>
+                  <div>
+                    <div className="flex items-center">
+                      <Label htmlFor="hrv">{t('body.hrv')}</Label>
+                      <InfoTooltip content="Heart Rate Variability measures recovery status. Found in fitness watches (Garmin, Apple Watch, Whoop). Low HRV = poor recovery, may need extra hydration. Normal range varies by individual - check your baseline." />
+                    </div>
+                    <Input
+                      id="hrv"
+                      value={profile.hrv || ''}
+                      onChange={(e) => updateProfile({ hrv: e.target.value })}
+                      placeholder="If tracked via Garmin/Whoop/Oura"
+                    />
+                  </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="sleepHours">{t('body.avgSleep')}</Label>
-                    <InfoTooltip content="Sleep duration affects recovery and hydration needs. Track via Garmin, Apple Watch, Whoop, Oura Ring, or Coros. Aim for 7-9 hours for optimal athletic performance." />
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <div className="flex items-center">
+                        <Label htmlFor="sleepHours">{t('body.avgSleep')}</Label>
+                        <InfoTooltip content="Sleep duration affects recovery and hydration needs. Track via Garmin, Apple Watch, Whoop, Oura Ring, or Coros. Aim for 7-9 hours for optimal athletic performance." />
+                      </div>
+                      <Input
+                        id="sleepHours"
+                        type="number"
+                        step="0.5"
+                        value={profile.sleepHours || ''}
+                        onChange={(e) => updateProfile({ sleepHours: parseFloat(e.target.value) })}
+                        placeholder="hours/night"
+                      />
+                    </div>
+                    <div>
+                      <div className="flex items-center">
+                        <Label htmlFor="sleepQuality">{t('body.sleepQuality')}</Label>
+                        <InfoTooltip content="Rate your sleep quality from 1 (poor) to 10 (excellent). Many wearables provide a sleep score. Poor sleep impacts recovery and may increase hydration needs." />
+                      </div>
+                      <Input
+                        id="sleepQuality"
+                        type="number"
+                        min="1"
+                        max="10"
+                        value={profile.sleepQuality || ''}
+                        onChange={(e) => updateProfile({ sleepQuality: parseInt(e.target.value) })}
+                        placeholder="1-10"
+                      />
+                    </div>
                   </div>
-                  <Input
-                    id="sleepHours"
-                    type="number"
-                    step="0.5"
-                    value={profile.sleepHours || ''}
-                    onChange={(e) => updateProfile({ sleepHours: parseFloat(e.target.value) })}
-                    placeholder="hours/night"
-                  />
-                </div>
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="sleepQuality">{t('body.sleepQuality')}</Label>
-                    <InfoTooltip content="Rate your sleep quality from 1 (poor) to 10 (excellent). Many wearables provide a sleep score. Poor sleep impacts recovery and may increase hydration needs." />
-                  </div>
-                  <Input
-                    id="sleepQuality"
-                    type="number"
-                    min="1"
-                    max="10"
-                    value={profile.sleepQuality || ''}
-                    onChange={(e) => updateProfile({ sleepQuality: parseInt(e.target.value) })}
-                    placeholder="1-10"
-                  />
-                </div>
-              </div>
+                </>
+              )}
 
               <div>
                 <Label htmlFor="healthConditions">{t('body.healthConditions')}</Label>
