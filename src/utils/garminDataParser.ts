@@ -12,6 +12,37 @@ interface ParsedGarminData {
   activityCalories?: Array<{ month: string; activityType: string; value: number }>;
 }
 
+interface ParsedWhoopData {
+  workouts?: Array<{
+    date: string;
+    duration: number;
+    strain: number;
+    maxHR: number;
+    avgHR: number;
+    calories: number;
+  }>;
+  physiologicalCycles?: Array<{
+    date: string;
+    recoveryScore: number;
+    restingHR: number;
+    hrv: number;
+    skinTemp: number;
+    bloodOxygen: number;
+    sleepDuration: number;
+    sleepPerformance: number;
+    respiratoryRate: number;
+  }>;
+  sleeps?: Array<{
+    date: string;
+    duration: number;
+    remDuration: number;
+    deepDuration: number;
+    lightDuration: number;
+    sleepPerformance: number;
+    sleepEfficiency: number;
+  }>;
+}
+
 function parseCSV(content: string): any[] {
   const lines = content.trim().split('\n');
   if (lines.length < 2) return [];
@@ -32,6 +63,61 @@ function parseCSV(content: string): any[] {
   }
   
   return data;
+}
+
+async function parseWhoopFiles(files: File[]): Promise<ParsedWhoopData> {
+  const parsedData: ParsedWhoopData = {};
+  
+  for (const file of files) {
+    const content = await file.text();
+    const fileName = file.name.toLowerCase();
+    
+    try {
+      if (fileName.includes('workout')) {
+        const rows = parseCSV(content);
+        parsedData.workouts = rows.slice(1).map(row => ({
+          date: row['Workout start time'] || row['Cycle start time'] || '',
+          duration: parseFloat(row['Duration (min)']) || 0,
+          strain: parseFloat(row['Activity Strain']) || 0,
+          maxHR: parseFloat(row['Max HR (bpm)']) || 0,
+          avgHR: parseFloat(row['Average HR (bpm)']) || 0,
+          calories: parseFloat(row['Energy burned (cal)']) || 0,
+        })).filter(w => w.duration > 0);
+      }
+      
+      if (fileName.includes('physiological_cycle')) {
+        const rows = parseCSV(content);
+        parsedData.physiologicalCycles = rows.slice(1).map(row => ({
+          date: row['Cycle start time'] || '',
+          recoveryScore: parseFloat(row['Recovery score %']) || 0,
+          restingHR: parseFloat(row['Resting heart rate (bpm)']) || 0,
+          hrv: parseFloat(row['Heart rate variability (ms)']) || 0,
+          skinTemp: parseFloat(row['Skin temp (celsius)']) || 0,
+          bloodOxygen: parseFloat(row['Blood oxygen %']) || 0,
+          sleepDuration: parseFloat(row['Asleep duration (min)']) || 0,
+          sleepPerformance: parseFloat(row['Sleep performance %']) || 0,
+          respiratoryRate: parseFloat(row['Respiratory rate (rpm)']) || 0,
+        })).filter(c => c.date);
+      }
+      
+      if (fileName.includes('sleep')) {
+        const rows = parseCSV(content);
+        parsedData.sleeps = rows.slice(1).map(row => ({
+          date: row['Sleep onset'] || row['Cycle start time'] || '',
+          duration: parseFloat(row['Asleep duration (min)']) || 0,
+          remDuration: parseFloat(row['REM duration (min)']) || 0,
+          deepDuration: parseFloat(row['Deep (SWS) duration (min)']) || 0,
+          lightDuration: parseFloat(row['Light sleep duration (min)']) || 0,
+          sleepPerformance: parseFloat(row['Sleep performance %']) || 0,
+          sleepEfficiency: parseFloat(row['Sleep efficiency %']) || 0,
+        })).filter(s => s.duration > 0);
+      }
+    } catch (error) {
+      console.error(`Error parsing Whoop file ${file.name}:`, error);
+    }
+  }
+  
+  return parsedData;
 }
 
 export async function parseGarminFiles(files: File[]): Promise<ParsedGarminData> {
@@ -225,4 +311,82 @@ export function mapGarminDataToProfile(parsedData: ParsedGarminData): Partial<Hy
   }
   
   return profile;
+}
+
+function mapWhoopDataToProfile(parsedData: ParsedWhoopData): Partial<HydrationProfile> {
+  const profile: Partial<HydrationProfile> = {};
+  
+  // Extract resting HR and HRV from physiological cycles
+  if (parsedData.physiologicalCycles && parsedData.physiologicalCycles.length > 0) {
+    const recent = parsedData.physiologicalCycles.slice(-30); // Last 30 days
+    
+    const avgRestingHR = recent.reduce((sum, c) => sum + c.restingHR, 0) / recent.length;
+    const avgHRV = recent.reduce((sum, c) => sum + c.hrv, 0) / recent.length;
+    
+    profile.restingHeartRate = Math.round(avgRestingHR);
+    profile.hrv = `${Math.round(avgHRV)}ms`;
+    
+    // Extract sleep data
+    const avgSleepHours = recent.reduce((sum, c) => sum + c.sleepDuration, 0) / recent.length / 60;
+    profile.sleepHours = Math.round(avgSleepHours * 10) / 10;
+    
+    const avgSleepPerformance = recent.reduce((sum, c) => sum + c.sleepPerformance, 0) / recent.length;
+    profile.sleepQuality = Math.round(avgSleepPerformance / 10); // Convert % to 1-10 scale
+  }
+  
+  // Extract workout data
+  if (parsedData.workouts && parsedData.workouts.length > 0) {
+    const recentWorkouts = parsedData.workouts.slice(-30); // Last 30 workouts
+    
+    // Calculate average session duration
+    const avgDuration = recentWorkouts.reduce((sum, w) => sum + w.duration, 0) / recentWorkouts.length / 60;
+    profile.sessionDuration = Math.round(avgDuration * 10) / 10;
+    
+    // Calculate training frequency (workouts per week)
+    const daysSpan = 30; // Assuming last 30 days
+    profile.trainingFrequency = Math.round((recentWorkouts.length / daysSpan) * 7);
+    
+    // Infer primary discipline based on workout patterns
+    const avgStrain = recentWorkouts.reduce((sum, w) => sum + w.strain, 0) / recentWorkouts.length;
+    const avgDurationMin = recentWorkouts.reduce((sum, w) => sum + w.duration, 0) / recentWorkouts.length;
+    
+    // High strain + moderate duration = Running
+    // High strain + long duration = Endurance sports
+    // Moderate strain + short duration = Gym/Strength
+    if (avgStrain > 12 && avgDurationMin > 45) {
+      profile.disciplines = ['Run'];
+    } else if (avgStrain > 10 && avgDurationMin < 60) {
+      profile.disciplines = ['Strength Training'];
+    } else {
+      profile.disciplines = ['Run']; // Default
+    }
+  }
+  
+  return profile;
+}
+
+export async function parseSmartWatchFiles(files: File[]): Promise<Partial<HydrationProfile>> {
+  // Detect file type based on filenames
+  const fileNames = files.map(f => f.name.toLowerCase());
+  
+  const isWhoop = fileNames.some(name => 
+    name.includes('physiological_cycle') || 
+    name.includes('workout') && name.includes('cycle')
+  );
+  
+  const isGarmin = fileNames.some(name => 
+    name.includes('total_distance') || 
+    name.includes('total_activity_time') ||
+    name.includes('fitness_age')
+  );
+  
+  if (isWhoop) {
+    const whoopData = await parseWhoopFiles(files);
+    return mapWhoopDataToProfile(whoopData);
+  } else if (isGarmin) {
+    const garminData = await parseGarminFiles(files);
+    return mapGarminDataToProfile(garminData);
+  }
+  
+  return {};
 }

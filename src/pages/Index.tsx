@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { HydrationProfile } from '@/types/hydration';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import { validateAndSanitizeProfile } from '@/utils/profileValidation';
-import { parseGarminFiles, mapGarminDataToProfile } from '@/utils/garminDataParser';
+import { parseSmartWatchFiles } from '@/utils/garminDataParser';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
@@ -49,14 +49,13 @@ const Index = () => {
     setIsAnalyzing(true);
     
     try {
-      // Parse Garmin CSV files
-      const parsedData = await parseGarminFiles(files);
-      const extractedData = mapGarminDataToProfile(parsedData);
+      // Parse smartwatch files (Garmin or Whoop)
+      const extractedData = await parseSmartWatchFiles(files);
       
       setIsAnalyzing(false);
       
       if (Object.keys(extractedData).length > 0) {
-        toast.success('Garmin data analyzed successfully!');
+        toast.success('Smartwatch data analyzed successfully!');
       }
       
       return extractedData;
