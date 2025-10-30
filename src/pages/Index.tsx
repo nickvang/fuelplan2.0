@@ -412,21 +412,6 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pointer-events-none">
-                <div className="p-4 rounded-lg border border-border bg-card">
-                  <p className="text-2xl font-bold mb-1">PRE</p>
-                  <p className="text-sm text-muted-foreground">{t('plan.preActivity')}</p>
-                </div>
-                <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
-                  <p className="text-2xl font-bold mb-1 text-primary">DURING</p>
-                  <p className="text-sm text-muted-foreground">{t('plan.duringActivity')}</p>
-                </div>
-                <div className="p-4 rounded-lg border border-border bg-card">
-                  <p className="text-2xl font-bold mb-1">POST</p>
-                  <p className="text-sm text-muted-foreground">{t('plan.postActivity')}</p>
-                </div>
-              </div>
-
               {/* Optional Smartwatch Upload - Pro version only */}
               {version === 'pro' && (
                 <div className="bg-blue-50 dark:bg-blue-950/30 p-4 sm:p-6 rounded-lg space-y-4">
