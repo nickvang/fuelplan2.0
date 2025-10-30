@@ -51,21 +51,40 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
     }
 
     try {
+      const deletionToken = localStorage.getItem('hydration_deletion_token');
+      
+      if (!deletionToken) {
+        toast({
+          title: "Cannot Delete Data",
+          description: "No deletion token found. Data may have already been deleted or expired.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       const { error } = await supabase.functions.invoke('delete-user-data', {
-        body: { requestDeletion: true }
+        body: { 
+          confirmDelete: true,
+          deletionToken: deletionToken
+        }
       });
 
       if (error) throw error;
 
+      // Clear deletion token from localStorage
+      localStorage.removeItem('hydration_deletion_token');
+
       toast({
-        title: "Data Deletion Requested",
-        description: "Your data has been scheduled for deletion in compliance with GDPR.",
+        title: "Data Deleted Successfully",
+        description: "Your data has been permanently deleted in compliance with GDPR.",
       });
 
       // Optionally redirect after deletion
       setTimeout(() => onReset(), 2000);
     } catch (error) {
-      console.error('Failed to delete data:', error);
+      if (import.meta.env.DEV) {
+        console.error('Failed to delete data:', error);
+      }
       toast({
         title: "Deletion Failed",
         description: "Please contact info@supplme.com for manual data deletion.",

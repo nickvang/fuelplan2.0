@@ -20,6 +20,7 @@ export type Database = {
           consent_timestamp: string | null
           created_at: string
           data_retention_expires_at: string | null
+          deletion_token: string | null
           has_smartwatch_data: boolean | null
           id: string
           ip_address: unknown
@@ -33,6 +34,7 @@ export type Database = {
           consent_timestamp?: string | null
           created_at?: string
           data_retention_expires_at?: string | null
+          deletion_token?: string | null
           has_smartwatch_data?: boolean | null
           id?: string
           ip_address?: unknown
@@ -46,6 +48,7 @@ export type Database = {
           consent_timestamp?: string | null
           created_at?: string
           data_retention_expires_at?: string | null
+          deletion_token?: string | null
           has_smartwatch_data?: boolean | null
           id?: string
           ip_address?: unknown

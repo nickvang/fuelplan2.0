@@ -146,6 +146,7 @@ serve(async (req) => {
       JSON.stringify({ 
         success: true, 
         profileId: data.id,
+        deletionToken: data.deletion_token,
         message: 'Profile saved with GDPR compliance'
       }),
       {

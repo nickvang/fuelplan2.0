@@ -11,6 +11,9 @@ const corsHeaders = {
 const requestSchema = z.object({
   confirmDelete: z.boolean().refine(val => val === true, {
     message: "Deletion must be confirmed"
+  }),
+  deletionToken: z.string().uuid({
+    message: "Valid deletion token is required"
   })
 });
 
@@ -40,7 +43,7 @@ serve(async (req) => {
       );
     }
 
-    const { confirmDelete } = validationResult.data;
+    const { confirmDelete, deletionToken } = validationResult.data;
 
     if (!confirmDelete) {
       return new Response(
@@ -61,22 +64,11 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get IP address and user agent to identify user's data
-    const forwardedFor = req.headers.get('x-forwarded-for');
-    const ipAddress = forwardedFor ? forwardedFor.split(',')[0].trim() : 
-                     req.headers.get('x-real-ip') || '';
-    const userAgent = req.headers.get('user-agent') || '';
-
-    // Delete user's data based on IP and user agent (last 24 hours)
-    // This is a best-effort approach for anonymous users
-    const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString();
-
+    // Delete user's data using secure deletion token
     const { error, data } = await supabase
       .from('hydration_profiles')
       .delete()
-      .eq('ip_address', ipAddress)
-      .eq('user_agent', userAgent)
-      .gte('created_at', oneDayAgo)
+      .eq('deletion_token', deletionToken)
       .select();
 
     if (error) {
@@ -95,7 +87,21 @@ serve(async (req) => {
       );
     }
 
-    console.log(`[Success] Deleted ${data?.length || 0} records for IP:`, ipAddress);
+    if (!data || data.length === 0) {
+      return new Response(
+        JSON.stringify({ 
+          error: 'No data found with the provided deletion token.',
+          code: 'NOT_FOUND',
+          success: false
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 404,
+        }
+      );
+    }
+
+    console.log(`[Success] Deleted ${data.length} record(s) using deletion token`);
 
     return new Response(
       JSON.stringify({ 

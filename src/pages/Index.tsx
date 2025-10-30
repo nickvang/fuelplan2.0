@@ -195,7 +195,7 @@ const Index = () => {
         const validatedProfile = validateAndSanitizeProfile(profile);
         
         // Save profile data to backend with GDPR compliance
-        const { error } = await supabase.functions.invoke('save-hydration-profile', {
+        const { data, error } = await supabase.functions.invoke('save-hydration-profile', {
           body: {
             profile: validatedProfile,
             plan: calculateHydrationPlan(profile as HydrationProfile),
@@ -210,6 +210,9 @@ const Index = () => {
             console.error('Error saving profile:', error);
           }
           toast.error('Failed to save profile. Your hydration plan will still be displayed.');
+        } else if (data?.deletionToken) {
+          // Store deletion token securely in localStorage for GDPR data deletion
+          localStorage.setItem('hydration_deletion_token', data.deletionToken);
         }
       } catch (error) {
         if (import.meta.env.DEV) {
