@@ -60,15 +60,20 @@ const Index = () => {
       }
       
       if (fileName.includes('sleep') || fileName.includes('recovery')) {
-        // Extract recovery metrics
+        // Extract sleep and recovery metrics
+        extractedData.sleepDuration = 7.5; // hours
+        extractedData.sleepQuality = 85; // score out of 100
+        extractedData.sleepScore = 85;
+        extractedData.recoveryScore = 82;
         extractedData.hrv = '65ms';
       }
       
       if (fileName.includes('workout') || fileName.includes('activity')) {
-        // Extract activity data
+        // Extract activity data including pace
         extractedData.disciplines = ['Run'];
         extractedData.sessionDuration = 1.5;
         extractedData.trainingFrequency = 5;
+        extractedData.avgPace = '5:00 min/km';
       }
       
       // Add more parsing logic for different file types
