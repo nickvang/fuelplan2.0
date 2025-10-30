@@ -17,7 +17,7 @@ const Index = () => {
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
-  const [smartwatchData, setSmartWatchData] = useState<File | null>(null);
+  const [smartwatchData, setSmartWatchData] = useState<File[]>([]);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
@@ -72,7 +72,7 @@ const Index = () => {
     setStep(0);
     setShowPlan(false);
     setConsentGiven(false);
-    setSmartWatchData(null);
+    setSmartWatchData([]);
     setProfile({
       sex: 'male',
       indoorOutdoor: 'outdoor',
@@ -164,32 +164,78 @@ const Index = () => {
 
               {/* Optional Smartwatch Upload */}
               <div className="bg-blue-50 dark:bg-blue-950/30 p-6 rounded-lg space-y-4">
-                <div className="flex items-center justify-between">
-                  <div>
-                    <h4 className="font-medium">Have Smartwatch Data? (Optional)</h4>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Upload from Whoop, Garmin, Apple Watch, Coros to pre-fill your profile
-                    </p>
-                  </div>
-                </div>
                 <div>
-                  <Input
-                    id="smartwatch-upload"
-                    type="file"
-                    accept=".fit,.csv,.json,.xml"
-                    onChange={(e) => {
-                      const file = e.target.files?.[0];
-                      if (file) {
-                        setSmartWatchData(file);
-                        // In a real implementation, parse the file and pre-fill profile
-                      }
-                    }}
-                    className="cursor-pointer"
-                  />
-                  {smartwatchData && (
-                    <p className="text-sm text-green-600 dark:text-green-400 mt-2">
-                      ✓ File uploaded: {smartwatchData.name}
-                    </p>
+                  <h4 className="font-medium">Have Smartwatch Data? (Optional)</h4>
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Upload files from Whoop, Garmin, Apple Watch, Coros to pre-fill your profile
+                  </p>
+                </div>
+                
+                <div className="space-y-3">
+                  {/* Multiple Files Upload */}
+                  <div>
+                    <Label htmlFor="smartwatch-files" className="text-sm font-medium mb-2 block">
+                      Upload Multiple Files
+                    </Label>
+                    <Input
+                      id="smartwatch-files"
+                      type="file"
+                      multiple
+                      accept=".fit,.csv,.json,.xml,.txt"
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          setSmartWatchData(prev => [...prev, ...files]);
+                          // In a real implementation, parse the files and pre-fill profile
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+
+                  {/* Folder Upload */}
+                  <div>
+                    <Label htmlFor="smartwatch-folder" className="text-sm font-medium mb-2 block">
+                      Or Upload Entire Folder
+                    </Label>
+                    <Input
+                      id="smartwatch-folder"
+                      type="file"
+                      // @ts-ignore - webkitdirectory is not in TypeScript types but works in browsers
+                      webkitdirectory=""
+                      directory=""
+                      multiple
+                      onChange={(e) => {
+                        const files = Array.from(e.target.files || []);
+                        if (files.length > 0) {
+                          setSmartWatchData(files);
+                          // In a real implementation, parse all files and pre-fill profile
+                        }
+                      }}
+                      className="cursor-pointer"
+                    />
+                  </div>
+
+                  {smartwatchData.length > 0 && (
+                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                      <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
+                        ✓ {smartwatchData.length} file(s) uploaded:
+                      </p>
+                      <div className="max-h-32 overflow-y-auto space-y-1">
+                        {smartwatchData.map((file, index) => (
+                          <div key={index} className="text-xs text-green-600 dark:text-green-400 flex items-center justify-between">
+                            <span className="truncate">{file.name}</span>
+                            <button
+                              type="button"
+                              onClick={() => setSmartWatchData(prev => prev.filter((_, i) => i !== index))}
+                              className="ml-2 text-red-500 hover:text-red-700"
+                            >
+                              ✕
+                            </button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
