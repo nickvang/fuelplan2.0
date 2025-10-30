@@ -811,21 +811,45 @@ const Index = () => {
           >
             <div className="space-y-4">
               <div>
-                <Label>{t('activity.primaryDiscipline')} *</Label>
-                <p className="text-sm text-muted-foreground mb-2">
+                <Label className="text-lg">{t('activity.primaryDiscipline')} *</Label>
+                <p className="text-sm text-muted-foreground mb-4">
                   Select the activity you want a hydration guide for
                 </p>
-                <RadioGroup
-                  value={profile.disciplines?.[0] || ''}
-                  onValueChange={(value) => updateProfile({ disciplines: [value] })}
-                >
-                  {['Run', 'Swim', 'Bike', 'Triathlon', 'Football', 'Padel Tennis'].map((disc) => (
-                    <div key={disc} className="flex items-center space-x-2">
-                      <RadioGroupItem value={disc} id={`disc-${disc}`} />
-                      <Label htmlFor={`disc-${disc}`} className="font-normal">{disc === 'Football' ? 'Football (Soccer)' : disc}</Label>
-                    </div>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                  {[
+                    { value: 'Running', label: 'Run', icon: '🏃' },
+                    { value: 'Swimming', label: 'Swim', icon: '🏊' },
+                    { value: 'Cycling', label: 'Bike', icon: '🚴' },
+                    { value: 'Triathlon', label: 'Triathlon', icon: '🏅' },
+                    { value: 'Football', label: 'Football (Soccer)', icon: '⚽' },
+                    { value: 'Padel Tennis', label: 'Padel Tennis', icon: '🎾' },
+                  ].map((activity) => (
+                    <button
+                      key={activity.value}
+                      type="button"
+                      onClick={() => updateProfile({ disciplines: [activity.value] })}
+                      className={`
+                        relative flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all
+                        ${profile.disciplines?.[0] === activity.value
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                        }
+                      `}
+                    >
+                      <span className="text-4xl mb-2">{activity.icon}</span>
+                      <span className={`text-sm font-medium ${
+                        profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
+                      }`}>
+                        {activity.label}
+                      </span>
+                      {profile.disciplines?.[0] === activity.value && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                      )}
+                    </button>
                   ))}
-                </RadioGroup>
+                </div>
               </div>
 
               {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
