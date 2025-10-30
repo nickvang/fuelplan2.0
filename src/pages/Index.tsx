@@ -24,9 +24,6 @@ const Index = () => {
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
     indoorOutdoor: 'outdoor',
-    sweatRate: 'medium',
-    sweatSaltiness: 'medium',
-    dailySaltIntake: 'medium',
     primaryGoal: 'performance',
     disciplines: [],
   });
