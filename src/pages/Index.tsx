@@ -131,12 +131,20 @@ const Index = () => {
       case 1:
         return !!(profile.age && profile.sex && profile.height && profile.weight);
       case 2:
-        // Simple mode: just need basic activity info
+        // Check if race distance is required
+        const needsRaceDistance = profile.disciplines?.[0] !== 'Football' && 
+                                 profile.disciplines?.[0] !== 'Padel Tennis' && 
+                                 profile.hasUpcomingRace;
+        const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
+        
+        // Simple mode: just need basic activity info + race distance if applicable
         if (version === 'simple') {
-          return !!(profile.disciplines && profile.disciplines.length > 0 && profile.sessionDuration);
+          return !!(profile.disciplines && profile.disciplines.length > 0 && 
+                   profile.sessionDuration && hasRequiredRaceDistance);
         }
-        // Pro mode: need full activity details
-        return !!(profile.disciplines && profile.disciplines.length > 0 && profile.sessionDuration && profile.indoorOutdoor);
+        // Pro mode: need full activity details + race distance if applicable
+        return !!(profile.disciplines && profile.disciplines.length > 0 && 
+                 profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
       case 3:
         return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
                   profile.sunExposure && profile.windConditions && profile.clothingType);
@@ -822,7 +830,7 @@ const Index = () => {
 
               {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
                 <div>
-                  <Label htmlFor="raceDistance">{t('activity.raceDistance')}</Label>
+                  <Label htmlFor="raceDistance">Distance *</Label>
                   <Input
                     id="raceDistance"
                     value={profile.raceDistance || ''}
