@@ -18,6 +18,8 @@ const Index = () => {
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
   const [smartwatchData, setSmartWatchData] = useState<File[]>([]);
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analyzedData, setAnalyzedData] = useState<Partial<HydrationProfile> | null>(null);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
@@ -38,6 +40,73 @@ const Index = () => {
     setProfile(newProfile);
     // Update validation warnings on profile change
     setValidationWarnings(getValidationWarnings(newProfile));
+  };
+
+  // Analyze uploaded smartwatch files
+  const analyzeSmartWatchFiles = async (files: File[]): Promise<Partial<HydrationProfile>> => {
+    setIsAnalyzing(true);
+    
+    // Simulate file parsing - in real implementation, parse FIT/CSV/JSON files
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    const extractedData: Partial<HydrationProfile> = {};
+    
+    for (const file of files) {
+      const fileName = file.name.toLowerCase();
+      const fileContent = await file.text();
+      
+      // Mock parsing logic - replace with actual parsing
+      if (fileName.includes('physiological') || fileName.includes('metrics')) {
+        // Extract age, weight, height, HR, HRV from physiological data
+        extractedData.age = 32; // Mock data
+        extractedData.weight = 75;
+        extractedData.height = 180;
+        extractedData.restingHeartRate = 52;
+        extractedData.hrv = '65ms';
+      }
+      
+      if (fileName.includes('sleep') || fileName.includes('recovery')) {
+        // Extract recovery metrics
+        extractedData.hrv = '65ms';
+      }
+      
+      if (fileName.includes('workout') || fileName.includes('activity')) {
+        // Extract activity data
+        extractedData.disciplines = ['Run'];
+        extractedData.sessionDuration = 1.5;
+        extractedData.trainingFrequency = 5;
+      }
+      
+      // Add more parsing logic for different file types
+    }
+    
+    setIsAnalyzing(false);
+    return extractedData;
+  };
+
+  // Determine which steps to skip based on analyzed data
+  const shouldSkipStep = (stepNumber: number): boolean => {
+    if (!analyzedData) return false;
+    
+    switch (stepNumber) {
+      case 1: // Body & Physiology
+        return !!(analyzedData.age && analyzedData.weight && analyzedData.height && analyzedData.sex);
+      case 2: // Activity & Terrain
+        return !!(analyzedData.disciplines && analyzedData.sessionDuration);
+      case 4: // Sweat Profile
+        return !!(analyzedData.sweatRate && analyzedData.sweatSaltiness);
+      default:
+        return false;
+    }
+  };
+
+  // Get next non-skipped step
+  const getNextStep = (currentStep: number): number => {
+    let nextStep = currentStep + 1;
+    while (nextStep <= 6 && shouldSkipStep(nextStep)) {
+      nextStep++;
+    }
+    return nextStep;
   };
 
   const isStepValid = (): boolean => {
@@ -62,6 +131,18 @@ const Index = () => {
     }
   };
 
+  const handleNextStep = async () => {
+    if (step === 0 && smartwatchData.length > 0 && !analyzedData) {
+      // Analyze files on first step
+      const data = await analyzeSmartWatchFiles(smartwatchData);
+      setAnalyzedData(data);
+      updateProfile(data);
+      setStep(getNextStep(0));
+    } else {
+      setStep(getNextStep(step));
+    }
+  };
+
   const handleComplete = () => {
     if (isStepValid()) {
       setShowPlan(true);
@@ -73,6 +154,8 @@ const Index = () => {
     setShowPlan(false);
     setConsentGiven(false);
     setSmartWatchData([]);
+    setAnalyzedData(null);
+    setIsAnalyzing(false);
     setProfile({
       sex: 'male',
       indoorOutdoor: 'outdoor',
@@ -127,7 +210,40 @@ const Index = () => {
         </div>
 
         {/* Progress */}
-        {step > 0 && <ProgressBar currentStep={step} totalSteps={6} />}
+        {step > 0 && !isAnalyzing && <ProgressBar currentStep={step} totalSteps={6} />}
+
+        {/* Analyzing Indicator */}
+        {isAnalyzing && (
+          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
+            <div className="flex items-center justify-center gap-3">
+              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+              <div className="space-y-1">
+                <p className="font-semibold text-primary">Analyzing Your Data...</p>
+                <p className="text-sm text-muted-foreground">
+                  Processing {smartwatchData.length} file(s) to extract your health metrics
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Data Analysis Complete */}
+        {analyzedData && step === 1 && (
+          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <p className="text-sm text-green-700 dark:text-green-400 font-medium">
+              ✓ Data analysis complete! We found:
+            </p>
+            <ul className="text-xs text-green-600 dark:text-green-400 mt-2 space-y-1">
+              {analyzedData.age && <li>• Age and body metrics</li>}
+              {analyzedData.restingHeartRate && <li>• Resting heart rate</li>}
+              {analyzedData.hrv && <li>• Heart rate variability</li>}
+              {analyzedData.disciplines && <li>• Activity type and training data</li>}
+            </ul>
+            <p className="text-xs text-green-600 dark:text-green-400 mt-2">
+              Only showing questions we couldn't answer from your data.
+            </p>
+          </div>
+        )}
 
         {/* Validation Warnings */}
         {validationWarnings.length > 0 && step > 0 && (
@@ -139,11 +255,11 @@ const Index = () => {
         )}
 
         {/* STEP 0: Welcome & Consent */}
-        {step === 0 && (
+        {step === 0 && !isAnalyzing && (
           <QuestionnaireStep
             title="Welcome"
             description="Get a science-backed hydration plan tailored to your physiology, activity, and environment."
-            onNext={() => setStep(1)}
+            onNext={handleNextStep}
             isValid={isStepValid()}
           >
             <div className="py-6 space-y-6">
@@ -272,11 +388,11 @@ const Index = () => {
         )}
 
         {/* STEP 1: Body & Physiology */}
-        {step === 1 && (
+        {step === 1 && !isAnalyzing && (
           <QuestionnaireStep
             title="1. Body & Physiology"
-            description="Basic information to calculate your hydration needs"
-            onNext={() => setStep(2)}
+            description={analyzedData ? "Complete any missing information" : "Basic information to calculate your hydration needs"}
+            onNext={handleNextStep}
             onBack={() => setStep(0)}
             isValid={isStepValid()}
           >
@@ -409,11 +525,11 @@ const Index = () => {
         )}
 
         {/* STEP 2: Activity & Terrain */}
-        {step === 2 && (
+        {step === 2 && !isAnalyzing && (
           <QuestionnaireStep
             title="2. Activity & Terrain"
-            description="Tell us about your training and racing"
-            onNext={() => setStep(3)}
+            description={analyzedData ? "Complete any missing information" : "Tell us about your training and racing"}
+            onNext={handleNextStep}
             onBack={() => setStep(1)}
             isValid={isStepValid()}
           >
@@ -586,11 +702,11 @@ const Index = () => {
         )}
 
         {/* STEP 3: Environment Data */}
-        {step === 3 && (
+        {step === 3 && !isAnalyzing && (
           <QuestionnaireStep
             title="3. Environment Data"
             description="Training conditions affect your hydration needs"
-            onNext={() => setStep(4)}
+            onNext={handleNextStep}
             onBack={() => setStep(2)}
             isValid={isStepValid()}
           >
@@ -763,11 +879,11 @@ const Index = () => {
         )}
 
         {/* STEP 4: Sweat Profile */}
-        {step === 4 && (
+        {step === 4 && !isAnalyzing && (
           <QuestionnaireStep
             title="4. Sweat Profile"
-            description="Understanding your sweat rate and saltiness helps optimize electrolyte intake"
-            onNext={() => setStep(5)}
+            description={analyzedData ? "Complete any missing information" : "Understanding your sweat rate and saltiness helps optimize electrolyte intake"}
+            onNext={handleNextStep}
             onBack={() => setStep(3)}
             isValid={isStepValid()}
           >
@@ -875,11 +991,11 @@ const Index = () => {
         )}
 
         {/* STEP 5: Dietary Habits */}
-        {step === 5 && (
+        {step === 5 && !isAnalyzing && (
           <QuestionnaireStep
             title="5. Dietary Habits"
             description="Your everyday nutrition affects hydration needs"
-            onNext={() => setStep(6)}
+            onNext={handleNextStep}
             onBack={() => setStep(4)}
             isValid={isStepValid()}
           >
@@ -959,7 +1075,7 @@ const Index = () => {
         )}
 
         {/* STEP 6: Goals & Events */}
-        {step === 6 && (
+        {step === 6 && !isAnalyzing && (
           <QuestionnaireStep
             title="6. Goals & Events"
             description="Help us tailor your plan to your objectives"
