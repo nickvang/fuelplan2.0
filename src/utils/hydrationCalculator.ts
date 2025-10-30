@@ -9,13 +9,19 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
     high: 1200,  // Updated from 1000ml
   }[profile.sweatRate];
 
+  // Store calculation details for transparency
+  const calculationSteps: string[] = [];
+  calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate})`);
+
   // Adjust for temperature (using training temp average)
   const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
   const tempMultiplier = avgTemp < 15 ? 0.8 : avgTemp > 25 ? 1.3 : 1.0;
+  calculationSteps.push(`Temperature adjustment: ${avgTemp}°C → ${tempMultiplier}x multiplier`);
 
   // Adjust for humidity
   const humidityMultiplier = profile.humidity < 40 ? 0.9 : 
                              profile.humidity > 70 ? 1.2 : 1.0;
+  calculationSteps.push(`Humidity adjustment: ${profile.humidity}% → ${humidityMultiplier}x multiplier`);
 
   // Adjust for altitude
   const altitudeMultiplier = {
@@ -39,9 +45,11 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
     baseSweatRate * tempMultiplier * humidityMultiplier * 
     altitudeMultiplier * sunMultiplier * environmentMultiplier
   );
+  calculationSteps.push(`Final sweat rate: ${sweatRatePerHour}ml/hour (after all adjustments)`);
 
   // Total fluid loss for the activity
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
+  calculationSteps.push(`Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
 
   // Pre-activity hydration - ACSM recommendations (PMID 17277604)
   const preWater = 400 + (profile.weight * 5); // 400-600ml based on weight
@@ -113,5 +121,26 @@ export function calculateHydrationPlan(profile: HydrationProfile): HydrationPlan
     },
     totalFluidLoss: totalFluidLoss,
     recommendations,
+    calculationSteps,
+    scientificReferences: [
+      {
+        pmid: '17277604',
+        title: 'American College of Sports Medicine position stand. Exercise and fluid replacement.',
+        citation: 'Med Sci Sports Exerc. 2007 Feb;39(2):377-90',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/17277604/'
+      },
+      {
+        pmid: '38732589',
+        title: 'Personalized Hydration Strategy to Improve Fluid Balance and Intermittent Exercise Performance In The Heat',
+        citation: 'Nutrients. 2024 May 3;16(9):1341',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/38732589/'
+      },
+      {
+        pmid: '23320854',
+        title: 'Water and sodium intake habits and status of ultra-endurance athletes',
+        citation: 'Nutr Metab Insights. 2013 Jan 6;6:13-27',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/23320854/'
+      }
+    ]
   };
 }

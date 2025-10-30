@@ -84,4 +84,18 @@ export interface HydrationPlan {
   };
   totalFluidLoss: number;
   recommendations: string[];
+  calculationSteps: string[];
+  scientificReferences: Array<{
+    pmid: string;
+    title: string;
+    citation: string;
+    url: string;
+  }>;
+}
+
+export interface AIEnhancedInsights {
+  personalized_insight: string;
+  risk_factors: string;
+  confidence_level: 'high' | 'medium' | 'low';
+  professional_recommendation: string;
 }

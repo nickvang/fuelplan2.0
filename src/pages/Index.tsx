@@ -5,6 +5,7 @@ import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
 import { InfoTooltip } from '@/components/InfoTooltip';
+import { ValidationWarning, getValidationWarnings } from '@/components/ValidationWarning';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
@@ -16,6 +17,7 @@ const Index = () => {
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
+  const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
     indoorOutdoor: 'outdoor',
@@ -31,7 +33,10 @@ const Index = () => {
   });
 
   const updateProfile = (updates: Partial<HydrationProfile>) => {
-    setProfile({ ...profile, ...updates });
+    const newProfile = { ...profile, ...updates };
+    setProfile(newProfile);
+    // Update validation warnings on profile change
+    setValidationWarnings(getValidationWarnings(newProfile));
   };
 
   const isStepValid = (): boolean => {
@@ -95,7 +100,7 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background py-12 px-4">
         <div className="max-w-5xl mx-auto">
-          <HydrationPlanDisplay plan={plan} onReset={handleReset} />
+          <HydrationPlanDisplay plan={plan} profile={profile as HydrationProfile} onReset={handleReset} />
         </div>
       </div>
     );
@@ -116,6 +121,15 @@ const Index = () => {
 
         {/* Progress */}
         {step > 0 && <ProgressBar currentStep={step} totalSteps={6} />}
+
+        {/* Validation Warnings */}
+        {validationWarnings.length > 0 && step > 0 && (
+          <div className="space-y-2">
+            {validationWarnings.map((warning, index) => (
+              <ValidationWarning key={index} message={warning} />
+            ))}
+          </div>
+        )}
 
         {/* STEP 0: Welcome & Consent */}
         {step === 0 && (

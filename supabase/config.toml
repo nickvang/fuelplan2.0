@@ -1,0 +1,4 @@
+project_id = "bepotbhwdxlznkohaevv"
+
+[functions.enhance-hydration-plan]
+verify_jwt = false
