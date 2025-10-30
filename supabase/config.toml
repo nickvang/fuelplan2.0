@@ -5,3 +5,6 @@ verify_jwt = false
 
 [functions.save-hydration-profile]
 verify_jwt = false
+
+[functions.delete-user-data]
+verify_jwt = false
