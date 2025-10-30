@@ -58,7 +58,7 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
       {/* Header with Logo */}
       <div className="text-center space-y-4 py-8">
         <div className="inline-flex items-center justify-center mb-4">
-          <img src={supplmeLogo} alt="SUPPLME" className="h-24 w-auto" />
+          <img src={supplmeLogo} alt="SUPPLME" className="h-48 w-auto" />
         </div>
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
           <Droplets className="w-8 h-8 text-primary" />
