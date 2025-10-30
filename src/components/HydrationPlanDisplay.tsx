@@ -56,70 +56,17 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
       {/* Header with Logo */}
-      <div className="text-center space-y-4 py-8">
-        <div className="inline-flex items-center justify-center mb-4">
+      <div className="text-center space-y-4 py-4">
+        <div className="inline-flex items-center justify-center">
           <img src={supplmeLogo} alt="SUPPLME" className="h-48 w-auto" />
         </div>
-        <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
-          <Droplets className="w-8 h-8 text-primary" />
-        </div>
         <h1 className="text-4xl font-bold tracking-tight">
-          Your Personalized Hydration Plan
+          Supplme Hydration Guide
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Science-backed hydration strategy optimized for your training sessions
-        </p>
-        <p className="text-sm text-muted-foreground italic">
-          Based on distance and typical training conditions
+          Your Personalized Hydration Plan
         </p>
       </div>
-
-      {/* AI Insights Section */}
-      {aiInsights && (
-        <Card className="p-6 border-2 border-primary/20 bg-primary/5">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">AI-Enhanced Analysis</h3>
-              <span className={`ml-auto text-xs px-3 py-1 rounded-full border ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
-                {aiInsights.confidence_level.toUpperCase()} CONFIDENCE
-              </span>
-            </div>
-            
-            <div className="space-y-3">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">Why These Numbers?</h4>
-                <p className="text-sm leading-relaxed">{aiInsights.personalized_insight}</p>
-              </div>
-              
-              {aiInsights.risk_factors && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Key Risk Factors</AlertTitle>
-                  <AlertDescription>{aiInsights.risk_factors}</AlertDescription>
-                </Alert>
-              )}
-              
-              {aiInsights.professional_recommendation && (
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Professional Recommendation:</strong> {aiInsights.professional_recommendation}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {loadingInsights && (
-        <Card className="p-6 border-2 border-primary/20">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-            <p className="text-sm text-muted-foreground">Generating AI-enhanced insights...</p>
-          </div>
-        </Card>
-      )}
 
       {/* Fluid Loss Summary */}
       <Card className="p-6 bg-accent/50 border-accent">
@@ -133,6 +80,14 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           </p>
         </div>
       </Card>
+
+      {/* Training Plan Header */}
+      <div className="text-center py-4">
+        <h2 className="text-2xl font-bold">Training Session Hydration Plan</h2>
+        <p className="text-muted-foreground mt-2">
+          For typical training sessions based on your {profile.sessionDuration}-hour {profile.disciplines?.[0] || 'activity'}
+        </p>
+      </div>
 
       {/* Three Phase Plan */}
       <div className="grid md:grid-cols-3 gap-6">
@@ -229,62 +184,203 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           <Download className="w-4 h-4" />
           Download Plan
         </Button>
-        <Button variant="default" size="lg" asChild>
-          <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
-            Buy Supplme
-          </a>
-        </Button>
       </div>
 
-      {/* Hydration Visualization Graph */}
-      <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-6">Hydration Timeline</h3>
-        <div className="space-y-4">
-          <div className="relative h-48 bg-muted/30 rounded-lg p-6">
-            {/* Simple visual representation */}
-            <div className="flex items-end justify-around h-full gap-2">
-              <div className="flex flex-col items-center justify-end flex-1">
-                <div 
-                  className="w-full bg-blue-500/70 rounded-t-lg transition-all"
-                  style={{ height: `${Math.min((plan.preActivity.water / 1000) * 20, 100)}%` }}
-                />
-                <p className="text-xs mt-2 font-medium">PRE</p>
-                <p className="text-xs text-muted-foreground">{(plan.preActivity.water / 1000).toFixed(1)}L</p>
-              </div>
-              <div className="flex flex-col items-center justify-end flex-1">
-                <div 
-                  className="w-full bg-primary rounded-t-lg transition-all"
-                  style={{ height: `${Math.min((plan.duringActivity.waterPerHour * profile.sessionDuration / 1000) * 15, 100)}%` }}
-                />
-                <p className="text-xs mt-2 font-medium">DURING</p>
-                <p className="text-xs text-muted-foreground">{(plan.duringActivity.waterPerHour * profile.sessionDuration / 1000).toFixed(1)}L</p>
-              </div>
-              <div className="flex flex-col items-center justify-end flex-1">
-                <div 
-                  className="w-full bg-green-500/70 rounded-t-lg transition-all"
-                  style={{ height: `${Math.min((plan.postActivity.water / 1000) * 20, 100)}%` }}
-                />
-                <p className="text-xs mt-2 font-medium">POST</p>
-                <p className="text-xs text-muted-foreground">{(plan.postActivity.water / 1000).toFixed(1)}L</p>
-              </div>
-            </div>
-          </div>
-          <div className="grid grid-cols-3 gap-4 text-center text-sm">
-            <div>
-              <p className="font-medium text-blue-600">Pre-Loading</p>
-              <p className="text-xs text-muted-foreground">Optimize baseline</p>
-            </div>
-            <div>
-              <p className="font-medium text-primary">Active Hydration</p>
-              <p className="text-xs text-muted-foreground">Performance maintenance</p>
-            </div>
-            <div>
-              <p className="font-medium text-green-600">Recovery</p>
-              <p className="text-xs text-muted-foreground">Restore balance</p>
-            </div>
-          </div>
+      {/* Supplme Product Info - Moved here */}
+      <Card className="p-6 bg-accent/30">
+        <div className="flex flex-col items-center gap-4">
+          <h4 className="font-semibold text-lg">Supplme Liquid Electrolyte</h4>
+          <p className="text-sm text-muted-foreground text-center">
+            30ml sachets • 500mg Sodium • 250mg Potassium • 100mg Magnesium • 1380mg Citrate • 230mg Chloride
+          </p>
+          <p className="text-sm text-muted-foreground text-center">
+            Drink directly from sachet - no mixing required
+          </p>
+          <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
+            <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
+              Buy Supplme
+            </a>
+          </Button>
         </div>
       </Card>
+
+      {/* Race Day Hydration Guide */}
+      {profile.upcomingEvents && (
+        <div className="space-y-6">
+          <div className="text-center py-4">
+            <h2 className="text-2xl font-bold">Race Day Hydration Plan</h2>
+            <p className="text-muted-foreground mt-2">
+              For your upcoming: <strong>{profile.upcomingEvents}</strong>
+            </p>
+          </div>
+
+          <Card className="p-6 bg-primary/5 border-primary/20">
+            <h3 className="text-xl font-semibold mb-4">Race Day Strategy</h3>
+            
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Race Adjustments</AlertTitle>
+              <AlertDescription>
+                Race intensity is typically 10-15% higher than training, increasing fluid needs. 
+                Nervousness and adrenaline also increase fluid loss. Practice this strategy during training!
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4">
+              <div className="bg-background p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">Pre-Race (Day Before & Morning)</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• Day before: Maintain normal hydration + {plan.preActivity.water}ml extra</li>
+                  <li>• 2 hours before start: {plan.preActivity.water}ml water + <strong>{plan.preActivity.electrolytes}x Supplme sachet</strong></li>
+                  <li>• 30 min before start: 200-300ml water (sips only)</li>
+                </ul>
+              </div>
+
+              <div className="bg-background p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">During Race - Supplme Sachet Schedule</h4>
+                {profile.disciplines?.[0] === 'Triathlon' ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">For Triathlon:</p>
+                    <ul className="space-y-2 text-sm">
+                      <li>• <strong>Swim:</strong> Pre-loaded from pre-race sachet</li>
+                      <li>• <strong>T1 Transition:</strong> Take 1 Supplme sachet</li>
+                      <li>• <strong>Bike:</strong> 1 sachet every 45-60 minutes + {Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour</li>
+                      <li>• <strong>T2 Transition:</strong> Take 1 Supplme sachet</li>
+                      <li>• <strong>Run:</strong> 1 sachet every 30-45 minutes at aid stations + water as tolerated</li>
+                    </ul>
+                  </div>
+                ) : profile.disciplines?.[0] === 'Run' ? (
+                  <ul className="space-y-2 text-sm">
+                    <li>• <strong>Every 30 minutes:</strong> 1 Supplme sachet at aid station</li>
+                    <li>• Drink {Math.round(plan.duringActivity.waterPerHour / 2)}ml water every 15 minutes</li>
+                    <li>• For marathons: Aim for 3-4 sachets total during race</li>
+                    <li>• For ultras: 1 sachet per hour minimum</li>
+                  </ul>
+                ) : profile.disciplines?.[0] === 'Bike' ? (
+                  <ul className="space-y-2 text-sm">
+                    <li>• <strong>Every 45-60 minutes:</strong> 1 Supplme sachet</li>
+                    <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour in small sips</li>
+                    <li>• Keep sachets in jersey pocket or bike bag for easy access</li>
+                  </ul>
+                ) : (
+                  <ul className="space-y-2 text-sm">
+                    <li>• <strong>Every 30-45 minutes:</strong> 1 Supplme sachet</li>
+                    <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour</li>
+                    <li>• Adjust based on aid station availability</li>
+                  </ul>
+                )}
+              </div>
+
+              <div className="bg-background p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">Post-Race Recovery</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• Within 30 minutes: <strong>{plan.postActivity.electrolytes}x Supplme sachets</strong> + {Math.round(plan.postActivity.water / 2)}ml water</li>
+                  <li>• Next 2-4 hours: Remaining {Math.round(plan.postActivity.water / 2)}ml water gradually</li>
+                  <li>• Monitor urine color - aim for pale yellow</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
+
+      {/* Fluid Loss Line Graph */}
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-6">Fluid Loss Rate (Training)</h3>
+        <div className="space-y-4">
+          <div className="relative h-64 bg-muted/30 rounded-lg p-6">
+            <svg width="100%" height="100%" viewBox="0 0 600 200" className="overflow-visible">
+              {/* Grid lines */}
+              <line x1="50" y1="180" x2="550" y2="180" stroke="currentColor" strokeOpacity="0.2" />
+              <line x1="50" y1="135" x2="550" y2="135" stroke="currentColor" strokeOpacity="0.2" />
+              <line x1="50" y1="90" x2="550" y2="90" stroke="currentColor" strokeOpacity="0.2" />
+              <line x1="50" y1="45" x2="550" y2="45" stroke="currentColor" strokeOpacity="0.2" />
+              
+              {/* Axes */}
+              <line x1="50" y1="10" x2="50" y2="180" stroke="currentColor" strokeWidth="2" />
+              <line x1="50" y1="180" x2="550" y2="180" stroke="currentColor" strokeWidth="2" />
+              
+              {/* Y-axis labels */}
+              <text x="40" y="185" textAnchor="end" fontSize="12" fill="currentColor">0</text>
+              <text x="40" y="140" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration / 4)}ml</text>
+              <text x="40" y="95" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration / 2)}ml</text>
+              <text x="40" y="50" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration * 0.75)}ml</text>
+              <text x="40" y="15" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml</text>
+              
+              {/* X-axis labels */}
+              {Array.from({ length: Math.ceil(profile.sessionDuration) + 1 }).map((_, i) => (
+                <text key={i} x={50 + (i * 500 / profile.sessionDuration)} y="195" textAnchor="middle" fontSize="12" fill="currentColor">
+                  {i}h
+                </text>
+              ))}
+              
+              {/* Line graph */}
+              <polyline
+                points={Array.from({ length: Math.ceil(profile.sessionDuration * 4) + 1 })
+                  .map((_, i) => {
+                    const x = 50 + (i * 500 / (profile.sessionDuration * 4));
+                    const y = 180 - ((Math.round(plan.totalFluidLoss / profile.sessionDuration) / Math.round(plan.totalFluidLoss / profile.sessionDuration)) * 170 * (i / (profile.sessionDuration * 4)));
+                    return `${x},${y}`;
+                  })
+                  .join(' ')}
+                fill="none"
+                stroke="hsl(var(--primary))"
+                strokeWidth="3"
+              />
+            </svg>
+          </div>
+          <p className="text-sm text-center text-muted-foreground">
+            Cumulative fluid loss over {profile.sessionDuration} hours: <strong>{(plan.totalFluidLoss / 1000).toFixed(2)}L</strong>
+          </p>
+        </div>
+      </Card>
+
+      {/* AI Insights Section - Moved after plans */}
+      {aiInsights && (
+        <Card className="p-6 border-2 border-primary/20 bg-primary/5">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">AI-Enhanced Analysis</h3>
+              <span className={`ml-auto text-xs px-3 py-1 rounded-full border ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
+                {aiInsights.confidence_level.toUpperCase()} CONFIDENCE
+              </span>
+            </div>
+            
+            <div className="space-y-3">
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground mb-1">Why These Numbers?</h4>
+                <p className="text-sm leading-relaxed">{aiInsights.personalized_insight}</p>
+              </div>
+              
+              {aiInsights.risk_factors && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Key Risk Factors</AlertTitle>
+                  <AlertDescription>{aiInsights.risk_factors}</AlertDescription>
+                </Alert>
+              )}
+              
+              {aiInsights.professional_recommendation && (
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Professional Recommendation:</strong> {aiInsights.professional_recommendation}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {loadingInsights && (
+        <Card className="p-6 border-2 border-primary/20">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+            <p className="text-sm text-muted-foreground">Generating AI-enhanced insights...</p>
+          </div>
+        </Card>
+      )}
 
       {/* Calculation Transparency */}
       <Card className="p-6">
@@ -347,7 +443,14 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
         </div>
       </Card>
 
-      {/* Medical Disclaimer */}
+      {/* Final action button */}
+      <div className="flex justify-center">
+        <Button onClick={onReset} variant="outline" size="lg">
+          Create New Plan
+        </Button>
+      </div>
+
+      {/* Medical Disclaimer - Moved to bottom */}
       <Alert>
         <Shield className="h-4 w-4" />
         <AlertTitle>Medical & Professional Disclaimer</AlertTitle>
@@ -393,47 +496,6 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           </p>
         </div>
       </Card>
-
-      {/* Supplme Product Info */}
-      <Card className="p-6 bg-accent/30">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <h4 className="font-semibold">Supplme Liquid Electrolyte</h4>
-            <p className="text-sm text-muted-foreground">
-              30ml sachets • 500mg Sodium • 250mg Potassium • 100mg Magnesium • 1380mg Citrate • 230mg Chloride
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Drink directly from sachet - no mixing required
-            </p>
-          </div>
-        </div>
-      </Card>
-
-      {/* New section for race day planning */}
-      {profile.upcomingEvents && (
-        <Card className="p-6 bg-primary/5 border-primary/20">
-          <h3 className="text-xl font-semibold mb-4">Race Day Hydration Guide</h3>
-          <p className="text-sm text-muted-foreground mb-4">
-            Based on your upcoming event: <strong>{profile.upcomingEvents}</strong>
-          </p>
-          <Alert>
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Race Day Adjustments</AlertTitle>
-            <AlertDescription>
-              Race conditions often differ from training. Consider: higher intensity (+10-15% fluid needs), 
-              nervousness (increased fluid loss), aid station availability, and temperature on race day. 
-              Practice your race hydration strategy during training to avoid GI issues.
-            </AlertDescription>
-          </Alert>
-        </Card>
-      )}
-
-      {/* Final action button */}
-      <div className="flex justify-center">
-        <Button onClick={onReset} variant="outline" size="lg">
-          Create New Plan
-        </Button>
-      </div>
     </div>
   );
 }
