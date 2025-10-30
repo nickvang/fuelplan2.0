@@ -22,7 +22,7 @@ import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
   const { t } = useLanguage();
-  const [version, setVersion] = useState<'simple' | 'pro' | null>(null); // Version selection
+  const [version, setVersion] = useState<'simple' | 'pro' | null>('simple'); // Version selection - Quick mode by default
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false);
@@ -412,16 +412,16 @@ const Index = () => {
                 </div>
               </div>
 
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center pointer-events-none">
-                <div className="p-4 rounded-lg border border-border bg-card">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">
+                <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">PRE</p>
                   <p className="text-sm text-muted-foreground">{t('plan.preActivity')}</p>
                 </div>
-                <div className="p-4 rounded-lg border-2 border-primary bg-primary/5">
-                  <p className="text-2xl font-bold mb-1 text-primary">DURING</p>
-                  <p className="text-sm text-muted-foreground">{t('plan.duringActivity')}</p>
+                <div className="p-4 rounded-lg bg-primary text-primary-foreground">
+                  <p className="text-2xl font-bold mb-1">DURING</p>
+                  <p className="text-sm opacity-90">{t('plan.duringActivity')}</p>
                 </div>
-                <div className="p-4 rounded-lg border border-border bg-card">
+                <div className="p-4 rounded-lg bg-muted">
                   <p className="text-2xl font-bold mb-1">POST</p>
                   <p className="text-sm text-muted-foreground">{t('plan.postActivity')}</p>
                 </div>
