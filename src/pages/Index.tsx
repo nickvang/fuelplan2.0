@@ -313,6 +313,7 @@ const Index = () => {
             description={t('app.subtitle')}
             onNext={handleNextStep}
             isValid={isStepValid()}
+            nextButtonText={t('common.start')}
           >
             <div className="py-6 space-y-6">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-center">

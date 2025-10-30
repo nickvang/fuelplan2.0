@@ -28,6 +28,7 @@ export const translations = {
     // Common
     'common.next': 'Next',
     'common.back': 'Back',
+    'common.start': 'Start',
     'common.complete': 'Complete',
     'common.yes': 'Yes',
     'common.no': 'No',
@@ -191,6 +192,7 @@ export const translations = {
     // Common
     'common.next': 'Næste',
     'common.back': 'Tilbage',
+    'common.start': 'Start',
     'common.complete': 'Fuldfør',
     'common.yes': 'Ja',
     'common.no': 'Nej',

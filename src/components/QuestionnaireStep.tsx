@@ -10,6 +10,7 @@ interface QuestionnaireStepProps {
   onNext: () => void;
   onBack?: () => void;
   isValid: boolean;
+  nextButtonText?: string;
 }
 
 export function QuestionnaireStep({
@@ -19,6 +20,7 @@ export function QuestionnaireStep({
   onNext,
   onBack,
   isValid,
+  nextButtonText,
 }: QuestionnaireStepProps) {
   const { t } = useLanguage();
   
@@ -48,7 +50,7 @@ export function QuestionnaireStep({
           disabled={!isValid}
           className="flex-1"
         >
-          {onBack ? t('common.next') : t('common.next')}
+          {nextButtonText || t('common.next')}
         </Button>
       </div>
     </Card>
