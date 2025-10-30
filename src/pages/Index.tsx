@@ -24,10 +24,6 @@ const Index = () => {
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     sex: 'male',
     indoorOutdoor: 'outdoor',
-    altitude: 'sea-level',
-    sunExposure: 'partial',
-    windConditions: 'moderate',
-    clothingType: 'light',
     sweatRate: 'medium',
     sweatSaltiness: 'medium',
     dailySaltIntake: 'medium',
@@ -91,8 +87,8 @@ const Index = () => {
     switch (stepNumber) {
       case 1: // Body & Physiology
         return !!(analyzedData.age && analyzedData.weight && analyzedData.height && analyzedData.sex);
-      case 2: // Activity & Terrain
-        return !!(analyzedData.disciplines && analyzedData.sessionDuration);
+      case 2: // Activity & Terrain - NEVER SKIP, user must choose
+        return false;
       case 4: // Sweat Profile
         return !!(analyzedData.sweatRate && analyzedData.sweatSaltiness);
       default:
@@ -159,10 +155,6 @@ const Index = () => {
     setProfile({
       sex: 'male',
       indoorOutdoor: 'outdoor',
-      altitude: 'sea-level',
-      sunExposure: 'partial',
-      windConditions: 'moderate',
-      clothingType: 'light',
       sweatRate: 'medium',
       sweatSaltiness: 'medium',
       dailySaltIntake: 'medium',
@@ -228,19 +220,19 @@ const Index = () => {
         )}
 
         {/* Data Analysis Complete */}
-        {analyzedData && step === 1 && (
+        {analyzedData && step > 0 && (
           <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
             <p className="text-sm text-green-700 dark:text-green-400 font-medium">
-              ✓ Data analysis complete! We found:
+              ✓ Data analysis complete! We pre-filled:
             </p>
             <ul className="text-xs text-green-600 dark:text-green-400 mt-2 space-y-1">
               {analyzedData.age && <li>• Age and body metrics</li>}
               {analyzedData.restingHeartRate && <li>• Resting heart rate</li>}
               {analyzedData.hrv && <li>• Heart rate variability</li>}
-              {analyzedData.disciplines && <li>• Activity type and training data</li>}
+              {analyzedData.disciplines && <li>• Activity data (for reference - you still choose your guide)</li>}
             </ul>
             <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-              Only showing questions we couldn't answer from your data.
+              Skipping questions we could answer from your data.
             </p>
           </div>
         )}
@@ -528,7 +520,7 @@ const Index = () => {
         {step === 2 && !isAnalyzing && (
           <QuestionnaireStep
             title="2. Activity & Terrain"
-            description={analyzedData ? "Complete any missing information" : "Tell us about your training and racing"}
+            description="Choose which activity guide you want"
             onNext={handleNextStep}
             onBack={() => setStep(1)}
             isValid={isStepValid()}
@@ -536,6 +528,9 @@ const Index = () => {
             <div className="space-y-4">
               <div>
                 <Label>Primary Discipline *</Label>
+                <p className="text-sm text-muted-foreground mb-2">
+                  Select the activity you want a hydration guide for
+                </p>
                 <RadioGroup
                   value={profile.disciplines?.[0] || ''}
                   onValueChange={(value) => updateProfile({ disciplines: [value] })}
@@ -787,7 +782,7 @@ const Index = () => {
                   <InfoTooltip content="Sea-level: 0-1000m, Moderate: 1000-2500m, High: >2500m. Higher altitude increases respiratory fluid loss and dehydration risk." />
                 </div>
                 <RadioGroup
-                  value={profile.altitude || 'sea-level'}
+                  value={profile.altitude || ''}
                   onValueChange={(value) => updateProfile({ altitude: value as 'sea-level' | 'moderate' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
@@ -811,7 +806,7 @@ const Index = () => {
                   <InfoTooltip content="Direct sun exposure increases body temperature and sweat rate significantly compared to shade." />
                 </div>
                 <RadioGroup
-                  value={profile.sunExposure || 'partial'}
+                  value={profile.sunExposure || ''}
                   onValueChange={(value) => updateProfile({ sunExposure: value as 'shade' | 'partial' | 'full-sun' })}
                 >
                   <div className="flex items-center space-x-2">
@@ -832,7 +827,7 @@ const Index = () => {
               <div>
                 <Label>Wind Conditions *</Label>
                 <RadioGroup
-                  value={profile.windConditions || 'moderate'}
+                  value={profile.windConditions || ''}
                   onValueChange={(value) => updateProfile({ windConditions: value as 'calm' | 'moderate' | 'windy' })}
                 >
                   <div className="flex items-center space-x-2">
@@ -853,7 +848,7 @@ const Index = () => {
               <div>
                 <Label>Clothing Type *</Label>
                 <RadioGroup
-                  value={profile.clothingType || 'light'}
+                  value={profile.clothingType || ''}
                   onValueChange={(value) => updateProfile({ clothingType: value as 'minimal' | 'light' | 'moderate' | 'heavy' })}
                 >
                   <div className="flex items-center space-x-2">
