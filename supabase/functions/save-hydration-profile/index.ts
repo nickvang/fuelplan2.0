@@ -35,15 +35,15 @@ const profileSchema = z.object({
 const planSchema = z.object({
   preActivity: z.object({
     water: z.number().min(0).max(5000),
-    electrolytes: z.string().max(100)
+    electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)])
   }),
   duringActivity: z.object({
     waterPerHour: z.number().min(0).max(5000),
-    electrolytesPerHour: z.string().max(100)
+    electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)])
   }),
   postActivity: z.object({
     water: z.number().min(0).max(5000),
-    electrolytes: z.string().max(100)
+    electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)])
   }),
   totalFluidLoss: z.number().min(0).max(20000),
   recommendations: z.array(z.string().max(500)).max(20).optional(),
