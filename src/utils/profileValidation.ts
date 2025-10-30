@@ -13,7 +13,7 @@ export const profileSchema = z.object({
   
   // Activity & Terrain
   disciplines: z.array(z.string()).min(1, "At least one discipline is required").optional(),
-  sessionDuration: z.number().min(0.25, "Session must be at least 15 minutes").max(24, "Session must be less than 24 hours").optional(),
+  sessionDuration: z.number().min(0.25, "Session must be at least 15 minutes").max(168, "Session must be less than 7 days").optional(),
   indoorOutdoor: z.enum(['indoor', 'outdoor', 'both']).optional(),
   
   // Environment Data
