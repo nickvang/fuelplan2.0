@@ -66,9 +66,6 @@ export interface HydrationProfile {
   // 7. Optional Data
   weeklyVolume?: number;
   sleepQuality?: number;
-  sleepDuration?: number;
-  sleepScore?: number;
-  recoveryScore?: number;
   otherNotes?: string;
 }
 
