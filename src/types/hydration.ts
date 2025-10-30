@@ -15,6 +15,9 @@ export interface HydrationProfile {
   raceDistance?: string;
   sessionDuration: number;
   avgPace?: string;
+  swimPace?: string;
+  bikePower?: string;
+  runPace?: string;
   elevationGain?: number;
   longestSession?: number;
   trainingFrequency?: number;

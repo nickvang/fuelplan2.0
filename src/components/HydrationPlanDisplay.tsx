@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { HydrationPlan, HydrationProfile, AIEnhancedInsights } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield } from 'lucide-react';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import supplmeLogo from '@/assets/supplme-logo-2.svg';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -54,8 +55,11 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
+      {/* Header with Logo */}
       <div className="text-center space-y-4 py-8">
+        <div className="inline-flex items-center justify-center mb-4">
+          <img src={supplmeLogo} alt="SUPPLME" className="h-24 w-auto" />
+        </div>
         <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-primary/10 mb-4">
           <Droplets className="w-8 h-8 text-primary" />
         </div>
@@ -63,7 +67,10 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
           Your Personalized Hydration Plan
         </h1>
         <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Science-backed hydration strategy optimized for your performance
+          Science-backed hydration strategy optimized for your training sessions
+        </p>
+        <p className="text-sm text-muted-foreground italic">
+          Based on distance and typical training conditions
         </p>
       </div>
 
@@ -216,6 +223,69 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
         </Card>
       </div>
 
+      {/* Action Buttons - Right under the plan */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
+          <Download className="w-4 h-4" />
+          Download Plan
+        </Button>
+        <Button variant="default" size="lg" asChild>
+          <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
+            Buy Supplme
+          </a>
+        </Button>
+      </div>
+
+      {/* Hydration Visualization Graph */}
+      <Card className="p-6">
+        <h3 className="text-xl font-semibold mb-6">Hydration Timeline</h3>
+        <div className="space-y-4">
+          <div className="relative h-48 bg-muted/30 rounded-lg p-6">
+            {/* Simple visual representation */}
+            <div className="flex items-end justify-around h-full gap-2">
+              <div className="flex flex-col items-center justify-end flex-1">
+                <div 
+                  className="w-full bg-blue-500/70 rounded-t-lg transition-all"
+                  style={{ height: `${Math.min((plan.preActivity.water / 1000) * 20, 100)}%` }}
+                />
+                <p className="text-xs mt-2 font-medium">PRE</p>
+                <p className="text-xs text-muted-foreground">{(plan.preActivity.water / 1000).toFixed(1)}L</p>
+              </div>
+              <div className="flex flex-col items-center justify-end flex-1">
+                <div 
+                  className="w-full bg-primary rounded-t-lg transition-all"
+                  style={{ height: `${Math.min((plan.duringActivity.waterPerHour * profile.sessionDuration / 1000) * 15, 100)}%` }}
+                />
+                <p className="text-xs mt-2 font-medium">DURING</p>
+                <p className="text-xs text-muted-foreground">{(plan.duringActivity.waterPerHour * profile.sessionDuration / 1000).toFixed(1)}L</p>
+              </div>
+              <div className="flex flex-col items-center justify-end flex-1">
+                <div 
+                  className="w-full bg-green-500/70 rounded-t-lg transition-all"
+                  style={{ height: `${Math.min((plan.postActivity.water / 1000) * 20, 100)}%` }}
+                />
+                <p className="text-xs mt-2 font-medium">POST</p>
+                <p className="text-xs text-muted-foreground">{(plan.postActivity.water / 1000).toFixed(1)}L</p>
+              </div>
+            </div>
+          </div>
+          <div className="grid grid-cols-3 gap-4 text-center text-sm">
+            <div>
+              <p className="font-medium text-blue-600">Pre-Loading</p>
+              <p className="text-xs text-muted-foreground">Optimize baseline</p>
+            </div>
+            <div>
+              <p className="font-medium text-primary">Active Hydration</p>
+              <p className="text-xs text-muted-foreground">Performance maintenance</p>
+            </div>
+            <div>
+              <p className="font-medium text-green-600">Recovery</p>
+              <p className="text-xs text-muted-foreground">Restore balance</p>
+            </div>
+          </div>
+        </div>
+      </Card>
+
       {/* Calculation Transparency */}
       <Card className="p-6">
         <Accordion type="single" collapsible>
@@ -336,21 +406,32 @@ export function HydrationPlanDisplay({ plan, profile, onReset }: HydrationPlanDi
               Drink directly from sachet - no mixing required
             </p>
           </div>
-          <Button variant="default" size="lg" asChild>
-            <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
-              Shop Supplme
-            </a>
-          </Button>
         </div>
       </Card>
 
-      {/* Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-4 justify-center pt-8">
+      {/* New section for race day planning */}
+      {profile.upcomingEvents && (
+        <Card className="p-6 bg-primary/5 border-primary/20">
+          <h3 className="text-xl font-semibold mb-4">Race Day Hydration Guide</h3>
+          <p className="text-sm text-muted-foreground mb-4">
+            Based on your upcoming event: <strong>{profile.upcomingEvents}</strong>
+          </p>
+          <Alert>
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Race Day Adjustments</AlertTitle>
+            <AlertDescription>
+              Race conditions often differ from training. Consider: higher intensity (+10-15% fluid needs), 
+              nervousness (increased fluid loss), aid station availability, and temperature on race day. 
+              Practice your race hydration strategy during training to avoid GI issues.
+            </AlertDescription>
+          </Alert>
+        </Card>
+      )}
+
+      {/* Final action button */}
+      <div className="flex justify-center">
         <Button onClick={onReset} variant="outline" size="lg">
           Create New Plan
-        </Button>
-        <Button onClick={() => window.print()} variant="default" size="lg">
-          Print Plan
         </Button>
       </div>
     </div>

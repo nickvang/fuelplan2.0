@@ -109,14 +109,16 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-background pt-6 pb-12 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
-        {/* Header */}
+        {/* Header - Shows on all steps */}
         <div className="text-center space-y-3">
           <div className="inline-flex items-center justify-center">
-            <img src={supplmeLogo} alt="SUPPLME" className="h-56 w-auto" />
+            <img src={supplmeLogo} alt="SUPPLME" className="h-24 w-auto" />
           </div>
-          <p className="text-lg text-muted-foreground">
-            Your personalized hydration plan
-          </p>
+          {step === 0 && (
+            <p className="text-lg text-muted-foreground">
+              Your personalized hydration plan
+            </p>
+          )}
         </div>
 
         {/* Progress */}
@@ -256,7 +258,10 @@ const Index = () => {
 
               <div className="grid grid-cols-2 gap-4">
                 <div>
-                  <Label htmlFor="bodyFat">Body Fat %</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="bodyFat">Body Fat %</Label>
+                    <InfoTooltip content="Body fat percentage affects hydration needs - lower body fat means more body water. Can be measured with smart scales, DEXA scans, or found in Garmin Index, Apple Watch (requires third-party apps), or fitness assessments. Typical athletic range: 6-24% (men), 14-31% (women)." />
+                  </div>
                   <Input
                     id="bodyFat"
                     type="number"
@@ -266,7 +271,10 @@ const Index = () => {
                   />
                 </div>
                 <div>
-                  <Label htmlFor="restingHeartRate">Resting HR</Label>
+                  <div className="flex items-center">
+                    <Label htmlFor="restingHeartRate">Resting HR</Label>
+                    <InfoTooltip content="Resting heart rate (RHR) indicates fitness level and recovery. Lower RHR typically means better cardiovascular fitness. Find it on: Garmin (morning report), Apple Watch (Health app), Coros (training status), Whoop (daily metrics), Oura Ring. Typical athletic range: 40-60 bpm." />
+                  </div>
                   <Input
                     id="restingHeartRate"
                     type="number"
@@ -328,19 +336,18 @@ const Index = () => {
           >
             <div className="space-y-4">
               <div>
-                <Label>Disciplines (select all that apply) *</Label>
-                <div className="space-y-2 mt-2">
-                  {['Swim', 'Bike', 'Run', 'Trail', 'Other'].map((disc) => (
+                <Label>Primary Discipline *</Label>
+                <RadioGroup
+                  value={profile.disciplines?.[0] || ''}
+                  onValueChange={(value) => updateProfile({ disciplines: [value] })}
+                >
+                  {['Run', 'Swim', 'Bike', 'Triathlon'].map((disc) => (
                     <div key={disc} className="flex items-center space-x-2">
-                      <Checkbox
-                        id={disc}
-                        checked={profile.disciplines?.includes(disc)}
-                        onCheckedChange={() => toggleDiscipline(disc)}
-                      />
-                      <Label htmlFor={disc} className="font-normal">{disc}</Label>
+                      <RadioGroupItem value={disc} id={`disc-${disc}`} />
+                      <Label htmlFor={`disc-${disc}`} className="font-normal">{disc}</Label>
                     </div>
                   ))}
-                </div>
+                </RadioGroup>
               </div>
 
               <div>
@@ -381,15 +388,67 @@ const Index = () => {
                 </div>
               </div>
 
-              <div>
-                <Label htmlFor="avgPace">Average Pace or Power Output</Label>
-                <Input
-                  id="avgPace"
-                  value={profile.avgPace || ''}
-                  onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                  placeholder="e.g., 5:30/km, 250W"
-                />
-              </div>
+              {profile.disciplines?.[0] === 'Triathlon' ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="swimPace">Swim Pace</Label>
+                    <Input
+                      id="swimPace"
+                      value={profile.swimPace || ''}
+                      onChange={(e) => updateProfile({ swimPace: e.target.value })}
+                      placeholder="e.g., 1:45/100m"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bikePower">Bike Power/Pace</Label>
+                    <Input
+                      id="bikePower"
+                      value={profile.bikePower || ''}
+                      onChange={(e) => updateProfile({ bikePower: e.target.value })}
+                      placeholder="e.g., 250W or 30 km/h"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="runPace">Run Pace</Label>
+                    <Input
+                      id="runPace"
+                      value={profile.runPace || ''}
+                      onChange={(e) => updateProfile({ runPace: e.target.value })}
+                      placeholder="e.g., 5:30/km"
+                    />
+                  </div>
+                </div>
+              ) : profile.disciplines?.[0] === 'Swim' ? (
+                <div>
+                  <Label htmlFor="avgPace">Average Swim Pace</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 1:45/100m"
+                  />
+                </div>
+              ) : profile.disciplines?.[0] === 'Bike' ? (
+                <div>
+                  <Label htmlFor="avgPace">Average Power/Speed</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 250W or 30 km/h"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="avgPace">Average Run Pace</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 5:30/km"
+                  />
+                </div>
+              )}
 
               <div>
                 <div className="flex items-center">
@@ -624,12 +683,20 @@ const Index = () => {
         {step === 4 && (
           <QuestionnaireStep
             title="4. Sweat Profile"
-            description="Your individual sweat characteristics"
+            description="Understanding your sweat rate and saltiness helps optimize electrolyte intake"
             onNext={() => setStep(5)}
             onBack={() => setStep(3)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
+              <div className="bg-muted/50 p-4 rounded-lg space-y-2">
+                <h4 className="font-medium text-sm">How to Determine Your Sweat Profile:</h4>
+                <div className="text-sm text-muted-foreground space-y-1">
+                  <p><strong>Sweat Rate:</strong> Weigh yourself before and after a 1-hour workout. Weight loss (in kg) × 1000 + fluids consumed = sweat rate in ml/hour. High: &gt;1000ml/h, Medium: 500-1000ml/h, Low: &lt;500ml/h.</p>
+                  <p><strong>Sweat Saltiness:</strong> After exercise, check your skin and clothing. White crystalline residue = high salt loss. No visible residue = low salt loss. Can also be measured with sweat sodium test kits.</p>
+                  <p className="text-xs pt-2">💡 Found in: Garmin (Body Battery + Performance Widget), Coros (Training Insights), Whoop (Strain & Recovery), or manual weighing method.</p>
+                </div>
+              </div>
               <div>
                 <div className="flex items-center mb-2">
                   <Label>Sweat Rate *</Label>
@@ -771,7 +838,10 @@ const Index = () => {
               </div>
 
               <div>
-                <Label htmlFor="caffeineIntake">Daily Caffeine Intake (mg)</Label>
+                <div className="flex items-center">
+                  <Label htmlFor="caffeineIntake">Daily Caffeine Intake (mg)</Label>
+                  <InfoTooltip content="Caffeine can have a mild diuretic effect at high doses (>300mg/day), potentially increasing fluid needs. However, regular caffeine users develop tolerance. 1 cup coffee ≈ 95mg, 1 espresso ≈ 64mg, 1 energy drink ≈ 80mg." />
+                </div>
                 <Input
                   id="caffeineIntake"
                   type="number"
