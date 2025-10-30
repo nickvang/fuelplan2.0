@@ -772,19 +772,22 @@ const Index = () => {
                 />
               </div>
 
-              <div>
-                <div className="flex items-center">
-                  <Label htmlFor="sweatSodiumTest">{t('body.sweatSodiumTest')}</Label>
-                  <InfoTooltip content="A sweat sodium test measures the concentration of sodium in your sweat. Normal range is 20-80 mmol/L. High sodium loss (>60 mmol/L) means you need more electrolytes. Can be done at sports labs or with at-home test kits." />
+              {/* Sweat Sodium Test - Pro Mode Only */}
+              {version === 'pro' && (
+                <div>
+                  <div className="flex items-center">
+                    <Label htmlFor="sweatSodiumTest">{t('body.sweatSodiumTest')}</Label>
+                    <InfoTooltip content="A sweat sodium test measures the concentration of sodium in your sweat. Normal range is 20-80 mmol/L. High sodium loss (>60 mmol/L) means you need more electrolytes. Can be done at sports labs or with at-home test kits." />
+                  </div>
+                  <Input
+                    id="sweatSodiumTest"
+                    type="number"
+                    value={profile.sweatSodiumTest || ''}
+                    onChange={(e) => updateProfile({ sweatSodiumTest: parseFloat(e.target.value) })}
+                    placeholder="If known"
+                  />
                 </div>
-                <Input
-                  id="sweatSodiumTest"
-                  type="number"
-                  value={profile.sweatSodiumTest || ''}
-                  onChange={(e) => updateProfile({ sweatSodiumTest: parseFloat(e.target.value) })}
-                  placeholder="If known"
-                />
-              </div>
+              )}
             </div>
           </QuestionnaireStep>
         )}
