@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import supplmeLogo from '@/assets/supplme-logo.png';
+import supplmeLogo from '@/assets/supplme-logo-2.svg';
 
 const Index = () => {
   const [step, setStep] = useState(0);
@@ -107,14 +107,14 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background py-12 px-4">
+    <div className="min-h-screen bg-background pt-6 pb-12 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
-        <div className="text-center space-y-4">
-          <div className="inline-flex items-center justify-center mb-4">
-            <img src={supplmeLogo} alt="SUPPLME" className="h-40" />
+        <div className="text-center space-y-3">
+          <div className="inline-flex items-center justify-center">
+            <img src={supplmeLogo} alt="SUPPLME" className="h-12 w-auto" />
           </div>
-          <p className="text-xl text-muted-foreground">
+          <p className="text-lg text-muted-foreground">
             Your personalized hydration plan
           </p>
         </div>
