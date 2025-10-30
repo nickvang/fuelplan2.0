@@ -13,7 +13,7 @@ export const profileSchema = z.object({
   
   // Activity & Terrain
   disciplines: z.array(z.string()).min(1, "At least one discipline is required").optional(),
-  sessionDuration: z.number().min(15, "Session must be at least 15 minutes").max(720, "Session must be less than 12 hours").optional(),
+  sessionDuration: z.number().min(0.25, "Session must be at least 15 minutes").max(24, "Session must be less than 24 hours").optional(),
   indoorOutdoor: z.enum(['indoor', 'outdoor', 'both']).optional(),
   
   // Environment Data
@@ -24,8 +24,9 @@ export const profileSchema = z.object({
   }).optional(),
   trainingHumidity: z.number().min(0).max(100).optional(),
   trainingAltitude: z.number().min(0).max(5000).optional(),
-  sunExposure: z.enum(['low', 'medium', 'high']).optional(),
+  sunExposure: z.enum(['shade', 'partial', 'full-sun']).optional(),
   windConditions: z.enum(['calm', 'moderate', 'windy']).optional(),
+  clothingType: z.string().optional(),
   
   // Sweat Profile
   sweatRate: z.enum(['low', 'medium', 'high']).optional(),
@@ -35,8 +36,8 @@ export const profileSchema = z.object({
   // Dietary Habits
   dailySaltIntake: z.enum(['low', 'medium', 'high']).optional(),
   dailyWaterIntake: z.number().min(0).max(10).optional(),
-  caffeineIntake: z.enum(['none', 'low', 'moderate', 'high']).optional(),
-  dietType: z.enum(['omnivore', 'vegetarian', 'vegan', 'keto', 'other']).optional(),
+  caffeineIntake: z.number().min(0).max(2000).optional(),
+  dietType: z.string().max(50).optional(),
   
   // Goals & Events
   primaryGoal: z.enum(['performance', 'endurance', 'recovery', 'weight-loss', 'general-health']).optional(),
@@ -69,6 +70,12 @@ export const validateAndSanitizeProfile = (profile: any) => {
   }
   if (profile.userEmail) {
     profile.userEmail = sanitizeString(profile.userEmail);
+  }
+  if (profile.dietType) {
+    profile.dietType = sanitizeString(profile.dietType);
+  }
+  if (profile.clothingType) {
+    profile.clothingType = sanitizeString(profile.clothingType);
   }
   
   // Validate with zod
