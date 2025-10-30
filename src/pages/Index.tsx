@@ -413,17 +413,17 @@ const Index = () => {
                 <h3 className="font-medium text-base sm:text-lg">{t('gdpr.title')}</h3>
                 
                 <div className="space-y-3 text-xs sm:text-sm text-muted-foreground leading-relaxed">
-                  <div>
-                    <p className="font-semibold text-foreground mb-1">{t('gdpr.ai.title')}</p>
-                    <p>{t('gdpr.ai.description')}</p>
-                  </div>
-
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="gdpr-details" className="border-none">
                       <AccordionTrigger className="text-sm font-semibold text-foreground hover:no-underline py-2">
                         {t('gdpr.compliance.title')}
                       </AccordionTrigger>
                       <AccordionContent className="space-y-3 pt-2">
+                        <div>
+                          <p className="font-semibold text-foreground mb-1">{t('gdpr.ai.title')}</p>
+                          <p>{t('gdpr.ai.description')}</p>
+                        </div>
+                        
                         <p>{t('gdpr.compliance.intro')}</p>
                         <ul className="list-disc pl-5 space-y-1">
                           <li><strong>{t('gdpr.dataCollection')}:</strong> {t('gdpr.dataCollection.text')}</li>
