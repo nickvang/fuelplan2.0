@@ -316,6 +316,17 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
                     )}
                     <li>• Keep sachets in jersey pocket or bike bag for easy access</li>
                   </ul>
+                ) : profile.disciplines?.[0] === 'Football' ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">For Football (Soccer):</p>
+                    <ul className="space-y-2 text-sm">
+                      <li>• <strong>Pre-Match (60-90 min before):</strong> {Math.round(plan.preActivity.water / 2)}ml water + {plan.preActivity.electrolytes}x Supplme sachet</li>
+                      <li>• <strong>Pre-Match (30 min before):</strong> {Math.round(plan.preActivity.water / 3)}ml water</li>
+                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + 200-300ml water</li>
+                      <li>• <strong>Post-Match (immediately):</strong> {plan.postActivity.water}ml water + {plan.postActivity.electrolytes}x Supplme sachet</li>
+                      <li>• <strong>Post-Match (within 2 hours):</strong> Continue hydrating with water based on urine color</li>
+                    </ul>
+                  </div>
                 ) : (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>Every 30-45 minutes:</strong> 1 Supplme sachet</li>

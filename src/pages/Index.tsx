@@ -319,10 +319,10 @@ const Index = () => {
               </div>
 
               {/* Optional Smartwatch Upload */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 p-6 rounded-lg space-y-4">
+              <div className="bg-blue-50 dark:bg-blue-950/30 p-4 sm:p-6 rounded-lg space-y-4">
                 <div>
-                  <h4 className="font-medium">Have Smartwatch Data? (Optional)</h4>
-                  <p className="text-sm text-muted-foreground mt-1">
+                  <h4 className="font-medium text-sm sm:text-base">Have Smartwatch Data? <span className="text-blue-600">(Recommended for enhanced results)</span></h4>
+                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
                     Upload files from Whoop, Garmin, Apple Watch, Coros to pre-fill your profile
                   </p>
                 </div>
@@ -615,10 +615,10 @@ const Index = () => {
                   value={profile.disciplines?.[0] || ''}
                   onValueChange={(value) => updateProfile({ disciplines: [value] })}
                 >
-                  {['Run', 'Swim', 'Bike', 'Triathlon'].map((disc) => (
+                  {['Run', 'Swim', 'Bike', 'Triathlon', 'Football'].map((disc) => (
                     <div key={disc} className="flex items-center space-x-2">
                       <RadioGroupItem value={disc} id={`disc-${disc}`} />
-                      <Label htmlFor={`disc-${disc}`} className="font-normal">{disc}</Label>
+                      <Label htmlFor={`disc-${disc}`} className="font-normal">{disc === 'Football' ? 'Football (Soccer)' : disc}</Label>
                     </div>
                   ))}
                 </RadioGroup>
