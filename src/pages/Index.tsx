@@ -53,12 +53,13 @@ const Index = () => {
       
       // Mock parsing logic - replace with actual parsing
       if (fileName.includes('physiological') || fileName.includes('metrics')) {
-        // Extract age, weight, height, HR, HRV from physiological data
+        // Extract age, weight, height, HR, HRV, body fat from physiological data
         extractedData.age = 32; // Mock data
         extractedData.weight = 75;
         extractedData.height = 180;
         extractedData.restingHeartRate = 52;
         extractedData.hrv = '65ms';
+        extractedData.bodyFat = 15; // Body fat percentage
       }
       
       if (fileName.includes('sleep') || fileName.includes('recovery')) {
