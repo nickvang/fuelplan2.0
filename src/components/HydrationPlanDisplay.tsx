@@ -7,7 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import supplmeLogo from '@/assets/supplme-logo-2.svg';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -56,11 +55,8 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
 
   return (
     <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header with Logo */}
+      {/* Header */}
       <div className="text-center space-y-4 py-4">
-        <div className="inline-flex items-center justify-center">
-          <img src={supplmeLogo} alt="SUPPLME" className="h-48 w-auto" />
-        </div>
         <h1 className="text-4xl font-bold tracking-tight">
           Supplme Hydration Guide
         </h1>
@@ -138,7 +134,6 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
             <div>
               <p className="text-sm text-muted-foreground">Supplme Sachet (30ml)</p>
               <p className="text-xl font-semibold">{plan.preActivity.electrolytes}x sachet</p>
-              <p className="text-xs text-muted-foreground mt-1">Consume directly - no mixing</p>
             </div>
           </div>
 
@@ -174,12 +169,11 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
                   ? `${plan.duringActivity.electrolytesPerHour}x sachet` 
                   : 'Not required'}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Space out evenly during activity</p>
             </div>
           </div>
 
           <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Replace 60-80% of sweat losses for optimal performance without GI distress (PMID 38732589)
+            Supplme products are optimized to avoid GI distress. Replace 60-80% of sweat losses for optimal performance (PMID 38732589)
           </p>
         </Card>
 
@@ -217,6 +211,26 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
         <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
           <Download className="w-4 h-4" />
           Download Plan
+        </Button>
+        <Button 
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: 'My Supplme Hydration Plan',
+                text: `Check out my personalized hydration plan: ${(plan.totalFluidLoss / 1000).toFixed(1)}L fluid loss during ${profile.sessionDuration}h activity`,
+                url: window.location.href
+              }).catch(err => console.log('Error sharing:', err));
+            } else {
+              navigator.clipboard.writeText(window.location.href);
+              toast({ title: "Link copied!", description: "Share link copied to clipboard" });
+            }
+          }} 
+          variant="outline" 
+          size="lg" 
+          className="gap-2"
+        >
+          <ExternalLink className="w-4 h-4" />
+          Share Plan
         </Button>
       </div>
 
@@ -318,56 +332,6 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
         </div>
       )}
 
-      {/* Fluid Loss Line Graph */}
-      <Card className="p-6">
-        <h3 className="text-xl font-semibold mb-6">Fluid Loss Rate (Training)</h3>
-        <div className="space-y-4">
-          <div className="relative h-64 bg-muted/30 rounded-lg p-6">
-            <svg width="100%" height="100%" viewBox="0 0 600 200" className="overflow-visible">
-              {/* Grid lines */}
-              <line x1="50" y1="180" x2="550" y2="180" stroke="currentColor" strokeOpacity="0.2" />
-              <line x1="50" y1="135" x2="550" y2="135" stroke="currentColor" strokeOpacity="0.2" />
-              <line x1="50" y1="90" x2="550" y2="90" stroke="currentColor" strokeOpacity="0.2" />
-              <line x1="50" y1="45" x2="550" y2="45" stroke="currentColor" strokeOpacity="0.2" />
-              
-              {/* Axes */}
-              <line x1="50" y1="10" x2="50" y2="180" stroke="currentColor" strokeWidth="2" />
-              <line x1="50" y1="180" x2="550" y2="180" stroke="currentColor" strokeWidth="2" />
-              
-              {/* Y-axis labels */}
-              <text x="40" y="185" textAnchor="end" fontSize="12" fill="currentColor">0</text>
-              <text x="40" y="140" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration / 4)}ml</text>
-              <text x="40" y="95" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration / 2)}ml</text>
-              <text x="40" y="50" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration * 0.75)}ml</text>
-              <text x="40" y="15" textAnchor="end" fontSize="12" fill="currentColor">{Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml</text>
-              
-              {/* X-axis labels */}
-              {Array.from({ length: Math.ceil(profile.sessionDuration) + 1 }).map((_, i) => (
-                <text key={i} x={50 + (i * 500 / profile.sessionDuration)} y="195" textAnchor="middle" fontSize="12" fill="currentColor">
-                  {i}h
-                </text>
-              ))}
-              
-              {/* Line graph */}
-              <polyline
-                points={Array.from({ length: Math.ceil(profile.sessionDuration * 4) + 1 })
-                  .map((_, i) => {
-                    const x = 50 + (i * 500 / (profile.sessionDuration * 4));
-                    const y = 180 - ((Math.round(plan.totalFluidLoss / profile.sessionDuration) / Math.round(plan.totalFluidLoss / profile.sessionDuration)) * 170 * (i / (profile.sessionDuration * 4)));
-                    return `${x},${y}`;
-                  })
-                  .join(' ')}
-                fill="none"
-                stroke="hsl(var(--primary))"
-                strokeWidth="3"
-              />
-            </svg>
-          </div>
-          <p className="text-sm text-center text-muted-foreground">
-            Cumulative fluid loss over {profile.sessionDuration} hours: <strong>{(plan.totalFluidLoss / 1000).toFixed(2)}L</strong>
-          </p>
-        </div>
-      </Card>
 
       {/* AI Insights Section - Moved after plans */}
       {aiInsights && (
@@ -448,7 +412,27 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
               </div>
             </AccordionTrigger>
             <AccordionContent>
-              <div className="space-y-2 pt-2">
+              <div className="space-y-3 pt-2">
+                {hasSmartWatchData && (
+                  <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-3 mb-3">
+                    <p className="text-sm font-medium text-blue-700 dark:text-blue-400">
+                      Enhanced Calculation Using Your Smartwatch Data
+                    </p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400 mt-1">
+                      This plan uses your actual physiological metrics, training history, and recovery data for improved accuracy.
+                    </p>
+                  </div>
+                )}
+                {!hasSmartWatchData && (
+                  <div className="bg-muted/50 border border-border rounded-lg p-3 mb-3">
+                    <p className="text-sm font-medium text-muted-foreground">
+                      Standard Calculation Method
+                    </p>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Based on your responses and scientific research. Upload smartwatch data for more personalized results.
+                    </p>
+                  </div>
+                )}
                 {plan.calculationSteps.map((step, index) => (
                   <div key={index} className="flex gap-3 text-sm">
                     <span className="text-primary font-mono">{index + 1}.</span>
@@ -497,6 +481,19 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
           ))}
         </div>
       </Card>
+
+      {/* Bottom Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
+          <Download className="w-4 h-4" />
+          Download Plan
+        </Button>
+        <Button variant="default" size="lg" asChild>
+          <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
+            Buy Supplme
+          </a>
+        </Button>
+      </div>
 
       {/* Final action button */}
       <div className="flex justify-center">

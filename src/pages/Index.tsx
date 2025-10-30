@@ -11,7 +11,6 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
-import supplmeLogo from '@/assets/supplme-logo-2.svg';
 
 const Index = () => {
   const [step, setStep] = useState(0);
@@ -238,9 +237,6 @@ const Index = () => {
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header - Shows on all steps */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center justify-center">
-            <img src={supplmeLogo} alt="SUPPLME" className="h-48 w-auto" />
-          </div>
           <h1 className="text-3xl font-bold tracking-tight">
             Supplme Hydration Guide
           </h1>
@@ -978,8 +974,13 @@ const Index = () => {
                   <Label>Sweat Rate *</Label>
                   <InfoTooltip content="Your sweat rate affects hydration needs. If you're unsure, choose 'medium'. High sweat rate = clothing soaked during exercise. Low = minimal sweating even during hard efforts." />
                 </div>
+                {analyzedData?.sweatRate && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">
+                    ✓ This data was taken from your smartwatch
+                  </p>
+                )}
                 <RadioGroup
-                  value={profile.sweatRate || 'medium'}
+                  value={profile.sweatRate || ''}
                   onValueChange={(value) => updateProfile({ sweatRate: value as 'low' | 'medium' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
@@ -1002,8 +1003,13 @@ const Index = () => {
                   <Label>Sweat Saltiness *</Label>
                   <InfoTooltip content="Salty sweat = white residue on skin/clothing after exercise. This indicates higher sodium loss. Can be measured with a sweat sodium test at sports labs or with at-home kits." />
                 </div>
+                {analyzedData?.sweatSaltiness && (
+                  <p className="text-xs text-blue-600 dark:text-blue-400 mb-2">
+                    ✓ This data was taken from your smartwatch
+                  </p>
+                )}
                 <RadioGroup
-                  value={profile.sweatSaltiness || 'medium'}
+                  value={profile.sweatSaltiness || ''}
                   onValueChange={(value) => updateProfile({ sweatSaltiness: value as 'low' | 'medium' | 'high' })}
                 >
                   <div className="flex items-center space-x-2">
