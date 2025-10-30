@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Textarea } from '@/components/ui/textarea';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import supplmeLogo from '@/assets/supplme-logo.png';
 
@@ -427,27 +428,33 @@ const Index = () => {
                     <p>This tool uses artificial intelligence to generate personalized hydration recommendations based on peer-reviewed scientific research from PubMed.</p>
                   </div>
 
-                  <div>
-                    <p className="font-semibold text-foreground mb-1">🇪🇺 GDPR Compliance</p>
-                    <p>We comply with EU GDPR and Danish data protection laws:</p>
-                    <ul className="list-disc pl-5 mt-1 space-y-1">
-                      <li><strong>Data Collection:</strong> Your data is collected anonymously with explicit consent (GDPR Art. 6(1)(a))</li>
-                      <li><strong>Purpose:</strong> Data used solely for product development and improving hydration recommendations</li>
-                      <li><strong>Storage:</strong> Data stored securely for max 2 years, then automatically deleted (GDPR Art. 5(1)(e))</li>
-                      <li><strong>Your Rights:</strong> You can request data deletion at any time by contacting us</li>
-                      <li><strong>No Third Parties:</strong> Data never sold or shared with third parties</li>
-                      <li><strong>Anonymization:</strong> All data anonymized - no personally identifiable information stored unless you choose to provide email</li>
-                    </ul>
-                  </div>
+                  <Accordion type="single" collapsible className="w-full">
+                    <AccordionItem value="gdpr-details" className="border-none">
+                      <AccordionTrigger className="text-sm font-semibold text-foreground hover:no-underline py-2">
+                        🇪🇺 GDPR Compliance - See more
+                      </AccordionTrigger>
+                      <AccordionContent className="space-y-3 pt-2">
+                        <p>We comply with EU GDPR and Danish data protection laws:</p>
+                        <ul className="list-disc pl-5 space-y-1">
+                          <li><strong>Data Collection:</strong> Your data is collected anonymously with explicit consent (GDPR Art. 6(1)(a))</li>
+                          <li><strong>Purpose:</strong> Data used solely for product development and improving hydration recommendations</li>
+                          <li><strong>Storage:</strong> Data stored securely for max 2 years, then automatically deleted (GDPR Art. 5(1)(e))</li>
+                          <li><strong>Your Rights:</strong> You can request data deletion at any time by contacting us</li>
+                          <li><strong>No Third Parties:</strong> Data never sold or shared with third parties</li>
+                          <li><strong>Anonymization:</strong> All data anonymized - no personally identifiable information stored unless you choose to provide email</li>
+                        </ul>
 
-                  <div>
-                    <p className="font-semibold text-foreground mb-1">🔒 Security</p>
-                    <p>Data encrypted in transit and at rest. Compliant with industry standards.</p>
-                  </div>
+                        <div className="pt-2">
+                          <p className="font-semibold text-foreground mb-1">🔒 Security</p>
+                          <p>Data encrypted in transit and at rest. Compliant with industry standards.</p>
+                        </div>
 
-                  <div className="text-xs text-muted-foreground pt-2">
-                    <p>Contact: For data deletion requests or privacy questions, email privacy@supplme.com</p>
-                  </div>
+                        <div className="text-xs text-muted-foreground pt-2 border-t">
+                          <p>Contact: For data deletion requests or privacy questions, email privacy@supplme.com</p>
+                        </div>
+                      </AccordionContent>
+                    </AccordionItem>
+                  </Accordion>
                 </div>
                 
                 <div className="flex items-start space-x-3 pt-4 border-t">
