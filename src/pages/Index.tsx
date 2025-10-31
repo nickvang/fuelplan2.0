@@ -1186,7 +1186,7 @@ const Index = () => {
                   <InfoTooltip content="Indoor environments typically have lower fluid loss due to controlled temperature and airflow." />
                 </div>
                 <RadioGroup
-                  value={profile.indoorOutdoor || 'outdoor'}
+                  value={profile.indoorOutdoor || ''}
                   onValueChange={(value) => updateProfile({ indoorOutdoor: value as 'indoor' | 'outdoor' | 'both' })}
                 >
                   <div className="flex items-center space-x-2">
