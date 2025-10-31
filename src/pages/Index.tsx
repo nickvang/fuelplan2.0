@@ -36,6 +36,7 @@ const Index = () => {
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     primaryGoal: 'performance',
     disciplines: [],
+    indoorOutdoor: 'outdoor', // Default training environment
     // Simple mode defaults (hidden from user)
     trainingTempRange: { min: 15, max: 20 },
     humidity: 50,
