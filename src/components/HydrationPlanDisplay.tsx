@@ -362,9 +362,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 step="1"
                 value={adjustedDistance}
                 onChange={(e) => {
-                  const val = parseFloat(e.target.value);
-                  if (!isNaN(val)) {
-                    handleDistanceChange(val);
+                  const val = e.target.value;
+                  // Allow empty input for editing
+                  if (val === '') {
+                    setAdjustedDistance(0);
+                    return;
+                  }
+                  const numVal = parseFloat(val);
+                  if (!isNaN(numVal)) {
+                    handleDistanceChange(numVal);
                   }
                 }}
                 className="mt-2 text-lg font-semibold bg-background"
