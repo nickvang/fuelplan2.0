@@ -392,11 +392,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   step="1"
                   value={distanceInput}
                   onChange={(e) => setDistanceInput(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && distanceInput && parseFloat(distanceInput) > 0) {
-                      handleDistanceChange(parseFloat(distanceInput));
-                    }
-                  }}
                   placeholder="Enter distance in km"
                   className="text-lg font-semibold"
                   disabled={isRegenerating}
@@ -438,8 +433,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </>
                 ) : (
                   <>
-                    <Sparkles className="w-4 h-4" />
-                    Generate
+                    <Calculator className="w-4 h-4" />
+                    Re-calculate
                   </>
                 )}
               </Button>
@@ -466,7 +461,19 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Button onClick={onReset} variant="outline" size="lg" className="gap-2">
           <RefreshCw className="w-4 h-4" />
-          Start New Plan
+          Start New Plan (Same Data)
+        </Button>
+        <Button 
+          onClick={() => {
+            onReset();
+            window.location.reload();
+          }} 
+          variant="outline" 
+          size="lg" 
+          className="gap-2"
+        >
+          <AlertCircle className="w-4 h-4" />
+          Start Completely Fresh
         </Button>
         <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
           <Download className="w-4 h-4" />
