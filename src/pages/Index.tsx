@@ -134,14 +134,14 @@ const Index = () => {
         const needsRaceDistance = profile.hasUpcomingRace;
         const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
         
-        // Simple mode: just need basic activity info + race distance if applicable
+        // Simple mode: just need basic activity info + terrain + race distance if applicable
         if (version === 'simple') {
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.sessionDuration && hasRequiredRaceDistance);
+                   profile.terrain && profile.sessionDuration && hasRequiredRaceDistance);
         }
-        // Pro mode: need full activity details + race distance if applicable
+        // Pro mode: need full activity details + terrain + race distance if applicable
         return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                 profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
+                 profile.terrain && profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
       case 3:
         return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
                   profile.sunExposure && profile.windConditions && profile.clothingType);
@@ -645,7 +645,7 @@ const Index = () => {
                     <button
                       key={activity.value}
                       type="button"
-                      onClick={() => updateProfile({ disciplines: [activity.value] })}
+                      onClick={() => updateProfile({ disciplines: [activity.value], terrain: undefined })}
                       className={`
                         relative flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all
                         ${profile.disciplines?.[0] === activity.value
@@ -669,6 +669,113 @@ const Index = () => {
                   ))}
                 </div>
               </div>
+
+              {/* Terrain Selection */}
+              {profile.disciplines?.[0] && (
+                <div>
+                  <Label>
+                    {profile.disciplines?.[0] === 'Running' ? 'Running Terrain *' :
+                     profile.disciplines?.[0] === 'Swimming' ? 'Swimming Environment *' :
+                     profile.disciplines?.[0] === 'Cycling' ? 'Cycling Type *' :
+                     profile.disciplines?.[0] === 'Triathlon' ? 'Primary Terrain *' :
+                     'Terrain *'}
+                  </Label>
+                  <RadioGroup
+                    value={profile.terrain || ''}
+                    onValueChange={(value) => updateProfile({ terrain: value })}
+                    className="mt-2"
+                  >
+                    {profile.disciplines?.[0] === 'Running' && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="road" id="terrain-road" />
+                          <Label htmlFor="terrain-road" className="font-normal">Road</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="trail" id="terrain-trail" />
+                          <Label htmlFor="terrain-trail" className="font-normal">Trail</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="gravel" id="terrain-gravel" />
+                          <Label htmlFor="terrain-gravel" className="font-normal">Gravel</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="track" id="terrain-track" />
+                          <Label htmlFor="terrain-track" className="font-normal">Track</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mixed" id="terrain-mixed" />
+                          <Label htmlFor="terrain-mixed" className="font-normal">Mixed</Label>
+                        </div>
+                      </>
+                    )}
+                    {profile.disciplines?.[0] === 'Swimming' && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="indoor-pool" id="terrain-indoor-pool" />
+                          <Label htmlFor="terrain-indoor-pool" className="font-normal">Indoor Pool</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="outdoor-pool" id="terrain-outdoor-pool" />
+                          <Label htmlFor="terrain-outdoor-pool" className="font-normal">Outdoor Pool</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="ocean" id="terrain-ocean" />
+                          <Label htmlFor="terrain-ocean" className="font-normal">Ocean/Sea</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="lake" id="terrain-lake" />
+                          <Label htmlFor="terrain-lake" className="font-normal">Lake</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="river" id="terrain-river" />
+                          <Label htmlFor="terrain-river" className="font-normal">River</Label>
+                        </div>
+                      </>
+                    )}
+                    {profile.disciplines?.[0] === 'Cycling' && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="road-bike" id="terrain-road-bike" />
+                          <Label htmlFor="terrain-road-bike" className="font-normal">Road Bike</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mountain-bike" id="terrain-mountain-bike" />
+                          <Label htmlFor="terrain-mountain-bike" className="font-normal">Mountain Bike</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="gravel-bike" id="terrain-gravel-bike" />
+                          <Label htmlFor="terrain-gravel-bike" className="font-normal">Gravel Bike</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="cyclocross" id="terrain-cyclocross" />
+                          <Label htmlFor="terrain-cyclocross" className="font-normal">Cyclocross</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mixed-cycling" id="terrain-mixed-cycling" />
+                          <Label htmlFor="terrain-mixed-cycling" className="font-normal">Mixed</Label>
+                        </div>
+                      </>
+                    )}
+                    {profile.disciplines?.[0] === 'Triathlon' && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="road-triathlon" id="terrain-road-triathlon" />
+                          <Label htmlFor="terrain-road-triathlon" className="font-normal">Road Triathlon</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="off-road-triathlon" id="terrain-off-road-triathlon" />
+                          <Label htmlFor="terrain-off-road-triathlon" className="font-normal">Off-Road/XTERRA</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mixed-triathlon" id="terrain-mixed-triathlon" />
+                          <Label htmlFor="terrain-mixed-triathlon" className="font-normal">Mixed</Label>
+                        </div>
+                      </>
+                    )}
+                  </RadioGroup>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="raceDistance">Distance *</Label>

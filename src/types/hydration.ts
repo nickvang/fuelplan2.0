@@ -12,6 +12,7 @@ export interface HydrationProfile {
   
   // 2. Activity & Terrain
   disciplines: string[];
+  terrain?: string;
   raceDistance?: string;
   sessionDuration: number;
   avgPace?: string;
