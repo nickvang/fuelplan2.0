@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2 } from 'lucide-react';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2, X, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -38,11 +38,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   
   const [adjustedDistance, setAdjustedDistance] = useState(getInitialDistance());
   const [distanceInput, setDistanceInput] = useState(String(getInitialDistance()));
+  const [isRegenerating, setIsRegenerating] = useState(false);
   const [plan, setPlan] = useState(initialPlan);
   const [profile, setProfile] = useState(initialProfile);
   const { toast } = useToast();
 
-  const handleDistanceChange = (newDistance: number) => {
+  const handleDistanceChange = async (newDistance: number) => {
     console.log('handleDistanceChange called with:', newDistance);
     
     if (newDistance <= 0 || newDistance > 500) {
@@ -50,6 +51,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       return;
     }
     
+    setIsRegenerating(true);
     setAdjustedDistance(newDistance);
     
     // Calculate new duration based on pace
@@ -90,10 +92,33 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     console.log('New plan calculated:', newPlan);
     setPlan(newPlan);
     
-    toast({
-      title: "Plan Updated",
-      description: `Recalculated for ${newDistance} km (${newDuration.toFixed(1)} hours at ${paceMinPerKm} min/km pace)`,
-    });
+    // Fetch AI insights for the new plan
+    try {
+      const { data, error } = await supabase.functions.invoke('enhance-hydration-plan', {
+        body: { 
+          plan: newPlan,
+          profile: updatedProfile
+        }
+      });
+
+      if (error) throw error;
+      if (data?.insights) {
+        setAiInsights(data.insights);
+      }
+      
+      toast({
+        title: "Plan Updated",
+        description: `Recalculated for ${newDistance} km (${newDuration.toFixed(1)} hours at ${paceMinPerKm} min/km pace)`,
+      });
+    } catch (error) {
+      console.error('Error fetching AI insights:', error);
+      toast({
+        title: "Plan Updated",
+        description: `Recalculated for ${newDistance} km (${newDuration.toFixed(1)} hours)`,
+      });
+    } finally {
+      setIsRegenerating(false);
+    }
   };
 
   useEffect(() => {
@@ -348,56 +373,89 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Change the distance to recalculate duration and hydration needs (based on your pace)
+            Enter a new distance to recalculate your hydration plan (duration calculated from your pace)
           </p>
-          <div className="flex items-end gap-4">
-            <div className="flex-1 max-w-xs">
+          <div className="space-y-3">
+            <div className="relative">
               <Label htmlFor="distance-adjust" className="text-sm font-medium">
                 Distance (km)
               </Label>
-              <Input
-                id="distance-adjust"
-                type="number"
-                min="1"
-                max="500"
-                step="1"
-                value={distanceInput}
-                onChange={(e) => {
-                  setDistanceInput(e.target.value);
-                }}
-                onBlur={(e) => {
-                  const val = e.target.value;
-                  if (val === '' || parseFloat(val) <= 0 || parseFloat(val) > 500) {
-                    const initial = getInitialDistance();
-                    setDistanceInput(String(initial));
-                    return;
-                  }
-                  const numVal = parseFloat(val);
-                  if (!isNaN(numVal)) {
-                    handleDistanceChange(numVal);
-                  }
-                }}
-                onKeyDown={(e) => {
-                  if (e.key === 'Enter') {
-                    const val = e.currentTarget.value;
-                    if (val && parseFloat(val) > 0 && parseFloat(val) <= 500) {
-                      const numVal = parseFloat(val);
-                      handleDistanceChange(numVal);
+              <div className="relative mt-2">
+                <Input
+                  id="distance-adjust"
+                  type="number"
+                  min="1"
+                  max="500"
+                  step="1"
+                  value={distanceInput}
+                  onChange={(e) => setDistanceInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && distanceInput && parseFloat(distanceInput) > 0) {
+                      handleDistanceChange(parseFloat(distanceInput));
                     }
+                  }}
+                  placeholder="Enter distance in km"
+                  className="text-lg font-semibold bg-background pr-10"
+                  disabled={isRegenerating}
+                />
+                {distanceInput && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
+                    onClick={() => setDistanceInput('')}
+                    disabled={isRegenerating}
+                  >
+                    <X className="h-4 w-4" />
+                  </Button>
+                )}
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="default"
+                size="lg"
+                className="flex-1 gap-2"
+                onClick={() => {
+                  if (distanceInput && parseFloat(distanceInput) > 0 && parseFloat(distanceInput) <= 500) {
+                    handleDistanceChange(parseFloat(distanceInput));
+                  } else {
+                    toast({
+                      title: "Invalid distance",
+                      description: "Please enter a distance between 1 and 500 km",
+                      variant: "destructive"
+                    });
                   }
                 }}
-                className="mt-2 text-lg font-semibold bg-background"
-              />
+                disabled={!distanceInput || parseFloat(distanceInput) <= 0 || isRegenerating}
+              >
+                {isRegenerating ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    Generating...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-4 h-4" />
+                    Generate Plan
+                  </>
+                )}
+              </Button>
+              <Button
+                variant="outline"
+                size="lg"
+                onClick={() => {
+                  const initial = getInitialDistance();
+                  setDistanceInput(String(initial));
+                  handleDistanceChange(initial);
+                }}
+                disabled={isRegenerating}
+                className="gap-2"
+              >
+                <RefreshCw className="w-4 h-4" />
+                Reset
+              </Button>
             </div>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => handleDistanceChange(getInitialDistance())}
-              className="gap-2"
-            >
-              <RefreshCw className="w-4 h-4" />
-              Reset
-            </Button>
           </div>
         </div>
       </Card>
