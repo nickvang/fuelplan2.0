@@ -242,7 +242,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <div className="text-center">
           <p className="text-sm text-muted-foreground mb-2">Estimated Fluid Loss</p>
           <p className="text-3xl font-bold">
-            {(plan.totalFluidLoss / 1000).toFixed(1)} liters
+            {(() => {
+              const liters = plan.totalFluidLoss / 1000;
+              return liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1);
+            })()} liters
           </p>
           <p className="text-sm text-muted-foreground mt-2">
             during your {profile.sessionDuration < 1 
@@ -368,21 +371,19 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       {/* Distance Adjustment Tool */}
       <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
         <div className="space-y-4">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Adjust Distance</h3>
-            </div>
+          <div className="flex items-center gap-2">
+            <RefreshCw className="w-5 h-5 text-primary" />
+            <h3 className="text-lg font-semibold">Adjust Distance</h3>
           </div>
           <p className="text-sm text-muted-foreground">
             Enter a new distance to recalculate your hydration plan (duration calculated from your pace)
           </p>
           <div className="space-y-3">
-            <div className="relative">
+            <div className="space-y-2">
               <Label htmlFor="distance-adjust" className="text-sm font-medium">
                 Distance (km)
               </Label>
-              <div className="relative mt-2">
+              <div className="flex gap-2">
                 <Input
                   id="distance-adjust"
                   type="number"
@@ -397,20 +398,19 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     }
                   }}
                   placeholder="Enter distance in km"
-                  className="text-lg font-semibold bg-background pr-10"
+                  className="text-lg font-semibold"
                   disabled={isRegenerating}
                 />
-                {distanceInput && (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    className="absolute right-1 top-1/2 -translate-y-1/2 h-8 w-8 p-0"
-                    onClick={() => setDistanceInput('')}
-                    disabled={isRegenerating}
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                )}
+                <Button
+                  variant="outline"
+                  size="lg"
+                  className="gap-2 shrink-0"
+                  onClick={() => setDistanceInput('')}
+                  disabled={isRegenerating || !distanceInput}
+                >
+                  <X className="h-4 w-4" />
+                  Clear
+                </Button>
               </div>
             </div>
             <div className="flex gap-2">
@@ -439,7 +439,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 ) : (
                   <>
                     <Sparkles className="w-4 h-4" />
-                    Generate Plan
+                    Generate
                   </>
                 )}
               </Button>
