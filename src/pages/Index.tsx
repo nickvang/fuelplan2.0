@@ -125,35 +125,51 @@ const Index = () => {
   };
 
   const isStepValid = (): boolean => {
-    switch (step) {
-      case 0:
-        return version !== null && consentGiven;
-      case 1:
-        // Activity & Terrain validation
-        // Check if race distance is required
-        const needsRaceDistance = profile.hasUpcomingRace;
-        const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
-        
-        // Simple mode: just need basic activity info + terrain + race distance if applicable
-        if (version === 'simple') {
+    const result = (() => {
+      switch (step) {
+        case 0:
+          return version !== null && consentGiven;
+        case 1:
+          // Activity & Terrain validation
+          // Check if race distance is required
+          const needsRaceDistance = profile.hasUpcomingRace;
+          const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
+          
+          // Simple mode: just need basic activity info + terrain + race distance if applicable
+          if (version === 'simple') {
+            const isValid = !!(profile.disciplines && profile.disciplines.length > 0 && 
+                     profile.terrain && profile.sessionDuration && hasRequiredRaceDistance);
+            console.log('Step 1 (Simple) Validation:', {
+              disciplines: profile.disciplines,
+              terrain: profile.terrain,
+              sessionDuration: profile.sessionDuration,
+              hasUpcomingRace: profile.hasUpcomingRace,
+              raceDistance: profile.raceDistance,
+              needsRaceDistance,
+              hasRequiredRaceDistance,
+              isValid
+            });
+            return isValid;
+          }
+          // Pro mode: need full activity details + terrain + race distance if applicable
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.terrain && profile.sessionDuration && hasRequiredRaceDistance);
-        }
-        // Pro mode: need full activity details + terrain + race distance if applicable
-        return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                 profile.terrain && profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
-      case 3:
-        return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
-                  profile.sunExposure && profile.windConditions && profile.clothingType);
-      case 4:
-        return !!(profile.sweatRate && profile.sweatSaltiness);
-      case 5:
-        return !!(profile.dailySaltIntake);
-      case 6:
-        return !!(profile.primaryGoal);
-      default:
-        return false;
-    }
+                   profile.terrain && profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
+        case 2:
+          return !!(profile.age && profile.sex && profile.height && profile.weight);
+        case 3:
+          return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
+                    profile.sunExposure && profile.windConditions && profile.clothingType);
+        case 4:
+          return !!(profile.sweatRate && profile.sweatSaltiness);
+        case 5:
+          return !!(profile.dailySaltIntake);
+        case 6:
+          return !!(profile.primaryGoal);
+        default:
+          return false;
+      }
+    })();
+    return result;
   };
 
   const handleNextStep = async () => {
