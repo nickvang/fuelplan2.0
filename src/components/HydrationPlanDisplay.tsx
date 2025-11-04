@@ -37,6 +37,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   };
   
   const [adjustedDistance, setAdjustedDistance] = useState(getInitialDistance());
+  const [distanceInput, setDistanceInput] = useState(String(getInitialDistance()));
   const [plan, setPlan] = useState(initialPlan);
   const [profile, setProfile] = useState(initialProfile);
   const { toast } = useToast();
@@ -360,25 +361,29 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 min="1"
                 max="500"
                 step="1"
-                value={adjustedDistance || ''}
+                value={distanceInput}
                 onChange={(e) => {
+                  setDistanceInput(e.target.value);
+                }}
+                onBlur={(e) => {
                   const val = e.target.value;
-                  // Allow empty input for editing
-                  if (val === '') {
-                    setAdjustedDistance(0);
+                  if (val === '' || parseFloat(val) <= 0 || parseFloat(val) > 500) {
+                    const initial = getInitialDistance();
+                    setDistanceInput(String(initial));
                     return;
                   }
                   const numVal = parseFloat(val);
-                  if (!isNaN(numVal) && numVal > 0 && numVal <= 500) {
+                  if (!isNaN(numVal)) {
                     handleDistanceChange(numVal);
                   }
                 }}
-                onBlur={(e) => {
-                  // Reset to initial if invalid on blur
-                  if (!e.target.value || parseFloat(e.target.value) <= 0) {
-                    const initial = getInitialDistance();
-                    setAdjustedDistance(initial);
-                    handleDistanceChange(initial);
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    const val = e.currentTarget.value;
+                    if (val && parseFloat(val) > 0 && parseFloat(val) <= 500) {
+                      const numVal = parseFloat(val);
+                      handleDistanceChange(numVal);
+                    }
                   }
                 }}
                 className="mt-2 text-lg font-semibold bg-background"
