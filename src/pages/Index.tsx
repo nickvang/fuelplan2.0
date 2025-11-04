@@ -692,6 +692,10 @@ const Index = () => {
                           <Label htmlFor="terrain-road" className="font-normal">Road</Label>
                         </div>
                         <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="treadmill" id="terrain-treadmill" />
+                          <Label htmlFor="terrain-treadmill" className="font-normal">Treadmill</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
                           <RadioGroupItem value="trail" id="terrain-trail" />
                           <Label htmlFor="terrain-trail" className="font-normal">Trail</Label>
                         </div>
