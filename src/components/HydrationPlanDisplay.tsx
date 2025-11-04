@@ -383,7 +383,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <Label htmlFor="distance-adjust" className="text-sm font-medium">
                 Distance (km)
               </Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 items-center">
                 <Input
                   id="distance-adjust"
                   type="number"
@@ -392,10 +392,36 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   step="1"
                   value={distanceInput}
                   onChange={(e) => setDistanceInput(e.target.value)}
-                  placeholder="Enter distance in km"
-                  className="text-lg font-semibold"
+                  placeholder="Enter distance"
+                  className="text-2xl font-bold text-center w-32 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                   disabled={isRegenerating}
                 />
+                <div className="flex flex-col gap-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      const current = parseFloat(distanceInput) || 0;
+                      setDistanceInput(String(Math.min(500, current + 1)));
+                    }}
+                    disabled={isRegenerating}
+                  >
+                    ▲
+                  </Button>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="h-8 w-8 p-0"
+                    onClick={() => {
+                      const current = parseFloat(distanceInput) || 0;
+                      setDistanceInput(String(Math.max(1, current - 1)));
+                    }}
+                    disabled={isRegenerating}
+                  >
+                    ▼
+                  </Button>
+                </div>
                 <Button
                   variant="outline"
                   size="lg"
