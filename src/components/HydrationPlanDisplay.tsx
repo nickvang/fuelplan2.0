@@ -28,8 +28,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const getInitialDistance = () => {
     if (initialProfile.raceDistance) {
       const match = initialProfile.raceDistance.match(/(\d+\.?\d*)/);
-      return match ? parseFloat(match[1]) : 5;
+      const distance = match ? parseFloat(match[1]) : 5;
+      console.log('Initial distance extracted:', distance, 'from', initialProfile.raceDistance);
+      return distance;
     }
+    console.log('No raceDistance found, defaulting to 5');
     return 5;
   };
   
@@ -39,7 +42,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const { toast } = useToast();
 
   const handleDistanceChange = (newDistance: number) => {
-    if (newDistance <= 0 || newDistance > 500) return;
+    console.log('handleDistanceChange called with:', newDistance);
+    
+    if (newDistance <= 0 || newDistance > 500) {
+      console.log('Distance out of range, ignoring');
+      return;
+    }
     
     setAdjustedDistance(newDistance);
     
@@ -47,15 +55,21 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     // Parse pace from profile (avgPace or runPace), default to 6 min/km
     const getPaceInMinPerKm = () => {
       const paceStr = profile.runPace || profile.avgPace;
+      console.log('Pace string found:', paceStr);
       if (paceStr) {
         const match = paceStr.match(/(\d+\.?\d*)/);
-        return match ? parseFloat(match[1]) : 6;
+        const pace = match ? parseFloat(match[1]) : 6;
+        console.log('Parsed pace:', pace);
+        return pace;
       }
+      console.log('No pace found, using default 6 min/km');
       return 6;
     };
     
     const paceMinPerKm = getPaceInMinPerKm();
     const newDuration = (newDistance * paceMinPerKm) / 60;
+    
+    console.log('Calculated new duration:', newDuration, 'hours for', newDistance, 'km at', paceMinPerKm, 'min/km');
     
     const updatedProfile = { 
       ...profile, 
@@ -66,6 +80,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     
     // Recalculate plan with new duration
     const newPlan = calculateHydrationPlan(updatedProfile, rawSmartWatchData);
+    console.log('New plan calculated:', newPlan);
     setPlan(newPlan);
     
     toast({
