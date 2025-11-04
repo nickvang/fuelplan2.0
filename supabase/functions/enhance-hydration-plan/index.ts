@@ -25,10 +25,10 @@ const planSchema = z.object({
     electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)])
   }),
   postActivity: z.object({
-    water: z.number().min(0).max(5000),
+    water: z.number().min(0).max(15000),
     electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)])
   }),
-  totalFluidLoss: z.number().min(0).max(20000)
+  totalFluidLoss: z.number().min(0).max(50000)
 }).passthrough();
 
 const requestSchema = z.object({

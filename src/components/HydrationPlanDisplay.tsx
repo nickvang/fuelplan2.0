@@ -67,7 +67,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     };
     
     const paceMinPerKm = getPaceInMinPerKm();
-    const newDuration = (newDistance * paceMinPerKm) / 60;
+    let newDuration = (newDistance * paceMinPerKm) / 60;
+    
+    // Ensure minimum duration is 0.5 hours to pass validation
+    if (newDuration < 0.5) {
+      console.log('Duration too short:', newDuration, 'setting to minimum 0.5 hours');
+      newDuration = 0.5;
+    }
     
     console.log('Calculated new duration:', newDuration, 'hours for', newDistance, 'km at', paceMinPerKm, 'min/km');
     
