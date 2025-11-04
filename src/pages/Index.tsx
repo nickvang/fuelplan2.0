@@ -623,7 +623,7 @@ const Index = () => {
         {/* STEP 1: Activity & Terrain */}
         {step === 1 && !isAnalyzing && (
           <QuestionnaireStep
-            title={t('step.2.title')}
+            title="Step 1: Activity & Terrain"
             description="Choose which activity guide you want"
             onNext={handleNextStep}
             onBack={() => setStep(0)}
@@ -854,7 +854,7 @@ const Index = () => {
         {/* STEP 2: Body & Physiology */}
         {step === 2 && !isAnalyzing && (
           <QuestionnaireStep
-            title={t('step.1.title')}
+            title="Step 2: Body & Physiology"
             description={analyzedData ? "Complete any missing information" : "Basic information to calculate your hydration needs"}
             onNext={handleNextStep}
             onBack={() => setStep(1)}
