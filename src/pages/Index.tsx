@@ -92,10 +92,10 @@ const Index = () => {
     
     // Pro mode step skipping
     switch (stepNumber) {
-      case 1: // Body & Physiology - skip if we have all data
-        return !!(analyzedData.age && analyzedData.restingHeartRate);
-      case 2: // Activity & Terrain - NEVER SKIP
+      case 1: // Activity & Terrain - NEVER SKIP
         return false;
+      case 2: // Body & Physiology - skip if we have all data
+        return !!(analyzedData.age && analyzedData.restingHeartRate);
       case 3: // Environmental Conditions - skip if we have data
         return false; // Never skip, user must choose
       case 4: // Sweat Profile - skip if we have inferred data
@@ -129,12 +129,9 @@ const Index = () => {
       case 0:
         return version !== null && consentGiven;
       case 1:
-        return !!(profile.age && profile.sex && profile.height && profile.weight);
-      case 2:
+        // Activity & Terrain validation
         // Check if race distance is required
-        const needsRaceDistance = profile.disciplines?.[0] !== 'Football' && 
-                                 profile.disciplines?.[0] !== 'Padel Tennis' && 
-                                 profile.hasUpcomingRace;
+        const needsRaceDistance = profile.hasUpcomingRace;
         const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
         
         // Simple mode: just need basic activity info + race distance if applicable
@@ -623,13 +620,244 @@ const Index = () => {
           </QuestionnaireStep>
         )}
 
-        {/* STEP 1: Body & Physiology */}
+        {/* STEP 1: Activity & Terrain */}
         {step === 1 && !isAnalyzing && (
+          <QuestionnaireStep
+            title={t('step.2.title')}
+            description="Choose which activity guide you want"
+            onNext={handleNextStep}
+            onBack={() => setStep(0)}
+            isValid={isStepValid()}
+          >
+            <div className="space-y-4">
+              <div>
+                <Label className="text-lg">{t('activity.primaryDiscipline')} *</Label>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Select the activity you want a hydration guide for
+                </p>
+                <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                  {[
+                    { value: 'Running', label: 'Run', icon: '🏃' },
+                    { value: 'Swimming', label: 'Swim', icon: '🏊' },
+                    { value: 'Cycling', label: 'Bike', icon: '🚴' },
+                    { value: 'Triathlon', label: 'Triathlon', icon: '🏅' },
+                  ].map((activity) => (
+                    <button
+                      key={activity.value}
+                      type="button"
+                      onClick={() => updateProfile({ disciplines: [activity.value] })}
+                      className={`
+                        relative flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all
+                        ${profile.disciplines?.[0] === activity.value
+                          ? 'border-primary bg-primary/5 shadow-md'
+                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                        }
+                      `}
+                    >
+                      <span className="text-4xl mb-2">{activity.icon}</span>
+                      <span className={`text-sm font-medium ${
+                        profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
+                      }`}>
+                        {activity.label}
+                      </span>
+                      {profile.disciplines?.[0] === activity.value && (
+                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
+                          <span className="text-primary-foreground text-xs">✓</span>
+                        </div>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              <div>
+                <Label htmlFor="raceDistance">Distance *</Label>
+                <Input
+                  id="raceDistance"
+                  value={profile.raceDistance || ''}
+                  onChange={(e) => updateProfile({ raceDistance: e.target.value })}
+                  placeholder={
+                    profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
+                    profile.disciplines?.[0] === 'Cycling' ? 'e.g., 25 miles, 50 miles, 100 miles (Century)' :
+                    profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1500m, 5K, 10K' :
+                    profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
+                    'e.g., Half Marathon, Marathon, 50K'
+                  }
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <div className="flex items-center">
+                    <Label htmlFor="sessionDuration">
+                      {t('activity.sessionDuration')} *
+                    </Label>
+                    <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
+                  </div>
+                  <Input
+                    id="sessionDuration"
+                    type="number"
+                    step="0.5"
+                    value={profile.sessionDuration || ''}
+                    onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
+                    placeholder="Average"
+                  />
+                </div>
+                <div>
+                  <Label htmlFor="longestSession">
+                    {t('activity.longestSession')}
+                  </Label>
+                  <Input
+                    id="longestSession"
+                    type="number"
+                    step="0.5"
+                    value={profile.longestSession || ''}
+                    onChange={(e) => updateProfile({ longestSession: parseFloat(e.target.value) })}
+                    placeholder="Max"
+                  />
+                </div>
+              </div>
+
+              {/* Race Planning Section */}
+              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
+                <h3 className="font-semibold text-sm">Race Day Planning</h3>
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="hasUpcomingRace"
+                    checked={!!profile.hasUpcomingRace}
+                    onCheckedChange={(checked) => {
+                      updateProfile({ 
+                        hasUpcomingRace: Boolean(checked),
+                        ...(checked === false && { upcomingEvents: '' })
+                      });
+                    }}
+                  />
+                  <Label htmlFor="hasUpcomingRace" className="font-normal">
+                    I want a race-specific hydration guide
+                  </Label>
+                </div>
+                
+                {profile.hasUpcomingRace && (
+                  <div>
+                    <Label htmlFor="upcomingEvents">Your Upcoming Race</Label>
+                    <Input
+                      id="upcomingEvents"
+                      value={profile.upcomingEvents || ''}
+                      onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
+                      placeholder={
+                        profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K Ultra' :
+                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 50 Mile Race, Century (100 miles), Gran Fondo, Multi-day Tour' :
+                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5K Open Water, 5K Swim, 10K Marathon Swim' :
+                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint Tri, Olympic Tri, Half Ironman (70.3), Full Ironman' :
+                        'e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 50K'
+                      }
+                      className="mt-2"
+                    />
+                    <p className="text-xs text-muted-foreground mt-2">
+                      We'll create a specialized race day hydration strategy based on your event
+                    </p>
+                  </div>
+                )}
+              </div>
+
+              {profile.disciplines?.[0] === 'Triathlon' ? (
+                <div className="space-y-4">
+                  <div>
+                    <Label htmlFor="swimPace">Swim Pace</Label>
+                    <Input
+                      id="swimPace"
+                      value={profile.swimPace || ''}
+                      onChange={(e) => updateProfile({ swimPace: e.target.value })}
+                      placeholder="e.g., 1:45/100m"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="bikePower">Bike Power/Pace</Label>
+                    <Input
+                      id="bikePower"
+                      value={profile.bikePower || ''}
+                      onChange={(e) => updateProfile({ bikePower: e.target.value })}
+                      placeholder="e.g., 250W or 30 km/h"
+                    />
+                  </div>
+                  <div>
+                    <Label htmlFor="runPace">Run Pace</Label>
+                    <Input
+                      id="runPace"
+                      value={profile.runPace || ''}
+                      onChange={(e) => updateProfile({ runPace: e.target.value })}
+                      placeholder="e.g., 5:30/km"
+                    />
+                  </div>
+                </div>
+              ) : profile.disciplines?.[0] === 'Swimming' ? (
+                <div>
+                  <Label htmlFor="avgPace">Average Swim Pace</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 1:45/100m"
+                  />
+                </div>
+              ) : profile.disciplines?.[0] === 'Cycling' ? (
+                <div>
+                  <Label htmlFor="avgPace">Average Power/Speed</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 250W or 30 km/h"
+                  />
+                </div>
+              ) : (
+                <div>
+                  <Label htmlFor="avgPace">Average Run Pace</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 5:30/km"
+                  />
+                </div>
+              )}
+
+              {/* Training Location */}
+              {version === 'pro' && (
+                <div>
+                  <div className="flex items-center">
+                    <Label>Training Location</Label>
+                    <InfoTooltip content="Indoor environments typically have lower fluid loss due to controlled temperature and airflow." />
+                  </div>
+                  <RadioGroup
+                    value={profile.indoorOutdoor || ''}
+                    onValueChange={(value) => updateProfile({ indoorOutdoor: value as 'indoor' | 'outdoor' | 'both' })}
+                  >
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="indoor" id="indoor" />
+                      <Label htmlFor="indoor" className="font-normal">Indoor</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="outdoor" id="outdoor" />
+                      <Label htmlFor="outdoor" className="font-normal">Outdoor</Label>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <RadioGroupItem value="both" id="both" />
+                      <Label htmlFor="both" className="font-normal">Both</Label>
+                    </div>
+                  </RadioGroup>
+                </div>
+              )}
+            </div>
+          </QuestionnaireStep>
+        )}
+
+        {/* STEP 2: Body & Physiology */}
+        {step === 2 && !isAnalyzing && (
           <QuestionnaireStep
             title={t('step.1.title')}
             description={analyzedData ? "Complete any missing information" : "Basic information to calculate your hydration needs"}
             onNext={handleNextStep}
-            onBack={() => setStep(0)}
+            onBack={() => setStep(1)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -796,413 +1024,6 @@ const Index = () => {
                   />
                 </div>
               )}
-            </div>
-          </QuestionnaireStep>
-        )}
-
-        {/* STEP 2: Activity & Terrain */}
-        {step === 2 && !isAnalyzing && (
-          <QuestionnaireStep
-            title={t('step.2.title')}
-            description="Choose which activity guide you want"
-            onNext={handleNextStep}
-            onBack={() => setStep(1)}
-            isValid={isStepValid()}
-          >
-            <div className="space-y-4">
-              <div>
-                <Label className="text-lg">{t('activity.primaryDiscipline')} *</Label>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Select the activity you want a hydration guide for
-                </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {[
-                    { value: 'Running', label: 'Run', icon: '🏃' },
-                    { value: 'Swimming', label: 'Swim', icon: '🏊' },
-                    { value: 'Cycling', label: 'Bike', icon: '🚴' },
-                    { value: 'Triathlon', label: 'Triathlon', icon: '🏅' },
-                    { value: 'Football', label: 'Football (Soccer)', icon: '⚽' },
-                    { value: 'Padel Tennis', label: 'Padel Tennis', icon: '🎾' },
-                  ].map((activity) => (
-                    <button
-                      key={activity.value}
-                      type="button"
-                      onClick={() => updateProfile({ disciplines: [activity.value] })}
-                      className={`
-                        relative flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all
-                        ${profile.disciplines?.[0] === activity.value
-                          ? 'border-primary bg-primary/5 shadow-md'
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
-                        }
-                      `}
-                    >
-                      <span className="text-4xl mb-2">{activity.icon}</span>
-                      <span className={`text-sm font-medium ${
-                        profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
-                      }`}>
-                        {activity.label}
-                      </span>
-                      {profile.disciplines?.[0] === activity.value && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-primary-foreground text-xs">✓</span>
-                        </div>
-                      )}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
-                <div>
-                  <Label htmlFor="raceDistance">Distance *</Label>
-                  <Input
-                    id="raceDistance"
-                    value={profile.raceDistance || ''}
-                    onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                    placeholder={
-                      profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
-                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 25 miles, 50 miles, 100 miles (Century)' :
-                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1500m, 5K, 10K' :
-                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
-                      'e.g., Half Marathon, Marathon, 50K'
-                    }
-                  />
-                </div>
-              )}
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="sessionDuration">
-                      {profile.disciplines?.[0] === 'Football' ? 'Match/Training Duration (hours) *' : 
-                       profile.disciplines?.[0] === 'Padel Tennis' ? 'Match Duration (hours) *' :
-                       t('activity.sessionDuration')} *
-                    </Label>
-                    <InfoTooltip content={
-                      profile.disciplines?.[0] === 'Football' ? 
-                        "Full match is typically 1.5 hours (90 min). Training sessions are usually 1-2 hours." :
-                      profile.disciplines?.[0] === 'Padel Tennis' ?
-                        "Standard padel match is 1-1.5 hours. Can go up to 2-3 hours for competitive matches." :
-                        "How long is your typical training session or race? Include warm-up and cool-down time."
-                    } />
-                  </div>
-                  <Input
-                    id="sessionDuration"
-                    type="number"
-                    step="0.5"
-                    value={profile.sessionDuration || ''}
-                    onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
-                    placeholder={
-                      profile.disciplines?.[0] === 'Football' ? "1.5 for match" :
-                      profile.disciplines?.[0] === 'Padel Tennis' ? "1.5 typical" :
-                      "Average"
-                    }
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="longestSession">
-                    {profile.disciplines?.[0] === 'Football' ? 'Longest Match/Training (hours)' :
-                     profile.disciplines?.[0] === 'Padel Tennis' ? 'Longest Match (hours)' :
-                     t('activity.longestSession')}
-                  </Label>
-                  <Input
-                    id="longestSession"
-                    type="number"
-                    step="0.5"
-                    value={profile.longestSession || ''}
-                    onChange={(e) => updateProfile({ longestSession: parseFloat(e.target.value) })}
-                    placeholder="Max"
-                  />
-                </div>
-              </div>
-
-              {/* Race Planning Section - Not for Padel Tennis or Football */}
-              {profile.disciplines?.[0] !== 'Padel Tennis' && profile.disciplines?.[0] !== 'Football' && (
-                <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
-                  <h3 className="font-semibold text-sm">Race Day Planning</h3>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="hasUpcomingRace"
-                      checked={!!profile.hasUpcomingRace}
-                      onCheckedChange={(checked) => {
-                        updateProfile({ 
-                          hasUpcomingRace: Boolean(checked),
-                          ...(checked === false && { upcomingEvents: '' })
-                        });
-                      }}
-                    />
-                    <Label htmlFor="hasUpcomingRace" className="font-normal">
-                      I want a race-specific hydration guide
-                    </Label>
-                  </div>
-                  
-                  {profile.hasUpcomingRace && (
-                    <div>
-                      <Label htmlFor="upcomingEvents">Your Upcoming Race</Label>
-                      <Input
-                        id="upcomingEvents"
-                        value={profile.upcomingEvents || ''}
-                        onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
-                        placeholder={
-                          profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K Ultra' :
-                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 50 Mile Race, Century (100 miles), Gran Fondo, Multi-day Tour' :
-                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5K Open Water, 5K Swim, 10K Marathon Swim' :
-                          profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint Tri, Olympic Tri, Half Ironman (70.3), Full Ironman' :
-                          'e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 50K'
-                        }
-                        className="mt-2"
-                      />
-                      <p className="text-xs text-muted-foreground mt-2">
-                        We'll create a specialized race day hydration strategy based on your event
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-
-              {profile.disciplines?.[0] === 'Padel Tennis' ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="padelPlayingLevel">Playing Level *</Label>
-                    <RadioGroup
-                      value={profile.padelPlayingLevel || ''}
-                      onValueChange={(value) => updateProfile({ padelPlayingLevel: value })}
-                    >
-                      {['Recreational', 'Club Level', 'Competitive/Tournament', 'Professional'].map((level) => (
-                        <div key={level} className="flex items-center space-x-2">
-                          <RadioGroupItem value={level} id={`padel-level-${level}`} />
-                          <Label htmlFor={`padel-level-${level}`} className="font-normal">{level}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label htmlFor="padelCourtType">Court Type</Label>
-                    <RadioGroup
-                      value={profile.padelCourtType || ''}
-                      onValueChange={(value) => updateProfile({ padelCourtType: value })}
-                    >
-                      {['Indoor', 'Outdoor', 'Both'].map((type) => (
-                        <div key={type} className="flex items-center space-x-2">
-                          <RadioGroupItem value={type} id={`court-${type}`} />
-                          <Label htmlFor={`court-${type}`} className="font-normal">{type}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label htmlFor="padelPlayingStyle">Playing Style</Label>
-                    <RadioGroup
-                      value={profile.padelPlayingStyle || ''}
-                      onValueChange={(value) => updateProfile({ padelPlayingStyle: value })}
-                    >
-                      {['Defensive', 'Offensive', 'All-round'].map((style) => (
-                        <div key={style} className="flex items-center space-x-2">
-                          <RadioGroupItem value={style} id={`style-${style}`} />
-                          <Label htmlFor={`style-${style}`} className="font-normal">{style}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label htmlFor="padelMatchesPerWeek">Matches per Week</Label>
-                    <Input
-                      id="padelMatchesPerWeek"
-                      type="number"
-                      value={profile.padelMatchesPerWeek || ''}
-                      onChange={(e) => updateProfile({ padelMatchesPerWeek: parseInt(e.target.value) })}
-                      placeholder="e.g., 2-3"
-                    />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      id="padelTournamentPlay"
-                      checked={profile.padelTournamentPlay || false}
-                      onCheckedChange={(checked) => updateProfile({ padelTournamentPlay: checked as boolean })}
-                    />
-                    <Label htmlFor="padelTournamentPlay" className="font-normal">
-                      Participate in tournaments regularly
-                    </Label>
-                  </div>
-                </div>
-              ) : profile.disciplines?.[0] === 'Football' ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="position">Playing Position *</Label>
-                    <RadioGroup
-                      value={profile.position || ''}
-                      onValueChange={(value) => updateProfile({ position: value })}
-                    >
-                      {['Goalkeeper', 'Defender', 'Midfielder', 'Forward'].map((pos) => (
-                        <div key={pos} className="flex items-center space-x-2">
-                          <RadioGroupItem value={pos} id={`pos-${pos}`} />
-                          <Label htmlFor={`pos-${pos}`} className="font-normal">{pos}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label htmlFor="matchesPerWeek">Matches per Week</Label>
-                    <Input
-                      id="matchesPerWeek"
-                      type="number"
-                      value={profile.matchesPerWeek || ''}
-                      onChange={(e) => updateProfile({ matchesPerWeek: parseInt(e.target.value) })}
-                      placeholder="e.g., 1-2"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="playingLevel">Playing Level</Label>
-                    <RadioGroup
-                      value={profile.playingLevel || ''}
-                      onValueChange={(value) => updateProfile({ playingLevel: value })}
-                    >
-                      {['Amateur/Recreational', 'Semi-Professional', 'Professional'].map((level) => (
-                        <div key={level} className="flex items-center space-x-2">
-                          <RadioGroupItem value={level} id={`level-${level}`} />
-                          <Label htmlFor={`level-${level}`} className="font-normal">{level}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label htmlFor="playingSurface">Playing Surface</Label>
-                    <RadioGroup
-                      value={profile.playingSurface || ''}
-                      onValueChange={(value) => updateProfile({ playingSurface: value })}
-                    >
-                      {['Natural Grass', 'Artificial Turf', 'Both'].map((surface) => (
-                        <div key={surface} className="flex items-center space-x-2">
-                          <RadioGroupItem value={surface} id={`surface-${surface}`} />
-                          <Label htmlFor={`surface-${surface}`} className="font-normal">{surface}</Label>
-                        </div>
-                      ))}
-                    </RadioGroup>
-                  </div>
-                  <div>
-                    <Label htmlFor="avgDistanceCovered">Average Distance Covered per Match (km)</Label>
-                    <Input
-                      id="avgDistanceCovered"
-                      type="number"
-                      step="0.1"
-                      value={profile.avgDistanceCovered || ''}
-                      onChange={(e) => updateProfile({ avgDistanceCovered: parseFloat(e.target.value) })}
-                      placeholder="e.g., 10-12 km for outfield players"
-                    />
-                  </div>
-                </div>
-              ) : profile.disciplines?.[0] === 'Triathlon' ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="swimPace">Swim Pace</Label>
-                    <Input
-                      id="swimPace"
-                      value={profile.swimPace || ''}
-                      onChange={(e) => updateProfile({ swimPace: e.target.value })}
-                      placeholder="e.g., 1:45/100m"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="bikePower">Bike Power/Pace</Label>
-                    <Input
-                      id="bikePower"
-                      value={profile.bikePower || ''}
-                      onChange={(e) => updateProfile({ bikePower: e.target.value })}
-                      placeholder="e.g., 250W or 30 km/h"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="runPace">Run Pace</Label>
-                    <Input
-                      id="runPace"
-                      value={profile.runPace || ''}
-                      onChange={(e) => updateProfile({ runPace: e.target.value })}
-                      placeholder="e.g., 5:30/km"
-                    />
-                  </div>
-                </div>
-              ) : profile.disciplines?.[0] === 'Swim' ? (
-                <div>
-                  <Label htmlFor="avgPace">Average Swim Pace</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 1:45/100m"
-                  />
-                </div>
-              ) : profile.disciplines?.[0] === 'Bike' ? (
-                <div>
-                  <Label htmlFor="avgPace">Average Power/Speed</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 250W or 30 km/h"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label htmlFor="avgPace">Average Run Pace</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 5:30/km"
-                  />
-                </div>
-              )}
-
-              {profile.disciplines?.[0] !== 'Football' && profile.disciplines?.[0] !== 'Padel Tennis' && (
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="elevationGain">{t('activity.elevationGain')}</Label>
-                    <InfoTooltip content="Total uphill climbing during your activity. More climbing = higher energy demand and fluid loss. Check your GPS watch or route profile." />
-                  </div>
-                  <Input
-                    id="elevationGain"
-                    type="number"
-                    value={profile.elevationGain || ''}
-                    onChange={(e) => updateProfile({ elevationGain: parseInt(e.target.value) })}
-                    placeholder="Meters"
-                  />
-                </div>
-              )}
-
-              <div>
-                <Label htmlFor="trainingFrequency">{t('activity.trainingFrequency')}</Label>
-                <Input
-                  id="trainingFrequency"
-                  type="number"
-                  value={profile.trainingFrequency || ''}
-                  onChange={(e) => updateProfile({ trainingFrequency: parseInt(e.target.value) })}
-                  placeholder="Sessions per week"
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center mb-2">
-                  <Label>{t('activity.location')} *</Label>
-                  <InfoTooltip content="Indoor environments typically have lower fluid loss due to controlled temperature and airflow." />
-                </div>
-                <RadioGroup
-                  value={profile.indoorOutdoor || ''}
-                  onValueChange={(value) => updateProfile({ indoorOutdoor: value as 'indoor' | 'outdoor' | 'both' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="indoor" id="indoor" />
-                    <Label htmlFor="indoor" className="font-normal">{t('activity.indoor')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="outdoor" id="outdoor" />
-                    <Label htmlFor="outdoor" className="font-normal">{t('activity.outdoor')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="both" id="both" />
-                    <Label htmlFor="both" className="font-normal">{t('activity.both')}</Label>
-                  </div>
-                </RadioGroup>
-              </div>
             </div>
           </QuestionnaireStep>
         )}
