@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw } from 'lucide-react';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -23,16 +23,45 @@ interface HydrationPlanDisplayProps {
 export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
-  const [adjustedDuration, setAdjustedDuration] = useState(initialProfile.sessionDuration);
+  
+  // Extract initial distance from raceDistance string (e.g., "5 km" -> 5)
+  const getInitialDistance = () => {
+    if (initialProfile.raceDistance) {
+      const match = initialProfile.raceDistance.match(/(\d+\.?\d*)/);
+      return match ? parseFloat(match[1]) : 5;
+    }
+    return 5;
+  };
+  
+  const [adjustedDistance, setAdjustedDistance] = useState(getInitialDistance());
   const [plan, setPlan] = useState(initialPlan);
   const [profile, setProfile] = useState(initialProfile);
   const { toast } = useToast();
 
-  const handleDurationChange = (newDuration: number) => {
-    if (newDuration <= 0 || newDuration > 24) return;
+  const handleDistanceChange = (newDistance: number) => {
+    if (newDistance <= 0 || newDistance > 500) return;
     
-    setAdjustedDuration(newDuration);
-    const updatedProfile = { ...profile, sessionDuration: newDuration };
+    setAdjustedDistance(newDistance);
+    
+    // Calculate new duration based on pace
+    // Parse pace from profile (avgPace or runPace), default to 6 min/km
+    const getPaceInMinPerKm = () => {
+      const paceStr = profile.runPace || profile.avgPace;
+      if (paceStr) {
+        const match = paceStr.match(/(\d+\.?\d*)/);
+        return match ? parseFloat(match[1]) : 6;
+      }
+      return 6;
+    };
+    
+    const paceMinPerKm = getPaceInMinPerKm();
+    const newDuration = (newDistance * paceMinPerKm) / 60;
+    
+    const updatedProfile = { 
+      ...profile, 
+      sessionDuration: newDuration,
+      raceDistance: `${newDistance} km`
+    };
     setProfile(updatedProfile);
     
     // Recalculate plan with new duration
@@ -41,7 +70,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     
     toast({
       title: "Plan Updated",
-      description: `Recalculated for ${newDuration} hour${newDuration !== 1 ? 's' : ''}`,
+      description: `Recalculated for ${newDistance} km (${newDuration.toFixed(1)} hours at ${paceMinPerKm} min/km pace)`,
     });
   };
 
@@ -185,12 +214,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         {profile.raceDistance && (
           <div className="inline-block bg-primary/10 border border-primary/20 px-4 py-2 rounded-full">
             <p className="text-lg font-semibold text-primary">
-              {profile.raceDistance}
+              {adjustedDistance} km
             </p>
           </div>
         )}
         <p className="text-muted-foreground">
-          {adjustedDuration}-hour {profile.disciplines?.[0] || 'activity'}
+          {profile.sessionDuration.toFixed(1)}-hour {profile.disciplines?.[0] || 'activity'}
         </p>
       </div>
 
@@ -287,34 +316,34 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </Card>
       </div>
 
-      {/* Duration Adjustment Tool */}
+      {/* Distance Adjustment Tool */}
       <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
         <div className="space-y-4">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-2">
               <RefreshCw className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">Adjust Duration</h3>
+              <h3 className="text-lg font-semibold">Adjust Distance</h3>
             </div>
           </div>
           <p className="text-sm text-muted-foreground">
-            Change the activity duration to see how it affects your hydration needs
+            Change the distance to recalculate duration and hydration needs (based on your pace)
           </p>
           <div className="flex items-end gap-4">
             <div className="flex-1 max-w-xs">
-              <Label htmlFor="duration-adjust" className="text-sm font-medium">
-                Duration (hours)
+              <Label htmlFor="distance-adjust" className="text-sm font-medium">
+                Distance (km)
               </Label>
               <Input
-                id="duration-adjust"
+                id="distance-adjust"
                 type="number"
-                min="0.5"
-                max="24"
-                step="0.5"
-                value={adjustedDuration}
+                min="1"
+                max="500"
+                step="1"
+                value={adjustedDistance}
                 onChange={(e) => {
                   const val = parseFloat(e.target.value);
                   if (!isNaN(val)) {
-                    handleDurationChange(val);
+                    handleDistanceChange(val);
                   }
                 }}
                 className="mt-2 text-lg font-semibold bg-background"
@@ -323,7 +352,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <Button
               variant="outline"
               size="lg"
-              onClick={() => handleDurationChange(initialProfile.sessionDuration)}
+              onClick={() => handleDistanceChange(getInitialDistance())}
               className="gap-2"
             >
               <RefreshCw className="w-4 h-4" />
@@ -599,12 +628,36 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </p>
       </Card>
 
-      {/* Bottom Buy Button */}
-      <div className="flex justify-center">
+      {/* Bottom Action Buttons */}
+      <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
           <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
             Buy Supplme
           </a>
+        </Button>
+        <Button onClick={onReset} variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+          <RefreshCw className="w-4 h-4" />
+          Start New Plan
+        </Button>
+        <Button 
+          onClick={() => {
+            if (navigator.share) {
+              navigator.share({
+                title: 'Supplme Hydration Guide',
+                text: 'Check out my personalized hydration plan from Supplme',
+                url: window.location.href
+              }).catch(() => {});
+            } else {
+              navigator.clipboard.writeText(window.location.href);
+              toast({ title: "Link Copied", description: "Share link copied to clipboard" });
+            }
+          }}
+          variant="outline" 
+          size="lg" 
+          className="gap-2 w-full sm:w-auto"
+        >
+          <Share2 className="w-4 h-4" />
+          Share
         </Button>
       </div>
 
