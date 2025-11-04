@@ -245,7 +245,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             {(plan.totalFluidLoss / 1000).toFixed(1)} liters
           </p>
           <p className="text-sm text-muted-foreground mt-2">
-            during your {profile.sessionDuration}-hour activity
+            during your {profile.sessionDuration < 1 
+              ? `${Math.round(profile.sessionDuration * 60)}-minute` 
+              : `${profile.sessionDuration.toFixed(1)}-hour`} activity
           </p>
           {hasSmartWatchData && (
             <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
