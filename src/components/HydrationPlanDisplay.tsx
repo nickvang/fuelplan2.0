@@ -360,7 +360,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 min="1"
                 max="500"
                 step="1"
-                value={adjustedDistance}
+                value={adjustedDistance || ''}
                 onChange={(e) => {
                   const val = e.target.value;
                   // Allow empty input for editing
@@ -369,8 +369,16 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     return;
                   }
                   const numVal = parseFloat(val);
-                  if (!isNaN(numVal)) {
+                  if (!isNaN(numVal) && numVal > 0 && numVal <= 500) {
                     handleDistanceChange(numVal);
+                  }
+                }}
+                onBlur={(e) => {
+                  // Reset to initial if invalid on blur
+                  if (!e.target.value || parseFloat(e.target.value) <= 0) {
+                    const initial = getInitialDistance();
+                    setAdjustedDistance(initial);
+                    handleDistanceChange(initial);
                   }
                 }}
                 className="mt-2 text-lg font-semibold bg-background"
