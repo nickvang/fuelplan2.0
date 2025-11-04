@@ -2,11 +2,14 @@ import { useState, useEffect } from 'react';
 import { HydrationPlan, HydrationProfile, AIEnhancedInsights } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
 
 interface HydrationPlanDisplayProps {
@@ -17,10 +20,30 @@ interface HydrationPlanDisplayProps {
   rawSmartWatchData?: any;
 }
 
-export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
+export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
+  const [adjustedDuration, setAdjustedDuration] = useState(initialProfile.sessionDuration);
+  const [plan, setPlan] = useState(initialPlan);
+  const [profile, setProfile] = useState(initialProfile);
   const { toast } = useToast();
+
+  const handleDurationChange = (newDuration: number) => {
+    if (newDuration <= 0 || newDuration > 24) return;
+    
+    setAdjustedDuration(newDuration);
+    const updatedProfile = { ...profile, sessionDuration: newDuration };
+    setProfile(updatedProfile);
+    
+    // Recalculate plan with new duration
+    const newPlan = calculateHydrationPlan(updatedProfile, rawSmartWatchData);
+    setPlan(newPlan);
+    
+    toast({
+      title: "Plan Updated",
+      description: `Recalculated for ${newDuration} hour${newDuration !== 1 ? 's' : ''}`,
+    });
+  };
 
   useEffect(() => {
     const fetchAIInsights = async () => {
@@ -156,11 +179,18 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
         </div>
       </Card>
 
-      {/* Training Plan Header */}
-      <div className="text-center py-4">
+      {/* Training Plan Header with Distance */}
+      <div className="text-center py-4 space-y-2">
         <h2 className="text-2xl font-bold">Training Session Hydration Plan</h2>
-        <p className="text-muted-foreground mt-2">
-          For typical training sessions based on your {profile.sessionDuration}-hour {profile.disciplines?.[0] || 'activity'}
+        {profile.raceDistance && (
+          <div className="inline-block bg-primary/10 border border-primary/20 px-4 py-2 rounded-full">
+            <p className="text-lg font-semibold text-primary">
+              {profile.raceDistance}
+            </p>
+          </div>
+        )}
+        <p className="text-muted-foreground">
+          {adjustedDuration}-hour {profile.disciplines?.[0] || 'activity'}
         </p>
       </div>
 
@@ -257,31 +287,61 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
         </Card>
       </div>
 
-      {/* Action Buttons - Right under the plan */}
+      {/* Duration Adjustment Tool */}
+      <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <div className="space-y-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <RefreshCw className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">Adjust Duration</h3>
+            </div>
+          </div>
+          <p className="text-sm text-muted-foreground">
+            Change the activity duration to see how it affects your hydration needs
+          </p>
+          <div className="flex items-end gap-4">
+            <div className="flex-1 max-w-xs">
+              <Label htmlFor="duration-adjust" className="text-sm font-medium">
+                Duration (hours)
+              </Label>
+              <Input
+                id="duration-adjust"
+                type="number"
+                min="0.5"
+                max="24"
+                step="0.5"
+                value={adjustedDuration}
+                onChange={(e) => {
+                  const val = parseFloat(e.target.value);
+                  if (!isNaN(val)) {
+                    handleDurationChange(val);
+                  }
+                }}
+                className="mt-2 text-lg font-semibold bg-background"
+              />
+            </div>
+            <Button
+              variant="outline"
+              size="lg"
+              onClick={() => handleDurationChange(initialProfile.sessionDuration)}
+              className="gap-2"
+            >
+              <RefreshCw className="w-4 h-4" />
+              Reset
+            </Button>
+          </div>
+        </div>
+      </Card>
+
+      {/* Action Buttons - Right under the adjustment tool */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
+        <Button onClick={onReset} variant="outline" size="lg" className="gap-2">
+          <RefreshCw className="w-4 h-4" />
+          Start New Plan
+        </Button>
         <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
           <Download className="w-4 h-4" />
           Download Plan
-        </Button>
-        <Button 
-          onClick={() => {
-            if (navigator.share) {
-              navigator.share({
-                title: 'My Supplme Hydration Plan',
-                text: `Check out my personalized hydration plan: ${(plan.totalFluidLoss / 1000).toFixed(1)}L fluid loss during ${profile.sessionDuration}h activity`,
-                url: window.location.href
-              }).catch(err => console.log('Error sharing:', err));
-            } else {
-              navigator.clipboard.writeText(window.location.href);
-              toast({ title: "Link copied!", description: "Share link copied to clipboard" });
-            }
-          }} 
-          variant="outline" 
-          size="lg" 
-          className="gap-2"
-        >
-          <ExternalLink className="w-4 h-4" />
-          Share Plan
         </Button>
       </div>
 
@@ -539,11 +599,8 @@ export function HydrationPlanDisplay({ plan, profile, onReset, hasSmartWatchData
         </p>
       </Card>
 
-      {/* Bottom Action Buttons */}
-      <div className="flex flex-col sm:flex-row gap-3 sm:gap-4 justify-center">
-        <Button onClick={onReset} variant="outline" size="lg" className="w-full sm:w-auto">
-          Start New Plan
-        </Button>
+      {/* Bottom Buy Button */}
+      <div className="flex justify-center">
         <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
           <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
             Buy Supplme
