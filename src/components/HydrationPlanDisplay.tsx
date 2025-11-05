@@ -619,7 +619,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 <h4 className="font-semibold mb-3">Post-Race Recovery</h4>
                 <ul className="space-y-2 text-sm">
                   <li>• Within 30 minutes: <strong>{plan.postActivity.electrolytes}x Supplme sachets</strong> + {Math.round(plan.postActivity.water / 2)}ml water</li>
-                  <li>• Next 2-4 hours: Remaining {Math.round(plan.postActivity.water / 2)}ml water gradually</li>
+                  <li>• Next 4-6 hours: Remaining {Math.round(plan.postActivity.water / 2)}ml water gradually</li>
                   <li>• Monitor urine color - aim for pale yellow</li>
                 </ul>
               </div>
