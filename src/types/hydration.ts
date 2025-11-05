@@ -1,5 +1,6 @@
 export interface HydrationProfile {
   // 1. Body & Physiology
+  fullName?: string;
   age: number;
   sex: 'male' | 'female' | 'other';
   height: number;

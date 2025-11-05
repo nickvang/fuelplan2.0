@@ -126,7 +126,7 @@ export default function Admin() {
       ['', ''],
       [
         // Basic Info
-        'ID', 'Created At', 'Email', 'Consent', 'Smartwatch Data',
+        'ID', 'Created At', 'Email', 'Full Name', 'Consent', 'Smartwatch Data',
         // Body & Physiology
         'Age', 'Sex', 'Weight (kg)', 'Height (cm)', 'Body Fat %', 'Resting HR', 'HRV', 'Health Conditions', 'Sweat Sodium Test',
         // Activity & Terrain
@@ -163,6 +163,7 @@ export default function Admin() {
         profile.id,
         new Date(profile.created_at).toLocaleString(),
         profile.user_email || 'Anonymous',
+        pd.fullName || '',
         profile.consent_given ? 'Yes' : 'No',
         profile.has_smartwatch_data ? 'Yes' : 'No',
         // Body & Physiology
@@ -398,6 +399,10 @@ export default function Admin() {
                                 <p className="text-sm font-medium">{new Date(profile.created_at).toLocaleDateString()}</p>
                               </div>
                               <div>
+                                <p className="text-xs text-muted-foreground">Full Name</p>
+                                <p className="text-sm font-medium">{pd.fullName || 'N/A'}</p>
+                              </div>
+                              <div>
                                 <p className="text-xs text-muted-foreground">Email</p>
                                 <p className="text-sm font-medium">{profile.user_email || 'Anonymous'}</p>
                               </div>
@@ -514,17 +519,31 @@ export default function Admin() {
                               </div>
                             </div>
                             
-                            {/* Hydration Plan */}
-                            <div className="space-y-2">
-                              <h4 className="font-semibold text-sm">Hydration Plan</h4>
-                              <div className="space-y-1 text-sm">
-                                {plan.totalFluidLoss && <p><span className="text-muted-foreground">Total Loss:</span> {(plan.totalFluidLoss / 1000).toFixed(1)}L</p>}
-                                {plan.preActivity?.water && <p><span className="text-muted-foreground">Pre-Water:</span> {plan.preActivity.water}ml</p>}
-                                {plan.preActivity?.electrolytes && <p><span className="text-muted-foreground">Pre-Electrolytes:</span> {plan.preActivity.electrolytes}</p>}
-                                {plan.duringActivity?.waterPerHour && <p><span className="text-muted-foreground">During-Water:</span> {plan.duringActivity.waterPerHour}ml/hr</p>}
-                                {plan.duringActivity?.electrolytesPerHour && <p><span className="text-muted-foreground">During-Electrolytes:</span> {plan.duringActivity.electrolytesPerHour}/hr</p>}
-                                {plan.postActivity?.water && <p><span className="text-muted-foreground">Post-Water:</span> {plan.postActivity.water}ml</p>}
-                                {plan.postActivity?.electrolytes && <p><span className="text-muted-foreground">Post-Electrolytes:</span> {plan.postActivity.electrolytes}</p>}
+                            {/* Hydration Plan Results */}
+                            <div className="space-y-2 bg-primary/5 p-3 rounded-lg border border-primary/20">
+                              <h4 className="font-semibold text-sm text-primary">Hydration Plan Results</h4>
+                              <div className="space-y-2 text-sm">
+                                <div className="space-y-1">
+                                  <p className="font-medium">PRE-Activity:</p>
+                                  {plan.preActivity?.water && <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.preActivity.water}ml</p>}
+                                  {plan.preActivity?.electrolytes && <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.preActivity.electrolytes}</p>}
+                                  {plan.preActivity?.timing && <p className="pl-2"><span className="text-muted-foreground">Timing:</span> {plan.preActivity.timing}</p>}
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="font-medium">DURING Activity:</p>
+                                  {plan.duringActivity?.waterPerHour && <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.duringActivity.waterPerHour}ml/hr</p>}
+                                  {plan.duringActivity?.electrolytesPerHour !== undefined && <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.duringActivity.electrolytesPerHour}/hr</p>}
+                                  {plan.duringActivity?.frequency && <p className="pl-2"><span className="text-muted-foreground">Frequency:</span> {plan.duringActivity.frequency}</p>}
+                                </div>
+                                <div className="space-y-1">
+                                  <p className="font-medium">POST-Activity:</p>
+                                  {plan.postActivity?.water && <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.postActivity.water}ml</p>}
+                                  {plan.postActivity?.electrolytes && <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.postActivity.electrolytes}</p>}
+                                  {plan.postActivity?.timing && <p className="pl-2"><span className="text-muted-foreground">Timing:</span> {plan.postActivity.timing}</p>}
+                                </div>
+                                {plan.totalFluidLoss && (
+                                  <p className="pt-2 border-t"><span className="text-muted-foreground font-medium">Total Fluid Loss:</span> {(plan.totalFluidLoss / 1000).toFixed(1)}L</p>
+                                )}
                               </div>
                             </div>
                             

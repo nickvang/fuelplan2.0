@@ -3,6 +3,7 @@ import { z } from 'zod';
 // Client-side validation schema for hydration profile
 export const profileSchema = z.object({
   // Body & Physiology
+  fullName: z.string().max(100, "Name too long").optional().or(z.literal('')),
   age: z.number().min(13, "Age must be at least 13").max(120, "Age must be less than 120").optional(),
   weight: z.number().min(30, "Weight must be at least 30kg").max(300, "Weight must be less than 300kg").optional(),
   height: z.number().min(100, "Height must be at least 100cm").max(250, "Height must be less than 250cm").optional(),
@@ -63,6 +64,9 @@ export const sanitizeString = (str: string | undefined): string | undefined => {
 // Validate and sanitize profile before submission
 export const validateAndSanitizeProfile = (profile: any) => {
   // Sanitize string fields
+  if (profile.fullName) {
+    profile.fullName = sanitizeString(profile.fullName);
+  }
   if (profile.upcomingEvents) {
     profile.upcomingEvents = sanitizeString(profile.upcomingEvents);
   }

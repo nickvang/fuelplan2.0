@@ -1014,6 +1014,17 @@ const Index = () => {
             isValid={isStepValid()}
           >
             <div className="space-y-4">
+              <div>
+                <Label htmlFor="fullName">Full Name (Optional)</Label>
+                <Input
+                  id="fullName"
+                  type="text"
+                  value={profile.fullName || ''}
+                  onChange={(e) => updateProfile({ fullName: e.target.value })}
+                  placeholder="Your full name"
+                />
+              </div>
+
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label htmlFor="age">{t('body.age')} *</Label>
