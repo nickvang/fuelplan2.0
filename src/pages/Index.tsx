@@ -651,12 +651,13 @@ const Index = () => {
                 <p className="text-sm text-muted-foreground mb-4">
                   Select the activity you want a hydration guide for
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-2 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
                   {[
                     { value: 'Running', label: 'Run', icon: '🏃' },
                     { value: 'Swimming', label: 'Swim', icon: '🏊' },
                     { value: 'Cycling', label: 'Bike', icon: '🚴' },
                     { value: 'Triathlon', label: 'Triathlon', icon: '🏅' },
+                    { value: 'Hiking', label: 'Hiking', icon: '🥾' },
                   ].map((activity) => (
                     <button
                       key={activity.value}
@@ -694,6 +695,7 @@ const Index = () => {
                      profile.disciplines?.[0] === 'Swimming' ? 'Swimming Environment *' :
                      profile.disciplines?.[0] === 'Cycling' ? 'Cycling Type *' :
                      profile.disciplines?.[0] === 'Triathlon' ? 'Primary Terrain *' :
+                     profile.disciplines?.[0] === 'Hiking' ? 'Hiking Type *' :
                      'Terrain *'}
                   </Label>
                   <RadioGroup
@@ -790,6 +792,30 @@ const Index = () => {
                         <div className="flex items-center space-x-2">
                           <RadioGroupItem value="mixed-triathlon" id="terrain-mixed-triathlon" />
                           <Label htmlFor="terrain-mixed-triathlon" className="font-normal">Mixed</Label>
+                        </div>
+                      </>
+                    )}
+                    {profile.disciplines?.[0] === 'Hiking' && (
+                      <>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="day-hike" id="terrain-day-hike" />
+                          <Label htmlFor="terrain-day-hike" className="font-normal">Day Hike</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="backpacking" id="terrain-backpacking" />
+                          <Label htmlFor="terrain-backpacking" className="font-normal">Backpacking/Multi-Day</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="mountaineering" id="terrain-mountaineering" />
+                          <Label htmlFor="terrain-mountaineering" className="font-normal">Mountaineering</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="alpine" id="terrain-alpine" />
+                          <Label htmlFor="terrain-alpine" className="font-normal">Alpine</Label>
+                        </div>
+                        <div className="flex items-center space-x-2">
+                          <RadioGroupItem value="trekking" id="terrain-trekking" />
+                          <Label htmlFor="terrain-trekking" className="font-normal">Trekking</Label>
                         </div>
                       </>
                     )}
