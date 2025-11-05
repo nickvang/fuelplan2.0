@@ -95,16 +95,30 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const preWater = 400 + (profile.weight * 5); // 400-600ml based on weight
   const preElectrolytes = 1; // 1 sachet (30ml) of Supplme
 
-  // During activity - Updated based on personalized hydration research (PMID 38732589)
-  // Aim to replace 60-80% of sweat losses during exercise
-  const duringWater = profile.sessionDuration > 1 ? Math.round(sweatRatePerHour * 0.7) : 0;
-  // Electrolytes: approximately 1 sachet per hour for activities > 1 hour
-  const duringElectrolytes = profile.sessionDuration > 1 ? Math.round(profile.sessionDuration) : 0;
+  // During activity - Based on ACSM & IOC consensus (PMID 17277604, PMID 38732589)
+  // For activities > 45 min: aim to replace 60-80% of sweat losses
+  // Electrolyte needs increase significantly for activities > 90 minutes
+  const duringWater = profile.sessionDuration >= 0.75 ? Math.round(sweatRatePerHour * 0.7) : 0;
+  
+  // Electrolyte requirements (sachets):
+  // < 1 hour: minimal need (rely on pre-load)
+  // 1-2 hours: 1 sachet per hour
+  // > 2 hours: 1-1.5 sachets per hour (increase for high sweat/heat)
+  let duringElectrolytes = 0;
+  if (profile.sessionDuration >= 1) {
+    const baseRate = profile.sessionDuration <= 2 ? 1 : 1.3;
+    const sweatAdjustment = profile.sweatRate === 'high' ? 1.2 : 1.0;
+    duringElectrolytes = Math.round(profile.sessionDuration * baseRate * sweatAdjustment);
+  }
 
-  // Post-activity (150% of fluid lost) - Enhanced rehydration protocol
-  // Cap at reasonable recovery amounts to drink over 4-6 hours
-  const postWater = Math.min(Math.round(totalFluidLoss * 1.5), 3000);
-  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 1000)), 4);
+  // Post-activity rehydration (PMID 17277604)
+  // Target: 150% of fluid deficit to account for ongoing losses
+  // Cap based on realistic consumption over 4-6 hours (max ~500ml/hour)
+  const maxRealisticPostWater = 3000; // 3L max over recovery period
+  const postWater = Math.min(Math.round(totalFluidLoss * 1.5), maxRealisticPostWater);
+  
+  // Electrolytes: ~1 sachet per 750-1000ml of fluid loss, cap at 4 sachets
+  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 900)), 4);
 
   // Generate recommendations based on profile
   const recommendations: string[] = [];
