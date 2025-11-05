@@ -325,11 +325,14 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p className="text-xs text-muted-foreground mt-1">Sip every 15-20 minutes</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Supplme per hour</p>
+              <p className="text-sm text-muted-foreground">Supplme Sachets (Total)</p>
               <p className="text-xl font-semibold">
                 {plan.duringActivity.electrolytesPerHour > 0 
                   ? `${plan.duringActivity.electrolytesPerHour}x sachet` 
                   : 'Not required'}
+              </p>
+              <p className="text-xs text-muted-foreground mt-1">
+                ~{plan.duringActivity.electrolytesPerHour > 0 ? Math.round(plan.duringActivity.electrolytesPerHour / (profile.sessionDuration || 1)) : 0}-{plan.duringActivity.electrolytesPerHour > 0 ? Math.ceil(plan.duringActivity.electrolytesPerHour / (profile.sessionDuration || 1)) : 0} per hour
               </p>
             </div>
           </div>

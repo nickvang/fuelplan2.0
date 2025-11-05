@@ -98,11 +98,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // During activity - Updated based on personalized hydration research (PMID 38732589)
   // Aim to replace 60-80% of sweat losses during exercise
   const duringWater = profile.sessionDuration > 1 ? Math.round(sweatRatePerHour * 0.7) : 0;
-  const duringElectrolytes = profile.sessionDuration > 1 ? Math.max(1, Math.round(profile.sessionDuration * 0.8)) : 0;
+  // Electrolytes: approximately 1 sachet per hour for activities > 1 hour
+  const duringElectrolytes = profile.sessionDuration > 1 ? Math.round(profile.sessionDuration) : 0;
 
   // Post-activity (150% of fluid lost) - Enhanced rehydration protocol
-  const postWater = Math.round(totalFluidLoss * 1.5);
-  const postElectrolytes = Math.max(1, Math.round(totalFluidLoss / 1000));
+  // Cap at reasonable recovery amounts to drink over 4-6 hours
+  const postWater = Math.min(Math.round(totalFluidLoss * 1.5), 3000);
+  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 1000)), 4);
 
   // Generate recommendations based on profile
   const recommendations: string[] = [];
