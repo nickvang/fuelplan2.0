@@ -891,7 +891,9 @@ const Index = () => {
                 
                 {profile.hasUpcomingRace && (
                   <div>
-                    <Label htmlFor="upcomingEvents">Your Upcoming Race</Label>
+                    <Label htmlFor="upcomingEvents">
+                      {profile.disciplines?.[0] === 'Hiking' ? 'Your Upcoming Hike/Trek' : 'Your Upcoming Race'}
+                    </Label>
                     <Input
                       id="upcomingEvents"
                       value={profile.upcomingEvents || ''}
@@ -901,12 +903,16 @@ const Index = () => {
                         profile.disciplines?.[0] === 'Cycling' ? 'e.g., 50 Mile Race, Century (100 miles), Gran Fondo, Multi-day Tour' :
                         profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5K Open Water, 5K Swim, 10K Marathon Swim' :
                         profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint Tri, Olympic Tri, Half Ironman (70.3), Full Ironman' :
+                        profile.disciplines?.[0] === 'Hiking' ? 'e.g., 10km Day Hike, 30km Trek, Tour du Mont Blanc, Kilimanjaro' :
                         'e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 50K'
                       }
                       className="mt-2"
                     />
                     <p className="text-xs text-muted-foreground mt-2">
-                      We'll create a specialized race day hydration strategy based on your event
+                      {profile.disciplines?.[0] === 'Hiking' 
+                        ? "We'll create a specialized hydration strategy for your hike or trek"
+                        : "We'll create a specialized race day hydration strategy based on your event"
+                      }
                     </p>
                   </div>
                 )}
@@ -960,6 +966,16 @@ const Index = () => {
                     value={profile.avgPace || ''}
                     onChange={(e) => updateProfile({ avgPace: e.target.value })}
                     placeholder="e.g., 250W or 30 km/h"
+                  />
+                </div>
+              ) : profile.disciplines?.[0] === 'Hiking' ? (
+                <div>
+                  <Label htmlFor="avgPace">Average Hiking Pace</Label>
+                  <Input
+                    id="avgPace"
+                    value={profile.avgPace || ''}
+                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
+                    placeholder="e.g., 3-4 km/hr or 15-20 min/km"
                   />
                 </div>
               ) : (
