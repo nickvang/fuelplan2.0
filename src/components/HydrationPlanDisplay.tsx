@@ -325,15 +325,18 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p className="text-xs text-muted-foreground mt-1">Sip every 15-20 minutes</p>
             </div>
             <div>
-              <p className="text-sm text-muted-foreground">Supplme Sachets (Total)</p>
+              <p className="text-sm text-muted-foreground">Supplme Sachets</p>
               <p className="text-xl font-semibold">
                 {plan.duringActivity.electrolytesPerHour > 0 
                   ? `${plan.duringActivity.electrolytesPerHour}x sachet` 
                   : 'Not required'}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">
-                ~{plan.duringActivity.electrolytesPerHour > 0 ? Math.round(plan.duringActivity.electrolytesPerHour / (profile.sessionDuration || 1)) : 0}-{plan.duringActivity.electrolytesPerHour > 0 ? Math.ceil(plan.duringActivity.electrolytesPerHour / (profile.sessionDuration || 1)) : 0} per hour
-              </p>
+              {plan.duringActivity.electrolytesPerHour > 0 && (
+                <p className="text-xs text-muted-foreground mt-1">
+                  Take 1 sachet every {Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} minutes
+                  {profile.sessionDuration >= 2 && ` (e.g., at ${Array.from({length: plan.duringActivity.electrolytesPerHour}, (_, i) => `${Math.round((i + 1) * (profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)}min`).join(', ')})`}
+                </p>
+              )}
             </div>
           </div>
 
