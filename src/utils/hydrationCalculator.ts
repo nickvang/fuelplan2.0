@@ -173,7 +173,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     postActivity: {
       water: postWater,
       electrolytes: postElectrolytes,
-      timing: 'Within 30 minutes',
+      timing: '4-6 hours',
     },
     totalFluidLoss: totalFluidLoss,
     recommendations,
