@@ -364,7 +364,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <div>
               <p className="text-sm text-muted-foreground">Supplme Sachet</p>
               <p className="text-xl font-semibold">{plan.postActivity.electrolytes}x sachet</p>
-              <p className="text-xs text-muted-foreground mt-1">Take within 30 min of finishing</p>
+              <p className="text-xs text-muted-foreground mt-1">Over 4-6 hours with the water intake</p>
             </div>
           </div>
 
