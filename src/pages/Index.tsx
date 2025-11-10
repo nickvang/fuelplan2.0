@@ -295,21 +295,28 @@ const Index = () => {
   // Show generating animation
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-background flex items-center justify-center px-4">
-        <div className="text-center space-y-6 animate-fade-in">
-          <img 
-            src={supplmeLogo} 
-            alt="Supplme" 
-            className="h-32 mx-auto animate-pulse" 
-          />
-          <div className="space-y-2">
-            <h2 className="text-2xl font-bold">Generating Your Complete Hydration Guide</h2>
-            <p className="text-muted-foreground">by Supplme</p>
+      <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center px-4">
+        <div className="text-center space-y-8 animate-fade-in">
+          <div className="relative">
+            <div className="absolute inset-0 glow-effect blur-3xl opacity-30"></div>
+            <img 
+              src={supplmeLogo} 
+              alt="Supplme" 
+              className="h-40 mx-auto relative z-10 performance-pulse" 
+            />
           </div>
-          <div className="flex items-center justify-center gap-2">
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          <div className="space-y-3">
+            <h2 className="text-4xl font-black tracking-tight chrome-shine">
+              CRAFTING YOUR ELITE HYDRATION PLAN
+            </h2>
+            <p className="text-xl font-semibold text-muted-foreground">
+              Performance Optimization in Progress...
+            </p>
+          </div>
+          <div className="flex items-center justify-center gap-3">
+            <div className="w-3 h-3 bg-chrome rounded-full animate-bounce shimmer" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-3 h-3 bg-chrome rounded-full animate-bounce shimmer" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-3 h-3 bg-chrome rounded-full animate-bounce shimmer" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
@@ -334,19 +341,22 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-background pt-6 pb-12 px-4">
+    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background pt-6 pb-12 px-4">
       <div className="max-w-2xl mx-auto space-y-8">
         {/* Header - Shows on all steps */}
-        <div className="text-center space-y-3">
+        <div className="text-center space-y-4">
           <div className="flex justify-end mb-4">
             <LanguageSwitcher />
           </div>
-          <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto" />
-          <h1 className="text-3xl font-bold tracking-tight">
+          <div className="relative inline-block">
+            <div className="absolute inset-0 glow-effect blur-2xl opacity-20"></div>
+            <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto relative z-10" />
+          </div>
+          <h1 className="text-4xl md:text-5xl font-black tracking-tight">
             {t('app.title')}
           </h1>
           {step === 0 && (
-            <p className="text-lg text-muted-foreground">
+            <p className="text-xl font-semibold text-muted-foreground max-w-lg mx-auto">
               {t('app.subtitle')}
             </p>
           )}

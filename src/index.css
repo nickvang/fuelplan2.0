@@ -8,89 +8,125 @@ All colors MUST be HSL.
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 10%;
+    /* Athletic Black & White Base */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 5%;
 
-    --card: 0 0% 98%;
-    --card-foreground: 0 0% 10%;
+    /* Silver Chrome Accents */
+    --chrome: 0 0% 75%;
+    --chrome-light: 0 0% 85%;
+    --chrome-dark: 0 0% 60%;
+    
+    /* Card with subtle chrome shine */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 10%;
+    --popover-foreground: 0 0% 5%;
 
-    --primary: 0 0% 10%;
+    /* Bold Black Primary */
+    --primary: 0 0% 5%;
     --primary-foreground: 0 0% 98%;
+    --primary-glow: 0 0% 20%;
 
-    --secondary: 0 0% 95%;
+    /* Chrome Secondary */
+    --secondary: 0 0% 92%;
     --secondary-foreground: 0 0% 10%;
 
-    --muted: 0 0% 96%;
-    --muted-foreground: 0 0% 45%;
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 40%;
 
-    --accent: 0 0% 15%;
-    --accent-foreground: 0 0% 98%;
+    /* Energetic Accent - Silver Chrome */
+    --accent: 0 0% 75%;
+    --accent-foreground: 0 0% 5%;
+    --accent-glow: 0 0% 85%;
 
     --destructive: 0 84% 60%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 90%;
-    --input: 0 0% 90%;
-    --ring: 0 0% 10%;
+    --border: 0 0% 88%;
+    --input: 0 0% 92%;
+    --ring: 0 0% 5%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
+
+    /* Athletic Gradients */
+    --gradient-chrome: linear-gradient(135deg, hsl(0 0% 85%), hsl(0 0% 70%), hsl(0 0% 85%));
+    --gradient-athletic: linear-gradient(135deg, hsl(0 0% 5%), hsl(0 0% 15%));
+    --gradient-glow: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 92%));
+    
+    /* Shadows & Effects */
+    --shadow-chrome: 0 8px 32px -4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    --shadow-bold: 0 12px 48px -8px rgba(0, 0, 0, 0.2);
+    --glow-silver: 0 0 32px rgba(192, 192, 192, 0.4);
 
     --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 0 0% 5%;
     --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
-    --sidebar-border: 220 13% 91%;
-
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 0 0% 92%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 0 0% 88%;
+    --sidebar-ring: 0 0% 75%;
   }
 
   .dark {
-    --background: 0 0% 5%;
-    --foreground: 0 0% 95%;
+    /* Dark Athletic Mode */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 98%;
 
-    --card: 0 0% 8%;
-    --card-foreground: 0 0% 95%;
+    /* Chrome pops more in dark */
+    --chrome: 0 0% 70%;
+    --chrome-light: 0 0% 80%;
+    --chrome-dark: 0 0% 55%;
 
-    --popover: 0 0% 5%;
-    --popover-foreground: 0 0% 95%;
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
 
-    --primary: 0 0% 95%;
-    --primary-foreground: 0 0% 10%;
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
 
-    --secondary: 0 0% 15%;
-    --secondary-foreground: 0 0% 95%;
+    /* White Primary in Dark */
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 5%;
+    --primary-glow: 0 0% 85%;
 
-    --muted: 0 0% 15%;
-    --muted-foreground: 0 0% 60%;
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 98%;
 
-    --accent: 0 0% 20%;
-    --accent-foreground: 0 0% 95%;
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 65%;
 
-    --destructive: 0 62% 40%;
+    /* Chrome Accent glows in dark */
+    --accent: 0 0% 75%;
+    --accent-foreground: 0 0% 5%;
+    --accent-glow: 0 0% 90%;
+
+    --destructive: 0 62% 50%;
     --destructive-foreground: 0 0% 98%;
 
-    --border: 0 0% 20%;
-    --input: 0 0% 20%;
-    --ring: 0 0% 80%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --border: 0 0% 22%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 75%;
+
+    /* Dark Mode Gradients */
+    --gradient-chrome: linear-gradient(135deg, hsl(0 0% 75%), hsl(0 0% 60%), hsl(0 0% 75%));
+    --gradient-athletic: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 85%));
+    --gradient-glow: linear-gradient(180deg, hsl(0 0% 12%), hsl(0 0% 8%));
+    
+    /* Dark Shadows & Glows */
+    --shadow-chrome: 0 8px 32px -4px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    --shadow-bold: 0 12px 48px -8px rgba(0, 0, 0, 0.5);
+    --glow-silver: 0 0 48px rgba(192, 192, 192, 0.3);
+
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 0 0% 75%;
   }
 }
 
@@ -101,5 +137,74 @@ All colors MUST be HSL.
 
   body {
     @apply bg-background text-foreground;
+    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: tabular-nums;
+  }
+}
+
+@layer utilities {
+  /* Athletic Chrome Effects */
+  .chrome-shine {
+    background: var(--gradient-chrome);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .athletic-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-chrome);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .athletic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-bold);
+  }
+  
+  .glow-effect {
+    box-shadow: var(--glow-silver);
+  }
+  
+  .gradient-athletic {
+    background: var(--gradient-athletic);
+  }
+  
+  /* Performance Pulse Animation */
+  @keyframes performance-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+  
+  .performance-pulse {
+    animation: performance-pulse 2s ease-in-out infinite;
+  }
+  
+  /* Shimmer Effect for Chrome */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--chrome-dark)) 0%,
+      hsl(var(--chrome-light)) 50%,
+      hsl(var(--chrome-dark)) 100%
+    );
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
   }
 }

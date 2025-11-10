@@ -203,173 +203,190 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in duration-700">
-      {/* Header */}
-      <div className="text-center space-y-4 py-4">
-        <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto" />
-        <h1 className="text-4xl font-bold tracking-tight">
-          Supplme Hydration Guide
-        </h1>
-        <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-          Your Personalized Hydration Plan
-        </p>
+    <div className="space-y-10 animate-in fade-in duration-700">
+      {/* Epic Header - Achievement Unlocked Style */}
+      <div className="relative overflow-hidden">
+        {/* Background Glow Effect */}
+        <div className="absolute inset-0 bg-gradient-to-br from-chrome-light/20 via-transparent to-chrome-light/20 blur-3xl"></div>
         
-        {/* Smartwatch Data Badge */}
-        {hasSmartWatchData && (
-          <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 px-4 py-2 rounded-full">
-            <Sparkles className="w-4 h-4 text-blue-600" />
-            <span className="text-sm font-medium text-blue-700 dark:text-blue-400">
-              Enhanced with Smartwatch Data
-            </span>
+        <div className="relative text-center space-y-6 py-8">
+          {/* Logo with Glow */}
+          <div className="relative inline-block">
+            <div className="absolute inset-0 glow-effect blur-3xl opacity-40"></div>
+            <img src={supplmeLogo} alt="Supplme" className="h-40 mx-auto relative z-10 performance-pulse" />
           </div>
-        )}
+          
+          {/* Main Title - Athletic Energy */}
+          <div className="space-y-3">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight chrome-shine uppercase">
+              YOUR ELITE PLAN
+            </h1>
+            <p className="text-2xl md:text-3xl font-bold text-foreground">
+              Let's Fucking Go! 🔥
+            </p>
+            <p className="text-xl font-semibold text-muted-foreground max-w-2xl mx-auto">
+              Your First Ever Personalized Hydration Strategy
+            </p>
+          </div>
+          
+          {/* Smartwatch Data Badge - Athletic Style */}
+          {hasSmartWatchData && (
+            <div className="inline-flex items-center gap-2 athletic-card px-6 py-3 rounded-full bg-chrome/10">
+              <Sparkles className="w-5 h-5 text-chrome-dark" />
+              <span className="text-sm font-bold tracking-wide uppercase text-foreground">
+                Enhanced with Your Data
+              </span>
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Smartwatch Data Info Banner */}
+      {/* Smartwatch Data Info Banner - Chrome Style */}
       {hasSmartWatchData && (
-        <Alert className="border-blue-500/30 bg-blue-500/5">
-          <Sparkles className="h-4 w-4 text-blue-600" />
-          <AlertTitle className="text-blue-700 dark:text-blue-400">Enhanced Accuracy with Your Data</AlertTitle>
-          <AlertDescription className="text-sm">
-            This plan uses your personal metrics from uploaded smartwatch files, including physiological data, sleep patterns, activity history, and recovery metrics. 
-            This significantly improves accuracy compared to general estimates.
+        <Alert className="athletic-card border-chrome/30 bg-chrome/5">
+          <Sparkles className="h-5 w-5 text-chrome-dark" />
+          <AlertTitle className="text-lg font-bold text-foreground">Performance Optimized with Your Metrics</AlertTitle>
+          <AlertDescription className="text-base">
+            This plan leverages your physiological data, sleep patterns, activity history, and recovery metrics for elite-level accuracy.
           </AlertDescription>
         </Alert>
       )}
 
-      {/* Fluid Loss Summary */}
-      <Card className="p-6 bg-accent/50 border-accent">
-        <div className="text-center">
-          <p className="text-sm text-muted-foreground mb-2">Estimated Fluid Loss</p>
-          <p className="text-3xl font-bold">
+      {/* Fluid Loss Summary - Bold Athletic Card */}
+      <Card className="athletic-card p-8 bg-gradient-to-br from-chrome/10 to-background border-chrome">
+        <div className="text-center space-y-3">
+          <p className="text-sm font-bold tracking-wider uppercase text-muted-foreground">Total Fluid Loss</p>
+          <p className="text-6xl font-black chrome-shine">
             {(() => {
               const liters = plan.totalFluidLoss / 1000;
               return liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1);
-            })()} liters
+            })()} L
           </p>
-          <p className="text-sm text-muted-foreground mt-2">
+          <p className="text-base font-semibold text-muted-foreground">
             during your {profile.sessionDuration < 1 
               ? `${Math.round(profile.sessionDuration * 60)}-minute` 
-              : `${profile.sessionDuration.toFixed(1)}-hour`} activity
+              : `${profile.sessionDuration.toFixed(1)}-hour`} {profile.disciplines?.[0] || 'activity'}
           </p>
           {hasSmartWatchData && (
-            <p className="text-xs text-blue-600 dark:text-blue-400 mt-2">
-              Calculated using your actual training data
+            <p className="text-sm font-semibold text-chrome-dark">
+              ⚡ Calculated from your actual training data
             </p>
           )}
         </div>
       </Card>
 
-      {/* Training Plan Header with Distance */}
-      <div className="text-center py-4 space-y-2">
-        <h2 className="text-2xl font-bold">Training Session Hydration Plan</h2>
+      {/* Training Plan Header - Epic Style */}
+      <div className="text-center py-6 space-y-4">
+        <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase">Your Performance Protocol</h2>
         {profile.raceDistance && (
-          <div className="inline-block bg-primary/10 border border-primary/20 px-4 py-2 rounded-full">
-            <p className="text-lg font-semibold text-primary">
-              {adjustedDistance} km
+          <div className="inline-block athletic-card bg-primary px-8 py-4 rounded-2xl">
+            <p className="text-3xl font-black text-primary-foreground">
+              {adjustedDistance} KM
             </p>
           </div>
         )}
-        <p className="text-muted-foreground">
-          {profile.sessionDuration.toFixed(1)}-hour {profile.disciplines?.[0] || 'activity'}
+        <p className="text-xl font-bold text-muted-foreground uppercase tracking-wide">
+          {profile.sessionDuration.toFixed(1)}-Hour {profile.disciplines?.[0] || 'Activity'} Session
         </p>
       </div>
 
-      {/* Three Phase Plan */}
+      {/* Three Phase Plan - Athletic Cards */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* PRE */}
-        <Card className="p-6 space-y-4">
-          <div className="space-y-2">
+        <Card className="athletic-card p-8 space-y-5 bg-gradient-to-br from-secondary via-background to-background">
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">{plan.preActivity.timing}</span>
+              <Clock className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
             </div>
-            <h3 className="text-2xl font-bold">PRE</h3>
+            <h3 className="text-4xl font-black chrome-shine">PRE</h3>
           </div>
           
-          <div className="space-y-3 py-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Water</p>
-              <p className="text-xl font-semibold">{plan.preActivity.water} ml</p>
-              <p className="text-xs text-muted-foreground mt-1">Drink 2 hours before activity</p>
+          <div className="space-y-4 py-4">
+            <div className="athletic-card p-4 rounded-xl">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water</p>
+              <p className="text-3xl font-black">{plan.preActivity.water} ml</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-2">Drink 2 hours before</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Supplme Sachet (30ml)</p>
-              <p className="text-xl font-semibold">{plan.preActivity.electrolytes}x sachet</p>
+            <div className="athletic-card p-4 rounded-xl bg-chrome/5">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet (30ml)</p>
+              <p className="text-3xl font-black">{plan.preActivity.electrolytes}x</p>
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Pre-hydration establishes optimal fluid balance. Start 2 hours before to allow absorption and bathroom breaks.
+          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4">
+            ⚡ Prime your body with optimal fluid balance before you start
           </p>
         </Card>
 
         {/* DURING */}
-        <Card className="p-6 space-y-4 border-primary bg-primary/5">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-sm font-medium">{plan.duringActivity.frequency}</span>
+        <Card className="athletic-card p-8 space-y-5 border-primary/50 bg-gradient-to-br from-primary via-primary-glow to-primary relative overflow-hidden">
+          {/* Glow effect */}
+          <div className="absolute inset-0 bg-gradient-to-br from-chrome-light/10 to-transparent"></div>
+          
+          <div className="space-y-3 relative z-10">
+            <div className="flex items-center gap-2 text-primary-foreground/80">
+              <TrendingUp className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
             </div>
-            <h3 className="text-2xl font-bold">DURING</h3>
+            <h3 className="text-4xl font-black text-primary-foreground">DURING</h3>
           </div>
           
-          <div className="space-y-3 py-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Water per hour</p>
-              <p className="text-xl font-semibold">
+          <div className="space-y-4 py-4 relative z-10">
+            <div className="athletic-card p-4 rounded-xl bg-primary-foreground/10 backdrop-blur-sm">
+              <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/80 mb-2">Water per hour</p>
+              <p className="text-3xl font-black text-primary-foreground">
                 {plan.duringActivity.waterPerHour > 0 
                   ? `${plan.duringActivity.waterPerHour} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-xs text-muted-foreground mt-1">Sip every 15-20 minutes</p>
+              <p className="text-xs font-semibold text-primary-foreground/70 mt-2">Sip every 15-20 min</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Supplme Sachets</p>
-              <p className="text-xl font-semibold">
+            <div className="athletic-card p-4 rounded-xl bg-primary-foreground/10 backdrop-blur-sm">
+              <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/80 mb-2">Supplme Sachets</p>
+              <p className="text-3xl font-black text-primary-foreground">
                 {plan.duringActivity.electrolytesPerHour > 0 
-                  ? `${plan.duringActivity.electrolytesPerHour}x sachet` 
+                  ? `${plan.duringActivity.electrolytesPerHour}x / hr` 
                   : 'Not required'}
               </p>
               {plan.duringActivity.electrolytesPerHour > 0 && (
-                <p className="text-xs text-muted-foreground mt-1">
-                  Take 1 sachet every {Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} minutes
-                  {profile.sessionDuration >= 2 && ` (e.g., at ${Array.from({length: plan.duringActivity.electrolytesPerHour}, (_, i) => `${Math.round((i + 1) * (profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)}min`).join(', ')})`}
+                <p className="text-xs font-semibold text-primary-foreground/70 mt-2">
+                  Every {Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} minutes
                 </p>
               )}
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Supplme products are optimized to avoid GI distress. Replace 60-80% of sweat losses for optimal performance (PMID 38732589)
+          <p className="text-sm font-medium text-primary-foreground/80 border-t border-primary-foreground/20 pt-4 relative z-10">
+            🔥 Maintain peak performance - replace 60-80% of sweat loss
           </p>
         </Card>
 
         {/* POST */}
-        <Card className="p-6 space-y-4">
-          <div className="space-y-2">
+        <Card className="athletic-card p-8 space-y-5 bg-gradient-to-br from-secondary via-background to-background">
+          <div className="space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4" />
-              <span className="text-sm font-medium">{plan.postActivity.timing}</span>
+              <Clock className="w-5 h-5" />
+              <span className="text-sm font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
             </div>
-            <h3 className="text-2xl font-bold">POST</h3>
+            <h3 className="text-4xl font-black chrome-shine">POST</h3>
           </div>
           
-          <div className="space-y-3 py-4">
-            <div>
-              <p className="text-sm text-muted-foreground">Water (150% of loss)</p>
-              <p className="text-xl font-semibold">{plan.postActivity.water} ml</p>
-              <p className="text-xs text-muted-foreground mt-1">Drink gradually over 4-6 hours post-activity</p>
+          <div className="space-y-4 py-4">
+            <div className="athletic-card p-4 rounded-xl">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water (150% of loss)</p>
+              <p className="text-3xl font-black">{plan.postActivity.water} ml</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-2">Over 4-6 hours</p>
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Supplme Sachet</p>
-              <p className="text-xl font-semibold">{plan.postActivity.electrolytes}x sachet</p>
-              <p className="text-xs text-muted-foreground mt-1">Over 4-6 hours with the water intake</p>
+            <div className="athletic-card p-4 rounded-xl bg-chrome/5">
+              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet</p>
+              <p className="text-3xl font-black">{plan.postActivity.electrolytes}x</p>
+              <p className="text-xs font-semibold text-muted-foreground mt-2">With water intake</p>
             </div>
           </div>
 
-          <p className="text-sm text-muted-foreground border-t border-border pt-4">
-            Recovery hydration replaces deficit and accelerates muscle function recovery. The 150% target accounts for ongoing fluid losses during recovery.
+          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4">
+            💪 Accelerate recovery and restore your body to peak condition
           </p>
         </Card>
       </div>
