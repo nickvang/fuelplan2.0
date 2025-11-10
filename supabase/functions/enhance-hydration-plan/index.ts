@@ -231,14 +231,22 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
     }
 
     const data = await response.json();
-    const aiContent = data.choices[0].message.content;
+    let aiContent = data.choices[0].message.content;
     console.log('[Success] AI response received');
+
+    // Strip markdown code blocks if present (```json ... ```)
+    if (aiContent.includes('```json')) {
+      aiContent = aiContent.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
+    } else if (aiContent.includes('```')) {
+      aiContent = aiContent.replace(/```\s*/g, '').trim();
+    }
 
     let enhancedData;
     try {
       enhancedData = JSON.parse(aiContent);
     } catch (e) {
       console.error('[Internal] Failed to parse AI response:', e);
+      console.error('[Debug] Raw AI content:', aiContent);
       return new Response(
         JSON.stringify({ 
           error: 'Unable to process AI response. Please try again.',
