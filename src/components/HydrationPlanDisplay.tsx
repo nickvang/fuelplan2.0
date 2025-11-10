@@ -218,7 +218,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           
           {/* Main Title - Athletic Energy */}
           <div className="space-y-3">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight uppercase bg-gradient-to-r from-foreground via-chrome-dark to-foreground bg-clip-text text-transparent">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight uppercase text-foreground">
               YOUR ELITE PLAN
             </h1>
             <p className="text-2xl md:text-3xl font-bold text-foreground">
@@ -256,7 +256,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       <Card className="athletic-card p-8 bg-gradient-to-br from-chrome/10 to-background border-chrome">
         <div className="text-center space-y-3">
           <p className="text-sm font-bold tracking-wider uppercase text-muted-foreground">Total Fluid Loss</p>
-          <p className="text-6xl font-black bg-gradient-to-r from-foreground via-chrome-dark to-foreground bg-clip-text text-transparent">
+          <p className="text-6xl font-black text-foreground">
             {(() => {
               const liters = plan.totalFluidLoss / 1000;
               return liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1);
@@ -277,7 +277,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
       {/* Training Plan Header - Epic Style */}
       <div className="text-center py-6 space-y-4">
-        <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase">Your Performance Protocol</h2>
+        <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase text-foreground">Your Performance Protocol</h2>
         {profile.raceDistance && (
           <div className="inline-block athletic-card bg-primary px-8 py-4 rounded-2xl">
             <p className="text-3xl font-black text-primary-foreground">
