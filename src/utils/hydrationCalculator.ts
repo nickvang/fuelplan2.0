@@ -4,88 +4,103 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Base sweat rate calculation (ml/hour) - Based on ACSM guidelines and recent research
   // Reference: PMID 17277604, PMID 38732589
   const baseSweatRate = {
-    low: 600,    // Updated from 500ml
-    medium: 900, // Updated from 750ml  
-    high: 1200,  // Updated from 1000ml
+    low: 500,    // Conservative baseline
+    medium: 750, // Typical athlete  
+    high: 1000,  // High sweater
   }[profile.sweatRate];
 
   // Store calculation details for transparency
   const calculationSteps: string[] = [];
   calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate})`);
   
-  // Enhanced adjustments using smartwatch data if available
-  let smartWatchAdjustments = 1.0;
+  // Use ADDITIVE adjustments instead of multiplicative to prevent extreme values
+  let adjustmentFactor = 0; // Start at 0, add percentages
   
+  // Enhanced adjustments using smartwatch data if available
   if (rawSmartWatchData) {
-    // Whoop data adjustments
+    // Whoop data adjustments - reduce impact
     if (rawSmartWatchData.physiologicalCycles && rawSmartWatchData.physiologicalCycles.length > 0) {
       const recent = rawSmartWatchData.physiologicalCycles.slice(-7); // Last week
       const avgRecovery = recent.reduce((sum: number, c: any) => sum + c.recoveryScore, 0) / recent.length;
       const avgHRV = recent.reduce((sum: number, c: any) => sum + c.hrv, 0) / recent.length;
       
-      // Low recovery or low HRV = higher hydration need
+      // Low recovery or low HRV = slightly higher hydration need
       if (avgRecovery < 50) {
-        smartWatchAdjustments *= 1.15;
-        calculationSteps.push(`Low recovery score (${avgRecovery.toFixed(0)}%) → +15% hydration need`);
+        adjustmentFactor += 0.10; // +10% instead of 15%
+        calculationSteps.push(`Low recovery score (${avgRecovery.toFixed(0)}%) → +10% hydration need`);
       }
       if (avgHRV < 50) {
-        smartWatchAdjustments *= 1.1;
-        calculationSteps.push(`Low HRV (${avgHRV.toFixed(0)}ms) → +10% hydration need`);
+        adjustmentFactor += 0.05; // +5% instead of 10%
+        calculationSteps.push(`Low HRV (${avgHRV.toFixed(0)}ms) → +5% hydration need`);
       }
       
-      // Poor sleep quality = higher hydration need
+      // Poor sleep quality = slightly higher hydration need
       const avgSleepPerf = recent.reduce((sum: number, c: any) => sum + c.sleepPerformance, 0) / recent.length;
       if (avgSleepPerf < 70) {
-        smartWatchAdjustments *= 1.1;
-        calculationSteps.push(`Poor sleep quality (${avgSleepPerf.toFixed(0)}%) → +10% hydration need`);
+        adjustmentFactor += 0.05; // +5% instead of 10%
+        calculationSteps.push(`Poor sleep quality (${avgSleepPerf.toFixed(0)}%) → +5% hydration need`);
       }
     }
     
-    // Workout strain adjustments
+    // Workout strain adjustments - reduce impact
     if (rawSmartWatchData.workouts && rawSmartWatchData.workouts.length > 0) {
       const recentWorkouts = rawSmartWatchData.workouts.slice(-5);
       const avgStrain = recentWorkouts.reduce((sum: number, w: any) => sum + w.strain, 0) / recentWorkouts.length;
       
       if (avgStrain > 15) {
-        smartWatchAdjustments *= 1.2;
-        calculationSteps.push(`High workout strain (${avgStrain.toFixed(1)}) → +20% hydration need`);
+        adjustmentFactor += 0.10; // +10% instead of 20%
+        calculationSteps.push(`High workout strain (${avgStrain.toFixed(1)}) → +10% hydration need`);
       }
     }
   }
 
-  // Adjust for temperature (using training temp average)
+  // Temperature adjustment - ADDITIVE
   const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
-  const tempMultiplier = avgTemp < 15 ? 0.8 : avgTemp > 25 ? 1.3 : 1.0;
-  calculationSteps.push(`Temperature adjustment: ${avgTemp}°C → ${tempMultiplier}x multiplier`);
+  if (avgTemp < 10) {
+    adjustmentFactor += -0.20; // -20% for cold
+    calculationSteps.push(`Temperature adjustment: ${avgTemp}°C → -20%`);
+  } else if (avgTemp > 25) {
+    adjustmentFactor += 0.25; // +25% for hot
+    calculationSteps.push(`Temperature adjustment: ${avgTemp}°C → +25%`);
+  } else {
+    calculationSteps.push(`Temperature adjustment: ${avgTemp}°C → no change`);
+  }
 
-  // Adjust for humidity
-  const humidityMultiplier = profile.humidity < 40 ? 0.9 : 
-                             profile.humidity > 70 ? 1.2 : 1.0;
-  calculationSteps.push(`Humidity adjustment: ${profile.humidity}% → ${humidityMultiplier}x multiplier`);
+  // Humidity adjustment - ADDITIVE
+  if (profile.humidity > 70) {
+    adjustmentFactor += 0.15; // +15% for high humidity
+    calculationSteps.push(`Humidity adjustment: ${profile.humidity}% → +15%`);
+  } else if (profile.humidity < 30) {
+    adjustmentFactor += -0.10; // -10% for low humidity
+    calculationSteps.push(`Humidity adjustment: ${profile.humidity}% → -10%`);
+  }
 
-  // Adjust for altitude
-  const altitudeMultiplier = {
-    'sea-level': 1.0,
-    'moderate': 1.1,
-    'high': 1.2,
-  }[profile.altitude];
+  // Altitude adjustment - ADDITIVE
+  if (profile.altitude === 'high') {
+    adjustmentFactor += 0.15; // +15%
+  } else if (profile.altitude === 'moderate') {
+    adjustmentFactor += 0.08; // +8%
+  }
 
-  // Adjust for sun exposure
-  const sunMultiplier = {
-    'shade': 0.9,
-    'partial': 1.0,
-    'full-sun': 1.15,
-  }[profile.sunExposure];
+  // Sun exposure - ADDITIVE
+  if (profile.sunExposure === 'full-sun') {
+    adjustmentFactor += 0.10; // +10%
+  } else if (profile.sunExposure === 'shade') {
+    adjustmentFactor += -0.10; // -10%
+  }
 
-  // Adjust for indoor/outdoor
-  const environmentMultiplier = profile.indoorOutdoor === 'indoor' ? 0.85 : 1.0;
+  // Indoor reduces sweat rate
+  if (profile.indoorOutdoor === 'indoor') {
+    adjustmentFactor += -0.15; // -15%
+  }
 
-  // Calculate total sweat rate
-  const sweatRatePerHour = Math.round(
-    baseSweatRate * tempMultiplier * humidityMultiplier * 
-    altitudeMultiplier * sunMultiplier * environmentMultiplier * smartWatchAdjustments
-  );
-  calculationSteps.push(`Final sweat rate: ${sweatRatePerHour}ml/hour (after all adjustments)`);
+  // Cap total adjustment at reasonable limits
+  adjustmentFactor = Math.max(-0.30, Math.min(0.60, adjustmentFactor)); // Cap between -30% and +60%
+
+  // Calculate total sweat rate with REALISTIC CAP
+  const calculatedSweatRate = Math.round(baseSweatRate * (1 + adjustmentFactor));
+  const sweatRatePerHour = Math.min(calculatedSweatRate, 1400); // HARD CAP at 1400ml/hour (medically safe)
+  calculationSteps.push(`Final sweat rate: ${sweatRatePerHour}ml/hour (capped at 1400ml/hour for safety)`);
 
   // Total fluid loss for the activity
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
@@ -96,29 +111,35 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const preElectrolytes = 1; // 1 sachet (30ml) of Supplme
 
   // During activity - Based on ACSM & IOC consensus (PMID 17277604, PMID 38732589)
-  // For activities > 45 min: aim to replace 60-80% of sweat losses
-  // Electrolyte needs increase significantly for activities > 90 minutes
-  const duringWater = profile.sessionDuration >= 0.75 ? Math.round(sweatRatePerHour * 0.7) : 0;
+  // For activities > 45 min: aim to replace 60-70% of sweat losses (not 70-80% to prevent overhydration)
+  // ACSM recommends max 800ml per hour for most athletes
+  const duringWater = profile.sessionDuration >= 0.75 
+    ? Math.min(Math.round(sweatRatePerHour * 0.65), 1000) // Cap at 1000ml/hour
+    : 0;
   
-  // Electrolyte requirements (sachets):
-  // < 1 hour: minimal need (rely on pre-load)
-  // 1-2 hours: 1 sachet per hour
-  // > 2 hours: 1-1.5 sachets per hour (increase for high sweat/heat)
+  // Electrolyte requirements (sachets) - CONSERVATIVE approach:
+  // < 1 hour: 0 sachets (rely on pre-load)
+  // 1-2 hours: 1 sachet total
+  // 2-3 hours: 2 sachets total
+  // > 3 hours: 2-3 sachets total (not per hour!)
   let duringElectrolytes = 0;
-  if (profile.sessionDuration >= 1) {
-    const baseRate = profile.sessionDuration <= 2 ? 1 : 1.3;
-    const sweatAdjustment = profile.sweatRate === 'high' ? 1.2 : 1.0;
-    duringElectrolytes = Math.round(profile.sessionDuration * baseRate * sweatAdjustment);
+  if (profile.sessionDuration >= 1 && profile.sessionDuration < 2) {
+    duringElectrolytes = 1; // 1 sachet for 1-2 hour activities
+  } else if (profile.sessionDuration >= 2 && profile.sessionDuration < 3) {
+    duringElectrolytes = 2; // 2 sachets for 2-3 hour activities
+  } else if (profile.sessionDuration >= 3) {
+    // For ultra-distance: 2-3 sachets total, not per hour
+    duringElectrolytes = profile.sweatRate === 'high' ? 3 : 2;
   }
 
   // Post-activity rehydration (PMID 17277604)
-  // Target: 150% of fluid deficit to account for ongoing losses
-  // Cap based on realistic consumption over 4-6 hours (max ~500ml/hour)
-  const maxRealisticPostWater = 3000; // 3L max over recovery period
-  const postWater = Math.min(Math.round(totalFluidLoss * 1.5), maxRealisticPostWater);
+  // Target: 125-150% of fluid deficit to account for ongoing losses
+  // Cap at realistic consumption over 4-6 hours (max ~400ml/hour = 2400ml total)
+  const maxRealisticPostWater = 2000; // 2L max over recovery period (more realistic)
+  const postWater = Math.min(Math.round(totalFluidLoss * 1.25), maxRealisticPostWater);
   
-  // Electrolytes: ~1 sachet per 750-1000ml of fluid loss, cap at 4 sachets
-  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 900)), 4);
+  // Electrolytes: Conservative approach - 1 sachet per 1000ml of fluid loss, cap at 3 sachets
+  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 1000)), 3);
 
   // Generate recommendations based on profile
   const recommendations: string[] = [];
