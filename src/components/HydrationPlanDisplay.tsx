@@ -16,11 +16,12 @@ interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
   profile: HydrationProfile;
   onReset: () => void;
+  onFullReset?: () => void;
   hasSmartWatchData?: boolean;
   rawSmartWatchData?: any;
 }
 
-export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
+export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, onFullReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
   
@@ -510,20 +511,19 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Button onClick={onReset} variant="outline" size="lg" className="gap-2">
           <RefreshCw className="w-4 h-4" />
-          Start New Plan (Same Data)
+          Adjust My Data
         </Button>
-        <Button 
-          onClick={() => {
-            onReset();
-            window.location.reload();
-          }} 
-          variant="outline" 
-          size="lg" 
-          className="gap-2"
-        >
-          <AlertCircle className="w-4 h-4" />
-          Start Completely Fresh
-        </Button>
+        {onFullReset && (
+          <Button 
+            onClick={onFullReset} 
+            variant="outline" 
+            size="lg" 
+            className="gap-2"
+          >
+            <AlertCircle className="w-4 h-4" />
+            Start Completely Fresh
+          </Button>
+        )}
         <Button onClick={() => window.print()} variant="default" size="lg" className="gap-2">
           <Download className="w-4 h-4" />
           Download Plan

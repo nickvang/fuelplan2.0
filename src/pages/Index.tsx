@@ -284,6 +284,14 @@ const Index = () => {
     });
   };
 
+  const handleResetWithData = () => {
+    // Keep profile data, just go back to first step to allow adjustments
+    const currentVersion = version;
+    setShowPlan(false);
+    setIsGenerating(false);
+    setStep(currentVersion === 'simple' ? 1 : 1); // Go to activity step
+  };
+
   const toggleDiscipline = (discipline: string) => {
     const current = profile.disciplines || [];
     if (current.includes(discipline)) {
@@ -339,7 +347,8 @@ const Index = () => {
           <HydrationPlanDisplay 
             plan={plan} 
             profile={profile as HydrationProfile} 
-            onReset={handleReset}
+            onReset={handleResetWithData}
+            onFullReset={handleReset}
             hasSmartWatchData={!!analyzedData && smartwatchData.length > 0}
             rawSmartWatchData={rawSmartWatchData}
           />
