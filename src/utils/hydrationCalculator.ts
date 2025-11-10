@@ -117,14 +117,15 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     ? Math.min(Math.round(sweatRatePerHour * 0.65), 1000) // Cap at 1000ml/hour
     : 0;
   
-  // Electrolyte requirements (sachets) - CONSERVATIVE approach:
-  // < 1 hour: 0 sachets (rely on pre-load)
-  // 1-2 hours: 1 sachet total
-  // 2-3 hours: 2 sachets total
-  // > 3 hours: 2-3 sachets total (not per hour!)
+  // Electrolyte requirements (sachets) - EVIDENCE-BASED approach:
+  // Sports science shows pre-loading is sufficient for activities under 75 minutes
+  // < 75 min (e.g., 10km run): 0 sachets during (rely on pre-load)
+  // 75-120 min: 1 sachet during
+  // 2-3 hours: 2 sachets total during
+  // > 3 hours: 2-3 sachets total during (not per hour!)
   let duringElectrolytes = 0;
-  if (profile.sessionDuration >= 1 && profile.sessionDuration < 2) {
-    duringElectrolytes = 1; // 1 sachet for 1-2 hour activities
+  if (profile.sessionDuration >= 1.25 && profile.sessionDuration < 2) {
+    duringElectrolytes = 1; // 1 sachet for 75-120 minute activities
   } else if (profile.sessionDuration >= 2 && profile.sessionDuration < 3) {
     duringElectrolytes = 2; // 2 sachets for 2-3 hour activities
   } else if (profile.sessionDuration >= 3) {
