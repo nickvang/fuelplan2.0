@@ -11,18 +11,30 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }[profile.sweatRate];
 
   // Discipline-based intensity adjustment - Different sports have different intensities
-  // Hiking is significantly lower intensity than running/cycling
+  // Research-backed adjustments based on metabolic cost and sweat rate studies
   const disciplineAdjustment: { [key: string]: number } = {
-    'Hiking': -0.25,      // -25% for hiking (lower intensity)
-    'Walking': -0.35,     // -35% for walking (very low intensity)
-    'Cycling': -0.10,     // -10% for cycling (more efficient cooling)
-    'Swimming': -0.30,    // -30% for swimming (water cooling)
-    'Trail Running': 0.05, // +5% for trail running (more demanding)
+    // Low intensity activities (significantly lower sweat rates)
+    'Hiking': -0.25,          // -25% for hiking (moderate pace, lower intensity)
+    'Walking': -0.35,         // -35% for walking (very low intensity)
+    'Swimming': -0.30,        // -30% for swimming (water cooling effect)
+    
+    // Moderate intensity activities
+    'Cycling': -0.10,         // -10% for cycling (better cooling, seated position)
+    'Triathlon': 0,           // Baseline (mixed intensity)
+    'Football': 0.05,         // +5% for football/soccer (intermittent high intensity)
+    'Padel': 0,               // Baseline for padel tennis (moderate intensity)
+    'Tennis': 0,              // Baseline for tennis (moderate intensity)
+    
+    // High intensity activities
+    'Running': 0.10,          // +10% for running (higher impact, sustained effort)
+    'Trail Running': 0.15,    // +15% for trail running (more demanding terrain)
+    'Basketball': 0.10,       // +10% for basketball (high intensity intervals)
+    'CrossFit': 0.15,         // +15% for CrossFit (very high intensity)
   };
   
   // Apply discipline adjustment if applicable
   const primaryDiscipline = profile.disciplines?.[0] || '';
-  if (disciplineAdjustment[primaryDiscipline]) {
+  if (disciplineAdjustment[primaryDiscipline] !== undefined) {
     baseSweatRate = Math.round(baseSweatRate * (1 + disciplineAdjustment[primaryDiscipline]));
   }
 
@@ -144,28 +156,52 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   // Electrolyte requirements (sachets) - EVIDENCE-BASED approach for INTENSITY
-  // Lower intensity activities like hiking need fewer electrolytes
+  // Lower intensity activities need fewer electrolytes than high-intensity ones
   // Sports science shows pre-loading is sufficient for activities under 75 minutes
   // < 75 min: 0 sachets during (rely on pre-load)
-  // 75-120 min LOW intensity (hiking/walking): 0-1 sachet
-  // 75-120 min MODERATE/HIGH intensity: 1 sachet during
+  // 75-120 min LOW intensity: 0 sachet
+  // 75-120 min MODERATE intensity: 0-1 sachet
+  // 75-120 min HIGH intensity: 1 sachet during
   // 2-3 hours LOW intensity: 1 sachet
-  // 2-3 hours MODERATE/HIGH intensity: 2 sachets total during
+  // 2-3 hours MODERATE intensity: 1-2 sachets
+  // 2-3 hours HIGH intensity: 2 sachets total during
   // > 3 hours: 2-3 sachets total during (not per hour!)
   
-  const isLowIntensity = ['Hiking', 'Walking', 'Swimming', 'Cycling'].includes(primaryDiscipline);
+  // Categorize activities by intensity for electrolyte needs
+  const lowIntensity = ['Hiking', 'Walking', 'Swimming', 'Cycling'];
+  const moderateIntensity = ['Triathlon', 'Padel', 'Tennis', 'Football'];
+  const highIntensity = ['Running', 'Trail Running', 'Basketball', 'CrossFit'];
+  
+  const isLowIntensity = lowIntensity.includes(primaryDiscipline);
+  const isHighIntensity = highIntensity.includes(primaryDiscipline);
   
   let duringElectrolytes = 0;
   if (profile.sessionDuration >= 1.25 && profile.sessionDuration < 2) {
-    duringElectrolytes = isLowIntensity ? 0 : 1; // Low intensity gets 0, others get 1
+    // 75-120 minutes
+    if (isLowIntensity) {
+      duringElectrolytes = 0; // Low intensity: pre-load sufficient
+    } else if (isHighIntensity) {
+      duringElectrolytes = 1; // High intensity: 1 sachet
+    } else {
+      duringElectrolytes = 0; // Moderate intensity: pre-load usually sufficient
+    }
   } else if (profile.sessionDuration >= 2 && profile.sessionDuration < 3) {
-    duringElectrolytes = isLowIntensity ? 1 : 2; // Low intensity gets 1, others get 2
+    // 2-3 hours
+    if (isLowIntensity) {
+      duringElectrolytes = 1; // Low intensity: 1 sachet
+    } else if (isHighIntensity) {
+      duringElectrolytes = 2; // High intensity: 2 sachets
+    } else {
+      duringElectrolytes = 1; // Moderate intensity: 1 sachet
+    }
   } else if (profile.sessionDuration >= 3) {
-    // For ultra-distance: adjusted by intensity
+    // Over 3 hours (ultra-distance)
     if (isLowIntensity) {
       duringElectrolytes = 1; // Low intensity: just 1 sachet even for long duration
+    } else if (isHighIntensity) {
+      duringElectrolytes = profile.sweatRate === 'high' ? 3 : 2; // High intensity: 2-3 sachets
     } else {
-      duringElectrolytes = profile.sweatRate === 'high' ? 3 : 2;
+      duringElectrolytes = 2; // Moderate intensity: 2 sachets
     }
   }
 
