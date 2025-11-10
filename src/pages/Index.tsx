@@ -521,17 +521,31 @@ const Index = () => {
                     onClick={() => setVersion('simple')}
                     className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
                       version === 'simple'
-                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02]'
+                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02] ring-2 ring-primary/20'
                         : 'border-border/30 hover:border-primary/50 hover:shadow-md'
                     }`}
                   >
+                    {/* Selected Indicator */}
+                    {version === 'simple' && (
+                      <div className="absolute top-4 right-4 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg animate-scale-in">
+                        <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="space-y-3 relative z-10">
-                      <h3 className="text-xl font-black uppercase tracking-tight">{t('version.simple.title')}</h3>
+                      <h3 className={`text-xl font-black uppercase tracking-tight transition-colors ${
+                        version === 'simple' ? 'text-primary' : ''
+                      }`}>
+                        {t('version.simple.title')}
+                      </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {t('version.simple.description')}
                       </p>
-                      <div className="text-xs font-bold text-primary/80 mt-4 flex items-center gap-2">
+                      <div className={`text-xs font-bold mt-4 flex items-center gap-2 transition-colors ${
+                        version === 'simple' ? 'text-primary' : 'text-primary/80'
+                      }`}>
                         <Clock className="w-3 h-3" />
                         {t('version.simple.time')}
                       </div>
@@ -544,17 +558,31 @@ const Index = () => {
                     onClick={() => setVersion('pro')}
                     className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
                       version === 'pro'
-                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02]'
+                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02] ring-2 ring-primary/20'
                         : 'border-border/30 hover:border-primary/50 hover:shadow-md'
                     }`}
                   >
+                    {/* Selected Indicator */}
+                    {version === 'pro' && (
+                      <div className="absolute top-4 right-4 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg animate-scale-in">
+                        <svg className="w-5 h-5 text-primary-foreground" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={3} d="M5 13l4 4L19 7" />
+                        </svg>
+                      </div>
+                    )}
                     <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="space-y-3 relative z-10">
-                      <h3 className="text-xl font-black uppercase tracking-tight">{t('version.pro.title')}</h3>
+                      <h3 className={`text-xl font-black uppercase tracking-tight transition-colors ${
+                        version === 'pro' ? 'text-primary' : ''
+                      }`}>
+                        {t('version.pro.title')}
+                      </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {t('version.pro.description')}
                       </p>
-                      <div className="text-xs font-bold text-primary/80 mt-4 flex items-center gap-2">
+                      <div className={`text-xs font-bold mt-4 flex items-center gap-2 transition-colors ${
+                        version === 'pro' ? 'text-primary' : 'text-primary/80'
+                      }`}>
                         <Clock className="w-3 h-3" />
                         {t('version.pro.time')}
                       </div>
