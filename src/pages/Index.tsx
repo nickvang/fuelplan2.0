@@ -306,7 +306,7 @@ const Index = () => {
             />
           </div>
           <div className="space-y-3">
-            <h2 className="text-4xl font-black tracking-tight chrome-shine">
+            <h2 className="text-4xl font-black tracking-tight bg-gradient-to-r from-foreground via-chrome-dark to-foreground bg-clip-text text-transparent">
               CRAFTING YOUR ELITE HYDRATION PLAN
             </h2>
             <p className="text-xl font-semibold text-muted-foreground">

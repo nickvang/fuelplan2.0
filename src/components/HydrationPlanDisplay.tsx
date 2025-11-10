@@ -218,7 +218,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           
           {/* Main Title - Athletic Energy */}
           <div className="space-y-3">
-            <h1 className="text-5xl md:text-7xl font-black tracking-tight chrome-shine uppercase">
+            <h1 className="text-5xl md:text-7xl font-black tracking-tight uppercase bg-gradient-to-r from-foreground via-chrome-dark to-foreground bg-clip-text text-transparent">
               YOUR ELITE PLAN
             </h1>
             <p className="text-2xl md:text-3xl font-bold text-foreground">
@@ -256,7 +256,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       <Card className="athletic-card p-8 bg-gradient-to-br from-chrome/10 to-background border-chrome">
         <div className="text-center space-y-3">
           <p className="text-sm font-bold tracking-wider uppercase text-muted-foreground">Total Fluid Loss</p>
-          <p className="text-6xl font-black chrome-shine">
+          <p className="text-6xl font-black bg-gradient-to-r from-foreground via-chrome-dark to-foreground bg-clip-text text-transparent">
             {(() => {
               const liters = plan.totalFluidLoss / 1000;
               return liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1);
@@ -299,7 +299,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <Clock className="w-5 h-5" />
               <span className="text-sm font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
             </div>
-            <h3 className="text-4xl font-black chrome-shine">PRE</h3>
+            <h3 className="text-4xl font-black text-foreground">PRE</h3>
           </div>
           
           <div className="space-y-4 py-4">
@@ -369,7 +369,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <Clock className="w-5 h-5" />
               <span className="text-sm font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
             </div>
-            <h3 className="text-4xl font-black chrome-shine">POST</h3>
+            <h3 className="text-4xl font-black text-foreground">POST</h3>
           </div>
           
           <div className="space-y-4 py-4">
