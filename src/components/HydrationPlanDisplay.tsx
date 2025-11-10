@@ -343,12 +343,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme Sachets</p>
               <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
-                  ? `${plan.duringActivity.electrolytesPerHour}x / hr` 
+                  ? `${plan.duringActivity.electrolytesPerHour} sachet${plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}` 
                   : 'Not required'}
               </p>
               {plan.duringActivity.electrolytesPerHour > 0 && (
                 <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                  Every {Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} minutes
+                  {plan.duringActivity.electrolytesPerHour === 1 
+                    ? `Take 1 after ${Math.round((profile.sessionDuration * 60) / 2)} min`
+                    : `1 every ${Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} min`
+                  }
                 </p>
               )}
             </div>
