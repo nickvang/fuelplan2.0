@@ -18,6 +18,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
+import { Clock } from 'lucide-react';
 import supplmeLogo from '@/assets/supplme-logo.png';
 
 const Index = () => {
@@ -295,28 +296,35 @@ const Index = () => {
   // Show generating animation
   if (isGenerating) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-background via-secondary to-background flex items-center justify-center px-4">
-        <div className="text-center space-y-8 animate-fade-in">
+      <div className="min-h-screen bg-gradient-to-br from-background via-muted/10 to-background flex items-center justify-center px-4 relative overflow-hidden">
+        {/* Athletic background pattern */}
+        <div className="absolute inset-0 opacity-[0.02]">
+          <div className="absolute inset-0" style={{
+            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px)',
+          }}></div>
+        </div>
+        
+        <div className="text-center space-y-10 animate-fade-in relative z-10">
           <div className="relative">
-            <div className="absolute inset-0 glow-effect blur-3xl opacity-30"></div>
+            <div className="absolute inset-0 glow-effect blur-3xl opacity-40 animate-pulse"></div>
             <img 
               src={supplmeLogo} 
               alt="Supplme" 
-              className="h-40 mx-auto relative z-10 performance-pulse" 
+              className="h-40 md:h-48 mx-auto relative z-10 performance-pulse" 
             />
           </div>
-          <div className="space-y-3">
-            <h2 className="text-4xl font-black tracking-tight text-foreground">
+          <div className="space-y-4">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tighter chrome-shine uppercase">
               CRAFTING YOUR ELITE HYDRATION PLAN
             </h2>
-            <p className="text-xl font-semibold text-muted-foreground">
+            <p className="text-xl md:text-2xl font-bold text-muted-foreground tracking-wide">
               Performance Optimization in Progress...
             </p>
           </div>
-          <div className="flex items-center justify-center gap-3">
-            <div className="w-3 h-3 bg-chrome rounded-full animate-bounce shimmer" style={{ animationDelay: '0ms' }}></div>
-            <div className="w-3 h-3 bg-chrome rounded-full animate-bounce shimmer" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-3 h-3 bg-chrome rounded-full animate-bounce shimmer" style={{ animationDelay: '300ms' }}></div>
+          <div className="flex items-center justify-center gap-4">
+            <div className="w-4 h-4 bg-chrome rounded-full animate-bounce shimmer shadow-lg" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-4 h-4 bg-chrome rounded-full animate-bounce shimmer shadow-lg" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-4 h-4 bg-chrome rounded-full animate-bounce shimmer shadow-lg" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
@@ -341,25 +349,34 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-background via-secondary/20 to-background pt-6 pb-12 px-4">
-      <div className="max-w-2xl mx-auto space-y-8">
+    <div className="min-h-screen bg-gradient-to-br from-background via-background to-muted/20 relative overflow-hidden pt-6 pb-12 px-4">
+      {/* Athletic background pattern */}
+      <div className="absolute inset-0 opacity-[0.02]">
+        <div className="absolute inset-0" style={{
+          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px)',
+        }}></div>
+      </div>
+      
+      <div className="max-w-2xl mx-auto space-y-8 relative z-10">
         {/* Header - Shows on all steps */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-6">
           <div className="flex justify-end mb-4">
             <LanguageSwitcher />
           </div>
-          <div className="relative inline-block">
-            <div className="absolute inset-0 glow-effect blur-2xl opacity-20"></div>
-            <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto relative z-10" />
+          <div className="relative inline-block group">
+            <div className="absolute inset-0 glow-effect blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
+            <img src={supplmeLogo} alt="Supplme" className="h-28 md:h-32 mx-auto relative z-10 transition-transform duration-300 group-hover:scale-105" />
           </div>
-          <h1 className="text-4xl md:text-5xl font-black tracking-tight">
-            {t('app.title')}
-          </h1>
-          {step === 0 && (
-            <p className="text-xl font-semibold text-muted-foreground max-w-lg mx-auto">
-              {t('app.subtitle')}
-            </p>
-          )}
+          <div className="space-y-2">
+            <h1 className="text-4xl md:text-6xl font-black tracking-tighter chrome-shine uppercase">
+              {t('app.title')}
+            </h1>
+            {step === 0 && (
+              <p className="text-lg md:text-xl font-semibold text-muted-foreground max-w-lg mx-auto leading-relaxed">
+                {t('app.subtitle')}
+              </p>
+            )}
+          </div>
           
           {/* Demo Button - Only visible in development mode */}
           {import.meta.env.DEV && !showPlan && (
@@ -390,7 +407,7 @@ const Index = () => {
                 setProfile(demoProfile);
                 setShowPlan(true);
               }}
-              className="mt-4 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors"
+              className="mt-4 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors shadow-lg"
             >
               🚀 Preview Demo Results (Dev Only)
             </button>
@@ -420,12 +437,12 @@ const Index = () => {
 
         {/* Analyzing Indicator */}
         {isAnalyzing && (
-          <div className="bg-primary/10 border border-primary/20 rounded-lg p-6">
-            <div className="flex items-center justify-center gap-3">
-              <div className="animate-spin rounded-full h-6 w-6 border-b-2 border-primary"></div>
+          <div className="athletic-card bg-primary/5 border-primary/20 rounded-xl p-6 animate-fade-in">
+            <div className="flex items-center justify-center gap-4">
+              <div className="animate-spin rounded-full h-8 w-8 border-3 border-primary border-t-transparent shimmer"></div>
               <div className="space-y-1">
-                <p className="font-semibold text-primary">{t('analyzing.title')}</p>
-                <p className="text-sm text-muted-foreground">
+                <p className="font-bold text-lg text-primary uppercase tracking-wide">{t('analyzing.title')}</p>
+                <p className="text-sm text-muted-foreground font-medium">
                   {t('analyzing.processing').replace('{count}', smartwatchData.length.toString())}
                 </p>
               </div>
@@ -493,26 +510,30 @@ const Index = () => {
           >
             <div className="py-6 space-y-6">
               {/* Version Selection */}
-              <div className="space-y-4">
-                <Label className="text-base font-semibold">{t('version.select')}</Label>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="space-y-5">
+                <Label className="text-lg font-bold uppercase tracking-wide chrome-shine">
+                  {t('version.select')}
+                </Label>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                   {/* Quick Version Button */}
                   <button
                     type="button"
                     onClick={() => setVersion('simple')}
-                    className={`p-6 rounded-lg border-2 transition-all text-left ${
+                    className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
                       version === 'simple'
-                        ? 'border-primary bg-primary/5 shadow-md'
-                        : 'border-border hover:border-primary/50'
+                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02]'
+                        : 'border-border/30 hover:border-primary/50 hover:shadow-md'
                     }`}
                   >
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold">{t('version.simple.title')}</h3>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="space-y-3 relative z-10">
+                      <h3 className="text-xl font-black uppercase tracking-tight">{t('version.simple.title')}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {t('version.simple.description')}
                       </p>
-                      <div className="text-xs text-muted-foreground mt-3">
-                        <strong>{t('version.simple.time')}</strong>
+                      <div className="text-xs font-bold text-primary/80 mt-4 flex items-center gap-2">
+                        <Clock className="w-3 h-3" />
+                        {t('version.simple.time')}
                       </div>
                     </div>
                   </button>
@@ -521,19 +542,21 @@ const Index = () => {
                   <button
                     type="button"
                     onClick={() => setVersion('pro')}
-                    className={`p-6 rounded-lg border-2 transition-all text-left ${
+                    className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
                       version === 'pro'
-                        ? 'border-primary bg-primary/5 shadow-md'
-                        : 'border-border hover:border-primary/50'
+                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02]'
+                        : 'border-border/30 hover:border-primary/50 hover:shadow-md'
                     }`}
                   >
-                    <div className="space-y-2">
-                      <h3 className="text-xl font-bold">{t('version.pro.title')}</h3>
-                      <p className="text-sm text-muted-foreground">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
+                    <div className="space-y-3 relative z-10">
+                      <h3 className="text-xl font-black uppercase tracking-tight">{t('version.pro.title')}</h3>
+                      <p className="text-sm text-muted-foreground leading-relaxed">
                         {t('version.pro.description')}
                       </p>
-                      <div className="text-xs text-muted-foreground mt-3">
-                        <strong>{t('version.pro.time')}</strong>
+                      <div className="text-xs font-bold text-primary/80 mt-4 flex items-center gap-2">
+                        <Clock className="w-3 h-3" />
+                        {t('version.pro.time')}
                       </div>
                     </div>
                   </button>
