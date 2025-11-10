@@ -360,6 +360,41 @@ const Index = () => {
               {t('app.subtitle')}
             </p>
           )}
+          
+          {/* Demo Button - Only visible in development mode */}
+          {import.meta.env.DEV && !showPlan && (
+            <button
+              onClick={() => {
+                // Set demo profile data
+                const demoProfile: Partial<HydrationProfile> = {
+                  primaryGoal: 'performance',
+                  disciplines: ['Running'],
+                  terrain: 'road',
+                  raceDistance: '10 km',
+                  sessionDuration: 1,
+                  age: 31,
+                  weight: 70,
+                  height: 185,
+                  sex: 'male',
+                  indoorOutdoor: 'outdoor',
+                  trainingTempRange: { min: 15, max: 20 },
+                  humidity: 50,
+                  altitude: 'sea-level',
+                  sunExposure: 'partial',
+                  windConditions: 'calm',
+                  clothingType: 'light',
+                  sweatRate: 'medium',
+                  sweatSaltiness: 'medium',
+                  dailySaltIntake: 'medium',
+                };
+                setProfile(demoProfile);
+                setShowPlan(true);
+              }}
+              className="mt-4 px-6 py-2 bg-yellow-500 hover:bg-yellow-600 text-black font-bold rounded-lg transition-colors"
+            >
+              🚀 Preview Demo Results (Dev Only)
+            </button>
+          )}
         </div>
 
         {/* Honeypot field - hidden from real users, visible to bots */}
