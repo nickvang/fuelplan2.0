@@ -28,6 +28,46 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   // Extract initial distance from raceDistance string (e.g., "5 km" -> 5)
   const getInitialDistance = () => {
     if (initialProfile.raceDistance) {
+      const raceText = initialProfile.raceDistance.toLowerCase();
+      
+      // Check for common race names first
+      const raceDistances: { [key: string]: number } = {
+        // Triathlon distances
+        'ironman': 226, // 3.8km swim + 180km bike + 42.2km run
+        'full ironman': 226,
+        '140.6': 226,
+        'half ironman': 113, // 1.9km swim + 90km bike + 21.1km run
+        'ironman 70.3': 113,
+        '70.3': 113,
+        'olympic': 51.5, // 1.5km swim + 40km bike + 10km run
+        'olympic tri': 51.5,
+        'sprint': 25.75, // 750m swim + 20km bike + 5km run
+        'sprint tri': 25.75,
+        
+        // Running distances
+        'marathon': 42.2,
+        'half marathon': 21.1,
+        'ultra': 50,
+        '50k': 50,
+        '100k': 100,
+        '100 mile': 160,
+        '10k': 10,
+        '5k': 5,
+        
+        // Cycling
+        'century': 160,
+        '100 miles': 160,
+      };
+      
+      // Check if any race name matches
+      for (const [raceName, distance] of Object.entries(raceDistances)) {
+        if (raceText.includes(raceName)) {
+          console.log('Matched race name:', raceName, 'to distance:', distance);
+          return distance;
+        }
+      }
+      
+      // If no race name match, try to extract a number
       const match = initialProfile.raceDistance.match(/(\d+\.?\d*)/);
       const distance = match ? parseFloat(match[1]) : 5;
       console.log('Initial distance extracted:', distance, 'from', initialProfile.raceDistance);
