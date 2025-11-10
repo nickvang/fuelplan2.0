@@ -319,42 +319,42 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </p>
         </Card>
 
-        {/* DURING - Solid Black Background */}
-        <Card className="athletic-card p-8 space-y-5 border-4 border-foreground bg-foreground">
+        {/* DURING - Solid Black Background with White Text */}
+        <Card className="athletic-card p-8 space-y-5 border-4" style={{ backgroundColor: '#0a0a0a', borderColor: '#0a0a0a' }}>
           <div className="space-y-3">
-            <div className="flex items-center gap-2 text-background opacity-70">
+            <div className="flex items-center gap-2" style={{ color: '#ffffff', opacity: 0.7 }}>
               <TrendingUp className="w-5 h-5" />
               <span className="text-sm font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
             </div>
-            <h3 className="text-5xl font-black text-background">DURING</h3>
+            <h3 className="text-5xl font-black" style={{ color: '#ffffff' }}>DURING</h3>
           </div>
           
           <div className="space-y-4 py-4">
-            <div className="bg-background/20 p-4 rounded-xl border border-background/30">
-              <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">Water per hour</p>
-              <p className="text-3xl font-black text-background">
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Water per hour</p>
+              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.waterPerHour > 0 
                   ? `${plan.duringActivity.waterPerHour} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-xs font-semibold text-background/70 mt-2">Sip every 15-20 min</p>
+              <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sip every 15-20 min</p>
             </div>
-            <div className="bg-background/20 p-4 rounded-xl border border-background/30">
-              <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">Supplme Sachets</p>
-              <p className="text-3xl font-black text-background">
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme Sachets</p>
+              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
                   ? `${plan.duringActivity.electrolytesPerHour}x / hr` 
                   : 'Not required'}
               </p>
               {plan.duringActivity.electrolytesPerHour > 0 && (
-                <p className="text-xs font-semibold text-background/70 mt-2">
+                <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   Every {Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} minutes
                 </p>
               )}
             </div>
           </div>
 
-          <p className="text-sm font-medium text-background/80 border-t border-background/20 pt-4">
+          <p className="text-sm font-medium pt-4" style={{ color: 'rgba(255, 255, 255, 0.85)', borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
             🔥 Maintain peak performance - replace 60-80% of sweat loss
           </p>
         </Card>
