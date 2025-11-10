@@ -38,9 +38,17 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     baseSweatRate = Math.round(baseSweatRate * (1 + disciplineAdjustment[primaryDiscipline]));
   }
 
+  // Duration intensity boost for longer efforts (cumulative heat stress and fatigue)
+  // Ultra-distance events (>3 hours) generate more heat stress than shorter efforts
+  // Reference: Ultra-endurance research shows increased sweat rates with duration
+  if (profile.sessionDuration > 3 && ['Running', 'Trail Running', 'Cycling', 'Triathlon'].includes(primaryDiscipline)) {
+    const durationBoost = Math.min((profile.sessionDuration - 3) * 0.05, 0.20); // +5% per hour over 3hrs, max +20%
+    baseSweatRate = Math.round(baseSweatRate * (1 + durationBoost));
+  }
+
   // Store calculation details for transparency
   const calculationSteps: string[] = [];
-  calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate}${disciplineAdjustment[primaryDiscipline] ? `, adjusted for ${primaryDiscipline}` : ''})`);
+  calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate}${disciplineAdjustment[primaryDiscipline] ? `, adjusted for ${primaryDiscipline}` : ''}${profile.sessionDuration > 3 ? ', ultra-distance boost applied' : ''})`);
   
   // Use ADDITIVE adjustments instead of multiplicative to prevent extreme values
   let adjustmentFactor = 0; // Start at 0, add percentages
