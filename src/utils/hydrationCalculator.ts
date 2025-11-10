@@ -4,15 +4,31 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Base sweat rate calculation (ml/hour) - CONSERVATIVE estimates
   // Research shows: Light exercise 0.3-0.5L/hr, Moderate 0.5-0.8L/hr, Intense 0.8-1.5L/hr
   // Reference: PMID 17277604, PMID 38732589
-  const baseSweatRate = {
+  let baseSweatRate = {
     low: 400,    // Very conservative baseline (0.4L/hr)
     medium: 600, // Conservative for typical athlete (0.6L/hr)
     high: 900,   // High sweater, still conservative (0.9L/hr)
   }[profile.sweatRate];
 
+  // Discipline-based intensity adjustment - Different sports have different intensities
+  // Hiking is significantly lower intensity than running/cycling
+  const disciplineAdjustment: { [key: string]: number } = {
+    'Hiking': -0.25,      // -25% for hiking (lower intensity)
+    'Walking': -0.35,     // -35% for walking (very low intensity)
+    'Cycling': -0.10,     // -10% for cycling (more efficient cooling)
+    'Swimming': -0.30,    // -30% for swimming (water cooling)
+    'Trail Running': 0.05, // +5% for trail running (more demanding)
+  };
+  
+  // Apply discipline adjustment if applicable
+  const primaryDiscipline = profile.disciplines?.[0] || '';
+  if (disciplineAdjustment[primaryDiscipline]) {
+    baseSweatRate = Math.round(baseSweatRate * (1 + disciplineAdjustment[primaryDiscipline]));
+  }
+
   // Store calculation details for transparency
   const calculationSteps: string[] = [];
-  calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate})`);
+  calculationSteps.push(`Base sweat rate: ${baseSweatRate}ml/hour (${profile.sweatRate}${disciplineAdjustment[primaryDiscipline] ? `, adjusted for ${primaryDiscipline}` : ''})`);
   
   // Use ADDITIVE adjustments instead of multiplicative to prevent extreme values
   let adjustmentFactor = 0; // Start at 0, add percentages
@@ -127,20 +143,30 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     duringWater = Math.min(Math.round(sweatRatePerHour * 0.50), 800);
   }
   
-  // Electrolyte requirements (sachets) - EVIDENCE-BASED approach:
+  // Electrolyte requirements (sachets) - EVIDENCE-BASED approach for INTENSITY
+  // Lower intensity activities like hiking need fewer electrolytes
   // Sports science shows pre-loading is sufficient for activities under 75 minutes
-  // < 75 min (e.g., 10km run): 0 sachets during (rely on pre-load)
-  // 75-120 min: 1 sachet during
-  // 2-3 hours: 2 sachets total during
+  // < 75 min: 0 sachets during (rely on pre-load)
+  // 75-120 min LOW intensity (hiking/walking): 0-1 sachet
+  // 75-120 min MODERATE/HIGH intensity: 1 sachet during
+  // 2-3 hours LOW intensity: 1 sachet
+  // 2-3 hours MODERATE/HIGH intensity: 2 sachets total during
   // > 3 hours: 2-3 sachets total during (not per hour!)
+  
+  const isLowIntensity = ['Hiking', 'Walking', 'Swimming', 'Cycling'].includes(primaryDiscipline);
+  
   let duringElectrolytes = 0;
   if (profile.sessionDuration >= 1.25 && profile.sessionDuration < 2) {
-    duringElectrolytes = 1; // 1 sachet for 75-120 minute activities
+    duringElectrolytes = isLowIntensity ? 0 : 1; // Low intensity gets 0, others get 1
   } else if (profile.sessionDuration >= 2 && profile.sessionDuration < 3) {
-    duringElectrolytes = 2; // 2 sachets for 2-3 hour activities
+    duringElectrolytes = isLowIntensity ? 1 : 2; // Low intensity gets 1, others get 2
   } else if (profile.sessionDuration >= 3) {
-    // For ultra-distance: 2-3 sachets total, not per hour
-    duringElectrolytes = profile.sweatRate === 'high' ? 3 : 2;
+    // For ultra-distance: adjusted by intensity
+    if (isLowIntensity) {
+      duringElectrolytes = 1; // Low intensity: just 1 sachet even for long duration
+    } else {
+      duringElectrolytes = profile.sweatRate === 'high' ? 3 : 2;
+    }
   }
 
   // Post-activity rehydration - CONSERVATIVE approach (PMID 17277604)
