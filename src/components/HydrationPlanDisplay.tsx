@@ -279,8 +279,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       <div className="text-center py-6 space-y-4">
         <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase text-foreground">Your Performance Protocol</h2>
         {profile.raceDistance && (
-          <div className="inline-block athletic-card bg-primary px-8 py-4 rounded-2xl">
-            <p className="text-3xl font-black text-primary-foreground">
+          <div className="inline-block athletic-card px-8 py-4 rounded-2xl" style={{ backgroundColor: '#0a0a0a' }}>
+            <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
               {adjustedDistance} KM
             </p>
           </div>
