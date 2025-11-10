@@ -290,27 +290,27 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </p>
       </div>
 
-      {/* Three Phase Plan - Athletic Cards */}
+      {/* Three Phase Plan - Simple High Contrast Cards */}
       <div className="grid md:grid-cols-3 gap-6">
         {/* PRE */}
-        <Card className="athletic-card p-8 space-y-5 bg-gradient-to-br from-secondary via-background to-background">
+        <Card className="athletic-card p-8 space-y-5 bg-card border-2 border-border">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="w-5 h-5" />
               <span className="text-sm font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
             </div>
-            <h3 className="text-4xl font-black text-foreground">PRE</h3>
+            <h3 className="text-5xl font-black text-foreground">PRE</h3>
           </div>
           
           <div className="space-y-4 py-4">
-            <div className="athletic-card p-4 rounded-xl">
+            <div className="bg-secondary p-4 rounded-xl border border-border">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water</p>
-              <p className="text-3xl font-black">{plan.preActivity.water} ml</p>
+              <p className="text-3xl font-black text-foreground">{plan.preActivity.water} ml</p>
               <p className="text-xs font-semibold text-muted-foreground mt-2">Drink 2 hours before</p>
             </div>
-            <div className="athletic-card p-4 rounded-xl bg-chrome/5">
+            <div className="bg-secondary p-4 rounded-xl border border-border">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet (30ml)</p>
-              <p className="text-3xl font-black">{plan.preActivity.electrolytes}x</p>
+              <p className="text-3xl font-black text-foreground">{plan.preActivity.electrolytes}x</p>
             </div>
           </div>
 
@@ -319,68 +319,65 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </p>
         </Card>
 
-        {/* DURING */}
-        <Card className="athletic-card p-8 space-y-5 border-primary/50 bg-gradient-to-br from-primary via-primary-glow to-primary relative overflow-hidden">
-          {/* Glow effect */}
-          <div className="absolute inset-0 bg-gradient-to-br from-chrome-light/10 to-transparent"></div>
-          
-          <div className="space-y-3 relative z-10">
-            <div className="flex items-center gap-2 text-primary-foreground/80">
+        {/* DURING - Solid Black Background */}
+        <Card className="athletic-card p-8 space-y-5 border-4 border-foreground bg-foreground">
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 text-background opacity-70">
               <TrendingUp className="w-5 h-5" />
               <span className="text-sm font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
             </div>
-            <h3 className="text-4xl font-black text-primary-foreground">DURING</h3>
+            <h3 className="text-5xl font-black text-background">DURING</h3>
           </div>
           
-          <div className="space-y-4 py-4 relative z-10">
-            <div className="athletic-card p-4 rounded-xl bg-primary-foreground/10 backdrop-blur-sm">
-              <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/80 mb-2">Water per hour</p>
-              <p className="text-3xl font-black text-primary-foreground">
+          <div className="space-y-4 py-4">
+            <div className="bg-background/20 p-4 rounded-xl border border-background/30">
+              <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">Water per hour</p>
+              <p className="text-3xl font-black text-background">
                 {plan.duringActivity.waterPerHour > 0 
                   ? `${plan.duringActivity.waterPerHour} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-xs font-semibold text-primary-foreground/70 mt-2">Sip every 15-20 min</p>
+              <p className="text-xs font-semibold text-background/70 mt-2">Sip every 15-20 min</p>
             </div>
-            <div className="athletic-card p-4 rounded-xl bg-primary-foreground/10 backdrop-blur-sm">
-              <p className="text-xs font-bold uppercase tracking-wider text-primary-foreground/80 mb-2">Supplme Sachets</p>
-              <p className="text-3xl font-black text-primary-foreground">
+            <div className="bg-background/20 p-4 rounded-xl border border-background/30">
+              <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">Supplme Sachets</p>
+              <p className="text-3xl font-black text-background">
                 {plan.duringActivity.electrolytesPerHour > 0 
                   ? `${plan.duringActivity.electrolytesPerHour}x / hr` 
                   : 'Not required'}
               </p>
               {plan.duringActivity.electrolytesPerHour > 0 && (
-                <p className="text-xs font-semibold text-primary-foreground/70 mt-2">
+                <p className="text-xs font-semibold text-background/70 mt-2">
                   Every {Math.round((profile.sessionDuration * 60) / plan.duringActivity.electrolytesPerHour)} minutes
                 </p>
               )}
             </div>
           </div>
 
-          <p className="text-sm font-medium text-primary-foreground/80 border-t border-primary-foreground/20 pt-4 relative z-10">
+          <p className="text-sm font-medium text-background/80 border-t border-background/20 pt-4">
             🔥 Maintain peak performance - replace 60-80% of sweat loss
           </p>
         </Card>
 
         {/* POST */}
-        <Card className="athletic-card p-8 space-y-5 bg-gradient-to-br from-secondary via-background to-background">
+        <Card className="athletic-card p-8 space-y-5 bg-card border-2 border-border">
           <div className="space-y-3">
             <div className="flex items-center gap-2 text-muted-foreground">
               <Clock className="w-5 h-5" />
               <span className="text-sm font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
             </div>
-            <h3 className="text-4xl font-black text-foreground">POST</h3>
+            <h3 className="text-5xl font-black text-foreground">POST</h3>
           </div>
           
           <div className="space-y-4 py-4">
-            <div className="athletic-card p-4 rounded-xl">
+            <div className="bg-secondary p-4 rounded-xl border border-border">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water (150% of loss)</p>
-              <p className="text-3xl font-black">{plan.postActivity.water} ml</p>
+              <p className="text-3xl font-black text-foreground">{plan.postActivity.water} ml</p>
               <p className="text-xs font-semibold text-muted-foreground mt-2">Over 4-6 hours</p>
             </div>
-            <div className="athletic-card p-4 rounded-xl bg-chrome/5">
+            <div className="bg-secondary p-4 rounded-xl border border-border">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet</p>
-              <p className="text-3xl font-black">{plan.postActivity.electrolytes}x</p>
+              <p className="text-3xl font-black text-foreground">{plan.postActivity.electrolytes}x</p>
               <p className="text-xs font-semibold text-muted-foreground mt-2">With water intake</p>
             </div>
           </div>
