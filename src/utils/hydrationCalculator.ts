@@ -1,12 +1,13 @@
 import { HydrationProfile, HydrationPlan } from '@/types/hydration';
 
 export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
-  // Base sweat rate calculation (ml/hour) - Based on ACSM guidelines and recent research
+  // Base sweat rate calculation (ml/hour) - CONSERVATIVE estimates
+  // Research shows: Light exercise 0.3-0.5L/hr, Moderate 0.5-0.8L/hr, Intense 0.8-1.5L/hr
   // Reference: PMID 17277604, PMID 38732589
   const baseSweatRate = {
-    low: 500,    // Conservative baseline
-    medium: 750, // Typical athlete  
-    high: 1000,  // High sweater
+    low: 400,    // Very conservative baseline (0.4L/hr)
+    medium: 600, // Conservative for typical athlete (0.6L/hr)
+    high: 900,   // High sweater, still conservative (0.9L/hr)
   }[profile.sweatRate];
 
   // Store calculation details for transparency
@@ -110,12 +111,21 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const preWater = 400 + (profile.weight * 5); // 400-600ml based on weight
   const preElectrolytes = 1; // 1 sachet (30ml) of Supplme
 
-  // During activity - Based on ACSM & IOC consensus (PMID 17277604, PMID 38732589)
-  // For activities > 45 min: aim to replace 60-70% of sweat losses (not 70-80% to prevent overhydration)
-  // ACSM recommends max 800ml per hour for most athletes
-  const duringWater = profile.sessionDuration >= 0.75 
-    ? Math.min(Math.round(sweatRatePerHour * 0.65), 1000) // Cap at 1000ml/hour
-    : 0;
+  // During activity - CONSERVATIVE approach based on ACSM & IOC consensus
+  // Research shows many athletes perform well with minimal during-activity hydration for runs < 90 min
+  // For short runs (< 75 min): minimal or no during hydration needed if properly pre-hydrated
+  // For longer runs: Replace 50-60% of sweat losses to avoid both dehydration AND overhydration
+  // ACSM recommends max 800ml per hour for most athletes (PMID 17277604)
+  let duringWater = 0;
+  if (profile.sessionDuration < 0.75) {
+    duringWater = 0; // No during-activity hydration needed for runs < 45 min
+  } else if (profile.sessionDuration < 1.5) {
+    // For 45-90 min runs: very conservative, 40% replacement
+    duringWater = Math.min(Math.round(sweatRatePerHour * 0.40), 600);
+  } else {
+    // For longer runs: 50% replacement, capped at 800ml/hour (ACSM recommendation)
+    duringWater = Math.min(Math.round(sweatRatePerHour * 0.50), 800);
+  }
   
   // Electrolyte requirements (sachets) - EVIDENCE-BASED approach:
   // Sports science shows pre-loading is sufficient for activities under 75 minutes
@@ -133,14 +143,22 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     duringElectrolytes = profile.sweatRate === 'high' ? 3 : 2;
   }
 
-  // Post-activity rehydration (PMID 17277604)
-  // Target: 125-150% of fluid deficit to account for ongoing losses
-  // Cap at realistic consumption over 4-6 hours (max ~400ml/hour = 2400ml total)
-  const maxRealisticPostWater = 2000; // 2L max over recovery period (more realistic)
-  const postWater = Math.min(Math.round(totalFluidLoss * 1.25), maxRealisticPostWater);
+  // Post-activity rehydration - CONSERVATIVE approach (PMID 17277604)
+  // Target: 120-150% of fluid deficit to account for ongoing losses
+  // For short activities with minimal fluid loss, keep post-hydration conservative
+  // Cap at realistic consumption over 4-6 hours
+  const maxRealisticPostWater = 1800; // 1.8L max over recovery period (realistic for most athletes)
+  let postWater;
+  if (totalFluidLoss < 500) {
+    // For very short activities, minimal post-hydration needed
+    postWater = Math.min(Math.round(totalFluidLoss * 1.2), 800);
+  } else {
+    // Standard formula: 120% of fluid loss
+    postWater = Math.min(Math.round(totalFluidLoss * 1.2), maxRealisticPostWater);
+  }
   
-  // Electrolytes: Conservative approach - 1 sachet per 1000ml of fluid loss, cap at 3 sachets
-  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 1000)), 3);
+  // Electrolytes: Conservative approach - 1 sachet per 800ml of fluid loss (more conservative), cap at 3 sachets
+  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 800)), 3);
 
   // Generate recommendations based on profile
   const recommendations: string[] = [];
