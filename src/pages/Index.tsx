@@ -710,15 +710,16 @@ const Index = () => {
                   </Accordion>
                 </div>
                 
-                <div className="flex items-start space-x-3 pt-4 border-t">
+                <div className="flex items-start space-x-3 pt-4 border-t group">
                   <Checkbox 
                     id="consent" 
                     checked={consentGiven}
                     onCheckedChange={(checked) => setConsentGiven(checked === true)}
+                    className="mt-1"
                   />
                   <label
                     htmlFor="consent"
-                    className="text-xs sm:text-sm font-medium leading-relaxed cursor-pointer"
+                    className="text-sm font-medium leading-relaxed cursor-pointer group-hover:text-foreground/90 transition-colors"
                   >
                     {t('consent.gdpr')}
                   </label>
@@ -743,11 +744,11 @@ const Index = () => {
           >
             <div className="space-y-4">
               <div>
-                <Label className="text-lg">{t('activity.primaryDiscipline')} *</Label>
+                <Label className="text-lg mb-4 block">{t('activity.primaryDiscipline')} *</Label>
                 <p className="text-sm text-muted-foreground mb-4">
                   Select the activity you want a hydration guide for
                 </p>
-                <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
                   {[
                     { value: 'Running', label: 'Run', icon: '🏃' },
                     { value: 'Swimming', label: 'Swim', icon: '🏊' },
@@ -760,24 +761,26 @@ const Index = () => {
                       type="button"
                       onClick={() => updateProfile({ disciplines: [activity.value], terrain: undefined })}
                       className={`
-                        relative flex flex-col items-center justify-center p-6 rounded-lg border-2 transition-all
+                        group relative flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105
                         ${profile.disciplines?.[0] === activity.value
-                          ? 'border-primary bg-primary/5 shadow-md'
-                          : 'border-border hover:border-primary/50 hover:bg-muted/50'
+                          ? 'border-primary bg-primary/10 shadow-xl shadow-primary/20 scale-105'
+                          : 'border-border/50 hover:border-primary/50 hover:bg-muted/50 hover:shadow-lg'
                         }
                       `}
                     >
-                      <span className="text-4xl mb-2">{activity.icon}</span>
-                      <span className={`text-sm font-medium ${
+                      <span className="text-5xl mb-3 transition-transform group-hover:scale-110">{activity.icon}</span>
+                      <span className={`text-sm font-bold uppercase tracking-wide transition-colors ${
                         profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
                       }`}>
                         {activity.label}
                       </span>
                       {profile.disciplines?.[0] === activity.value && (
-                        <div className="absolute top-2 right-2 w-5 h-5 bg-primary rounded-full flex items-center justify-center">
-                          <span className="text-primary-foreground text-xs">✓</span>
+                        <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg animate-scale-in">
+                          <span className="text-primary-foreground text-sm font-bold">✓</span>
                         </div>
                       )}
+                      {/* Subtle gradient overlay on hover */}
+                      <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
                     </button>
                   ))}
                 </div>
@@ -797,122 +800,122 @@ const Index = () => {
                   <RadioGroup
                     value={profile.terrain || ''}
                     onValueChange={(value) => updateProfile({ terrain: value })}
-                    className="mt-2"
+                    className="mt-3 space-y-3"
                   >
                     {profile.disciplines?.[0] === 'Running' && (
                       <>
-                        <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="road" id="terrain-road" />
-                          <Label htmlFor="terrain-road" className="font-normal">Road</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-road" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Road</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="treadmill" id="terrain-treadmill" />
-                          <Label htmlFor="terrain-treadmill" className="font-normal">Treadmill</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-treadmill" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Treadmill</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="trail" id="terrain-trail" />
-                          <Label htmlFor="terrain-trail" className="font-normal">Trail</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-trail" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Trail</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="gravel" id="terrain-gravel" />
-                          <Label htmlFor="terrain-gravel" className="font-normal">Gravel</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-gravel" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Gravel</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="track" id="terrain-track" />
-                          <Label htmlFor="terrain-track" className="font-normal">Track</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-track" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Track</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="mixed" id="terrain-mixed" />
-                          <Label htmlFor="terrain-mixed" className="font-normal">Mixed</Label>
-                        </div>
+                          <Label htmlFor="terrain-mixed" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mixed</Label>
+                        </label>
                       </>
                     )}
                     {profile.disciplines?.[0] === 'Swimming' && (
                       <>
-                        <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="indoor-pool" id="terrain-indoor-pool" />
-                          <Label htmlFor="terrain-indoor-pool" className="font-normal">Indoor Pool</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-indoor-pool" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Indoor Pool</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="outdoor-pool" id="terrain-outdoor-pool" />
-                          <Label htmlFor="terrain-outdoor-pool" className="font-normal">Outdoor Pool</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-outdoor-pool" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Outdoor Pool</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="ocean" id="terrain-ocean" />
-                          <Label htmlFor="terrain-ocean" className="font-normal">Ocean/Sea</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-ocean" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Ocean/Sea</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="lake" id="terrain-lake" />
-                          <Label htmlFor="terrain-lake" className="font-normal">Lake</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-lake" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Lake</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="river" id="terrain-river" />
-                          <Label htmlFor="terrain-river" className="font-normal">River</Label>
-                        </div>
+                          <Label htmlFor="terrain-river" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">River</Label>
+                        </label>
                       </>
                     )}
                     {profile.disciplines?.[0] === 'Cycling' && (
                       <>
-                        <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="road-bike" id="terrain-road-bike" />
-                          <Label htmlFor="terrain-road-bike" className="font-normal">Road Bike</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-road-bike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Road Bike</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="mountain-bike" id="terrain-mountain-bike" />
-                          <Label htmlFor="terrain-mountain-bike" className="font-normal">Mountain Bike</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-mountain-bike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mountain Bike</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="gravel-bike" id="terrain-gravel-bike" />
-                          <Label htmlFor="terrain-gravel-bike" className="font-normal">Gravel Bike</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-gravel-bike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Gravel Bike</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="cyclocross" id="terrain-cyclocross" />
-                          <Label htmlFor="terrain-cyclocross" className="font-normal">Cyclocross</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-cyclocross" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Cyclocross</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="mixed-cycling" id="terrain-mixed-cycling" />
-                          <Label htmlFor="terrain-mixed-cycling" className="font-normal">Mixed</Label>
-                        </div>
+                          <Label htmlFor="terrain-mixed-cycling" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mixed</Label>
+                        </label>
                       </>
                     )}
                     {profile.disciplines?.[0] === 'Triathlon' && (
                       <>
-                        <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="road-triathlon" id="terrain-road-triathlon" />
-                          <Label htmlFor="terrain-road-triathlon" className="font-normal">Road Triathlon</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-road-triathlon" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Road Triathlon</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="off-road-triathlon" id="terrain-off-road-triathlon" />
-                          <Label htmlFor="terrain-off-road-triathlon" className="font-normal">Off-Road/XTERRA</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-off-road-triathlon" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Off-Road/XTERRA</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="mixed-triathlon" id="terrain-mixed-triathlon" />
-                          <Label htmlFor="terrain-mixed-triathlon" className="font-normal">Mixed</Label>
-                        </div>
+                          <Label htmlFor="terrain-mixed-triathlon" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mixed</Label>
+                        </label>
                       </>
                     )}
                     {profile.disciplines?.[0] === 'Hiking' && (
                       <>
-                        <div className="flex items-center space-x-2">
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="day-hike" id="terrain-day-hike" />
-                          <Label htmlFor="terrain-day-hike" className="font-normal">Day Hike</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-day-hike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Day Hike</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="backpacking" id="terrain-backpacking" />
-                          <Label htmlFor="terrain-backpacking" className="font-normal">Backpacking/Multi-Day</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-backpacking" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Backpacking/Multi-Day</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="mountaineering" id="terrain-mountaineering" />
-                          <Label htmlFor="terrain-mountaineering" className="font-normal">Mountaineering</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-mountaineering" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mountaineering</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="alpine" id="terrain-alpine" />
-                          <Label htmlFor="terrain-alpine" className="font-normal">Alpine</Label>
-                        </div>
-                        <div className="flex items-center space-x-2">
+                          <Label htmlFor="terrain-alpine" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Alpine</Label>
+                        </label>
+                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
                           <RadioGroupItem value="trekking" id="terrain-trekking" />
-                          <Label htmlFor="terrain-trekking" className="font-normal">Trekking</Label>
-                        </div>
+                          <Label htmlFor="terrain-trekking" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Trekking</Label>
+                        </label>
                       </>
                     )}
                   </RadioGroup>
@@ -967,9 +970,9 @@ const Index = () => {
               </div>
 
               {/* Race Planning Section */}
-              <div className="bg-blue-50 dark:bg-blue-950/30 border border-blue-200 dark:border-blue-800 rounded-lg p-4 space-y-4">
-                <h3 className="font-semibold text-sm">Race Day Planning</h3>
-                <div className="flex items-center space-x-2">
+              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-200/50 dark:border-blue-800/50 rounded-xl p-5 space-y-4 shadow-sm">
+                <h3 className="font-bold text-base text-blue-900 dark:text-blue-100 tracking-wide">Race Day Planning</h3>
+                <div className="flex items-start space-x-3 group">
                   <Checkbox
                     id="hasUpcomingRace"
                     checked={!!profile.hasUpcomingRace}
@@ -979,14 +982,15 @@ const Index = () => {
                         ...(checked === false && { upcomingEvents: '' })
                       });
                     }}
+                    className="mt-0.5"
                   />
-                  <Label htmlFor="hasUpcomingRace" className="font-normal">
+                  <Label htmlFor="hasUpcomingRace" className="font-medium cursor-pointer group-hover:text-blue-900 dark:group-hover:text-blue-100 transition-colors">
                     I want a race-specific hydration guide
                   </Label>
                 </div>
                 
                 {profile.hasUpcomingRace && (
-                  <div>
+                  <div className="animate-fade-in space-y-2">
                     <Label htmlFor="upcomingEvents">
                       {profile.disciplines?.[0] === 'Hiking' ? 'Your Upcoming Hike/Trek' : 'Your Upcoming Race'}
                     </Label>
@@ -1002,9 +1006,8 @@ const Index = () => {
                         profile.disciplines?.[0] === 'Hiking' ? 'e.g., 10km Day Hike, 30km Trek, Tour du Mont Blanc, Kilimanjaro' :
                         'e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 50K'
                       }
-                      className="mt-2"
                     />
-                    <p className="text-xs text-muted-foreground mt-2">
+                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
                       {profile.disciplines?.[0] === 'Hiking' 
                         ? "We'll create a specialized hydration strategy for your hike or trek"
                         : "We'll create a specialized race day hydration strategy based on your event"
