@@ -241,6 +241,19 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
       aiContent = aiContent.replace(/```\s*/g, '').trim();
     }
 
+    // Fix common JSON formatting issues from AI responses
+    aiContent = aiContent.trim();
+    
+    // If response doesn't start with {, add it
+    if (!aiContent.startsWith('{')) {
+      aiContent = '{' + aiContent;
+    }
+    
+    // If response doesn't end with }, add it
+    if (!aiContent.endsWith('}')) {
+      aiContent = aiContent + '}';
+    }
+
     let enhancedData;
     try {
       enhancedData = JSON.parse(aiContent);
