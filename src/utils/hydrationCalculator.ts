@@ -219,8 +219,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     postWater = Math.min(Math.round(totalFluidLoss * 1.2), maxRealisticPostWater);
   }
   
-  // Electrolytes: Conservative approach - 1 sachet per 800ml of fluid loss (more conservative), cap at 3 sachets
-  const postElectrolytes = Math.min(Math.max(1, Math.round(totalFluidLoss / 800)), 3);
+  // Electrolytes: Always 1 sachet post-activity for recovery
+  const postElectrolytes = 1;
 
   // Generate recommendations based on profile
   const recommendations: string[] = [];
