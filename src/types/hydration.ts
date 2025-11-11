@@ -18,6 +18,7 @@ export interface HydrationProfile {
   sessionDuration: number;
   avgPace?: string;
   swimPace?: string;
+  swimTemperature?: number; // Triathlon swim temperature in Celsius
   bikePower?: string;
   runPace?: string;
   elevationGain?: number;

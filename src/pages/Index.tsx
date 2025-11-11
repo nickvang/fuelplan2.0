@@ -1029,6 +1029,16 @@ const Index = () => {
               {profile.disciplines?.[0] === 'Triathlon' ? (
                 <div className="space-y-4">
                   <div>
+                    <Label htmlFor="swimTemperature">Swim Temperature (°C)</Label>
+                    <Input
+                      id="swimTemperature"
+                      type="number"
+                      value={profile.swimTemperature || ''}
+                      onChange={(e) => updateProfile({ swimTemperature: parseFloat(e.target.value) })}
+                      placeholder="e.g., 18 or 22"
+                    />
+                  </div>
+                  <div>
                     <Label htmlFor="swimPace">Swim Pace</Label>
                     <Input
                       id="swimPace"
