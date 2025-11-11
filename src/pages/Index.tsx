@@ -1726,23 +1726,27 @@ const Index = () => {
                 <Label>{t('goals.primary')} *</Label>
                 <RadioGroup
                   value={profile.primaryGoal}
-                  onValueChange={(value: 'performance' | 'health' | 'weight-loss' | 'endurance') => updateProfile({ primaryGoal: value })}
+                  onValueChange={(value: 'performance' | 'endurance' | 'recovery' | 'weight-loss' | 'general-health') => updateProfile({ primaryGoal: value })}
                 >
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="performance" id="goal-performance" />
                     <Label htmlFor="goal-performance" className="font-normal cursor-pointer">{t('goals.performance')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="health" id="goal-health" />
-                    <Label htmlFor="goal-health" className="font-normal cursor-pointer">{t('goals.health')}</Label>
+                    <RadioGroupItem value="endurance" id="goal-endurance" />
+                    <Label htmlFor="goal-endurance" className="font-normal cursor-pointer">{t('goals.endurance')}</Label>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <RadioGroupItem value="recovery" id="goal-recovery" />
+                    <Label htmlFor="goal-recovery" className="font-normal cursor-pointer">Recovery</Label>
                   </div>
                   <div className="flex items-center space-x-2">
                     <RadioGroupItem value="weight-loss" id="goal-weight" />
                     <Label htmlFor="goal-weight" className="font-normal cursor-pointer">{t('goals.weightLoss')}</Label>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="endurance" id="goal-endurance" />
-                    <Label htmlFor="goal-endurance" className="font-normal cursor-pointer">{t('goals.endurance')}</Label>
+                    <RadioGroupItem value="general-health" id="goal-health" />
+                    <Label htmlFor="goal-health" className="font-normal cursor-pointer">{t('goals.health')}</Label>
                   </div>
                 </RadioGroup>
               </div>
