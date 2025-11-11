@@ -37,9 +37,58 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
   calculationSteps.push(`Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
 
-  // 4. PRE-activity hydration: 10ml per kg bodyweight + 1 sachet
-  const preWater = profile.weight * 10; // 10ml per kg
-  const preElectrolytes = 1; // 1 sachet
+  // 4. PRE-activity hydration: Base 10ml per kg bodyweight, adjusted for conditions
+  let preWaterBase = profile.weight * 10; // 10ml per kg base
+  let preAdjustmentFactor = 1.0;
+  const preAdjustments: string[] = [];
+
+  // Temperature adjustment
+  if (avgTemp > 25) {
+    preAdjustmentFactor += 0.20; // +20% for hot conditions
+    preAdjustments.push('hot conditions (+20%)');
+  }
+
+  // Sport type adjustment (high intensity sports need more pre-loading)
+  if (primaryDiscipline === 'Running' || primaryDiscipline === 'Triathlon') {
+    preAdjustmentFactor += 0.10; // +10%
+    preAdjustments.push(`${primaryDiscipline} (+10%)`);
+  } else if (primaryDiscipline === 'Swimming') {
+    preAdjustmentFactor -= 0.10; // -10% (less pre-loading needed)
+    preAdjustments.push('swimming (-10%)');
+  }
+
+  // Session duration adjustment
+  if (profile.sessionDuration >= 3) {
+    preAdjustmentFactor += 0.20; // +20% for long sessions
+    preAdjustments.push('long session (+20%)');
+  } else if (profile.sessionDuration >= 2) {
+    preAdjustmentFactor += 0.10; // +10% for medium sessions
+    preAdjustments.push('medium session (+10%)');
+  }
+
+  // Altitude adjustment
+  if (profile.altitude === 'high') {
+    preAdjustmentFactor += 0.15; // +15%
+    preAdjustments.push('high altitude (+15%)');
+  } else if (profile.altitude === 'moderate') {
+    preAdjustmentFactor += 0.10; // +10%
+    preAdjustments.push('moderate altitude (+10%)');
+  }
+
+  // Sun exposure adjustment
+  if (profile.sunExposure === 'full-sun') {
+    preAdjustmentFactor += 0.10; // +10%
+    preAdjustments.push('full sun (+10%)');
+  }
+
+  const preWater = Math.round(preWaterBase * preAdjustmentFactor);
+  const preElectrolytes = 1; // 1 sachet (standard)
+
+  calculationSteps.push(`Pre-activity base: ${preWaterBase}ml (${profile.weight}kg × 10ml/kg)`);
+  if (preAdjustments.length > 0) {
+    calculationSteps.push(`Pre-activity adjustments: ${preAdjustments.join(', ')} = ${Math.round((preAdjustmentFactor - 1) * 100)}% total`);
+  }
+  calculationSteps.push(`Pre-activity total: ${preWater}ml + ${preElectrolytes} sachet`);
 
   // 5. DURING-activity hydration: Replace 60-80% of fluid loss (use 70% average)
   const duringWater = Math.round(sweatRatePerHour * 0.70); // 70% replacement per hour
