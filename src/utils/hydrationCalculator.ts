@@ -37,8 +37,9 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
   calculationSteps.push(`Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
 
-  // 4. PRE-activity hydration: Base 10ml per kg bodyweight, adjusted for conditions
-  let preWaterBase = profile.weight * 10; // 10ml per kg base
+  // 4. PRE-activity hydration: Base 5-7ml per kg bodyweight (ACSM guidelines), adjusted for conditions
+  // Using 6ml/kg as baseline (middle of 5-7ml/kg range)
+  let preWaterBase = profile.weight * 6; // 6ml per kg base (ACSM: 5-7 ml/kg, 2-4 hours before)
   let preAdjustmentFactor = 1.0;
   const preAdjustments: string[] = [];
 
@@ -46,27 +47,30 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   if (avgTemp > 25) {
     preAdjustmentFactor += 0.20; // +20% for hot conditions
     preAdjustments.push('hot conditions (+20%)');
+  } else if (avgTemp < 18) {
+    preAdjustmentFactor -= 0.10; // -10% for cool conditions
+    preAdjustments.push('cool conditions (-10%)');
   }
 
   // Sport type adjustment (high intensity sports need more pre-loading)
   if (primaryDiscipline === 'Running' || primaryDiscipline === 'Triathlon') {
-    preAdjustmentFactor += 0.10; // +10%
-    preAdjustments.push(`${primaryDiscipline} (+10%)`);
+    preAdjustmentFactor += 0.15; // +15% (higher cardiovascular demand)
+    preAdjustments.push(`${primaryDiscipline} (+15%)`);
   } else if (primaryDiscipline === 'Swimming') {
-    preAdjustmentFactor -= 0.10; // -10% (less pre-loading needed)
-    preAdjustments.push('swimming (-10%)');
+    preAdjustmentFactor -= 0.15; // -15% (less pre-loading needed in water)
+    preAdjustments.push('swimming (-15%)');
   }
 
-  // Session duration adjustment
+  // Session duration adjustment (longer sessions need more pre-loading)
   if (profile.sessionDuration >= 3) {
-    preAdjustmentFactor += 0.20; // +20% for long sessions
-    preAdjustments.push('long session (+20%)');
+    preAdjustmentFactor += 0.25; // +25% for long sessions (>3 hours)
+    preAdjustments.push('long session 3+ hrs (+25%)');
   } else if (profile.sessionDuration >= 2) {
-    preAdjustmentFactor += 0.10; // +10% for medium sessions
-    preAdjustments.push('medium session (+10%)');
+    preAdjustmentFactor += 0.15; // +15% for medium sessions (2-3 hours)
+    preAdjustments.push('medium session 2-3 hrs (+15%)');
   }
 
-  // Altitude adjustment
+  // Altitude adjustment (increased fluid loss at altitude)
   if (profile.altitude === 'high') {
     preAdjustmentFactor += 0.15; // +15%
     preAdjustments.push('high altitude (+15%)');
@@ -84,7 +88,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const preWater = Math.round(preWaterBase * preAdjustmentFactor);
   const preElectrolytes = 1; // 1 sachet (standard)
 
-  calculationSteps.push(`Pre-activity base: ${preWaterBase}ml (${profile.weight}kg × 10ml/kg)`);
+  calculationSteps.push(`Pre-activity base: ${preWaterBase}ml (${profile.weight}kg × 6ml/kg, ACSM guideline: 5-7ml/kg)`);
   if (preAdjustments.length > 0) {
     calculationSteps.push(`Pre-activity adjustments: ${preAdjustments.join(', ')} = ${Math.round((preAdjustmentFactor - 1) * 100)}% total`);
   }
@@ -146,7 +150,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
 
   return {
     preActivity: {
-      timing: '2 hours before',
+      timing: '2-4 hours before',
       water: preWater,
       electrolytes: preElectrolytes,
     },
@@ -175,6 +179,18 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
         title: 'Personalized Hydration Strategy to Improve Fluid Balance and Intermittent Exercise Performance In The Heat',
         citation: 'Nutrients. 2024 May 3;16(9):1341',
         url: 'https://pubmed.ncbi.nlm.nih.gov/38732589/'
+      },
+      {
+        pmid: '37490269',
+        title: 'The Effect of Pre-Exercise Hyperhydration on Exercise Performance, Physiological Outcomes and Gastrointestinal Symptoms: A Systematic Review',
+        citation: 'Sports Med. 2023 Jul 25;53(11):2111-2134',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/37490269/'
+      },
+      {
+        pmid: '38695357',
+        title: 'Whole body sweat rate prediction: outdoor running and cycling exercise',
+        citation: 'Eur J Appl Physiol. 2024 May;124(9):2825-2840',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/38695357/'
       },
       {
         pmid: '23320854',
