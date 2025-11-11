@@ -665,7 +665,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             Drink directly from sachet - no mixing required
           </p>
           <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
-            <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
+            <a href="https://www.supplme.com/products/electrolyte-28-pack-clementine-salt" target="_blank" rel="noopener noreferrer">
               Buy Supplme
             </a>
           </Button>
@@ -911,7 +911,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       {/* Bottom Action Buttons */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
         <Button variant="default" size="lg" asChild className="w-full sm:w-auto">
-          <a href="https://www.supplme.com" target="_blank" rel="noopener noreferrer">
+          <a href="https://www.supplme.com/products/electrolyte-28-pack-clementine-salt" target="_blank" rel="noopener noreferrer">
             Buy Supplme
           </a>
         </Button>
