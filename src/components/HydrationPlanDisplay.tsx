@@ -95,9 +95,31 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     setIsRegenerating(true);
     setAdjustedDistance(newDistance);
     
-    // Calculate new duration based on pace
-    // Parse pace from profile (avgPace or runPace), default to 6 min/km
+    // Calculate new duration based on discipline and pace
     const getPaceInMinPerKm = () => {
+      const discipline = profile.disciplines?.[0];
+      
+      // For cycling, use bike power or avgPace, default to 30 km/h
+      if (discipline === 'Cycling' || discipline === 'Triathlon') {
+        const paceStr = profile.bikePower || profile.avgPace;
+        console.log('Cycling pace string found:', paceStr);
+        if (paceStr) {
+          // Check if it's speed (km/h)
+          if (paceStr.includes('km/h')) {
+            const match = paceStr.match(/(\d+\.?\d*)/);
+            const speedKmH = match ? parseFloat(match[1]) : 30;
+            const paceMinPerKm = 60 / speedKmH; // Convert speed to pace
+            console.log('Parsed cycling speed:', speedKmH, 'km/h -> pace:', paceMinPerKm, 'min/km');
+            return paceMinPerKm;
+          }
+          // If it's wattage, estimate 25 km/h average
+          return 60 / 25; // ~2.4 min/km
+        }
+        console.log('No cycling pace found, using default 30 km/h (2 min/km)');
+        return 60 / 30; // 2 min/km
+      }
+      
+      // For running and other disciplines
       const paceStr = profile.runPace || profile.avgPace;
       console.log('Pace string found:', paceStr);
       if (paceStr) {
@@ -262,11 +284,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <h1 className="text-5xl md:text-7xl font-black tracking-tight uppercase text-foreground">
               YOUR ELITE PLAN
             </h1>
-            <p className="text-2xl md:text-3xl font-bold text-foreground">
-              Let's Fucking Go! 🔥
-            </p>
             <p className="text-xl font-semibold text-muted-foreground max-w-2xl mx-auto">
-              Your First Ever Personalized Hydration Strategy
+              Your Personalized Hydration Strategy
             </p>
           </div>
           

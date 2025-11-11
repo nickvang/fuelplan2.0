@@ -932,15 +932,15 @@ const Index = () => {
               )}
 
               <div>
-                <Label htmlFor="raceDistance">Distance *</Label>
+                <Label htmlFor="raceDistance">Distance (kilometers) *</Label>
                 <Input
                   id="raceDistance"
                   value={profile.raceDistance || ''}
                   onChange={(e) => updateProfile({ raceDistance: e.target.value })}
                   placeholder={
                     profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
-                    profile.disciplines?.[0] === 'Cycling' ? 'e.g., 25 miles, 50 miles, 100 miles (Century)' :
-                    profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1500m, 5K, 10K' :
+                    profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
+                    profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
                     profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
                     'e.g., Half Marathon, Marathon, 50K'
                   }
@@ -1327,7 +1327,16 @@ const Index = () => {
           >
             <div className="space-y-4">
               <div>
-                <Label>Training Temperature Range (°C) *</Label>
+                <Label>
+                  {profile.disciplines?.[0] === 'Swimming' 
+                    ? 'Water Temperature Range (°C) *' 
+                    : 'Training Temperature Range (°C) *'}
+                </Label>
+                {profile.disciplines?.[0] === 'Swimming' && (
+                  <p className="text-sm text-muted-foreground mt-1">
+                    Enter the typical water temperature for your swimming sessions
+                  </p>
+                )}
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <Input
                     type="number"
@@ -1355,7 +1364,11 @@ const Index = () => {
               </div>
 
               <div>
-                <Label>Race Temperature Range (°C)</Label>
+                <Label>
+                  {profile.disciplines?.[0] === 'Swimming' 
+                    ? 'Race Water Temperature Range (°C)' 
+                    : 'Race Temperature Range (°C)'}
+                </Label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <Input
                     type="number"
