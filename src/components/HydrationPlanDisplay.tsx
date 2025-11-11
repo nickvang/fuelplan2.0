@@ -459,12 +459,20 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <h3 className="text-lg font-semibold">Adjust Distance</h3>
           </div>
           <p className="text-sm text-muted-foreground">
-            Enter a new distance to recalculate your hydration plan (duration calculated from your pace)
+            {profile.disciplines?.[0] === 'Triathlon' 
+              ? 'Enter total race distance to recalculate (swim + bike + run combined)'
+              : profile.disciplines?.[0] === 'Cycling'
+              ? 'Enter cycling distance to recalculate (duration based on your cycling speed)'
+              : 'Enter a new distance to recalculate your hydration plan (duration calculated from your pace)'}
           </p>
           <div className="space-y-3">
             <div className="space-y-2">
               <Label htmlFor="distance-adjust" className="text-sm font-medium">
-                Distance (km)
+                {profile.disciplines?.[0] === 'Triathlon' 
+                  ? 'Total Race Distance (km)'
+                  : profile.disciplines?.[0] === 'Cycling'
+                  ? 'Cycling Distance (km)'
+                  : 'Distance (km)'}
               </Label>
               <div className="flex gap-2 items-center">
                 <Input
@@ -517,6 +525,63 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 </Button>
               </div>
             </div>
+            
+            {/* Quick Distance Presets */}
+            <div className="space-y-2">
+              <Label className="text-xs font-medium text-muted-foreground">Quick Presets:</Label>
+              <div className="flex flex-wrap gap-2">
+                {profile.disciplines?.[0] === 'Triathlon' ? (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('25.75'); handleDistanceChange(25.75); }} disabled={isRegenerating}>
+                      Sprint (25.75km)
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('51.5'); handleDistanceChange(51.5); }} disabled={isRegenerating}>
+                      Olympic (51.5km)
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('113'); handleDistanceChange(113); }} disabled={isRegenerating}>
+                      Half Ironman (113km)
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('226'); handleDistanceChange(226); }} disabled={isRegenerating}>
+                      Ironman (226km)
+                    </Button>
+                  </>
+                ) : profile.disciplines?.[0] === 'Cycling' ? (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('40'); handleDistanceChange(40); }} disabled={isRegenerating}>
+                      40km
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('80'); handleDistanceChange(80); }} disabled={isRegenerating}>
+                      80km
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('100'); handleDistanceChange(100); }} disabled={isRegenerating}>
+                      100km
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('160'); handleDistanceChange(160); }} disabled={isRegenerating}>
+                      Century (160km)
+                    </Button>
+                  </>
+                ) : profile.disciplines?.[0] === 'Running' ? (
+                  <>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('5'); handleDistanceChange(5); }} disabled={isRegenerating}>
+                      5K
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('10'); handleDistanceChange(10); }} disabled={isRegenerating}>
+                      10K
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('21.1'); handleDistanceChange(21.1); }} disabled={isRegenerating}>
+                      Half Marathon
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('42.2'); handleDistanceChange(42.2); }} disabled={isRegenerating}>
+                      Marathon
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('50'); handleDistanceChange(50); }} disabled={isRegenerating}>
+                      50K Ultra
+                    </Button>
+                  </>
+                ) : null}
+              </div>
+            </div>
+            
             <div className="flex gap-2">
               <Button
                 variant="default"
