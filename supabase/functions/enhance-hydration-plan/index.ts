@@ -193,7 +193,49 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
           { role: 'system', content: systemPrompt },
           { role: 'user', content: userPrompt }
         ],
-        response_format: { type: "json_object" }
+        tools: [
+          {
+            type: "function",
+            function: {
+              name: "provide_hydration_insights",
+              description: "Provide personalized hydration insights for an athlete",
+              parameters: {
+                type: "object",
+                properties: {
+                  personalized_insight: {
+                    type: "string",
+                    description: "Why these numbers make sense for this athlete (2-3 sentences)"
+                  },
+                  risk_factors: {
+                    type: "string",
+                    description: "Concerning factors that increase dehydration risk (1-2 sentences)"
+                  },
+                  confidence_level: {
+                    type: "string",
+                    enum: ["high", "medium", "low"],
+                    description: "Confidence level based on data completeness"
+                  },
+                  professional_recommendation: {
+                    type: "string",
+                    description: "When to seek professional testing (1 sentence)"
+                  },
+                  performance_comparison: {
+                    type: "string",
+                    description: "Compare to typical athletes in their discipline (2 sentences)"
+                  },
+                  optimization_tips: {
+                    type: "array",
+                    items: { type: "string" },
+                    description: "3-4 specific actionable tips (each 1 sentence)"
+                  }
+                },
+                required: ["personalized_insight", "risk_factors", "confidence_level", "professional_recommendation", "performance_comparison", "optimization_tips"],
+                additionalProperties: false
+              }
+            }
+          }
+        ],
+        tool_choice: { type: "function", function: { name: "provide_hydration_insights" } }
       }),
     });
 
@@ -231,35 +273,31 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
     }
 
     const data = await response.json();
-    let aiContent = data.choices[0].message.content;
     console.log('[Success] AI response received');
 
-    // Strip markdown code blocks if present (```json ... ```)
-    if (aiContent.includes('```json')) {
-      aiContent = aiContent.replace(/```json\s*/g, '').replace(/```\s*$/g, '').trim();
-    } else if (aiContent.includes('```')) {
-      aiContent = aiContent.replace(/```\s*/g, '').trim();
-    }
-
-    // Fix common JSON formatting issues from AI responses
-    aiContent = aiContent.trim();
-    
-    // If response doesn't start with {, add it
-    if (!aiContent.startsWith('{')) {
-      aiContent = '{' + aiContent;
-    }
-    
-    // If response doesn't end with }, add it
-    if (!aiContent.endsWith('}')) {
-      aiContent = aiContent + '}';
+    // Extract structured output from tool call
+    const toolCalls = data.choices[0].message.tool_calls;
+    if (!toolCalls || toolCalls.length === 0) {
+      console.error('[Internal] No tool calls in AI response');
+      return new Response(
+        JSON.stringify({ 
+          error: 'Invalid AI response format. Please try again.',
+          code: 'PARSE_ERROR'
+        }),
+        { 
+          status: 500, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
     }
 
     let enhancedData;
     try {
-      enhancedData = JSON.parse(aiContent);
+      const functionArgs = toolCalls[0].function.arguments;
+      // Parse the function arguments (they come as a JSON string)
+      enhancedData = typeof functionArgs === 'string' ? JSON.parse(functionArgs) : functionArgs;
     } catch (e) {
-      console.error('[Internal] Failed to parse AI response:', e);
-      console.error('[Debug] Raw AI content:', aiContent);
+      console.error('[Internal] Failed to parse tool call arguments:', e);
       return new Response(
         JSON.stringify({ 
           error: 'Unable to process AI response. Please try again.',
