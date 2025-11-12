@@ -4,7 +4,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight } from 'lucide-react';
+import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight, FileDown } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -272,6 +272,195 @@ export default function Admin() {
     });
   };
 
+  const downloadUserGuide = (profile: HydrationProfileData) => {
+    const pd = profile.profile_data || {};
+    const plan = profile.plan_data || {};
+    
+    const htmlContent = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supplme Hydration Guide - ${pd.fullName || 'User'}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+      line-height: 1.6; 
+      color: #1a1a1a; 
+      background: #ffffff;
+      padding: 40px 20px;
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #000; padding-bottom: 30px; }
+    .header h1 { font-size: 48px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
+    .header p { font-size: 18px; color: #666; font-weight: 600; }
+    .user-info { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
+    .user-info strong { color: #000; }
+    .summary { background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 30px; border-radius: 12px; margin-bottom: 40px; text-align: center; border: 2px solid #000; }
+    .summary h2 { font-size: 16px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 10px; }
+    .summary .value { font-size: 64px; font-weight: 900; color: #000; }
+    .summary .subtitle { font-size: 18px; font-weight: 600; color: #666; margin-top: 10px; }
+    .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
+    .plan-card { background: #fff; border: 2px solid #000; border-radius: 12px; padding: 30px; }
+    .plan-card.during { background: #0a0a0a; color: #fff; border: 3px solid #000; }
+    .plan-card h3 { font-size: 48px; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; }
+    .plan-card .timing { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 15px; }
+    .plan-card.during .timing { color: rgba(255,255,255,0.7); }
+    .metric { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
+    .plan-card.during .metric { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); }
+    .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 5px; }
+    .plan-card.during .metric-label { color: rgba(255,255,255,0.7); }
+    .metric-value { font-size: 32px; font-weight: 900; color: #000; }
+    .plan-card.during .metric-value { color: #fff; }
+    .metric-note { font-size: 12px; font-weight: 600; color: #666; margin-top: 5px; }
+    .plan-card.during .metric-note { color: rgba(255,255,255,0.7); }
+    .section { margin-bottom: 30px; page-break-inside: avoid; }
+    .section h3 { font-size: 24px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
+    .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
+    .data-item { background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 3px solid #000; }
+    .data-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 4px; }
+    .data-value { font-size: 16px; font-weight: 600; color: #000; }
+    .footer { text-align: center; margin-top: 50px; padding-top: 30px; border-top: 2px solid #ddd; color: #666; font-size: 14px; }
+    @media print {
+      body { padding: 20px; }
+      .plan-card { page-break-inside: avoid; }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>SUPPLME</h1>
+    <p>Your Elite Hydration Strategy</p>
+  </div>
+
+  <div class="user-info">
+    <p><strong>Name:</strong> ${pd.fullName || 'N/A'}</p>
+    <p><strong>Email:</strong> ${profile.user_email || 'Anonymous'}</p>
+    <p><strong>Generated:</strong> ${new Date(profile.created_at).toLocaleString()}</p>
+    <p><strong>Discipline:</strong> ${(pd.disciplines || []).join(', ') || 'N/A'}</p>
+  </div>
+
+  <div class="summary">
+    <h2>Total Fluid Loss</h2>
+    <div class="value">${((plan.totalFluidLoss || 0) / 1000).toFixed(1)} L</div>
+    <p class="subtitle">during your ${pd.sessionDuration || '0'}-hour ${(pd.disciplines || [])[0] || 'activity'}</p>
+  </div>
+
+  <div class="plan-grid">
+    <div class="plan-card">
+      <div class="timing">${plan.preActivity?.timing || '2-4 hours before'}</div>
+      <h3>PRE</h3>
+      <div class="metric">
+        <div class="metric-label">Water</div>
+        <div class="metric-value">${plan.preActivity?.water || 0} ml</div>
+        <div class="metric-note">Drink 2 hours before</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Supplme Sachet (30ml)</div>
+        <div class="metric-value">${plan.preActivity?.electrolytes || 0}x</div>
+      </div>
+    </div>
+
+    <div class="plan-card during">
+      <div class="timing">${plan.duringActivity?.frequency || 'Every 15-20 minutes'}</div>
+      <h3>DURING</h3>
+      <div class="metric">
+        <div class="metric-label">Water per hour</div>
+        <div class="metric-value">${plan.duringActivity?.waterPerHour || 0} ml</div>
+        <div class="metric-note">Sip every 15-20 min</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Supplme Sachets</div>
+        <div class="metric-value">${plan.duringActivity?.electrolytesPerHour || 0} sachet${(plan.duringActivity?.electrolytesPerHour || 0) > 1 ? 's' : ''}</div>
+      </div>
+    </div>
+
+    <div class="plan-card">
+      <div class="timing">${plan.postActivity?.timing || 'Within 30 minutes'}</div>
+      <h3>POST</h3>
+      <div class="metric">
+        <div class="metric-label">Water</div>
+        <div class="metric-value">${plan.postActivity?.water || 0} ml</div>
+        <div class="metric-note">Start immediately</div>
+      </div>
+      <div class="metric">
+        <div class="metric-label">Supplme Sachet (30ml)</div>
+        <div class="metric-value">${plan.postActivity?.electrolytes || 0}x</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Body & Physiology</h3>
+    <div class="data-grid">
+      ${pd.age ? `<div class="data-item"><div class="data-label">Age</div><div class="data-value">${pd.age}</div></div>` : ''}
+      ${pd.sex ? `<div class="data-item"><div class="data-label">Sex</div><div class="data-value">${pd.sex}</div></div>` : ''}
+      ${pd.weight ? `<div class="data-item"><div class="data-label">Weight</div><div class="data-value">${pd.weight} kg</div></div>` : ''}
+      ${pd.height ? `<div class="data-item"><div class="data-label">Height</div><div class="data-value">${pd.height} cm</div></div>` : ''}
+      ${pd.bodyFat ? `<div class="data-item"><div class="data-label">Body Fat</div><div class="data-value">${pd.bodyFat}%</div></div>` : ''}
+      ${pd.restingHeartRate ? `<div class="data-item"><div class="data-label">Resting HR</div><div class="data-value">${pd.restingHeartRate} bpm</div></div>` : ''}
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Activity Details</h3>
+    <div class="data-grid">
+      ${pd.raceDistance ? `<div class="data-item"><div class="data-label">Race Distance</div><div class="data-value">${pd.raceDistance}</div></div>` : ''}
+      ${pd.sessionDuration ? `<div class="data-item"><div class="data-label">Session Duration</div><div class="data-value">${pd.sessionDuration} hours</div></div>` : ''}
+      ${pd.avgPace ? `<div class="data-item"><div class="data-label">Average Pace</div><div class="data-value">${pd.avgPace}</div></div>` : ''}
+      ${pd.trainingFrequency ? `<div class="data-item"><div class="data-label">Training Frequency</div><div class="data-value">${pd.trainingFrequency}</div></div>` : ''}
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Environment</h3>
+    <div class="data-grid">
+      ${pd.raceTempRange ? `<div class="data-item"><div class="data-label">Temperature Range</div><div class="data-value">${pd.raceTempRange.min}°C - ${pd.raceTempRange.max}°C</div></div>` : ''}
+      ${pd.humidity ? `<div class="data-item"><div class="data-label">Humidity</div><div class="data-value">${pd.humidity}</div></div>` : ''}
+      ${pd.altitude ? `<div class="data-item"><div class="data-label">Altitude</div><div class="data-value">${pd.altitude}</div></div>` : ''}
+      ${pd.sunExposure ? `<div class="data-item"><div class="data-label">Sun Exposure</div><div class="data-value">${pd.sunExposure}</div></div>` : ''}
+    </div>
+  </div>
+
+  <div class="section">
+    <h3>Hydration & Sweat Profile</h3>
+    <div class="data-grid">
+      ${pd.sweatRate ? `<div class="data-item"><div class="data-label">Sweat Rate</div><div class="data-value">${pd.sweatRate}</div></div>` : ''}
+      ${pd.sweatSaltiness ? `<div class="data-item"><div class="data-label">Sweat Saltiness</div><div class="data-value">${pd.sweatSaltiness}</div></div>` : ''}
+      ${pd.fluidIntake ? `<div class="data-item"><div class="data-label">Current Fluid Intake</div><div class="data-value">${pd.fluidIntake}</div></div>` : ''}
+      ${pd.urineColor ? `<div class="data-item"><div class="data-label">Urine Color</div><div class="data-value">${pd.urineColor}</div></div>` : ''}
+    </div>
+  </div>
+
+  <div class="footer">
+    <p><strong>Supplme</strong> - Science-Backed Hydration</p>
+    <p>This personalized guide is based on your individual profile and conditions.</p>
+    <p>For best results, adjust intake based on how you feel during training.</p>
+  </div>
+</body>
+</html>
+    `;
+
+    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
+    const link = document.createElement('a');
+    const url = URL.createObjectURL(blob);
+    
+    link.setAttribute('href', url);
+    link.setAttribute('download', `supplme-guide-${pd.fullName?.replace(/\s+/g, '-') || profile.id}-${new Date().getTime()}.html`);
+    link.style.visibility = 'hidden';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+
+    toast({
+      title: "Guide Downloaded",
+      description: `Downloaded hydration guide for ${pd.fullName || 'user'}.`,
+    });
+  };
+
   const deleteProfile = async (id: string) => {
     if (!confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
       return;
@@ -432,14 +621,25 @@ export default function Admin() {
                               </div>
                             </div>
                             
-                            <Button
-                              onClick={() => deleteProfile(profile.id)}
-                              variant="ghost"
-                              size="sm"
-                              className="text-destructive hover:text-destructive"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
+                            <div className="flex items-center gap-2">
+                              <Button
+                                onClick={() => downloadUserGuide(profile)}
+                                variant="ghost"
+                                size="sm"
+                                className="text-primary hover:text-primary"
+                                title="Download user's hydration guide"
+                              >
+                                <FileDown className="w-4 h-4" />
+                              </Button>
+                              <Button
+                                onClick={() => deleteProfile(profile.id)}
+                                variant="ghost"
+                                size="sm"
+                                className="text-destructive hover:text-destructive"
+                              >
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
                         
