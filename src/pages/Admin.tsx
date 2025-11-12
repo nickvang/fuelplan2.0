@@ -9,6 +9,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import supplmeLogo from '@/assets/supplme-logo.png';
+import { jsPDF } from 'jspdf';
 
 interface HydrationProfileData {
   id: string;
@@ -276,187 +277,214 @@ export default function Admin() {
     const pd = profile.profile_data || {};
     const plan = profile.plan_data || {};
     
-    const htmlContent = `
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Supplme Hydration Guide - ${pd.fullName || 'User'}</title>
-  <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-      line-height: 1.6; 
-      color: #1a1a1a; 
-      background: #ffffff;
-      padding: 40px 20px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    .header { text-align: center; margin-bottom: 40px; border-bottom: 3px solid #000; padding-bottom: 30px; }
-    .header h1 { font-size: 48px; font-weight: 900; text-transform: uppercase; margin-bottom: 10px; }
-    .header p { font-size: 18px; color: #666; font-weight: 600; }
-    .user-info { background: #f5f5f5; padding: 20px; border-radius: 8px; margin-bottom: 30px; }
-    .user-info strong { color: #000; }
-    .summary { background: linear-gradient(135deg, #f0f0f0 0%, #e0e0e0 100%); padding: 30px; border-radius: 12px; margin-bottom: 40px; text-align: center; border: 2px solid #000; }
-    .summary h2 { font-size: 16px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 10px; }
-    .summary .value { font-size: 64px; font-weight: 900; color: #000; }
-    .summary .subtitle { font-size: 18px; font-weight: 600; color: #666; margin-top: 10px; }
-    .plan-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px; margin-bottom: 40px; }
-    .plan-card { background: #fff; border: 2px solid #000; border-radius: 12px; padding: 30px; }
-    .plan-card.during { background: #0a0a0a; color: #fff; border: 3px solid #000; }
-    .plan-card h3 { font-size: 48px; font-weight: 900; text-transform: uppercase; margin-bottom: 20px; }
-    .plan-card .timing { font-size: 12px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 15px; }
-    .plan-card.during .timing { color: rgba(255,255,255,0.7); }
-    .metric { background: #f5f5f5; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid #ddd; }
-    .plan-card.during .metric { background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.25); }
-    .metric-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 5px; }
-    .plan-card.during .metric-label { color: rgba(255,255,255,0.7); }
-    .metric-value { font-size: 32px; font-weight: 900; color: #000; }
-    .plan-card.during .metric-value { color: #fff; }
-    .metric-note { font-size: 12px; font-weight: 600; color: #666; margin-top: 5px; }
-    .plan-card.during .metric-note { color: rgba(255,255,255,0.7); }
-    .section { margin-bottom: 30px; page-break-inside: avoid; }
-    .section h3 { font-size: 24px; font-weight: 900; text-transform: uppercase; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 20px; }
-    .data-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap: 15px; }
-    .data-item { background: #f9f9f9; padding: 12px; border-radius: 6px; border-left: 3px solid #000; }
-    .data-label { font-size: 11px; font-weight: 700; text-transform: uppercase; color: #666; margin-bottom: 4px; }
-    .data-value { font-size: 16px; font-weight: 600; color: #000; }
-    .footer { text-align: center; margin-top: 50px; padding-top: 30px; border-top: 2px solid #ddd; color: #666; font-size: 14px; }
-    @media print {
-      body { padding: 20px; }
-      .plan-card { page-break-inside: avoid; }
-    }
-  </style>
-</head>
-<body>
-  <div class="header">
-    <h1>SUPPLME</h1>
-    <p>Your Elite Hydration Strategy</p>
-  </div>
+    const doc = new jsPDF();
+    const pageWidth = doc.internal.pageSize.width;
+    const margin = 20;
+    let y = 20;
 
-  <div class="user-info">
-    <p><strong>Name:</strong> ${pd.fullName || 'N/A'}</p>
-    <p><strong>Email:</strong> ${profile.user_email || 'Anonymous'}</p>
-    <p><strong>Generated:</strong> ${new Date(profile.created_at).toLocaleString()}</p>
-    <p><strong>Discipline:</strong> ${(pd.disciplines || []).join(', ') || 'N/A'}</p>
-  </div>
+    // Helper function to add text with word wrap
+    const addText = (text: string, x: number, fontSize: number = 10, isBold: boolean = false, maxWidth?: number) => {
+      doc.setFontSize(fontSize);
+      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
+      const lines = doc.splitTextToSize(text, maxWidth || (pageWidth - 2 * margin));
+      doc.text(lines, x, y);
+      y += (lines.length * fontSize * 0.4) + 3;
+    };
 
-  <div class="summary">
-    <h2>Total Fluid Loss</h2>
-    <div class="value">${((plan.totalFluidLoss || 0) / 1000).toFixed(1)} L</div>
-    <p class="subtitle">during your ${pd.sessionDuration || '0'}-hour ${(pd.disciplines || [])[0] || 'activity'}</p>
-  </div>
+    const checkPageBreak = (neededSpace: number = 30) => {
+      if (y + neededSpace > doc.internal.pageSize.height - 20) {
+        doc.addPage();
+        y = 20;
+      }
+    };
 
-  <div class="plan-grid">
-    <div class="plan-card">
-      <div class="timing">${plan.preActivity?.timing || '2-4 hours before'}</div>
-      <h3>PRE</h3>
-      <div class="metric">
-        <div class="metric-label">Water</div>
-        <div class="metric-value">${plan.preActivity?.water || 0} ml</div>
-        <div class="metric-note">Drink 2 hours before</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Supplme Sachet (30ml)</div>
-        <div class="metric-value">${plan.preActivity?.electrolytes || 0}x</div>
-      </div>
-    </div>
-
-    <div class="plan-card during">
-      <div class="timing">${plan.duringActivity?.frequency || 'Every 15-20 minutes'}</div>
-      <h3>DURING</h3>
-      <div class="metric">
-        <div class="metric-label">Water per hour</div>
-        <div class="metric-value">${plan.duringActivity?.waterPerHour || 0} ml</div>
-        <div class="metric-note">Sip every 15-20 min</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Supplme Sachets</div>
-        <div class="metric-value">${plan.duringActivity?.electrolytesPerHour || 0} sachet${(plan.duringActivity?.electrolytesPerHour || 0) > 1 ? 's' : ''}</div>
-      </div>
-    </div>
-
-    <div class="plan-card">
-      <div class="timing">${plan.postActivity?.timing || 'Within 30 minutes'}</div>
-      <h3>POST</h3>
-      <div class="metric">
-        <div class="metric-label">Water</div>
-        <div class="metric-value">${plan.postActivity?.water || 0} ml</div>
-        <div class="metric-note">Start immediately</div>
-      </div>
-      <div class="metric">
-        <div class="metric-label">Supplme Sachet (30ml)</div>
-        <div class="metric-value">${plan.postActivity?.electrolytes || 0}x</div>
-      </div>
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Body & Physiology</h3>
-    <div class="data-grid">
-      ${pd.age ? `<div class="data-item"><div class="data-label">Age</div><div class="data-value">${pd.age}</div></div>` : ''}
-      ${pd.sex ? `<div class="data-item"><div class="data-label">Sex</div><div class="data-value">${pd.sex}</div></div>` : ''}
-      ${pd.weight ? `<div class="data-item"><div class="data-label">Weight</div><div class="data-value">${pd.weight} kg</div></div>` : ''}
-      ${pd.height ? `<div class="data-item"><div class="data-label">Height</div><div class="data-value">${pd.height} cm</div></div>` : ''}
-      ${pd.bodyFat ? `<div class="data-item"><div class="data-label">Body Fat</div><div class="data-value">${pd.bodyFat}%</div></div>` : ''}
-      ${pd.restingHeartRate ? `<div class="data-item"><div class="data-label">Resting HR</div><div class="data-value">${pd.restingHeartRate} bpm</div></div>` : ''}
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Activity Details</h3>
-    <div class="data-grid">
-      ${pd.raceDistance ? `<div class="data-item"><div class="data-label">Race Distance</div><div class="data-value">${pd.raceDistance}</div></div>` : ''}
-      ${pd.sessionDuration ? `<div class="data-item"><div class="data-label">Session Duration</div><div class="data-value">${pd.sessionDuration} hours</div></div>` : ''}
-      ${pd.avgPace ? `<div class="data-item"><div class="data-label">Average Pace</div><div class="data-value">${pd.avgPace}</div></div>` : ''}
-      ${pd.trainingFrequency ? `<div class="data-item"><div class="data-label">Training Frequency</div><div class="data-value">${pd.trainingFrequency}</div></div>` : ''}
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Environment</h3>
-    <div class="data-grid">
-      ${pd.raceTempRange ? `<div class="data-item"><div class="data-label">Temperature Range</div><div class="data-value">${pd.raceTempRange.min}°C - ${pd.raceTempRange.max}°C</div></div>` : ''}
-      ${pd.humidity ? `<div class="data-item"><div class="data-label">Humidity</div><div class="data-value">${pd.humidity}</div></div>` : ''}
-      ${pd.altitude ? `<div class="data-item"><div class="data-label">Altitude</div><div class="data-value">${pd.altitude}</div></div>` : ''}
-      ${pd.sunExposure ? `<div class="data-item"><div class="data-label">Sun Exposure</div><div class="data-value">${pd.sunExposure}</div></div>` : ''}
-    </div>
-  </div>
-
-  <div class="section">
-    <h3>Hydration & Sweat Profile</h3>
-    <div class="data-grid">
-      ${pd.sweatRate ? `<div class="data-item"><div class="data-label">Sweat Rate</div><div class="data-value">${pd.sweatRate}</div></div>` : ''}
-      ${pd.sweatSaltiness ? `<div class="data-item"><div class="data-label">Sweat Saltiness</div><div class="data-value">${pd.sweatSaltiness}</div></div>` : ''}
-      ${pd.fluidIntake ? `<div class="data-item"><div class="data-label">Current Fluid Intake</div><div class="data-value">${pd.fluidIntake}</div></div>` : ''}
-      ${pd.urineColor ? `<div class="data-item"><div class="data-label">Urine Color</div><div class="data-value">${pd.urineColor}</div></div>` : ''}
-    </div>
-  </div>
-
-  <div class="footer">
-    <p><strong>Supplme</strong> - Science-Backed Hydration</p>
-    <p>This personalized guide is based on your individual profile and conditions.</p>
-    <p>For best results, adjust intake based on how you feel during training.</p>
-  </div>
-</body>
-</html>
-    `;
-
-    const blob = new Blob([htmlContent], { type: 'text/html;charset=utf-8;' });
-    const link = document.createElement('a');
-    const url = URL.createObjectURL(blob);
+    // Header
+    doc.setFillColor(0, 0, 0);
+    doc.rect(0, 0, pageWidth, 40, 'F');
+    doc.setTextColor(255, 255, 255);
+    doc.setFontSize(32);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SUPPLME', pageWidth / 2, 20, { align: 'center' });
+    doc.setFontSize(12);
+    doc.text('Your Elite Hydration Strategy', pageWidth / 2, 30, { align: 'center' });
     
-    link.setAttribute('href', url);
-    link.setAttribute('download', `supplme-guide-${pd.fullName?.replace(/\s+/g, '-') || profile.id}-${new Date().getTime()}.html`);
-    link.style.visibility = 'hidden';
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    y = 50;
+    doc.setTextColor(0, 0, 0);
+
+    // User Info Box
+    doc.setFillColor(245, 245, 245);
+    doc.rect(margin, y, pageWidth - 2 * margin, 30, 'F');
+    y += 8;
+    addText(`Name: ${pd.fullName || 'N/A'}`, margin + 5, 10, true);
+    addText(`Email: ${profile.user_email || 'Anonymous'}`, margin + 5, 10);
+    addText(`Generated: ${new Date(profile.created_at).toLocaleString()}`, margin + 5, 10);
+    addText(`Discipline: ${(pd.disciplines || []).join(', ') || 'N/A'}`, margin + 5, 10);
+    y += 5;
+
+    checkPageBreak();
+
+    // Fluid Loss Summary
+    doc.setFillColor(240, 240, 240);
+    doc.rect(margin, y, pageWidth - 2 * margin, 40, 'F');
+    doc.setDrawColor(0, 0, 0);
+    doc.setLineWidth(2);
+    doc.rect(margin, y, pageWidth - 2 * margin, 40);
+    y += 10;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('TOTAL FLUID LOSS', pageWidth / 2, y, { align: 'center' });
+    y += 10;
+    doc.setFontSize(28);
+    doc.text(`${((plan.totalFluidLoss || 0) / 1000).toFixed(1)} L`, pageWidth / 2, y, { align: 'center' });
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`during your ${pd.sessionDuration || '0'}-hour ${(pd.disciplines || [])[0] || 'activity'}`, pageWidth / 2, y, { align: 'center' });
+    y += 15;
+
+    checkPageBreak();
+
+    // Three Phase Plan
+    doc.setFontSize(16);
+    doc.setFont('helvetica', 'bold');
+    addText('YOUR PERFORMANCE PROTOCOL', margin, 16, true);
+    y += 5;
+
+    // PRE
+    checkPageBreak(45);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(margin, y, pageWidth - 2 * margin, 40, 'FD');
+    y += 8;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(plan.preActivity?.timing || '2-4 hours before', margin + 5, y);
+    y += 5;
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('PRE', margin + 5, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Water: ${plan.preActivity?.water || 0} ml`, margin + 5, y);
+    y += 6;
+    doc.text(`Supplme Sachets: ${plan.preActivity?.electrolytes || 0}x`, margin + 5, y);
+    y += 15;
+
+    // DURING
+    checkPageBreak(45);
+    doc.setFillColor(10, 10, 10);
+    doc.rect(margin, y, pageWidth - 2 * margin, 40, 'F');
+    y += 8;
+    doc.setFontSize(8);
+    doc.setTextColor(200, 200, 200);
+    doc.text(plan.duringActivity?.frequency || 'Every 15-20 minutes', margin + 5, y);
+    y += 5;
+    doc.setFontSize(20);
+    doc.setTextColor(255, 255, 255);
+    doc.setFont('helvetica', 'bold');
+    doc.text('DURING', margin + 5, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Water per hour: ${plan.duringActivity?.waterPerHour || 0} ml`, margin + 5, y);
+    y += 6;
+    doc.text(`Supplme Sachets: ${plan.duringActivity?.electrolytesPerHour || 0} sachet${(plan.duringActivity?.electrolytesPerHour || 0) > 1 ? 's' : ''}`, margin + 5, y);
+    y += 15;
+    doc.setTextColor(0, 0, 0);
+
+    // POST
+    checkPageBreak(45);
+    doc.setFillColor(255, 255, 255);
+    doc.rect(margin, y, pageWidth - 2 * margin, 40, 'FD');
+    y += 8;
+    doc.setFontSize(8);
+    doc.setTextColor(100, 100, 100);
+    doc.text(plan.postActivity?.timing || 'Within 30 minutes', margin + 5, y);
+    y += 5;
+    doc.setFontSize(20);
+    doc.setTextColor(0, 0, 0);
+    doc.setFont('helvetica', 'bold');
+    doc.text('POST', margin + 5, y);
+    y += 8;
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'normal');
+    doc.text(`Water: ${plan.postActivity?.water || 0} ml`, margin + 5, y);
+    y += 6;
+    doc.text(`Supplme Sachets: ${plan.postActivity?.electrolytes || 0}x`, margin + 5, y);
+    y += 15;
+
+    // Data Sections
+    const addSection = (title: string, data: Array<{label: string, value: any}>) => {
+      checkPageBreak(40);
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      addText(title, margin, 14, true);
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'normal');
+      
+      data.forEach(item => {
+        if (item.value) {
+          checkPageBreak(10);
+          doc.setFont('helvetica', 'bold');
+          doc.text(`${item.label}:`, margin + 5, y);
+          doc.setFont('helvetica', 'normal');
+          const valueText = String(item.value);
+          const lines = doc.splitTextToSize(valueText, pageWidth - margin * 3 - 40);
+          doc.text(lines, margin + 45, y);
+          y += Math.max(6, lines.length * 5);
+        }
+      });
+      y += 5;
+    };
+
+    addSection('Body & Physiology', [
+      { label: 'Age', value: pd.age },
+      { label: 'Sex', value: pd.sex },
+      { label: 'Weight', value: pd.weight ? `${pd.weight} kg` : null },
+      { label: 'Height', value: pd.height ? `${pd.height} cm` : null },
+      { label: 'Body Fat', value: pd.bodyFat ? `${pd.bodyFat}%` : null },
+      { label: 'Resting HR', value: pd.restingHeartRate ? `${pd.restingHeartRate} bpm` : null },
+    ]);
+
+    addSection('Activity Details', [
+      { label: 'Race Distance', value: pd.raceDistance },
+      { label: 'Session Duration', value: pd.sessionDuration ? `${pd.sessionDuration} hours` : null },
+      { label: 'Average Pace', value: pd.avgPace },
+      { label: 'Training Frequency', value: pd.trainingFrequency },
+      { label: 'Elevation Gain', value: pd.elevationGain },
+    ]);
+
+    addSection('Environment', [
+      { label: 'Temperature Range', value: pd.raceTempRange ? `${pd.raceTempRange.min}°C - ${pd.raceTempRange.max}°C` : null },
+      { label: 'Humidity', value: pd.humidity },
+      { label: 'Altitude', value: pd.altitude },
+      { label: 'Sun Exposure', value: pd.sunExposure },
+    ]);
+
+    addSection('Hydration & Sweat Profile', [
+      { label: 'Sweat Rate', value: pd.sweatRate },
+      { label: 'Sweat Saltiness', value: pd.sweatSaltiness },
+      { label: 'Current Fluid Intake', value: pd.fluidIntake },
+      { label: 'Urine Color', value: pd.urineColor },
+    ]);
+
+    // Footer
+    checkPageBreak(30);
+    doc.setFillColor(220, 220, 220);
+    doc.rect(0, doc.internal.pageSize.height - 25, pageWidth, 25, 'F');
+    doc.setFontSize(10);
+    doc.setFont('helvetica', 'bold');
+    doc.text('SUPPLME - Science-Backed Hydration', pageWidth / 2, doc.internal.pageSize.height - 15, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.text('This personalized guide is based on your individual profile and conditions.', pageWidth / 2, doc.internal.pageSize.height - 10, { align: 'center' });
+
+    // Save PDF
+    doc.save(`supplme-guide-${pd.fullName?.replace(/\s+/g, '-') || profile.id}-${new Date().getTime()}.pdf`);
 
     toast({
-      title: "Guide Downloaded",
+      title: "PDF Downloaded",
       description: `Downloaded hydration guide for ${pd.fullName || 'user'}.`,
     });
   };
