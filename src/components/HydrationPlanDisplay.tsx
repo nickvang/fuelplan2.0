@@ -271,384 +271,523 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       const doc = new jsPDF();
       const pageWidth = doc.internal.pageSize.width;
       const pageHeight = doc.internal.pageSize.height;
-      const margin = 15;
-      let y = 20;
+      const margin = 20;
+      let y = 0;
 
-    // Helper function to check if we need a page break
-    const checkPageBreak = (neededSpace: number = 40) => {
-      if (y + neededSpace > pageHeight - 30) {
-        doc.addPage();
-        y = 20;
-        return true;
-      }
-      return false;
-    };
+      // SUPPLME Brand Colors - Scandinavian Palette
+      const colors = {
+        charcoal: [44, 44, 44] as [number, number, number],
+        electricBlue: [0, 163, 224] as [number, number, number],
+        coolGray: [240, 242, 245] as [number, number, number],
+        mediumGray: [140, 145, 150] as [number, number, number],
+        white: [255, 255, 255] as [number, number, number],
+        paleBlue: [235, 248, 255] as [number, number, number]
+      };
 
-    // Helper function to add wrapped text
-    const addWrappedText = (text: string, x: number, maxWidth: number, fontSize: number = 10, isBold: boolean = false) => {
-      doc.setFontSize(fontSize);
-      doc.setFont('helvetica', isBold ? 'bold' : 'normal');
-      const lines = doc.splitTextToSize(text, maxWidth);
-      lines.forEach((line: string) => {
-        checkPageBreak(10);
-        doc.text(line, x, y);
-        y += fontSize * 0.5;
-      });
-      y += 2;
-    };
+      // Helper: Check page break
+      const checkPageBreak = (neededSpace: number = 40) => {
+        if (y + neededSpace > pageHeight - 25) {
+          doc.addPage();
+          y = 20;
+          return true;
+        }
+        return false;
+      };
 
-    // ====== HEADER ======
-    doc.setFillColor(10, 10, 10);
-    doc.rect(0, 0, pageWidth, 45, 'F');
-    doc.setTextColor(255, 255, 255);
-    doc.setFontSize(28);
-    doc.setFont('helvetica', 'bold');
-    doc.text('SUPPLME', pageWidth / 2, 22, { align: 'center' });
-    doc.setFontSize(14);
-    doc.setFont('helvetica', 'normal');
-    doc.text('Your Elite Hydration Strategy', pageWidth / 2, 35, { align: 'center' });
-    
-    y = 55;
-    doc.setTextColor(0, 0, 0);
+      // Helper: Add separator line
+      const addSeparatorLine = () => {
+        doc.setDrawColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+        doc.setLineWidth(0.3);
+        doc.line(margin, y, pageWidth - margin, y);
+        y += 8;
+      };
 
-    // ====== USER INFO ======
-    doc.setFillColor(245, 245, 245);
-    doc.rect(margin, y, pageWidth - 2 * margin, 32, 'F');
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, y, pageWidth - 2 * margin, 32);
-    
-    y += 8;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Name: `, margin + 5, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(profile.fullName || 'N/A', margin + 25, y);
-    
-    y += 7;
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Discipline: `, margin + 5, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text((profile.disciplines || []).join(', ') || 'N/A', margin + 35, y);
-    
-    y += 7;
-    doc.setFont('helvetica', 'bold');
-    doc.text(`Generated: `, margin + 5, y);
-    doc.setFont('helvetica', 'normal');
-    doc.text(new Date().toLocaleString(), margin + 35, y);
-    
-    y += 15;
+      // Helper: Add wrapped text
+      const addWrappedText = (text: string, x: number, maxWidth: number, fontSize: number = 9, color: [number, number, number] = colors.charcoal, lineHeight: number = 1.4) => {
+        doc.setFontSize(fontSize);
+        doc.setTextColor(color[0], color[1], color[2]);
+        const lines = doc.splitTextToSize(text, maxWidth);
+        lines.forEach((line: string) => {
+          checkPageBreak(10);
+          doc.text(line, x, y);
+          y += fontSize * 0.35 * lineHeight;
+        });
+      };
 
-    // ====== FLUID LOSS SUMMARY ======
-    checkPageBreak(50);
-    doc.setFillColor(250, 250, 250);
-    doc.rect(margin, y, pageWidth - 2 * margin, 45, 'F');
-    doc.setDrawColor(0, 0, 0);
-    doc.setLineWidth(1.5);
-    doc.rect(margin, y, pageWidth - 2 * margin, 45);
-    
-    y += 12;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(100, 100, 100);
-    doc.text('TOTAL FLUID LOSS', pageWidth / 2, y, { align: 'center' });
-    
-    y += 13;
-    doc.setFontSize(32);
-    doc.setTextColor(0, 0, 0);
-    doc.text(`${((plan.totalFluidLoss || 0) / 1000).toFixed(1)} L`, pageWidth / 2, y, { align: 'center' });
-    
-    y += 10;
-    doc.setFontSize(10);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`during your ${profile.sessionDuration || '0'}-hour ${(profile.disciplines || [])[0] || 'activity'}`, pageWidth / 2, y, { align: 'center' });
-    
-    y += 18;
-
-    // ====== YOUR PERFORMANCE PROTOCOL ======
-    checkPageBreak(50);
-    doc.setFontSize(16);
-    doc.setFont('helvetica', 'bold');
-    doc.text('YOUR PERFORMANCE PROTOCOL', pageWidth / 2, y, { align: 'center' });
-    y += 10;
-
-    // === PRE ===
-    checkPageBreak(48);
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, y, pageWidth - 2 * margin, 45, 'FD');
-    
-    y += 8;
-    doc.setFontSize(9);
-    doc.setTextColor(120, 120, 120);
-    doc.setFont('helvetica', 'normal');
-    doc.text(plan.preActivity?.timing || '2-4 hours before', margin + 5, y);
-    
-    y += 8;
-    doc.setFontSize(22);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('PRE', margin + 5, y);
-    
-    y += 10;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Water: ${plan.preActivity?.water || 0} ml`, margin + 5, y);
-    
-    y += 8;
-    doc.text(`Supplme Sachets: ${plan.preActivity?.electrolytes || 0}x`, margin + 5, y);
-    
-    y += 15;
-
-    // === DURING ===
-    checkPageBreak(48);
-    doc.setFillColor(10, 10, 10);
-    doc.rect(margin, y, pageWidth - 2 * margin, 45, 'F');
-    
-    y += 8;
-    doc.setFontSize(9);
-    doc.setTextColor(200, 200, 200);
-    doc.text(plan.duringActivity?.frequency || 'Every 15-20 minutes', margin + 5, y);
-    
-    y += 8;
-    doc.setFontSize(22);
-    doc.setTextColor(255, 255, 255);
-    doc.setFont('helvetica', 'bold');
-    doc.text('DURING', margin + 5, y);
-    
-    y += 10;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Water per hour: ${plan.duringActivity?.waterPerHour || 0} ml`, margin + 5, y);
-    
-    y += 8;
-    doc.text(`Supplme Sachets: ${plan.duringActivity?.electrolytesPerHour || 0} sachet${(plan.duringActivity?.electrolytesPerHour || 0) !== 1 ? 's' : ''}`, margin + 5, y);
-    
-    y += 15;
-    doc.setTextColor(0, 0, 0);
-
-    // === POST ===
-    checkPageBreak(48);
-    doc.setFillColor(255, 255, 255);
-    doc.setDrawColor(200, 200, 200);
-    doc.rect(margin, y, pageWidth - 2 * margin, 45, 'FD');
-    
-    y += 8;
-    doc.setFontSize(9);
-    doc.setTextColor(120, 120, 120);
-    doc.setFont('helvetica', 'normal');
-    doc.text(plan.postActivity?.timing || 'Within 30 minutes', margin + 5, y);
-    
-    y += 8;
-    doc.setFontSize(22);
-    doc.setTextColor(0, 0, 0);
-    doc.setFont('helvetica', 'bold');
-    doc.text('POST', margin + 5, y);
-    
-    y += 10;
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'normal');
-    doc.text(`Water: ${plan.postActivity?.water || 0} ml`, margin + 5, y);
-    
-    y += 8;
-    doc.text(`Supplme Sachets: ${plan.postActivity?.electrolytes || 0}x`, margin + 5, y);
-    
-    y += 18;
-
-    // ====== AI-ENHANCED ANALYSIS ======
-    if (aiInsights) {
-      checkPageBreak(60);
+      // ========== HEADER: Clean, Minimal, Premium ==========
+      y = 0;
+      doc.setFillColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.rect(0, 0, pageWidth, 50, 'F');
       
-      doc.setFillColor(240, 245, 255);
-      const aiBoxHeight = 80;
-      doc.rect(margin, y, pageWidth - 2 * margin, aiBoxHeight, 'F');
-      doc.setDrawColor(100, 150, 255);
-      doc.setLineWidth(0.5);
-      doc.rect(margin, y, pageWidth - 2 * margin, aiBoxHeight);
+      // SUPPLME Logo Text
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setFontSize(26);
+      doc.setFont('helvetica', 'bold');
+      doc.text('SUPPLME', margin, 22);
+      
+      // Tagline
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.text('Science-Backed Hydration & Absorption', margin, 32);
+
+      // Smartwatch Badge (Top Right) - Only if data was used
+      if (hasSmartWatchData) {
+        const badgeX = pageWidth - margin - 60;
+        const badgeY = 13;
+        const badgeWidth = 58;
+        const badgeHeight = 20;
+        
+        // Badge background
+        doc.setFillColor(235, 248, 255);
+        doc.roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 3, 3, 'F');
+        
+        // Badge border
+        doc.setDrawColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(badgeX, badgeY, badgeWidth, badgeHeight, 3, 3, 'S');
+        
+        // Badge checkmark
+        doc.setTextColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+        doc.setFontSize(10);
+        doc.text('✓', badgeX + 3, badgeY + 8);
+        
+        // Badge text
+        doc.setFontSize(7);
+        doc.setFont('helvetica', 'bold');
+        doc.text('SMARTWATCH', badgeX + 9, badgeY + 6);
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(6);
+        doc.text('Enhanced Plan', badgeX + 9, badgeY + 11);
+        doc.setTextColor(100, 100, 100);
+        doc.text('Live Data', badgeX + 9, badgeY + 15.5);
+      }
+
+      y = 58;
+
+      // ========== ATHLETE INFO BAR ==========
+      doc.setFillColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.rect(margin, y, pageWidth - 2 * margin, 24, 'F');
       
       y += 8;
-      doc.setFontSize(13);
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('ATHLETE', margin + 5, y);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('AI-ENHANCED ANALYSIS', margin + 5, y);
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text(profile.fullName || 'N/A', margin + 5, y + 5);
       
-      if (aiInsights.confidence_level) {
-        doc.setFontSize(8);
-        doc.setFont('helvetica', 'bold');
-        const confidenceText = `${aiInsights.confidence_level.toUpperCase()} CONFIDENCE`;
-        const confidenceWidth = doc.getTextWidth(confidenceText);
-        const badgeX = pageWidth - margin - confidenceWidth - 10;
-        doc.text(confidenceText, badgeX, y);
-      }
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('DISCIPLINE', pageWidth / 2 - 10, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text((profile.disciplines || []).join(', ') || 'N/A', pageWidth / 2 - 10, y + 5);
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      const dateText = new Date().toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+      doc.text('DATE', pageWidth - margin - 40, y);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text(dateText, pageWidth - margin - 40, y + 5);
+      
+      y += 22;
+
+      // ========== KEY METRIC: FLUID LOSS ==========
+      checkPageBreak(55);
+      
+      doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.setDrawColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.setLineWidth(0.5);
+      doc.rect(margin, y, pageWidth - 2 * margin, 48, 'FD');
       
       y += 10;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('TOTAL FLUID LOSS', pageWidth / 2, y, { align: 'center' });
       
-      if (aiInsights.personalized_insight) {
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(80, 80, 80);
-        doc.text('Why These Numbers?', margin + 5, y);
-        y += 6;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(50, 50, 50);
-        addWrappedText(aiInsights.personalized_insight, margin + 5, pageWidth - 2 * margin - 10, 9);
-      }
+      y += 16;
+      doc.setFontSize(38);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      const liters = ((plan.totalFluidLoss || 0) / 1000).toFixed(1);
+      doc.text(`${liters} L`, pageWidth / 2, y, { align: 'center' });
       
-      if (aiInsights.risk_factors) {
-        y += 4;
-        doc.setFontSize(9);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(200, 0, 0);
-        doc.text('Key Risk Factors:', margin + 5, y);
-        y += 6;
-        doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 0, 0);
-        addWrappedText(aiInsights.risk_factors, margin + 5, pageWidth - 2 * margin - 10, 9);
-      }
+      y += 10;
+      doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      const durationText = profile.sessionDuration < 1 
+        ? `${Math.round(profile.sessionDuration * 60)}-minute` 
+        : `${profile.sessionDuration.toFixed(1)}-hour`;
+      doc.text(`${durationText} ${(profile.disciplines || [])[0] || 'activity'} session`, pageWidth / 2, y, { align: 'center' });
       
-      y += 8;
-    }
+      y += 18;
 
-    // ====== RACE DAY STRATEGY ======
-    if (profile.upcomingEvents) {
-      checkPageBreak(100);
-      
+      // ========== PERFORMANCE PROTOCOL HEADER ==========
+      checkPageBreak(45);
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text('RACE DAY HYDRATION PLAN', pageWidth / 2, y, { align: 'center' });
-      y += 7;
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`For your upcoming: ${profile.upcomingEvents}`, pageWidth / 2, y, { align: 'center' });
-      y += 12;
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text('PERFORMANCE PROTOCOL', pageWidth / 2, y, { align: 'center' });
       
-      // Pre-Race
-      checkPageBreak(35);
-      doc.setFillColor(250, 250, 250);
-      doc.rect(margin, y, pageWidth - 2 * margin, 32, 'F');
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(margin, y, pageWidth - 2 * margin, 32);
-      y += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Pre-Race (Day Before & Morning)', margin + 5, y);
-      y += 7;
-      doc.setFontSize(9);
+      y += 3;
+      doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      doc.text(`• Day before: Maintain normal hydration + ${plan.preActivity?.water || 0}ml extra`, margin + 5, y);
-      y += 6;
-      doc.text(`• 2 hours before: ${plan.preActivity?.water || 0}ml water + ${plan.preActivity?.electrolytes || 0}x Supplme sachet`, margin + 5, y);
-      y += 6;
-      doc.text(`• 30 min before start: 200-300ml water (sips only)`, margin + 5, y);
-      y += 12;
+      doc.setTextColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+      doc.text('PRE  •  DURING  •  POST', pageWidth / 2, y, { align: 'center' });
       
-      // During Race
-      checkPageBreak(35);
-      doc.setFillColor(250, 250, 250);
-      doc.rect(margin, y, pageWidth - 2 * margin, 28, 'F');
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(margin, y, pageWidth - 2 * margin, 28);
-      y += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('During Race', margin + 5, y);
-      y += 7;
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`• Every 30-45 min: 1 Supplme sachet`, margin + 5, y);
-      y += 6;
-      if (plan.duringActivity?.waterPerHour) {
-        doc.text(`• Drink ${plan.duringActivity.waterPerHour}ml water per hour`, margin + 5, y);
-        y += 6;
-      }
-      y += 10;
-      
-      // Post-Race
-      checkPageBreak(28);
-      doc.setFillColor(250, 250, 250);
-      doc.rect(margin, y, pageWidth - 2 * margin, 24, 'F');
-      doc.setDrawColor(200, 200, 200);
-      doc.rect(margin, y, pageWidth - 2 * margin, 24);
-      y += 8;
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Post-Race Recovery', margin + 5, y);
-      y += 7;
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`• Start immediately: ${plan.postActivity?.electrolytes || 0}x Supplme sachets over 4-6 hours`, margin + 5, y);
-      y += 6;
-      doc.text(`• Over 4-6 hours: ${plan.postActivity?.water || 0}ml water gradually`, margin + 5, y);
       y += 12;
-    }
 
-    // ====== PROFILE DATA SECTIONS ======
-    const addDataSection = (title: string, data: Array<{label: string, value: any}>) => {
-      const filteredData = data.filter(item => item.value);
-      if (filteredData.length === 0) return;
+      // ========== THREE-PHASE GRID ==========
+      const cardWidth = (pageWidth - 2 * margin - 10) / 3;
+      const cardHeight = 65;
       
-      checkPageBreak(30 + filteredData.length * 7);
+      checkPageBreak(cardHeight + 10);
       
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(0, 0, 0);
-      doc.text(title, margin, y);
-      y += 8;
+      // PRE Card
+      let cardX = margin;
+      doc.setFillColor(colors.paleBlue[0], colors.paleBlue[1], colors.paleBlue[2]);
+      doc.rect(cardX, y, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+      doc.setLineWidth(0.3);
+      doc.rect(cardX, y, cardWidth, cardHeight, 'S');
       
-      doc.setFontSize(9);
+      let cardY = y + 8;
+      doc.setFontSize(7);
       doc.setFont('helvetica', 'normal');
-      filteredData.forEach(item => {
-        checkPageBreak(8);
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text(plan.preActivity.timing.toUpperCase(), cardX + 5, cardY);
+      
+      cardY += 8;
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text('PRE', cardX + 5, cardY);
+      
+      cardY += 12;
+      doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.roundedRect(cardX + 5, cardY, cardWidth - 10, 14, 2, 2, 'F');
+      cardY += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('Water', cardX + 8, cardY);
+      cardY += 5;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text(`${plan.preActivity.water} ml`, cardX + 8, cardY);
+      
+      cardY += 10;
+      doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.roundedRect(cardX + 5, cardY, cardWidth - 10, 14, 2, 2, 'F');
+      cardY += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('Supplme Sachets', cardX + 8, cardY);
+      cardY += 5;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+      doc.text(`${plan.preActivity.electrolytes}×`, cardX + 8, cardY);
+
+      // DURING Card
+      cardX = margin + cardWidth + 5;
+      cardY = y;
+      doc.setFillColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.rect(cardX, cardY, cardWidth, cardHeight, 'F');
+      
+      cardY += 8;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.text(plan.duringActivity.frequency.toUpperCase(), cardX + 5, cardY);
+      
+      cardY += 8;
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.text('DURING', cardX + 5, cardY);
+      
+      cardY += 12;
+      doc.setFillColor(60, 60, 60);
+      doc.roundedRect(cardX + 5, cardY, cardWidth - 10, 14, 2, 2, 'F');
+      cardY += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.text('Per Hour', cardX + 8, cardY);
+      cardY += 5;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.text(`${plan.duringActivity.waterPerHour || 0} ml`, cardX + 8, cardY);
+      
+      cardY += 10;
+      doc.setFillColor(60, 60, 60);
+      doc.roundedRect(cardX + 5, cardY, cardWidth - 10, 14, 2, 2, 'F');
+      cardY += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.text('Supplme / Hour', cardX + 8, cardY);
+      cardY += 5;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+      doc.text(`${plan.duringActivity.electrolytesPerHour || 0}×`, cardX + 8, cardY);
+
+      // POST Card
+      cardX = margin + 2 * cardWidth + 10;
+      cardY = y;
+      doc.setFillColor(colors.paleBlue[0], colors.paleBlue[1], colors.paleBlue[2]);
+      doc.rect(cardX, cardY, cardWidth, cardHeight, 'F');
+      doc.setDrawColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+      doc.setLineWidth(0.3);
+      doc.rect(cardX, cardY, cardWidth, cardHeight, 'S');
+      
+      cardY += 8;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text(plan.postActivity.timing.toUpperCase(), cardX + 5, cardY);
+      
+      cardY += 8;
+      doc.setFontSize(18);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text('POST', cardX + 5, cardY);
+      
+      cardY += 12;
+      doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.roundedRect(cardX + 5, cardY, cardWidth - 10, 14, 2, 2, 'F');
+      cardY += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('Recovery Water', cardX + 8, cardY);
+      cardY += 5;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text(`${plan.postActivity.water} ml`, cardX + 8, cardY);
+      
+      cardY += 10;
+      doc.setFillColor(colors.white[0], colors.white[1], colors.white[2]);
+      doc.roundedRect(cardX + 5, cardY, cardWidth - 10, 14, 2, 2, 'F');
+      cardY += 5;
+      doc.setFontSize(7);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('Supplme Sachets', cardX + 8, cardY);
+      cardY += 5;
+      doc.setFontSize(13);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+      doc.text(`${plan.postActivity.electrolytes}×`, cardX + 8, cardY);
+      
+      y += cardHeight + 15;
+
+      // ========== AI PERFORMANCE INSIGHTS ==========
+      if (aiInsights?.personalized_insight) {
+        checkPageBreak(60);
+        
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${item.label}:`, margin + 5, y);
+        doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+        doc.text('AI PERFORMANCE INSIGHTS', margin, y);
+        y += 8;
+        
+        const startY = y;
+        doc.setFillColor(248, 250, 252);
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 50, 2, 2, 'F');
+        doc.setDrawColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+        doc.setLineWidth(0.3);
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 50, 2, 2, 'S');
+        
+        y += 8;
+        doc.setFontSize(9);
         doc.setFont('helvetica', 'normal');
-        const valueText = String(item.value);
-        const lines = doc.splitTextToSize(valueText, pageWidth - margin * 2 - 45);
-        doc.text(lines, margin + 50, y);
-        y += Math.max(6, lines.length * 5);
-      });
-      y += 6;
-    };
+        doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+        addWrappedText(aiInsights.personalized_insight, margin + 8, pageWidth - 2 * margin - 16, 9, colors.charcoal, 1.5);
+        
+        y += 5;
+        
+        if (aiInsights.confidence_level) {
+          y += 3;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+          doc.text('CONFIDENCE', margin + 8, y);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(colors.electricBlue[0], colors.electricBlue[1], colors.electricBlue[2]);
+          doc.text(aiInsights.confidence_level.toUpperCase(), margin + 35, y);
+        }
+        
+        if (aiInsights.risk_factors) {
+          y += 8;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+          doc.text('KEY RISKS', margin + 8, y);
+          y += 4;
+          doc.setFont('helvetica', 'normal');
+          const riskColor: [number, number, number] = [180, 40, 40];
+          addWrappedText(aiInsights.risk_factors, margin + 8, pageWidth - 2 * margin - 16, 8, riskColor, 1.4);
+        }
+        
+        y += 10;
+      }
 
-    addDataSection('Body & Physiology', [
-      { label: 'Age', value: profile.age },
-      { label: 'Sex', value: profile.sex },
-      { label: 'Weight', value: profile.weight ? `${profile.weight} kg` : null },
-      { label: 'Height', value: profile.height ? `${profile.height} cm` : null },
-      { label: 'Resting HR', value: profile.restingHeartRate ? `${profile.restingHeartRate} bpm` : null },
-    ]);
+      // ========== RACE DAY STRATEGY ==========
+      if (profile.upcomingEvents) {
+        checkPageBreak(90);
+        
+        doc.setFontSize(11);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+        doc.text('RACE DAY HYDRATION PLAN', margin, y);
+        y += 4;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+        doc.text(`For your upcoming: ${profile.upcomingEvents}`, margin, y);
+        y += 10;
+        
+        // Pre-Race
+        doc.setFillColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 28, 2, 2, 'F');
+        y += 7;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+        doc.text('Pre-Race (Day Before & Morning)', margin + 8, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Day before: Maintain hydration + ${plan.preActivity?.water || 0}ml extra`, margin + 8, y);
+        y += 4;
+        doc.text(`2 hours before: ${plan.preActivity?.water || 0}ml water + ${plan.preActivity?.electrolytes || 0}× Supplme`, margin + 8, y);
+        y += 4;
+        doc.text(`30 min before: 200-300ml water (sips only)`, margin + 8, y);
+        y += 12;
+        
+        // During Race
+        doc.setFillColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 22, 2, 2, 'F');
+        y += 7;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('During Race', margin + 8, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Every 30-45 min: 1 Supplme sachet`, margin + 8, y);
+        y += 4;
+        if (plan.duringActivity?.waterPerHour) {
+          doc.text(`Drink ${plan.duringActivity.waterPerHour}ml water per hour`, margin + 8, y);
+          y += 4;
+        }
+        y += 8;
+        
+        // Post-Race
+        doc.setFillColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+        doc.roundedRect(margin, y, pageWidth - 2 * margin, 18, 2, 2, 'F');
+        y += 7;
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.text('Post-Race Recovery', margin + 8, y);
+        y += 5;
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.text(`Start immediately: ${plan.postActivity?.electrolytes || 0}× Supplme over 4-6 hours`, margin + 8, y);
+        y += 4;
+        doc.text(`Gradually: ${plan.postActivity?.water || 0}ml water over 4-6 hours`, margin + 8, y);
+        y += 12;
+      }
 
-    addDataSection('Activity Details', [
-      { label: 'Session Duration', value: profile.sessionDuration ? `${profile.sessionDuration} hours` : null },
-      { label: 'Race Distance', value: profile.raceDistance },
-      { label: 'Average Pace', value: profile.avgPace },
-      { label: 'Training Frequency', value: profile.trainingFrequency ? `${profile.trainingFrequency}/week` : null },
-    ]);
+      // ========== DETAILED PROFILE DATA ==========
+      const addDataSection = (title: string, data: Array<{label: string, value: any}>) => {
+        const filteredData = data.filter(item => item.value);
+        if (filteredData.length === 0) return;
+        
+        checkPageBreak(30 + filteredData.length * 6);
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+        doc.text(title.toUpperCase(), margin, y);
+        y += 8;
+        
+        filteredData.forEach(item => {
+          checkPageBreak(7);
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+          doc.text(`${item.label}:`, margin + 5, y);
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+          const valueText = String(item.value);
+          doc.text(valueText.substring(0, 60), margin + 60, y);
+          y += 5;
+        });
+        
+        y += 8;
+      };
 
-    addDataSection('Environment', [
-      { label: 'Temperature', value: profile.raceTempRange ? `${profile.raceTempRange.min}°C - ${profile.raceTempRange.max}°C` : null },
-      { label: 'Humidity', value: profile.humidity ? `${profile.humidity}%` : null },
-      { label: 'Sun Exposure', value: profile.sunExposure },
-    ]);
+      // Body & Physiology
+      addDataSection('Body & Physiology', [
+        { label: 'Age', value: profile.age },
+        { label: 'Weight', value: profile.weight ? `${profile.weight} kg` : null },
+        { label: 'Height', value: profile.height ? `${profile.height} cm` : null },
+        { label: 'Sex', value: profile.sex },
+        { label: 'Resting HR', value: profile.restingHeartRate ? `${profile.restingHeartRate} bpm` : null }
+      ]);
 
-    addDataSection('Hydration & Sweat Profile', [
-      { label: 'Sweat Rate', value: profile.sweatRate },
-      { label: 'Sweat Saltiness', value: profile.sweatSaltiness },
-      { label: 'Fluid Intake', value: profile.fluidIntake ? `${profile.fluidIntake}L/day` : null },
-    ]);
+      // Activity Details
+      addDataSection('Activity Details', [
+        { label: 'Discipline', value: profile.disciplines?.join(', ') },
+        { label: 'Race Distance', value: profile.raceDistance },
+        { label: 'Session Duration', value: profile.sessionDuration ? `${profile.sessionDuration} hours` : null },
+        { label: 'Avg Pace', value: profile.avgPace },
+        { label: 'Upcoming Events', value: profile.upcomingEvents }
+      ]);
 
-    // ====== FOOTER ======
-    const footerY = pageHeight - 20;
-    doc.setFillColor(240, 240, 240);
-    doc.rect(0, footerY - 5, pageWidth, 25, 'F');
-    doc.setFontSize(11);
-    doc.setFont('helvetica', 'bold');
-    doc.setTextColor(0, 0, 0);
-    doc.text('SUPPLME - Science-Backed Hydration', pageWidth / 2, footerY + 3, { align: 'center' });
-    doc.setFont('helvetica', 'normal');
-    doc.setFontSize(8);
-    doc.setTextColor(100, 100, 100);
-    doc.text('This personalized guide is based on your individual profile and conditions.', pageWidth / 2, footerY + 10, { align: 'center' });
+      // Environment
+      addDataSection('Environment', [
+        { label: 'Training Temp', value: profile.trainingTempRange ? `${profile.trainingTempRange.min}-${profile.trainingTempRange.max}°C` : null },
+        { label: 'Humidity', value: profile.humidity ? `${profile.humidity}%` : null },
+        { label: 'Altitude', value: profile.altitude },
+        { label: 'Sun Exposure', value: profile.sunExposure }
+      ]);
+
+      // Sweat Profile
+      addDataSection('Sweat Profile', [
+        { label: 'Sweat Rate', value: profile.sweatRate },
+        { label: 'Sweat Saltiness', value: profile.sweatSaltiness },
+        { label: 'Sodium Test', value: profile.sweatSodiumTest ? `${profile.sweatSodiumTest} mg/L` : null },
+        { label: 'Daily Salt Intake', value: profile.dailySaltIntake }
+      ]);
+
+      // ========== FOOTER ==========
+      const footerY = pageHeight - 15;
+      doc.setDrawColor(colors.coolGray[0], colors.coolGray[1], colors.coolGray[2]);
+      doc.setLineWidth(0.3);
+      doc.line(margin, footerY - 5, pageWidth - margin, footerY - 5);
+      
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(colors.charcoal[0], colors.charcoal[1], colors.charcoal[2]);
+      doc.text('SUPPLME', pageWidth / 2, footerY, { align: 'center' });
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(7);
+      doc.setTextColor(colors.mediumGray[0], colors.mediumGray[1], colors.mediumGray[2]);
+      doc.text('Science-Backed Hydration & Absorption', pageWidth / 2, footerY + 4, { align: 'center' });
 
       // Save PDF
       const fileName = `supplme-guide-${profile.fullName?.replace(/\s+/g, '-').toLowerCase() || 'user'}-${new Date().getTime()}.pdf`;
@@ -656,7 +795,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
       toast({
         title: "PDF Downloaded",
-        description: "Your personalized hydration plan has been downloaded.",
+        description: "Your premium hydration guide is ready.",
       });
     } catch (error) {
       console.error('Error generating PDF:', error);
