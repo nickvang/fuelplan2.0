@@ -267,11 +267,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   };
 
   const downloadPDF = () => {
-    const doc = new jsPDF();
-    const pageWidth = doc.internal.pageSize.width;
-    const pageHeight = doc.internal.pageSize.height;
-    const margin = 15;
-    let y = 20;
+    try {
+      const doc = new jsPDF();
+      const pageWidth = doc.internal.pageSize.width;
+      const pageHeight = doc.internal.pageSize.height;
+      const margin = 15;
+      let y = 20;
 
     // Helper function to check if we need a page break
     const checkPageBreak = (neededSpace: number = 40) => {
@@ -649,14 +650,22 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     doc.setTextColor(100, 100, 100);
     doc.text('This personalized guide is based on your individual profile and conditions.', pageWidth / 2, footerY + 10, { align: 'center' });
 
-    // Save PDF
-    const fileName = `supplme-guide-${profile.fullName?.replace(/\s+/g, '-').toLowerCase() || 'user'}-${new Date().getTime()}.pdf`;
-    doc.save(fileName);
+      // Save PDF
+      const fileName = `supplme-guide-${profile.fullName?.replace(/\s+/g, '-').toLowerCase() || 'user'}-${new Date().getTime()}.pdf`;
+      doc.save(fileName);
 
-    toast({
-      title: "PDF Downloaded",
-      description: "Your personalized hydration plan has been downloaded.",
-    });
+      toast({
+        title: "PDF Downloaded",
+        description: "Your personalized hydration plan has been downloaded.",
+      });
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      toast({
+        title: "Download Failed",
+        description: "There was an error generating your PDF. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
