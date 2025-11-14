@@ -498,12 +498,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       y += cardH + 20;
 
       // ==== WHY SO MANY SACHETS? ====
-      checkPage(50);
+      checkPage(55);
       doc.setFillColor(240, 250, 255);
-      doc.rect(M, y, W - 2 * M, 42, 'F');
+      doc.rect(M, y, W - 2 * M, 50, 'F');
       doc.setDrawColor(0, 148, 255);
       doc.setLineWidth(0.5);
-      doc.line(M, y, M, y + 42);
+      doc.line(M, y, M, y + 50);
       
       const explainerY = y + 8;
       doc.setFontSize(10);
@@ -524,8 +524,14 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       const explainerText2 = `The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. This isn't guesswork—it's science-backed hydration optimized for your specific conditions.`;
       const explainerLines2 = doc.splitTextToSize(explainerText2, W - 2 * M - 10);
       doc.text(explainerLines2, M + 5, textY);
+      textY += explainerLines2.length * 3.5 + 3;
       
-      y += 50;
+      doc.setFont('helvetica', 'bold');
+      const explainerText3 = `This formula has been tested and validated with numerous athletes, doctors, physiotherapists, and nutritionists to ensure optimal performance and safety.`;
+      const explainerLines3 = doc.splitTextToSize(explainerText3, W - 2 * M - 10);
+      doc.text(explainerLines3, M + 5, textY);
+      
+      y += 58;
 
       // ==== AI-ENHANCED ANALYSIS ====
       if (aiInsights) {
@@ -957,6 +963,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           <p className="leading-relaxed">
             The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. 
             This isn't guesswork—it's science-backed hydration optimized for your specific conditions.
+          </p>
+          <p className="leading-relaxed font-semibold">
+            This formula has been tested and validated with numerous athletes, doctors, physiotherapists, and nutritionists to ensure optimal performance and safety.
           </p>
         </AlertDescription>
       </Alert>
