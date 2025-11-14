@@ -497,6 +497,36 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
       y += cardH + 20;
 
+      // ==== WHY SO MANY SACHETS? ====
+      checkPage(50);
+      doc.setFillColor(240, 250, 255);
+      doc.rect(M, y, W - 2 * M, 42, 'F');
+      doc.setDrawColor(0, 148, 255);
+      doc.setLineWidth(0.5);
+      doc.line(M, y, M, y + 42);
+      
+      const explainerY = y + 8;
+      doc.setFontSize(10);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(0, 148, 255);
+      doc.text('Why this many sachets?', M + 5, explainerY);
+      
+      let textY = explainerY + 8;
+      doc.setFontSize(8);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(60, 60, 60);
+      
+      const explainerText1 = `Your body loses ${plan.totalFluidLoss.toFixed(0)}ml of fluid during this session through sweat. Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption—up to 3x more effective than water alone.`;
+      const explainerLines1 = doc.splitTextToSize(explainerText1, W - 2 * M - 10);
+      doc.text(explainerLines1, M + 5, textY);
+      textY += explainerLines1.length * 3.5 + 3;
+      
+      const explainerText2 = `The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. This isn't guesswork—it's science-backed hydration optimized for your specific conditions.`;
+      const explainerLines2 = doc.splitTextToSize(explainerText2, W - 2 * M - 10);
+      doc.text(explainerLines2, M + 5, textY);
+      
+      y += 50;
+
       // ==== AI-ENHANCED ANALYSIS ====
       if (aiInsights) {
         checkPage(100);
@@ -914,6 +944,22 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </p>
         </Card>
       </div>
+
+      {/* Why So Many Sachets? Explainer */}
+      <Alert className="border-l-4 border-l-primary bg-primary/5">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
+        <AlertDescription className="text-muted-foreground space-y-2">
+          <p className="leading-relaxed">
+            Your body loses <strong>{plan.totalFluidLoss.toFixed(0)}ml of fluid</strong> during this session through sweat. 
+            Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption—up to 3x more effective than water alone.
+          </p>
+          <p className="leading-relaxed">
+            The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. 
+            This isn't guesswork—it's science-backed hydration optimized for your specific conditions.
+          </p>
+        </AlertDescription>
+      </Alert>
 
       {/* Distance Adjustment Tool */}
       <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
