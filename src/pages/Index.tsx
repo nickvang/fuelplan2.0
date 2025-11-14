@@ -20,7 +20,6 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Clock } from 'lucide-react';
 import supplmeLogo from '@/assets/supplme-logo.png';
-import brandLogo from '@/assets/brand-logo.svg';
 
 const Index = () => {
   const { t } = useLanguage();
