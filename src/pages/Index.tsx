@@ -946,36 +946,42 @@ const Index = () => {
                   }
                 />
               </div>
-              <div className="grid grid-cols-2 gap-4">
+
+              {/* Temperature input - Quick mode */}
+              {version === 'simple' && (
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="sessionDuration">
-                      {t('activity.sessionDuration')} *
-                    </Label>
-                    <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
+                    <Label htmlFor="temperature">Expected Temperature (°C)</Label>
+                    <InfoTooltip content="What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs." />
                   </div>
                   <Input
-                    id="sessionDuration"
+                    id="temperature"
                     type="number"
-                    step="0.5"
-                    value={profile.sessionDuration || ''}
-                    onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
-                    placeholder="Average"
+                    value={profile.trainingTempRange?.min || ''}
+                    onChange={(e) => {
+                      const temp = parseInt(e.target.value);
+                      updateProfile({ trainingTempRange: { min: temp, max: temp } });
+                    }}
+                    placeholder="e.g., 20"
                   />
                 </div>
-                <div>
-                  <Label htmlFor="longestSession">
-                    {t('activity.longestSession')}
+              )}
+
+              <div>
+                <div className="flex items-center">
+                  <Label htmlFor="sessionDuration">
+                    {t('activity.sessionDuration')} *
                   </Label>
-                  <Input
-                    id="longestSession"
-                    type="number"
-                    step="0.5"
-                    value={profile.longestSession || ''}
-                    onChange={(e) => updateProfile({ longestSession: parseFloat(e.target.value) })}
-                    placeholder="Max"
-                  />
+                  <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
                 </div>
+                <Input
+                  id="sessionDuration"
+                  type="number"
+                  step="0.5"
+                  value={profile.sessionDuration || ''}
+                  onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
+                  placeholder="Average"
+                />
               </div>
 
               {/* Race Planning Section */}
@@ -1216,26 +1222,6 @@ const Index = () => {
                   </div>
                 </RadioGroup>
               </div>
-
-              {/* Temperature input - Quick mode */}
-              {version === 'simple' && (
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="temperature">Expected Temperature (°C)</Label>
-                    <InfoTooltip content="What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs." />
-                  </div>
-                  <Input
-                    id="temperature"
-                    type="number"
-                    value={profile.trainingTempRange?.min || ''}
-                    onChange={(e) => {
-                      const temp = parseInt(e.target.value);
-                      updateProfile({ trainingTempRange: { min: temp, max: temp } });
-                    }}
-                    placeholder="e.g., 20"
-                  />
-                </div>
-              )}
 
               {/* Advanced metrics - Pro mode only */}
               {version === 'pro' && (
