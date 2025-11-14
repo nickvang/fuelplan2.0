@@ -976,7 +976,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </p>
           {version === 'simple' && (
             <p className="leading-relaxed text-primary font-semibold pt-2 border-t border-primary/20 mt-3">
-              💡 Want even more precision? Upgrade to our <strong>Pro/Advanced version</strong> for detailed environmental and physiological customization, or <strong>upload data from your smartwatch/device</strong> for AI-powered insights based on your actual recovery and performance metrics.
+              💡 Want even more precision? Take our <strong>Pro/Advanced version</strong> for detailed environmental and physiological customization, or <strong>upload data from your smartwatch/device</strong> for AI-powered insights based on your actual recovery and performance metrics.
             </p>
           )}
         </AlertDescription>
