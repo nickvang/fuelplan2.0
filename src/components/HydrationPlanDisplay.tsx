@@ -11,7 +11,6 @@ import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
-import brandLogo from '@/assets/brand-logo.svg';
 import { jsPDF } from 'jspdf';
 
 interface HydrationPlanDisplayProps {
@@ -769,11 +768,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
-      {/* Logo at top */}
-      <div className="flex justify-start mb-6">
-        <img src={brandLogo} alt="Brand Logo" className="h-12 w-auto" />
-      </div>
-
       {/* Epic Header - Achievement Unlocked Style */}
       <div className="relative overflow-hidden">
         {/* Background Glow Effect */}
