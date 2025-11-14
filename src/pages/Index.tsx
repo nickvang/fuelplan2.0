@@ -1217,6 +1217,26 @@ const Index = () => {
                 </RadioGroup>
               </div>
 
+              {/* Temperature input - Quick mode */}
+              {version === 'simple' && (
+                <div>
+                  <div className="flex items-center">
+                    <Label htmlFor="temperature">Expected Temperature (°C)</Label>
+                    <InfoTooltip content="What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs." />
+                  </div>
+                  <Input
+                    id="temperature"
+                    type="number"
+                    value={profile.trainingTempRange?.min || ''}
+                    onChange={(e) => {
+                      const temp = parseInt(e.target.value);
+                      updateProfile({ trainingTempRange: { min: temp, max: temp } });
+                    }}
+                    placeholder="e.g., 20"
+                  />
+                </div>
+              )}
+
               {/* Advanced metrics - Pro mode only */}
               {version === 'pro' && (
                 <>
