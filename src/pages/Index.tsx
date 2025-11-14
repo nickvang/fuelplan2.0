@@ -37,8 +37,7 @@ const Index = () => {
   const [profile, setProfile] = useState<Partial<HydrationProfile>>({
     primaryGoal: 'performance',
     disciplines: [],
-    // Simple mode defaults (hidden from user)
-    trainingTempRange: { min: 15, max: 20 },
+    // Simple mode defaults (hidden from user) - no temperature default
     humidity: 50,
     altitude: 'sea-level',
     sunExposure: 'partial',
@@ -136,14 +135,15 @@ const Index = () => {
           const needsRaceDistance = profile.hasUpcomingRace;
           const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
           
-          // Simple mode: just need basic activity info + terrain + race distance if applicable
+          // Simple mode: just need basic activity info + terrain + temperature + race distance if applicable
           if (version === 'simple') {
             const isValid = !!(profile.disciplines && profile.disciplines.length > 0 && 
-                     profile.terrain && profile.sessionDuration && hasRequiredRaceDistance);
+                     profile.terrain && profile.sessionDuration && profile.trainingTempRange?.min && hasRequiredRaceDistance);
             console.log('Step 1 (Simple) Validation:', {
               disciplines: profile.disciplines,
               terrain: profile.terrain,
               sessionDuration: profile.sessionDuration,
+              temperature: profile.trainingTempRange?.min,
               hasUpcomingRace: profile.hasUpcomingRace,
               raceDistance: profile.raceDistance,
               needsRaceDistance,
@@ -156,6 +156,11 @@ const Index = () => {
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
                    profile.terrain && profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
         case 2:
+          // Simple mode: require temperature
+          if (version === 'simple') {
+            return !!(profile.age && profile.sex && profile.height && profile.weight && profile.trainingTempRange?.min);
+          }
+          // Pro mode: just basic body info
           return !!(profile.age && profile.sex && profile.height && profile.weight);
         case 3:
           return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
@@ -207,6 +212,7 @@ const Index = () => {
         // Apply default values that are hidden from user in Simple mode
         if (!completeProfile.sex) completeProfile.sex = 'male';
         if (!completeProfile.indoorOutdoor) completeProfile.indoorOutdoor = 'outdoor';
+        // Temperature is now required and should be provided by user
       }
       
       try {
@@ -275,7 +281,6 @@ const Index = () => {
       dailySaltIntake: 'medium',
       primaryGoal: 'performance',
       disciplines: [],
-      trainingTempRange: { min: 15, max: 20 },
       humidity: 50,
       altitude: 'sea-level',
       sunExposure: 'partial',
@@ -951,7 +956,7 @@ const Index = () => {
               {version === 'simple' && (
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="temperature">Expected Temperature (°C)</Label>
+                    <Label htmlFor="temperature">Expected Temperature (°C) *</Label>
                     <InfoTooltip content="What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs." />
                   </div>
                   <Input
