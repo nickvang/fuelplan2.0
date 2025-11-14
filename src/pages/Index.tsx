@@ -20,6 +20,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Clock } from 'lucide-react';
 import supplmeLogo from '@/assets/supplme-logo.png';
+import brandLogo from '@/assets/brand-logo.svg';
 
 const Index = () => {
   const { t } = useLanguage();
@@ -356,6 +357,7 @@ const Index = () => {
             onFullReset={handleReset}
             hasSmartWatchData={!!analyzedData && smartwatchData.length > 0}
             rawSmartWatchData={rawSmartWatchData}
+            version={version || undefined}
           />
         </div>
       </div>
@@ -741,7 +743,7 @@ const Index = () => {
               </div>
               
               <p className="text-center text-sm text-muted-foreground pt-2">
-                Designed for endurance athletes: trail runners, triathletes, and ultra competitors
+                For those who train hard, race harder, and expect more from their hydration
               </p>
             </div>
           </QuestionnaireStep>
