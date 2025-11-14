@@ -181,63 +181,120 @@ Provide:
 
 Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_level": "", "professional_recommendation": "", "performance_comparison": "", "optimization_tips": []}`;
 
-    const response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: 'google/gemini-2.5-flash',
-        messages: [
-          { role: 'system', content: systemPrompt },
-          { role: 'user', content: userPrompt }
-        ],
-        tools: [
-          {
-            type: "function",
-            function: {
-              name: "provide_hydration_insights",
-              description: "Provide personalized hydration insights for an athlete",
-              parameters: {
-                type: "object",
-                properties: {
-                  personalized_insight: {
-                    type: "string",
-                    description: "Why these numbers make sense for this athlete (2-3 sentences)"
-                  },
-                  risk_factors: {
-                    type: "string",
-                    description: "Concerning factors that increase dehydration risk (1-2 sentences)"
-                  },
-                  confidence_level: {
-                    type: "string",
-                    enum: ["high", "medium", "low"],
-                    description: "Confidence level based on data completeness"
-                  },
-                  professional_recommendation: {
-                    type: "string",
-                    description: "When to seek professional testing (1 sentence)"
-                  },
-                  performance_comparison: {
-                    type: "string",
-                    description: "Compare to typical athletes in their discipline (2 sentences)"
-                  },
-                  optimization_tips: {
-                    type: "array",
-                    items: { type: "string" },
-                    description: "3-4 specific actionable tips (each 1 sentence)"
+    // Retry logic for handling temporary service issues
+    const maxRetries = 3;
+    let lastError: any = null;
+    let response: Response | null = null;
+
+    for (let attempt = 1; attempt <= maxRetries; attempt++) {
+      try {
+        console.log(`[Info] AI Gateway request attempt ${attempt}/${maxRetries}`);
+        
+        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            model: 'google/gemini-2.5-flash',
+            messages: [
+              { role: 'system', content: systemPrompt },
+              { role: 'user', content: userPrompt }
+            ],
+            tools: [
+              {
+                type: "function",
+                function: {
+                  name: "provide_hydration_insights",
+                  description: "Provide personalized hydration insights for an athlete",
+                  parameters: {
+                    type: "object",
+                    properties: {
+                      personalized_insight: {
+                        type: "string",
+                        description: "Why these numbers make sense for this athlete (2-3 sentences)"
+                      },
+                      risk_factors: {
+                        type: "string",
+                        description: "Concerning factors that increase dehydration risk (1-2 sentences)"
+                      },
+                      confidence_level: {
+                        type: "string",
+                        enum: ["high", "medium", "low"],
+                        description: "Confidence level based on data completeness"
+                      },
+                      professional_recommendation: {
+                        type: "string",
+                        description: "When to seek professional testing (1 sentence)"
+                      },
+                      performance_comparison: {
+                        type: "string",
+                        description: "Compare to typical athletes in their discipline (2 sentences)"
+                      },
+                      optimization_tips: {
+                        type: "array",
+                        items: { type: "string" },
+                        description: "3-4 specific actionable tips (each 1 sentence)"
+                      }
+                    },
+                    required: ["personalized_insight", "risk_factors", "confidence_level", "professional_recommendation", "performance_comparison", "optimization_tips"],
+                    additionalProperties: false
                   }
-                },
-                required: ["personalized_insight", "risk_factors", "confidence_level", "professional_recommendation", "performance_comparison", "optimization_tips"],
-                additionalProperties: false
+                }
               }
-            }
-          }
-        ],
-        tool_choice: { type: "function", function: { name: "provide_hydration_insights" } }
-      }),
-    });
+            ],
+            tool_choice: { type: "function", function: { name: "provide_hydration_insights" } }
+          }),
+        });
+
+        // If response is ok, break out of retry loop
+        if (response.ok) {
+          console.log(`[Success] AI Gateway responded successfully on attempt ${attempt}`);
+          break;
+        }
+
+        // Handle specific error codes that shouldn't be retried
+        if (response.status === 429 || response.status === 402 || response.status === 400) {
+          break;
+        }
+
+        // For other errors, save and continue to retry
+        lastError = { status: response.status, statusText: response.statusText };
+        console.warn(`[Warn] AI Gateway error on attempt ${attempt}: ${response.status} ${response.statusText}`);
+
+        // Wait before retrying (exponential backoff: 1s, 2s, 4s)
+        if (attempt < maxRetries) {
+          const delayMs = Math.pow(2, attempt - 1) * 1000;
+          console.log(`[Info] Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      } catch (error) {
+        lastError = error;
+        console.error(`[Error] Network error on attempt ${attempt}:`, error);
+        
+        // Wait before retrying on network errors
+        if (attempt < maxRetries) {
+          const delayMs = Math.pow(2, attempt - 1) * 1000;
+          console.log(`[Info] Retrying in ${delayMs}ms...`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+        }
+      }
+    }
+
+    // Check if we have a valid response after retries
+    if (!response) {
+      console.error('[Internal] All retry attempts failed:', lastError);
+      return new Response(
+        JSON.stringify({ 
+          error: 'AI service temporarily unavailable. Please try again.',
+          code: 'SERVICE_UNAVAILABLE'
+        }),
+        { 
+          status: 503, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
 
     if (!response.ok) {
       if (response.status === 429) {
