@@ -527,7 +527,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       textY += explainerLines2.length * 3.5 + 3;
       
       doc.setFont('helvetica', 'bold');
-      const explainerText3 = `This formula has been tested and validated with numerous athletes, doctors, physiotherapists, and nutritionists to ensure optimal performance and safety.`;
+      const explainerText3 = `This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.`;
       const explainerLines3 = doc.splitTextToSize(explainerText3, W - 2 * M - 10);
       doc.text(explainerLines3, M + 5, textY);
       
@@ -965,7 +965,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             This isn't guesswork—it's science-backed hydration optimized for your specific conditions.
           </p>
           <p className="leading-relaxed font-semibold">
-            This formula has been tested and validated with numerous athletes, doctors, physiotherapists, and nutritionists to ensure optimal performance and safety.
+            This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.
           </p>
         </AlertDescription>
       </Alert>
