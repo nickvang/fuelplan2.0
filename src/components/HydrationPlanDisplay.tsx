@@ -11,6 +11,7 @@ import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
+import brandLogo from '@/assets/brand-logo.svg';
 import { jsPDF } from 'jspdf';
 
 interface HydrationPlanDisplayProps {
@@ -20,9 +21,10 @@ interface HydrationPlanDisplayProps {
   onFullReset?: () => void;
   hasSmartWatchData?: boolean;
   rawSmartWatchData?: any;
+  version?: 'simple' | 'pro';
 }
 
-export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, onFullReset, hasSmartWatchData = false, rawSmartWatchData }: HydrationPlanDisplayProps) {
+export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, onFullReset, hasSmartWatchData = false, rawSmartWatchData, version }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
   
@@ -767,6 +769,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
   return (
     <div className="space-y-10 animate-in fade-in duration-700">
+      {/* Logo at top */}
+      <div className="flex justify-start mb-6">
+        <img src={brandLogo} alt="Brand Logo" className="h-12 w-auto" />
+      </div>
+
       {/* Epic Header - Achievement Unlocked Style */}
       <div className="relative overflow-hidden">
         {/* Background Glow Effect */}
@@ -967,6 +974,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           <p className="leading-relaxed font-semibold">
             This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.
           </p>
+          {version === 'simple' && (
+            <p className="leading-relaxed text-primary font-semibold pt-2 border-t border-primary/20 mt-3">
+              💡 Want even more precision? Upgrade to our <strong>Pro/Advanced version</strong> for detailed environmental and physiological customization, or <strong>upload data from your smartwatch/device</strong> for AI-powered insights based on your actual recovery and performance metrics.
+            </p>
+          )}
         </AlertDescription>
       </Alert>
 
