@@ -90,7 +90,7 @@ serve(async (req) => {
           smartWatchInsights += `- Exercise HR: ${avgHR.toFixed(0)} bpm avg, ${maxHR} bpm max\n`;
         }
         
-        smartWatchInsights += `\nKEY INSIGHT: This real data allows for MUCH more accurate hydration recommendations. Use it to explain why this athlete may need MORE or LESS hydration than typical calculations suggest.\n`;
+        smartWatchInsights += '\nUSE THIS REAL DATA to provide MORE PRECISE insights about their readiness, recovery needs, and hydration optimization based on actual physiological metrics, not just estimates!';
       }
     }
 
@@ -166,10 +166,8 @@ ${smartWatchInsights}
 PLAN:
 - PRE: ${plan.preActivity.water}ml water + ${plan.preActivity.electrolytes} Supplme sachet
 - DURING: ${plan.duringActivity.waterPerHour}ml/hour + ${plan.duringActivity.electrolytesPerHour} sachets/hour
-- POST: ${plan.postActivity.water}ml water + ${plan.postActivity.electrolytes} sachets
+- POST: ${plan.postActivity.water}ml + ${plan.postActivity.electrolytes} sachet
 - Total fluid loss: ${plan.totalFluidLoss}ml
-
-${hasSmartWatchData ? 'IMPORTANT: Use the smartwatch data to provide SPECIFIC insights about this athlete\'s actual physiological state (recovery, HRV, sleep, workout strain). Explain how these REAL metrics affect their hydration needs differently than a generic calculation.' : ''}
 
 Provide:
 1. personalized_insight: Why these numbers make sense for THIS athlete based on their ${hasSmartWatchData ? 'ACTUAL smartwatch data' : 'profile'} (2-3 sentences)
@@ -295,7 +293,9 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
           headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
         }
       );
+    }
 
+    // Handle error responses
     if (!response.ok) {
       if (response.status === 429) {
         return new Response(
@@ -357,7 +357,7 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
       console.error('[Internal] Failed to parse tool call arguments:', e);
       return new Response(
         JSON.stringify({ 
-          error: 'Unable to process AI response. Please try again.',
+          error: 'Failed to parse AI response. Please try again.',
           code: 'PARSE_ERROR'
         }),
         { 
@@ -369,17 +369,22 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
 
     return new Response(
       JSON.stringify(enhancedData),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
 
   } catch (error) {
-    console.error('[Internal] Error in enhance-hydration-plan:', error);
+    console.error('[Fatal] Unexpected error:', error);
     return new Response(
       JSON.stringify({ 
-        error: 'An unexpected error occurred. Please try again later.',
+        error: 'Internal server error. Please try again.',
         code: 'INTERNAL_ERROR'
       }),
-      { status: 500, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      { 
+        status: 500, 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+      }
     );
   }
 });
