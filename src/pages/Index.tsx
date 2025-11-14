@@ -956,8 +956,14 @@ const Index = () => {
               {version === 'simple' && (
                 <div>
                   <div className="flex items-center">
-                    <Label htmlFor="temperature">Expected Temperature (°C) *</Label>
-                    <InfoTooltip content="What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs." />
+                    <Label htmlFor="temperature">
+                      {profile.disciplines?.[0] === 'Swimming' ? 'Water Temperature (°C) *' : 'Expected Temperature (°C) *'}
+                    </Label>
+                    <InfoTooltip content={
+                      profile.disciplines?.[0] === 'Swimming' 
+                        ? "What water temperature do you expect? This helps us calculate your fluid needs during swimming."
+                        : "What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs."
+                    } />
                   </div>
                   <Input
                     id="temperature"
@@ -967,7 +973,7 @@ const Index = () => {
                       const temp = parseInt(e.target.value);
                       updateProfile({ trainingTempRange: { min: temp, max: temp } });
                     }}
-                    placeholder="e.g., 20"
+                    placeholder={profile.disciplines?.[0] === 'Swimming' ? 'e.g., 18' : 'e.g., 20'}
                   />
                 </div>
               )}
