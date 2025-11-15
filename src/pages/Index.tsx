@@ -155,7 +155,7 @@ const Index = () => {
           }
           // Pro mode: need full activity details + terrain + race distance if applicable
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.terrain && profile.sessionDuration && profile.indoorOutdoor && hasRequiredRaceDistance);
+                   profile.terrain && profile.sessionDuration && hasRequiredRaceDistance);
         case 2:
           // Simple mode: require temperature
           if (version === 'simple') {
@@ -215,6 +215,9 @@ const Index = () => {
         if (!completeProfile.indoorOutdoor) completeProfile.indoorOutdoor = 'outdoor';
         // Temperature is now required and should be provided by user
       }
+      
+      // Apply default for Pro mode as well
+      if (!completeProfile.indoorOutdoor) completeProfile.indoorOutdoor = 'outdoor';
       
       try {
         // Validate and sanitize profile data before submission
@@ -486,7 +489,6 @@ const Index = () => {
                 <li>• Activity: {profile.disciplines.join(', ')}{analyzedData?.disciplines ? ' (from your data - you still choose your guide)' : ''}</li>
               )}
               {profile.sessionDuration && <li>• Duration: {profile.sessionDuration} hours</li>}
-              {version === 'pro' && profile.indoorOutdoor && <li>• Environment: {profile.indoorOutdoor}</li>}
               
               {/* Environmental (Pro mode) */}
               {version === 'pro' && profile.trainingTempRange && (
@@ -1030,33 +1032,6 @@ const Index = () => {
                 onPaceChange={(pace) => updateProfile({ avgPace: pace })}
                 onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
               />
-
-              {/* Training Location */}
-              {version === 'pro' && (
-                <div>
-                  <div className="flex items-center">
-                    <Label>Training Location</Label>
-                    <InfoTooltip content="Indoor environments typically have lower fluid loss due to controlled temperature and airflow." />
-                  </div>
-                  <RadioGroup
-                    value={profile.indoorOutdoor || ''}
-                    onValueChange={(value) => updateProfile({ indoorOutdoor: value as 'indoor' | 'outdoor' | 'both' })}
-                  >
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="indoor" id="indoor" />
-                      <Label htmlFor="indoor" className="font-normal">Indoor</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="outdoor" id="outdoor" />
-                      <Label htmlFor="outdoor" className="font-normal">Outdoor</Label>
-                    </div>
-                    <div className="flex items-center space-x-2">
-                      <RadioGroupItem value="both" id="both" />
-                      <Label htmlFor="both" className="font-normal">Both</Label>
-                    </div>
-                  </RadioGroup>
-                </div>
-              )}
             </div>
           </QuestionnaireStep>
         )}
