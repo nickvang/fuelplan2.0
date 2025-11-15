@@ -124,8 +124,10 @@ export function PaceDurationCalculator({
   const detectInputType = (value: string): 'pace' | 'duration' | null => {
     if (!value) return null;
     
-    // Check if it's a pace format (contains ":" for time-based pace)
-    if (value.includes(':')) {
+    // Check if it's a complete pace format (e.g., "5:30" or "1:45/100m")
+    // Only detect as pace if it has both minutes AND seconds
+    const pacePattern = /^\d+:\d+/;
+    if (pacePattern.test(value)) {
       return 'pace';
     }
     
