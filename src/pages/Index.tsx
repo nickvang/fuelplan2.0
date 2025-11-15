@@ -137,16 +137,19 @@ const Index = () => {
           const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
           
           // Simple mode: just need basic activity info + terrain + temperature + race distance if applicable
+          // sessionDuration can be calculated from pace + distance, so it's not strictly required in validation
           if (version === 'simple') {
+            const hasDistanceOrDuration = profile.raceDistance || profile.sessionDuration;
             const isValid = !!(profile.disciplines && profile.disciplines.length > 0 && 
-                     profile.terrain && profile.sessionDuration && profile.trainingTempRange?.min && hasRequiredRaceDistance);
+                     profile.terrain && hasDistanceOrDuration && profile.trainingTempRange?.min && hasRequiredRaceDistance);
             console.log('Step 1 (Simple) Validation:', {
               disciplines: profile.disciplines,
               terrain: profile.terrain,
+              raceDistance: profile.raceDistance,
               sessionDuration: profile.sessionDuration,
+              hasDistanceOrDuration,
               temperature: profile.trainingTempRange?.min,
               hasUpcomingRace: profile.hasUpcomingRace,
-              raceDistance: profile.raceDistance,
               needsRaceDistance,
               hasRequiredRaceDistance,
               isValid
@@ -154,8 +157,9 @@ const Index = () => {
             return isValid;
           }
           // Pro mode: need full activity details + terrain + race distance if applicable
+          const hasDistanceOrDuration = profile.raceDistance || profile.sessionDuration;
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.terrain && profile.sessionDuration && hasRequiredRaceDistance);
+                   profile.terrain && hasDistanceOrDuration && hasRequiredRaceDistance);
         case 2:
           // Simple mode: require temperature
           if (version === 'simple') {
@@ -1037,6 +1041,26 @@ const Index = () => {
                 </div>
               )}
 
+              {!profile.hasUpcomingRace && (
+                <div className="space-y-2">
+                  <Label htmlFor="trainingDistance">Training Distance</Label>
+                  <Input
+                    id="trainingDistance"
+                    value={profile.raceDistance || ''}
+                    onChange={(e) => updateProfile({ raceDistance: e.target.value })}
+                    placeholder={
+                      profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, 15km' :
+                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km' :
+                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 3km' :
+                      'e.g., 10km'
+                    }
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Optional: Enter distance to auto-calculate duration from your pace
+                  </p>
+                </div>
+              )}
+
               {/* Temperature input - Quick mode */}
               {version === 'simple' && (
                 <div className="space-y-2">
@@ -1065,7 +1089,7 @@ const Index = () => {
 
               <PaceDurationCalculator
                 discipline={profile.disciplines?.[0] || 'Running'}
-                raceDistance={profile.hasUpcomingRace ? profile.raceDistance : undefined}
+                raceDistance={profile.raceDistance}
                 goalTime={profile.hasUpcomingRace ? profile.goalTime : undefined}
                 currentPace={profile.avgPace}
                 onPaceChange={(pace) => updateProfile({ avgPace: pace })}
