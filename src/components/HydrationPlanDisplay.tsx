@@ -1137,10 +1137,18 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       </div>
                     </div>
 
-                    {/* Comparison Summary */}
+                    {/* Comparison Summary - Dynamic Message */}
                     <div className="pt-4 border-t border-border">
                       <p className="text-sm font-semibold text-foreground">
-                        {aiInsights.performance_comparison.split('.')[0] + '.'}
+                        {(profile.sweatRate === 'high' || profile.sweatSaltiness === 'high') ? (
+                          <>
+                            💡 <strong>Why you need a tailored plan:</strong> Your {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' ? 'high sweat rate and elevated sodium loss' : profile.sweatRate === 'high' ? 'high sweat rate' : 'elevated sodium loss'} means traditional hydration guides won't work for you. Average recommendations underestimate your needs.
+                          </>
+                        ) : (profile.sweatRate === 'low' || profile.sweatSaltiness === 'low') ? (
+                          <>Your hydration needs are moderate—standard protocols work well with minor adjustments for your conditions.</>
+                        ) : (
+                          <>Your profile aligns closely with average athletes, but timing and environmental factors still require precision.</>
+                        )}
                       </p>
                     </div>
                   </div>
