@@ -1043,17 +1043,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         ? `High sweat sodium concentration increases cramping risk. Each Supplme sachet delivers the precise electrolyte ratio to maintain muscle function.`
                         : `Your balanced profile allows for standard hydration protocols with ${plan.totalFluidLoss.toFixed(0)}ml total intake, adjusted for environmental conditions.`}
                     </p>
-
-                    <Collapsible>
-                      <CollapsibleTrigger className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
-                        Read full analysis <span className="text-xs">▼</span>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="pt-4">
-                        <p className="text-sm text-muted-foreground leading-relaxed">
-                          {aiInsights.personalized_insight}
-                        </p>
-                      </CollapsibleContent>
-                    </Collapsible>
                   </div>
                 </div>
               </Card>
