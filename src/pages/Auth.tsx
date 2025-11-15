@@ -82,7 +82,7 @@ export default function Auth() {
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
       <Card className="w-full max-w-md p-8 space-y-6">
         <div className="text-center space-y-2">
-          <img src={supplmeLogo} alt="Supplme" className="h-24 mx-auto" />
+          <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto" />
           <h1 className="text-2xl font-bold">Admin Access</h1>
           <p className="text-muted-foreground text-sm">
             {isLogin ? 'Sign in to access admin dashboard' : 'Create admin account'}

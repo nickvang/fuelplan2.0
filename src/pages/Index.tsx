@@ -374,13 +374,13 @@ const Index = () => {
       
       <div className="max-w-2xl mx-auto space-y-8 relative z-10">
         {/* Header - Shows on all steps */}
-        <div className="text-center space-y-6">
-          <div className="flex justify-end mb-4">
+        <div className="text-center space-y-4">
+          <div className="flex justify-end">
             <LanguageSwitcher />
           </div>
           <div className="relative inline-block group">
             <div className="absolute inset-0 glow-effect blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
-            <img src={supplmeLogo} alt="Supplme" className="h-28 md:h-32 mx-auto relative z-10 transition-transform duration-300 group-hover:scale-105" />
+            <img src={supplmeLogo} alt="Supplme" className="h-40 md:h-48 mx-auto relative z-10 transition-transform duration-300 group-hover:scale-105" />
           </div>
           <div className="space-y-2">
             <h1 className="text-4xl md:text-6xl font-black tracking-tighter chrome-shine uppercase">
