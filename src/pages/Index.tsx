@@ -374,7 +374,7 @@ const Index = () => {
       
       <div className="max-w-2xl mx-auto space-y-8 relative z-10">
         {/* Header - Shows on all steps */}
-        <div className="text-center space-y-4">
+        <div className="text-center space-y-2">
           <div className="flex justify-end">
             <LanguageSwitcher />
           </div>

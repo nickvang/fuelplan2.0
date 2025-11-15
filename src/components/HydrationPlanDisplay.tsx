@@ -773,7 +773,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         {/* Background Glow Effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-chrome-light/20 via-transparent to-chrome-light/20 blur-3xl"></div>
         
-        <div className="relative text-center space-y-4 py-6">
+        <div className="relative text-center space-y-2 py-2">
           {/* Logo with Glow */}
           <div className="relative inline-block">
             <div className="absolute inset-0 glow-effect blur-3xl opacity-40"></div>
