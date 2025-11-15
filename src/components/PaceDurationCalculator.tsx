@@ -6,6 +6,7 @@ import { InfoTooltip } from '@/components/InfoTooltip';
 interface PaceDurationCalculatorProps {
   discipline: string;
   raceDistance?: string;
+  goalTime?: string;
   currentPace?: string;
   onPaceChange: (pace: string) => void;
   onDurationChange: (duration: number) => void;
@@ -29,6 +30,7 @@ const raceDistanceMap: { [key: string]: number } = {
 export function PaceDurationCalculator({
   discipline,
   raceDistance,
+  goalTime,
   currentPace,
   onPaceChange,
   onDurationChange,
@@ -36,6 +38,7 @@ export function PaceDurationCalculator({
   const [inputValue, setInputValue] = useState('');
   const [calculatedValue, setCalculatedValue] = useState('');
   const [finishTime, setFinishTime] = useState('');
+  const [requiredPace, setRequiredPace] = useState('');
 
   useEffect(() => {
     // Initialize with current pace
@@ -43,6 +46,74 @@ export function PaceDurationCalculator({
       setInputValue(currentPace);
     }
   }, [currentPace]);
+
+  // Calculate required pace from goal time
+  useEffect(() => {
+    if (goalTime && raceDistance) {
+      const pace = calculatePaceFromGoalTime(goalTime, raceDistance);
+      if (pace) {
+        setRequiredPace(pace);
+        // Also update the main pace field
+        setInputValue(pace);
+        onPaceChange(pace);
+        
+        // Calculate duration
+        const duration = calculateDurationFromPace(pace, raceDistance);
+        if (duration !== null) {
+          setCalculatedValue(`${duration.toFixed(1)} hours`);
+          onDurationChange(duration);
+          const hours = Math.floor(duration);
+          const minutes = Math.round((duration - hours) * 60);
+          setFinishTime(`${hours}:${minutes.toString().padStart(2, '0')}`);
+        }
+      }
+    } else {
+      setRequiredPace('');
+    }
+  }, [goalTime, raceDistance, onPaceChange, onDurationChange]);
+
+  // Calculate pace from goal time
+  const calculatePaceFromGoalTime = (time: string, distance: string): string | null => {
+    if (!time || !distance) return null;
+
+    // Parse goal time (e.g., "1:30:00" or "1:30")
+    const timeMatch = time.match(/(\d+):(\d+)(?::(\d+))?/);
+    if (!timeMatch) return null;
+
+    const hours = parseInt(timeMatch[1]);
+    const minutes = parseInt(timeMatch[2]);
+    const seconds = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+    const totalMinutes = hours * 60 + minutes + seconds / 60;
+
+    // Get distance
+    let distanceKm = raceDistanceMap[distance];
+    if (!distanceKm) {
+      const numericDistance = parseFloat(distance);
+      if (!isNaN(numericDistance)) {
+        distanceKm = numericDistance;
+      } else {
+        return null;
+      }
+    }
+
+    // Calculate required pace
+    if (discipline === 'Running' || discipline === 'Hiking') {
+      const minutesPerKm = totalMinutes / distanceKm;
+      const paceMinutes = Math.floor(minutesPerKm);
+      const paceSeconds = Math.round((minutesPerKm - paceMinutes) * 60);
+      return `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+    } else if (discipline === 'Cycling') {
+      const kmPerHour = (distanceKm / totalMinutes) * 60;
+      return `${kmPerHour.toFixed(1)} km/h`;
+    } else if (discipline === 'Swimming') {
+      const minutesPer100m = (totalMinutes / (distanceKm * 10));
+      const paceMinutes = Math.floor(minutesPer100m);
+      const paceSeconds = Math.round((minutesPer100m - paceMinutes) * 60);
+      return `${paceMinutes}:${paceSeconds.toString().padStart(2, '0')}`;
+    }
+
+    return null;
+  };
 
   // Calculate duration from pace
   const calculateDurationFromPace = (pace: string, distance?: string): number | null => {
@@ -159,6 +230,12 @@ export function PaceDurationCalculator({
         placeholder={getPacePlaceholder()}
         className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
       />
+      {requiredPace && (
+        <div className="mt-2 p-3 rounded-lg bg-primary/10 border border-primary/30 animate-fade-in">
+          <p className="text-xs font-medium text-primary uppercase tracking-wide">Required Pace to Hit Goal</p>
+          <p className="text-lg font-bold text-foreground">{requiredPace}</p>
+        </div>
+      )}
       {calculatedValue && (
         <div className="mt-3 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 animate-fade-in">
           <div className="flex items-center justify-between">

@@ -1006,20 +1006,34 @@ const Index = () => {
               </div>
 
               {profile.hasUpcomingRace && (
-                <div className="space-y-2">
-                  <Label htmlFor="raceDistance">Distance (kilometers) *</Label>
-                <Input
-                  id="raceDistance"
-                  value={profile.raceDistance || ''}
-                  onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                  placeholder={
-                    profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
-                    profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
-                    profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
-                    profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
-                    'e.g., Half Marathon, Marathon, 50K'
-                  }
-                />
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="raceDistance">Race Distance *</Label>
+                    <Input
+                      id="raceDistance"
+                      value={profile.raceDistance || ''}
+                      onChange={(e) => updateProfile({ raceDistance: e.target.value })}
+                      placeholder={
+                        profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
+                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
+                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
+                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
+                        'e.g., Half Marathon, Marathon, 50K'
+                      }
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="goalTime">Goal Finish Time (optional)</Label>
+                    <Input
+                      id="goalTime"
+                      value={profile.goalTime || ''}
+                      onChange={(e) => updateProfile({ goalTime: e.target.value })}
+                      placeholder="e.g., 1:30:00 for 1 hour 30 minutes"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your target finish time to calculate required pace
+                    </p>
+                  </div>
                 </div>
               )}
 
@@ -1052,6 +1066,7 @@ const Index = () => {
               <PaceDurationCalculator
                 discipline={profile.disciplines?.[0] || 'Running'}
                 raceDistance={profile.hasUpcomingRace ? profile.raceDistance : undefined}
+                goalTime={profile.hasUpcomingRace ? profile.goalTime : undefined}
                 currentPace={profile.avgPace}
                 onPaceChange={(pace) => updateProfile({ avgPace: pace })}
                 onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
