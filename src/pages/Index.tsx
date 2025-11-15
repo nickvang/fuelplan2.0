@@ -510,44 +510,6 @@ const Index = () => {
           </div>
         )}
 
-        {/* Profile Progress Indicator - Only show in Pro mode */}
-        {step > 0 && !isGenerating && version === 'pro' && (
-          <div className="bg-green-50 dark:bg-green-950/30 border border-green-200 dark:border-green-800 rounded-lg p-4 animate-fade-in">
-            <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
-              ✓ {analyzedData ? 'Data analysis complete! We pre-filled:' : 'Profile progress:'}
-            </p>
-            <ul className="text-xs text-green-600 dark:text-green-400 space-y-1">
-              {/* Body & Physiology */}
-              {profile.age && <li>• Age: {profile.age} years</li>}
-              {profile.sex && <li>• Sex: {profile.sex}</li>}
-              {profile.height && <li>• Height: {profile.height} cm</li>}
-              {profile.weight && <li>• Weight: {profile.weight} kg</li>}
-              {profile.restingHeartRate && <li>• Resting heart rate: {profile.restingHeartRate} bpm</li>}
-              {profile.hrv && <li>• Heart rate variability: {profile.hrv} ms</li>}
-              
-              {/* Activity */}
-              {profile.disciplines && profile.disciplines.length > 0 && (
-                <li>• Activity: {profile.disciplines.join(', ')}{analyzedData?.disciplines ? ' (from your data - you still choose your guide)' : ''}</li>
-              )}
-              {profile.sessionDuration && <li>• Duration: {profile.sessionDuration} hours</li>}
-              
-              {/* Environmental (Pro mode) */}
-              {version === 'pro' && profile.trainingTempRange && (
-                <li>• Temperature: {profile.trainingTempRange.min}-{profile.trainingTempRange.max}°C</li>
-              )}
-              {version === 'pro' && profile.altitude && <li>• Altitude: {profile.altitude}</li>}
-              
-              {/* Sweat Profile (Pro mode) */}
-              {version === 'pro' && profile.sweatRate && <li>• Sweat rate: {profile.sweatRate}</li>}
-              {version === 'pro' && profile.sweatSaltiness && <li>• Sweat saltiness: {profile.sweatSaltiness}</li>}
-            </ul>
-            {analyzedData && (
-              <p className="text-xs text-green-600 dark:text-green-400 mt-2">
-                {t('analysis.skipping')}
-              </p>
-            )}
-          </div>
-        )}
 
         {/* Validation Warnings */}
         {validationWarnings.length > 0 && step > 0 && (
