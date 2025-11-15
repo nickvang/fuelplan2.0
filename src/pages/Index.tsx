@@ -985,8 +985,23 @@ const Index = () => {
                 </div>
               )}
 
-              <div>
-                <Label htmlFor="raceDistance">Distance (kilometers) *</Label>
+              {/* Race Option */}
+              <div className="space-y-2">
+                <div className="flex items-center gap-2">
+                  <Checkbox
+                    id="hasUpcomingRace"
+                    checked={profile.hasUpcomingRace || false}
+                    onCheckedChange={(checked) => updateProfile({ hasUpcomingRace: checked === true })}
+                  />
+                  <Label htmlFor="hasUpcomingRace" className="cursor-pointer">
+                    Are you training for a race or specific event?
+                  </Label>
+                </div>
+              </div>
+
+              {profile.hasUpcomingRace && (
+                <div className="space-y-2">
+                  <Label htmlFor="raceDistance">Distance (kilometers) *</Label>
                 <Input
                   id="raceDistance"
                   value={profile.raceDistance || ''}
@@ -999,7 +1014,8 @@ const Index = () => {
                     'e.g., Half Marathon, Marathon, 50K'
                   }
                 />
-              </div>
+                </div>
+              )}
 
               {/* Temperature input - Quick mode */}
               {version === 'simple' && (

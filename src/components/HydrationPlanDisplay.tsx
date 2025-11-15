@@ -47,9 +47,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         'sprint': 25.75, // 750m swim + 20km bike + 5km run
         'sprint tri': 25.75,
         
-        // Running distances
-        'marathon': 42.2,
+        // Running distances - ORDER MATTERS: check 'half marathon' BEFORE 'marathon'!
         'half marathon': 21.1,
+        'marathon': 42.2,
         'ultra': 50,
         '50k': 50,
         '100k': 100,
@@ -355,7 +355,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       y += 10;
       doc.setFontSize(9);
       doc.setTextColor(100, 100, 100);
-      const dur = profile.sessionDuration < 1 ? `${Math.round(profile.sessionDuration * 60)}-minute` : `${profile.sessionDuration.toFixed(1)}-hour`;
+      const dur = profile.sessionDuration < 1 ? `${Math.round(profile.sessionDuration * 60)} minute` : `${profile.sessionDuration.toFixed(1)} hour`;
       doc.text(`during your ${dur} ${profile.disciplines?.[0] || 'activity'}`, W / 2, y, { align: 'center' });
       y += 20;
 
@@ -373,7 +373,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       }
       doc.setFontSize(10);
       doc.setTextColor(120, 120, 120);
-      doc.text(`${profile.sessionDuration.toFixed(1)}-Hour ${profile.disciplines?.[0] || 'Activity'} Session`, W / 2, y, { align: 'center' });
+      doc.text(`${profile.sessionDuration.toFixed(1)} Hour ${profile.disciplines?.[0] || 'Activity'} Session`, W / 2, y, { align: 'center' });
       y += 15;
 
       // ==== THREE PHASE PLAN ====
@@ -747,7 +747,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       y += 7;
       doc.setFontSize(8);
       doc.setFont('helvetica', 'normal');
-      addText('All recommendations based on peer-reviewed research from PubMed, using evidence-based guidelines from sports science, exercise physiology, and nutrition research.', 8, false);
+      addText('All recommendations based on peer reviewed research from PubMed, using evidence based guidelines from sports science, exercise physiology, and nutrition research.', 8, false);
       y += 10;
 
       // ==== FOOTER ====
@@ -839,8 +839,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </p>
           <p className="text-base font-semibold text-muted-foreground">
             during your {profile.sessionDuration < 1 
-              ? `${Math.round(profile.sessionDuration * 60)}-minute` 
-              : `${profile.sessionDuration.toFixed(1)}-hour`} {profile.disciplines?.[0] || 'activity'}
+              ? `${Math.round(profile.sessionDuration * 60)} minute` 
+              : `${profile.sessionDuration.toFixed(1)} hour`} {profile.disciplines?.[0] || 'activity'}
           </p>
           {hasSmartWatchData && (
             <p className="text-sm font-semibold text-chrome-dark">
@@ -861,7 +861,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
         )}
         <p className="text-xl font-bold text-muted-foreground uppercase tracking-wide">
-          {profile.sessionDuration.toFixed(1)}-Hour {profile.disciplines?.[0] || 'Activity'} Session
+          {profile.sessionDuration.toFixed(1)} Hour {profile.disciplines?.[0] || 'Activity'} Session
         </p>
       </div>
 
@@ -912,7 +912,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   ? `${plan.duringActivity.waterPerHour} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sip every 15-20 min</p>
+              <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sip every 15 to 20 min</p>
             </div>
             <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme Sachets</p>
@@ -1153,12 +1153,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <div className="mt-6 p-4 bg-muted/50 rounded-xl border border-border/50">
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                          ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration}-hour session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
+                          ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration} hour session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
                           : profile.sweatRate === 'high'
-                          ? `⚡ Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml during this ${profile.sessionDuration}-hour session—above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes every 15-20 minutes to maintain performance.`
+                          ? `⚡ Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml during this ${profile.sessionDuration} hour session—above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes every 15 to 20 minutes to maintain performance.`
                           : profile.sweatSaltiness === 'high'
                           ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
-                          : `✓ Your balanced profile allows standard evidence-based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration} hours aligns with ACSM guidelines, adjusted for environmental factors.`}
+                          : `✓ Your balanced profile allows standard evidence based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration} hours aligns with ACSM guidelines, adjusted for environmental factors.`}
                         {profile.altitudeMeters && profile.altitudeMeters > 1000 && (
                           <span className="block mt-2 font-medium text-foreground">
                             🏔️ Training at {profile.altitudeMeters}m altitude increases respiratory water loss by {profile.altitudeMeters > 2500 ? '15-20%' : '10-15%'}—this has been factored into your plan.
@@ -1614,8 +1614,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           <h3 className="text-lg font-semibold">Scientific References</h3>
         </div>
         <p className="text-sm text-muted-foreground">
-          All hydration recommendations are based on peer-reviewed scientific research from PubMed, 
-          the leading database of biomedical literature. Our calculations use evidence-based guidelines 
+          All hydration recommendations are based on peer reviewed scientific research from PubMed, 
+          the leading database of biomedical literature. Our calculations use evidence based guidelines 
           from sports science, exercise physiology, and nutrition research.
         </p>
       </Card>

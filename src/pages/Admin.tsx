@@ -376,7 +376,7 @@ export default function Admin() {
     y += 10;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
-    doc.text(`during your ${pd.sessionDuration || '0'}-hour ${(pd.disciplines || [])[0] || 'activity'}`, pageWidth / 2, y, { align: 'center' });
+    doc.text(`during your ${pd.sessionDuration || '0'} hour ${(pd.disciplines || [])[0] || 'activity'}`, pageWidth / 2, y, { align: 'center' });
     
     y += 18;
 
