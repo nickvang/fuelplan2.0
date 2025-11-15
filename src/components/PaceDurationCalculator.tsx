@@ -14,17 +14,42 @@ interface PaceDurationCalculatorProps {
 
 // Distance mapping in kilometers
 const raceDistanceMap: { [key: string]: number } = {
+  // Running distances
   '5 km': 5,
+  '5km': 5,
+  '5K': 5,
   '10 km': 10,
+  '10km': 10,
+  '10K': 10,
   '15 km': 15,
+  '15km': 15,
+  '15K': 15,
   'Half Marathon': 21.0975,
+  'half marathon': 21.0975,
   'Marathon': 42.195,
+  'marathon': 42.195,
   '50 km': 50,
+  '50km': 50,
+  '50K': 50,
   '100 km': 100,
-  'Sprint Triathlon': 5, // run portion
+  '100km': 100,
+  '100K': 100,
+  
+  // Triathlon distances
+  'Sprint': 5,
+  'Sprint Triathlon': 5,
+  'Olympic': 10,
   'Olympic Triathlon': 10,
   'Half Ironman': 21.0975,
+  'Half Ironman (70.3)': 21.0975,
+  '70.3': 21.0975,
   'Ironman': 42.195,
+  
+  // Cycling distances
+  'Century': 160,
+  'century': 160,
+  'Half Century': 80,
+  'Metric Century': 100,
 };
 
 export function PaceDurationCalculator({

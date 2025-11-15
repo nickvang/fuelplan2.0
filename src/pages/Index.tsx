@@ -1049,10 +1049,12 @@ const Index = () => {
                     value={profile.raceDistance || ''}
                     onChange={(e) => updateProfile({ raceDistance: e.target.value })}
                     placeholder={
-                      profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, 15km' :
-                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km' :
-                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 3km' :
-                      'e.g., 10km'
+                      profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, Half Marathon, Marathon' :
+                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
+                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
+                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman' :
+                      profile.disciplines?.[0] === 'Hiking' ? 'e.g., 5km, 10km, 15km, 20km' :
+                      'e.g., 10km, Half Marathon'
                     }
                   />
                   <p className="text-xs text-muted-foreground">
