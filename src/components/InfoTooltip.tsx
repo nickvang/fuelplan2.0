@@ -13,7 +13,7 @@ interface InfoTooltipProps {
 export const InfoTooltip = ({ content }: InfoTooltipProps) => {
   return (
     <TooltipProvider>
-      <Tooltip>
+      <Tooltip delayDuration={200}>
         <TooltipTrigger asChild>
           <button
             type="button"
@@ -24,11 +24,13 @@ export const InfoTooltip = ({ content }: InfoTooltipProps) => {
           </button>
         </TooltipTrigger>
         <TooltipContent 
-          className="max-w-sm bg-background text-foreground border-border shadow-lg p-4 z-50" 
-          side="top"
-          align="center"
-          sideOffset={8}
-          collisionPadding={16}
+          className="max-w-sm bg-background text-foreground border-border shadow-lg p-4 z-[9999]" 
+          side="right"
+          align="start"
+          sideOffset={10}
+          alignOffset={-10}
+          collisionPadding={20}
+          avoidCollisions={true}
         >
           <p className="text-sm leading-relaxed">{content}</p>
         </TooltipContent>
