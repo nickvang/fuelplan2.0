@@ -139,9 +139,9 @@ export function PaceDurationCalculator({
     <div className="space-y-2">
       <div className="flex items-center gap-2">
         <Label htmlFor="pace" className="text-foreground">
-          {getPaceLabel()}
+          {getPaceLabel()} *
         </Label>
-        <InfoTooltip content="Enter your average pace. If a race distance is selected, we'll automatically calculate the session duration." />
+        <InfoTooltip content="Enter your average pace. This is required to calculate accurate fluid needs for pre, during, and post-activity hydration. If a race distance is selected, we'll automatically calculate the session duration." />
       </div>
       <Input
         id="pace"
