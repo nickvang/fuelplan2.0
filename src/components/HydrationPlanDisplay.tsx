@@ -1184,25 +1184,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         </div>
                       ))}
                   </div>
-
-                  {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
-                    <Collapsible>
-                      <CollapsibleTrigger className="w-full mt-4">
-                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors">
-                          <span className="text-sm font-bold text-primary">+ {aiInsights.optimization_tips.length} Advanced Optimization Tips</span>
-                          <span className="text-xs text-primary">▼</span>
-                        </div>
-                      </CollapsibleTrigger>
-                      <CollapsibleContent className="space-y-3 mt-4">
-                        {aiInsights.optimization_tips.map((tip, index) => (
-                          <div key={index} className="flex gap-3 items-start p-4 rounded-xl bg-card border border-border/30">
-                            <span className="text-primary text-sm flex-shrink-0 mt-0.5">→</span>
-                            <p className="text-sm text-muted-foreground leading-relaxed">{tip}</p>
-                          </div>
-                        ))}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
                 </div>
               </Card>
 
