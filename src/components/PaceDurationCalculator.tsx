@@ -52,24 +52,35 @@ export function PaceDurationCalculator({
 
   // Calculate duration from pace
   const calculateDurationFromPace = (pace: string, distance?: string): number | null => {
-    if (!pace || !distance || !raceDistanceMap[distance]) return null;
+    if (!pace || !distance) return null;
 
-    const distanceKm = raceDistanceMap[distance];
+    // Try to get distance from map, or parse as number
+    let distanceKm = raceDistanceMap[distance];
+    if (!distanceKm) {
+      // If not in map, try parsing as a number
+      const numericDistance = parseFloat(distance);
+      if (!isNaN(numericDistance)) {
+        distanceKm = numericDistance;
+      } else {
+        return null;
+      }
+    }
 
     // Parse running/hiking pace (e.g., "5:30" means 5 minutes 30 seconds per km)
     if (discipline === 'Running' || discipline === 'Hiking') {
-      const paceMatch = pace.match(/(\d+):(\d+)/);
+      const paceMatch = pace.match(/(\d+):(\d{2})/);
       if (paceMatch) {
         const minutes = parseInt(paceMatch[1]);
         const seconds = parseInt(paceMatch[2]);
         const minutesPerKm = minutes + seconds / 60;
-        return (distanceKm * minutesPerKm) / 60; // Convert to hours
+        const totalMinutes = distanceKm * minutesPerKm;
+        return totalMinutes / 60; // Convert to hours
       }
     }
 
     // Parse swimming pace (e.g., "1:45/100m")
     if (discipline === 'Swimming') {
-      const paceMatch = pace.match(/(\d+):(\d+)/);
+      const paceMatch = pace.match(/(\d+):(\d{2})/);
       if (paceMatch) {
         const minutes = parseInt(paceMatch[1]);
         const seconds = parseInt(paceMatch[2]);
@@ -93,9 +104,20 @@ export function PaceDurationCalculator({
 
   // Calculate pace from duration
   const calculatePaceFromDuration = (duration: number, distance?: string): string | null => {
-    if (!duration || !distance || !raceDistanceMap[distance]) return null;
+    if (!duration || !distance) return null;
 
-    const distanceKm = raceDistanceMap[distance];
+    // Try to get distance from map, or parse as number
+    let distanceKm = raceDistanceMap[distance];
+    if (!distanceKm) {
+      // If not in map, try parsing as a number
+      const numericDistance = parseFloat(distance);
+      if (!isNaN(numericDistance)) {
+        distanceKm = numericDistance;
+      } else {
+        return null;
+      }
+    }
+
     const totalMinutes = duration * 60;
 
     if (discipline === 'Running' || discipline === 'Hiking') {
