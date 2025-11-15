@@ -1014,7 +1014,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         )}
                       </div>
                     </div>
-                    {aiInsights.confidence_level && (
+                    {aiInsights?.confidence_level && (
                       <span className={`text-xs px-3 py-1.5 rounded-full font-bold ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
                         {aiInsights.confidence_level.toUpperCase()}
                       </span>
