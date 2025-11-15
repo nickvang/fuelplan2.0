@@ -100,8 +100,18 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // 5. DURING-activity hydration: Replace 60-80% of fluid loss (use 70% average)
   const duringWater = Math.round(sweatRatePerHour * 0.70); // 70% replacement per hour
   
-  // DURING sachets: 1 per hour of activity
-  const duringElectrolytes = Math.round(profile.sessionDuration); // 1 sachet per hour
+  // DURING sachets: Base 1 per hour, adjusted by sweat profile
+  let duringElectrolytes = 1; // Base: 1 sachet per hour
+  
+  // Adjust based on sweat rate and saltiness
+  if (profile.sweatRate === 'high' && profile.sweatSaltiness === 'high') {
+    duringElectrolytes = 2; // High sweat + high sodium = 2 sachets/hr
+  } else if (profile.sweatRate === 'high' || profile.sweatSaltiness === 'high') {
+    duringElectrolytes = 1.5; // One elevated factor = 1.5 sachets/hr
+  } else if (profile.sweatRate === 'low' && profile.sweatSaltiness === 'low') {
+    duringElectrolytes = 0.5; // Low sweat + low sodium = 0.5 sachets/hr (1 sachet per 2 hours)
+  }
+  // Medium sweat rate and/or medium saltiness stays at 1 sachet/hr
 
   // 6. POST-activity hydration: 150% of remaining fluid deficit
   // Remaining deficit = total loss - what was replaced during
