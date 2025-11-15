@@ -215,41 +215,71 @@ export function PaceDurationCalculator({
   };
 
   return (
-    <div className="space-y-2">
-      <div className="flex items-center gap-2">
-        <Label htmlFor="pace" className="text-foreground">
-          {getPaceLabel()} *
-        </Label>
-        <InfoTooltip content="Enter your average pace. This is required to calculate accurate fluid needs for pre, during, and post-activity hydration. If a race distance is selected, we'll automatically calculate the session duration." />
-      </div>
-      <Input
-        id="pace"
-        type="text"
-        value={inputValue}
-        onChange={(e) => handleInputChange(e.target.value)}
-        placeholder={getPacePlaceholder()}
-        className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-      />
-      {requiredPace && (
-        <div className="mt-2 p-3 rounded-lg bg-primary/10 border border-primary/30 animate-fade-in">
-          <p className="text-xs font-medium text-primary uppercase tracking-wide">Required Pace to Hit Goal</p>
-          <p className="text-lg font-bold text-foreground">{requiredPace}</p>
+    <div className="space-y-4">
+      {/* Pace Input */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-2">
+          <Label htmlFor="pace" className="text-foreground">
+            {getPaceLabel()} *
+          </Label>
+          <InfoTooltip content="Enter your average pace. This is required to calculate accurate fluid needs for pre, during, and post-activity hydration. If a race distance is selected, we'll automatically calculate the session duration." />
         </div>
-      )}
-      {calculatedValue && (
-        <div className="mt-3 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 animate-fade-in">
-          <div className="flex items-center justify-between">
-            <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estimated Duration</p>
-              <p className="text-lg font-bold text-foreground">{calculatedValue}</p>
-            </div>
-            {finishTime && (
-              <div className="text-right">
-                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Expected Finish Time</p>
-                <p className="text-2xl font-black text-primary">{finishTime}</p>
-              </div>
-            )}
+        <Input
+          id="pace"
+          type="text"
+          value={inputValue}
+          onChange={(e) => handleInputChange(e.target.value)}
+          placeholder={getPacePlaceholder()}
+          className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+        />
+        {requiredPace && (
+          <div className="mt-2 p-3 rounded-lg bg-primary/10 border border-primary/30 animate-fade-in">
+            <p className="text-xs font-medium text-primary uppercase tracking-wide">Required Pace to Hit Goal</p>
+            <p className="text-lg font-bold text-foreground">{requiredPace}</p>
           </div>
+        )}
+        {calculatedValue && (
+          <div className="mt-3 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 animate-fade-in">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estimated Duration</p>
+                <p className="text-lg font-bold text-foreground">{calculatedValue}</p>
+              </div>
+              {finishTime && (
+                <div className="text-right">
+                  <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Expected Finish Time</p>
+                  <p className="text-2xl font-black text-primary">{finishTime}</p>
+                </div>
+              )}
+            </div>
+          </div>
+        )}
+      </div>
+
+      {/* Duration Input - Only show when no race distance */}
+      {!raceDistance && (
+        <div className="space-y-2">
+          <div className="flex items-center gap-2">
+            <Label htmlFor="manualDuration" className="text-foreground">
+              Training Duration (hours) *
+            </Label>
+            <InfoTooltip content="How long will your training session last? (e.g., 1.5 for 90 minutes)" />
+          </div>
+          <Input
+            id="manualDuration"
+            type="number"
+            step="0.25"
+            min="0.25"
+            max="24"
+            placeholder="e.g., 1.5"
+            onChange={(e) => {
+              const duration = parseFloat(e.target.value);
+              if (!isNaN(duration) && duration > 0) {
+                onDurationChange(duration);
+              }
+            }}
+            className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+          />
         </div>
       )}
     </div>
