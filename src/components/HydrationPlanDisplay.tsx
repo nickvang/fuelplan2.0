@@ -1033,9 +1033,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         : 'Your hydration profile suggests a well-balanced approach with strategic timing.'}
                     </h2>
                     
-                    {/* Tight Summary - 3-5 lines */}
+                    {/* Tight Summary - Key Takeaway Only */}
                     <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
-                      {aiInsights.personalized_insight.split('.').slice(0, 3).join('. ') + '.'}
+                      {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
+                        ? `Your ${plan.totalFluidLoss.toFixed(0)}ml fluid loss requires aggressive electrolyte replacement. The Supplme sachets are essential to offset your high sodium losses and maintain performance.`
+                        : profile.sweatRate === 'high'
+                        ? `Your elevated sweat rate means you'll lose ${plan.totalFluidLoss.toFixed(0)}ml during this session. Consistent fluid intake every 15-20 minutes is critical to prevent dehydration.`
+                        : profile.sweatSaltiness === 'high'
+                        ? `High sweat sodium concentration increases cramping risk. Each Supplme sachet delivers the precise electrolyte ratio to maintain muscle function.`
+                        : `Your balanced profile allows for standard hydration protocols with ${plan.totalFluidLoss.toFixed(0)}ml total intake, adjusted for environmental conditions.`}
                     </p>
 
                     <Collapsible>
