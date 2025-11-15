@@ -1139,8 +1139,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
                     {/* Comparison Summary */}
                     <div className="pt-4 border-t border-border">
-                      <p className="text-sm text-muted-foreground leading-relaxed">
-                        {aiInsights.performance_comparison}
+                      <p className="text-sm font-semibold text-foreground">
+                        {aiInsights.performance_comparison.split('.')[0] + '.'}
                       </p>
                     </div>
                   </div>
