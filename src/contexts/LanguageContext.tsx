@@ -13,7 +13,7 @@ const LanguageContext = createContext<LanguageContextType | undefined>(undefined
 export const translations = {
   en: {
     // Header
-    'app.title': 'Personalized Hydration Guide by Supplme',
+    'app.title': 'Personalized Hydration Guide',
     'app.subtitle': 'Get science-backed hydration recommendations tailored to your training',
     
     // Steps
@@ -186,7 +186,7 @@ export const translations = {
   },
   da: {
     // Header
-    'app.title': 'Personlig Væskebalance Guide af Supplme',
+    'app.title': 'Personlig Væskebalance Guide',
     'app.subtitle': 'Få videnskabsbaserede væskebalance anbefalinger skræddersyet til din træning',
     
     // Steps

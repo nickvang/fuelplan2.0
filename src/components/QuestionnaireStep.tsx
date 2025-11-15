@@ -3,7 +3,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { ArrowRight, ArrowLeft } from 'lucide-react';
-import supplmeLogo from '@/assets/supplme-logo.png';
 
 interface QuestionnaireStepProps {
   title: string;
@@ -35,12 +34,9 @@ export function QuestionnaireStep({
         <div className="flex items-center gap-3">
           <div className="h-1 w-12 bg-gradient-to-r from-primary to-chrome rounded-full shimmer" />
         </div>
-        <div className="flex items-center gap-4">
-          <img src={supplmeLogo} alt="Supplme" className="h-12 md:h-14" />
-          <h2 className="text-3xl md:text-4xl font-black tracking-tight chrome-shine uppercase">
-            {title}
-          </h2>
-        </div>
+        <h2 className="text-3xl md:text-4xl font-black tracking-tight chrome-shine uppercase">
+          {title}
+        </h2>
         {description && (
           <p className="text-muted-foreground text-base md:text-lg leading-relaxed max-w-2xl">
             {description}
