@@ -1025,23 +1025,23 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className="space-y-4">
                     <h2 className="text-2xl md:text-3xl font-black text-foreground leading-tight">
                       {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                        ? 'You lose significantly more sodium and fluid than average — your hydration needs are higher.'
+                        ? 'High Sodium & Fluid Loss'
                         : profile.sweatRate === 'high'
-                        ? 'You have a higher-than-average sweat rate — precise hydration timing is critical.'
+                        ? 'High Sweat Rate Detected'
                         : profile.sweatSaltiness === 'high'
-                        ? 'Your sweat sodium concentration is elevated — electrolyte replacement is essential.'
-                        : 'Your hydration profile suggests a well-balanced approach with strategic timing.'}
+                        ? 'High Sodium Loss Profile'
+                        : 'Balanced Hydration Profile'}
                     </h2>
                     
-                    {/* Tight Summary - Key Takeaway Only */}
+                    {/* Detailed Analysis */}
                     <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
                       {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                        ? `Your ${plan.totalFluidLoss.toFixed(0)}ml fluid loss requires aggressive electrolyte replacement. The Supplme sachets are essential to offset your high sodium losses and maintain performance.`
+                        ? `You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium concentration, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration}-hour session. Each Supplme sachet delivers 500mg sodium, 250mg potassium, and 100mg magnesium—precisely calibrated to offset your high sodium losses. Without adequate replacement, you risk hyponatremia, cramping, and significant performance decline. ${aiInsights?.personalized_insight ? aiInsights.personalized_insight.split('.')[0] + '.' : ''}`
                         : profile.sweatRate === 'high'
-                        ? `Your elevated sweat rate means you'll lose ${plan.totalFluidLoss.toFixed(0)}ml during this session. Consistent fluid intake every 15-20 minutes is critical to prevent dehydration.`
+                        ? `Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml of fluid during this ${profile.sessionDuration}-hour session—significantly above the average athlete. This high fluid turnover demands precise hydration timing: consuming ${plan.duringActivity.waterPerHour}ml per hour with electrolyte support every 15-20 minutes. Dehydration of just 2% body weight can reduce performance by 10-20%. Your plan ensures consistent fluid intake to maintain blood volume, thermoregulation, and cardiovascular function. ${aiInsights?.personalized_insight ? aiInsights.personalized_insight.split('.').slice(0, 2).join('. ') + '.' : ''}`
                         : profile.sweatSaltiness === 'high'
-                        ? `High sweat sodium concentration increases cramping risk. Each Supplme sachet delivers the precise electrolyte ratio to maintain muscle function.`
-                        : `Your balanced profile allows for standard hydration protocols with ${plan.totalFluidLoss.toFixed(0)}ml total intake, adjusted for environmental conditions.`}
+                        ? `Your sweat has an elevated sodium concentration, placing you at higher risk for electrolyte imbalance and exercise-associated muscle cramping. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is within normal ranges, each liter of sweat contains more sodium than average. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets per hour provide the precise electrolyte ratio—500mg sodium, 250mg potassium, 100mg magnesium—to maintain neuromuscular function and prevent cramping. ${aiInsights?.professional_recommendation || ''}`
+                        : `Your hydration profile indicates balanced sweat rate and sodium concentration, allowing for standard evidence-based hydration protocols. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration} hours aligns with ACSM guidelines (${(plan.totalFluidLoss / profile.sessionDuration / profile.weight).toFixed(1)}ml/kg/hour). Environmental factors like ${profile.trainingTempRange ? `temperatures between ${profile.trainingTempRange.min}-${profile.trainingTempRange.max}°C` : 'moderate conditions'} and ${profile.sunExposure || 'moderate'} sun exposure have been factored into your personalized plan. ${aiInsights?.personalized_insight ? aiInsights.personalized_insight.split('.')[0] + '.' : ''}`}
                     </p>
                   </div>
                 </div>
