@@ -1158,17 +1158,20 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
 
                   <div className="space-y-3">
-                    {plan.recommendations.slice(0, 5).map((rec, index) => (
-                      <div 
-                        key={index} 
-                        className="group flex gap-4 items-start p-4 rounded-xl bg-card border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-200"
-                      >
-                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-sm group-hover:bg-primary/20 transition-colors">
-                          {index + 1}
+                    {plan.recommendations
+                      .filter(rec => !rec.includes('Each 30ml Supplme sachet provides'))
+                      .slice(0, 5)
+                      .map((rec, index) => (
+                        <div 
+                          key={index} 
+                          className="group flex gap-4 items-start p-4 rounded-xl bg-card border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-200"
+                        >
+                          <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-sm group-hover:bg-primary/20 transition-colors">
+                            {index + 1}
+                          </div>
+                          <p className="text-sm font-medium text-foreground leading-relaxed pt-0.5">{rec}</p>
                         </div>
-                        <p className="text-sm font-medium text-foreground leading-relaxed pt-0.5">{rec}</p>
-                      </div>
-                    ))}
+                      ))}
                   </div>
 
                   {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
