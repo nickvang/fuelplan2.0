@@ -1003,8 +1003,8 @@ const Index = () => {
 
               {/* Temperature input - Quick mode */}
               {version === 'simple' && (
-                <div>
-                  <div className="flex items-center">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1">
                     <Label htmlFor="temperature">
                       {profile.disciplines?.[0] === 'Swimming' ? 'Water Temperature (°C) *' : 'Expected Temperature (°C) *'}
                     </Label>
@@ -1060,7 +1060,7 @@ const Index = () => {
               </div>
 
               <div className="grid grid-cols-2 gap-4">
-                <div>
+                <div className="space-y-2">
                   <Label htmlFor="age">{t('body.age')} *</Label>
                   <Input
                     id="age"
@@ -1070,8 +1070,8 @@ const Index = () => {
                     placeholder={t('body.age')}
                   />
                 </div>
-                <div>
-                  <div className="flex items-center">
+                <div className="space-y-2">
+                  <div className="flex items-center gap-1">
                     <Label htmlFor="weight">{t('body.weight')} *</Label>
                     <InfoTooltip content={t('body.tooltip.weight')} />
                   </div>
@@ -1085,7 +1085,7 @@ const Index = () => {
                 </div>
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="height">{t('body.height')} *</Label>
                 <Input
                   id="height"
@@ -1096,7 +1096,7 @@ const Index = () => {
                 />
               </div>
 
-              <div>
+              <div className="space-y-2">
                 <Label>{t('body.sex')} *</Label>
                 <RadioGroup
                   value={profile.sex || ''}
@@ -1121,8 +1121,8 @@ const Index = () => {
               {version === 'pro' && (
                 <>
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
                         <Label htmlFor="bodyFat">{t('body.bodyFat')}</Label>
                         <InfoTooltip content="Body fat percentage affects hydration needs - lower body fat means more body water. Can be measured with smart scales, DEXA scans, or found in Garmin Index, Apple Watch (requires third-party apps), or fitness assessments. Typical athletic range: 6-24% (men), 14-31% (women)." />
                       </div>
@@ -1134,8 +1134,8 @@ const Index = () => {
                         placeholder={t('common.optional')}
                       />
                     </div>
-                    <div>
-                      <div className="flex items-center">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
                         <Label htmlFor="restingHeartRate">{t('body.restingHR')}</Label>
                         <InfoTooltip content="Resting heart rate (RHR) indicates fitness level and recovery. Lower RHR typically means better cardiovascular fitness. Find it on: Garmin (morning report), Apple Watch (Health app), Coros (training status), Whoop (daily metrics), Oura Ring. Typical athletic range: 40-60 bpm." />
                       </div>
@@ -1149,8 +1149,8 @@ const Index = () => {
                     </div>
                   </div>
 
-                  <div>
-                    <div className="flex items-center">
+                  <div className="space-y-2">
+                    <div className="flex items-center gap-1">
                       <Label htmlFor="hrv">{t('body.hrv')}</Label>
                       <InfoTooltip content="Heart Rate Variability measures recovery status. Found in fitness watches (Garmin, Apple Watch, Whoop). Low HRV = poor recovery, may need extra hydration. Normal range varies by individual - check your baseline." />
                     </div>
@@ -1163,8 +1163,8 @@ const Index = () => {
                   </div>
 
                   <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <div className="flex items-center">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
                         <Label htmlFor="sleepHours">{t('body.avgSleep')}</Label>
                         <InfoTooltip content="Sleep duration affects recovery and hydration needs. Track via Garmin, Apple Watch, Whoop, Oura Ring, or Coros. Aim for 7-9 hours for optimal athletic performance." />
                       </div>
@@ -1177,8 +1177,8 @@ const Index = () => {
                         placeholder="hours/night"
                       />
                     </div>
-                    <div>
-                      <div className="flex items-center">
+                    <div className="space-y-2">
+                      <div className="flex items-center gap-1">
                         <Label htmlFor="sleepQuality">{t('body.sleepQuality')}</Label>
                         <InfoTooltip content="Rate your sleep quality from 1 (poor) to 10 (excellent). Many wearables provide a sleep score. Poor sleep impacts recovery and may increase hydration needs." />
                       </div>
@@ -1196,7 +1196,7 @@ const Index = () => {
                 </>
               )}
 
-              <div>
+              <div className="space-y-2">
                 <Label htmlFor="healthConditions">{t('body.healthConditions')}</Label>
                 <Input
                   id="healthConditions"
@@ -1305,8 +1305,8 @@ const Index = () => {
                 </div>
               </div>
 
-              <div>
-                <div className="flex items-center">
+              <div className="space-y-2">
+                <div className="flex items-center gap-1">
                   <Label htmlFor="humidity">{t('env.humidity')} *</Label>
                   <InfoTooltip content="High humidity (>70%) reduces sweat evaporation, increasing heat stress and fluid needs. Check weather apps for humidity levels." />
                 </div>
