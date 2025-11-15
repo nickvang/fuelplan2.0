@@ -977,158 +977,232 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </AlertDescription>
       </Alert>
 
-      {/* Premium AI-Enhanced Insights - Scandinavian Design */}
+      {/* Advanced Athlete Insights - Clinical Performance Dashboard */}
       {version === 'pro' && (
         <div className="space-y-6">
-          {/* Header with AI Badge */}
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
-                <Sparkles className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h3 className="text-2xl font-bold tracking-tight">Your Performance Insights</h3>
-                <p className="text-sm text-muted-foreground">Powered by AI analysis</p>
-              </div>
-            </div>
-            {aiInsights && hasSmartWatchData && (
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-primary/10 border border-primary/20">
-                <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                <span className="text-xs font-semibold text-primary">AI-Analyzed Data</span>
-              </div>
-            )}
-          </div>
-
           {loadingInsights && (
-            <div className="flex items-center justify-center gap-3 p-8 bg-muted/30 rounded-3xl border border-border/50">
-              <Loader2 className="w-5 h-5 text-primary animate-spin" />
-              <p className="text-sm text-muted-foreground font-medium">Analyzing your unique physiology...</p>
-            </div>
+            <Card className="border-0 shadow-lg bg-gradient-to-br from-muted/30 to-muted/10">
+              <div className="flex items-center justify-center gap-3 p-8">
+                <Loader2 className="w-6 h-6 text-primary animate-spin" />
+                <div className="text-center">
+                  <p className="text-base font-semibold text-foreground">Analyzing Your Physiology</p>
+                  <p className="text-sm text-muted-foreground">Processing performance data...</p>
+                </div>
+              </div>
+            </Card>
           )}
 
           {aiInsights && (
             <div className="space-y-6">
-              {/* Hero Insight Card - Premium Design */}
-              <Card className="relative overflow-hidden border-0 shadow-2xl bg-gradient-to-br from-card via-card to-primary/5">
-                <div className="absolute top-0 right-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl" />
-                <div className="relative p-8 space-y-4">
-                  <div className="flex items-start gap-4">
-                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary/20 to-primary/5 flex items-center justify-center flex-shrink-0">
-                      <span className="text-2xl">💧</span>
-                    </div>
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-lg font-bold">Your Key Insight</h4>
-                        {aiInsights.confidence_level && (
-                          <span className={`text-xs px-2.5 py-1 rounded-full font-semibold ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
-                            {aiInsights.confidence_level.toUpperCase()}
-                          </span>
+              {/* Bold Finding - Hero Statement */}
+              <Card className="border-0 shadow-2xl bg-gradient-to-br from-card via-card to-primary/5 overflow-hidden">
+                <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+                <div className="relative p-8 md:p-10 space-y-6">
+                  {/* Header */}
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
+                        <Sparkles className="w-6 h-6 text-white" />
+                      </div>
+                      <div>
+                        <h3 className="text-lg font-bold text-muted-foreground uppercase tracking-wide">Your Profile Analysis</h3>
+                        {hasSmartWatchData && (
+                          <div className="flex items-center gap-1.5 mt-1">
+                            <div className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+                            <span className="text-xs font-medium text-primary">AI-Enhanced</span>
+                          </div>
                         )}
                       </div>
-                      <p className="text-base text-muted-foreground leading-relaxed">
-                        {aiInsights.personalized_insight}
-                      </p>
                     </div>
+                    {aiInsights.confidence_level && (
+                      <span className={`text-xs px-3 py-1.5 rounded-full font-bold ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
+                        {aiInsights.confidence_level.toUpperCase()}
+                      </span>
+                    )}
+                  </div>
+
+                  {/* Bold Headline Finding */}
+                  <div className="space-y-4">
+                    <h2 className="text-2xl md:text-3xl font-black text-foreground leading-tight">
+                      {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
+                        ? 'You lose significantly more sodium and fluid than average — your hydration needs are higher.'
+                        : profile.sweatRate === 'high'
+                        ? 'You have a higher-than-average sweat rate — precise hydration timing is critical.'
+                        : profile.sweatSaltiness === 'high'
+                        ? 'Your sweat sodium concentration is elevated — electrolyte replacement is essential.'
+                        : 'Your hydration profile suggests a well-balanced approach with strategic timing.'}
+                    </h2>
+                    
+                    {/* Tight Summary - 3-5 lines */}
+                    <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
+                      {aiInsights.personalized_insight.split('.').slice(0, 3).join('. ') + '.'}
+                    </p>
+
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-sm font-semibold text-primary hover:text-primary/80 transition-colors flex items-center gap-1">
+                        Read full analysis <span className="text-xs">▼</span>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="pt-4">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {aiInsights.personalized_insight}
+                        </p>
+                      </CollapsibleContent>
+                    </Collapsible>
                   </div>
                 </div>
               </Card>
 
-              {/* Comparison Card - Apple Health Style */}
+              {/* You vs Average Athlete - Data Visualization */}
               {aiInsights.performance_comparison && (
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-accent/10 to-accent/5 overflow-hidden">
-                  <div className="p-6 space-y-3">
+                <Card className="border-0 shadow-lg bg-card">
+                  <div className="p-6 md:p-8 space-y-6">
                     <div className="flex items-center gap-3">
                       <div className="w-10 h-10 rounded-xl bg-accent/20 flex items-center justify-center">
                         <TrendingUp className="w-5 h-5 text-accent-foreground" />
                       </div>
-                      <h4 className="text-base font-bold">vs. Average Athlete</h4>
+                      <h4 className="text-xl font-bold">You vs. Average Athlete</h4>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed pl-13">
-                      {aiInsights.performance_comparison}
-                    </p>
+
+                    {/* Visual Comparison Bars */}
+                    <div className="space-y-5">
+                      {/* Sweat Rate */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Sweat Rate</span>
+                          <span className="text-muted-foreground capitalize">{profile.sweatRate}</span>
+                        </div>
+                        <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              profile.sweatRate === 'high' ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[85%]' :
+                              profile.sweatRate === 'medium' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[55%]' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[30%]'
+                            }`}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Low</span>
+                          <span className="font-medium">Average</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+
+                      {/* Sweat Saltiness */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Sweat Sodium</span>
+                          <span className="text-muted-foreground capitalize">{profile.sweatSaltiness}</span>
+                        </div>
+                        <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              profile.sweatSaltiness === 'high' ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[85%]' :
+                              profile.sweatSaltiness === 'medium' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[55%]' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[30%]'
+                            }`}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Low</span>
+                          <span className="font-medium">Average</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+
+                      {/* Fluid Loss */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Total Fluid Loss</span>
+                          <span className="text-muted-foreground font-mono">{plan.totalFluidLoss.toFixed(0)}ml</span>
+                        </div>
+                        <div className="relative h-3 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              plan.totalFluidLoss > 2000 ? 'bg-gradient-to-r from-amber-500 to-red-500' :
+                              plan.totalFluidLoss > 1200 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500'
+                            }`}
+                            style={{ 
+                              width: `${Math.min((plan.totalFluidLoss / 3000) * 100, 100)}%` 
+                            }}
+                          />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>0ml</span>
+                          <span className="font-medium">1500ml (avg)</span>
+                          <span>3000ml+</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Comparison Summary */}
+                    <div className="pt-4 border-t border-border">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {aiInsights.performance_comparison}
+                      </p>
+                    </div>
                   </div>
                 </Card>
               )}
 
-              {/* Recommendations Grid - Strava Premium Style */}
-              <div className="space-y-3">
-                <h4 className="text-sm font-bold uppercase tracking-wider text-muted-foreground px-2">
-                  Science-Backed Recommendations
-                </h4>
-                <div className="grid md:grid-cols-2 gap-3">
-                  {plan.recommendations.slice(0, 4).map((rec, index) => (
-                    <Card key={index} className="border-0 shadow-md hover:shadow-lg transition-all duration-300 bg-card group cursor-pointer">
-                      <div className="p-5 flex gap-3 items-start">
-                        <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                          <span className="text-primary font-bold text-sm">{index + 1}</span>
-                        </div>
-                        <p className="text-sm text-foreground leading-relaxed font-medium">{rec}</p>
-                      </div>
-                    </Card>
-                  ))}
-                </div>
-                {plan.recommendations.length > 4 && (
-                  <Collapsible>
-                    <CollapsibleTrigger className="w-full mt-2">
-                      <div className="flex items-center justify-center gap-2 p-3 rounded-xl hover:bg-muted/50 transition-colors">
-                        <span className="text-sm font-semibold text-primary">View {plan.recommendations.length - 4} More</span>
-                        <span className="text-primary text-xs">▼</span>
-                      </div>
-                    </CollapsibleTrigger>
-                    <CollapsibleContent className="mt-3">
-                      <div className="grid md:grid-cols-2 gap-3">
-                        {plan.recommendations.slice(4).map((rec, index) => (
-                          <Card key={index + 4} className="border-0 shadow-md hover:shadow-lg transition-all duration-300 bg-card group cursor-pointer">
-                            <div className="p-5 flex gap-3 items-start">
-                              <div className="w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 transition-colors">
-                                <span className="text-primary font-bold text-sm">{index + 5}</span>
-                              </div>
-                              <p className="text-sm text-foreground leading-relaxed font-medium">{rec}</p>
-                            </div>
-                          </Card>
-                        ))}
-                      </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                )}
-              </div>
-
-              {/* Quick Wins - WHOOP Style */}
-              {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
-                <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/5 to-primary/10 overflow-hidden">
-                  <div className="p-6 space-y-4">
-                    <div className="flex items-center gap-3">
-                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                        <span className="text-xl">⚡</span>
-                      </div>
-                      <h4 className="text-base font-bold">Quick Performance Wins</h4>
+              {/* Do This First - Priority Actions */}
+              <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/10 via-primary/5 to-card">
+                <div className="p-6 md:p-8 space-y-5">
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                      <span className="text-2xl">⚡</span>
                     </div>
-                    <div className="grid md:grid-cols-2 gap-3">
-                      {aiInsights.optimization_tips.map((tip, index) => (
-                        <div key={index} className="flex gap-3 items-start bg-card/80 backdrop-blur-sm p-4 rounded-xl">
-                          <div className="w-6 h-6 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0 mt-0.5">
-                            <span className="text-primary text-xs font-bold">→</span>
+                    <h4 className="text-xl font-bold">Do This First</h4>
+                  </div>
+
+                  <div className="space-y-3">
+                    {plan.recommendations.slice(0, 5).map((rec, index) => (
+                      <div 
+                        key={index} 
+                        className="group flex gap-4 items-start p-4 rounded-xl bg-card border border-border/50 hover:border-primary/50 hover:shadow-md transition-all duration-200"
+                      >
+                        <div className="flex-shrink-0 w-8 h-8 rounded-lg bg-primary/10 flex items-center justify-center font-bold text-primary text-sm group-hover:bg-primary/20 transition-colors">
+                          {index + 1}
+                        </div>
+                        <p className="text-sm font-medium text-foreground leading-relaxed pt-0.5">{rec}</p>
+                      </div>
+                    ))}
+                  </div>
+
+                  {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
+                    <Collapsible>
+                      <CollapsibleTrigger className="w-full mt-4">
+                        <div className="flex items-center justify-center gap-2 p-3 rounded-xl border border-primary/30 hover:bg-primary/5 transition-colors">
+                          <span className="text-sm font-bold text-primary">+ {aiInsights.optimization_tips.length} Advanced Optimization Tips</span>
+                          <span className="text-xs text-primary">▼</span>
+                        </div>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-3 mt-4">
+                        {aiInsights.optimization_tips.map((tip, index) => (
+                          <div key={index} className="flex gap-3 items-start p-4 rounded-xl bg-card border border-border/30">
+                            <span className="text-primary text-sm flex-shrink-0 mt-0.5">→</span>
+                            <p className="text-sm text-muted-foreground leading-relaxed">{tip}</p>
                           </div>
-                          <p className="text-sm text-foreground leading-relaxed">{tip}</p>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                </Card>
-              )}
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </div>
+              </Card>
 
-              {/* Alert Cards - Premium 2-Column Layout */}
+              {/* Critical Alerts - If Present */}
               {(aiInsights.risk_factors || aiInsights.professional_recommendation) && (
                 <div className="grid md:grid-cols-2 gap-4">
-                  {/* Watch Out Card */}
                   {aiInsights.risk_factors && (
-                    <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-amber-100/50 dark:from-amber-950/20 dark:to-amber-900/10">
+                    <Card className="border-0 shadow-lg bg-gradient-to-br from-amber-50 to-amber-100/30 dark:from-amber-950/30 dark:to-amber-900/10">
                       <div className="p-6 space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-amber-500/20 flex items-center justify-center">
                             <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400" />
                           </div>
-                          <h4 className="text-base font-bold text-amber-900 dark:text-amber-200">Watch Out</h4>
+                          <h4 className="text-base font-bold text-amber-900 dark:text-amber-200">Risk Factors</h4>
                         </div>
                         <p className="text-sm text-amber-800 dark:text-amber-300 leading-relaxed">
                           {aiInsights.risk_factors}
@@ -1137,7 +1211,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     </Card>
                   )}
 
-                  {/* Pro Tip Card */}
                   {aiInsights.professional_recommendation && (
                     <Card className="border-0 shadow-lg bg-gradient-to-br from-primary/10 to-primary/5">
                       <div className="p-6 space-y-3">
@@ -1145,7 +1218,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                             <span className="text-xl">🎯</span>
                           </div>
-                          <h4 className="text-base font-bold">Pro Tip</h4>
+                          <h4 className="text-base font-bold">Expert Recommendation</h4>
                         </div>
                         <p className="text-sm text-muted-foreground leading-relaxed">
                           {aiInsights.professional_recommendation}
