@@ -966,6 +966,30 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </Card>
       </div>
 
+      {/* Why So Many Sachets? Explainer */}
+      <Alert className="border-l-4 border-l-primary bg-primary/5">
+        <Sparkles className="h-5 w-5 text-primary" />
+        <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
+        <AlertDescription className="text-muted-foreground space-y-2">
+          <p className="leading-relaxed">
+            Your body loses <strong>{plan.totalFluidLoss.toFixed(0)}ml of fluid</strong> during this session through sweat. 
+            Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
+          </p>
+          <p className="leading-relaxed">
+            The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. 
+            This isn't guesswork it's science-backed hydration optimized for your specific conditions.
+          </p>
+          <p className="leading-relaxed font-semibold">
+            This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.
+          </p>
+          {version === 'simple' && (
+            <p className="leading-relaxed text-primary font-semibold pt-2 border-t border-primary/20 mt-3">
+              💡 Want even more precision? Take our <strong>Pro/Advanced version</strong> for detailed environmental and physiological customization, or <strong>upload data from your smartwatch/device</strong> for AI-powered insights based on your actual recovery and performance metrics.
+            </p>
+          )}
+        </AlertDescription>
+      </Alert>
+
       {/* Race Day Protocol - Only shows if user is training for a race */}
       {profile.hasUpcomingRace && (
         <div className="space-y-6">
@@ -1162,30 +1186,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p>✓ Practice protocol in training</p>
               <p>✓ Pack {Math.ceil(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)}x Supplme sachets</p>
               <p>✓ Check weather 48hrs before • Adjust if needed</p>
-            </AlertDescription>
-          </Alert>
-
-          {/* Why So Many Sachets? Explainer */}
-          <Alert className="border-l-4 border-l-primary bg-primary/5">
-            <Sparkles className="h-5 w-5 text-primary" />
-            <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
-            <AlertDescription className="text-muted-foreground space-y-2">
-              <p className="leading-relaxed">
-                Your body loses <strong>{plan.totalFluidLoss.toFixed(0)}ml of fluid</strong> during this session through sweat. 
-                Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
-              </p>
-              <p className="leading-relaxed">
-                The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. 
-                This isn't guesswork it's science-backed hydration optimized for your specific conditions.
-              </p>
-              <p className="leading-relaxed font-semibold">
-                This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.
-              </p>
-              {version === 'simple' && (
-                <p className="leading-relaxed text-primary font-semibold pt-2 border-t border-primary/20 mt-3">
-                  💡 Want even more precision? Take our <strong>Pro/Advanced version</strong> for detailed environmental and physiological customization, or <strong>upload data from your smartwatch/device</strong> for AI-powered insights based on your actual recovery and performance metrics.
-                </p>
-              )}
             </AlertDescription>
           </Alert>
         </div>
