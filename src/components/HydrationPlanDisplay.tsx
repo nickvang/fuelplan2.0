@@ -1021,6 +1021,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     )}
                   </div>
 
+                  {/* Summary sentence */}
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
+                      ? `You're a high-volume sweater with elevated sodium loss—requiring aggressive electrolyte replacement to maintain performance and prevent cramping.`
+                      : profile.sweatRate === 'high'
+                      ? `Your high sweat rate means you lose significantly more fluid than average athletes during exercise.`
+                      : profile.sweatSaltiness === 'high'
+                      ? `Your sweat contains higher sodium concentrations than average, increasing your risk for cramping without proper electrolyte replacement.`
+                      : `Your hydration profile falls within typical ranges for endurance athletes—standard protocols work well with environmental adjustments.`}
+                  </p>
+
                   {/* Profile Analysis - Bar Graph Comparison */}
                   <div className="space-y-6">
                     <div className="flex items-center gap-3">
