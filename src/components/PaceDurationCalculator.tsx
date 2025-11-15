@@ -7,7 +7,6 @@ interface PaceDurationCalculatorProps {
   discipline: string;
   raceDistance?: string;
   currentPace?: string;
-  currentDuration?: number;
   onPaceChange: (pace: string) => void;
   onDurationChange: (duration: number) => void;
 }
@@ -31,24 +30,18 @@ export function PaceDurationCalculator({
   discipline,
   raceDistance,
   currentPace,
-  currentDuration,
   onPaceChange,
   onDurationChange,
 }: PaceDurationCalculatorProps) {
   const [inputValue, setInputValue] = useState('');
   const [calculatedValue, setCalculatedValue] = useState('');
-  const [detectedType, setDetectedType] = useState<'pace' | 'duration' | null>(null);
 
   useEffect(() => {
-    // Initialize with current values
-    if (currentDuration) {
-      setInputValue(currentDuration.toString());
-      setDetectedType('duration');
-    } else if (currentPace) {
+    // Initialize with current pace
+    if (currentPace) {
       setInputValue(currentPace);
-      setDetectedType('pace');
     }
-  }, [currentPace, currentDuration]);
+  }, [currentPace]);
 
   // Calculate duration from pace
   const calculateDurationFromPace = (pace: string, distance?: string): number | null => {
@@ -102,107 +95,16 @@ export function PaceDurationCalculator({
     return null;
   };
 
-  // Calculate pace from duration
-  const calculatePaceFromDuration = (duration: number, distance?: string): string | null => {
-    if (!duration || !distance) return null;
-
-    // Try to get distance from map, or parse as number
-    let distanceKm = raceDistanceMap[distance];
-    if (!distanceKm) {
-      // If not in map, try parsing as a number
-      const numericDistance = parseFloat(distance);
-      if (!isNaN(numericDistance)) {
-        distanceKm = numericDistance;
-      } else {
-        return null;
-      }
-    }
-
-    const totalMinutes = duration * 60;
-
-    if (discipline === 'Running' || discipline === 'Hiking') {
-      const minutesPerKm = totalMinutes / distanceKm;
-      const mins = Math.floor(minutesPerKm);
-      const secs = Math.round((minutesPerKm - mins) * 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}`;
-    }
-
-    if (discipline === 'Swimming') {
-      const distanceMeters = distanceKm * 1000;
-      const minutesPer100m = totalMinutes / (distanceMeters / 100);
-      const mins = Math.floor(minutesPer100m);
-      const secs = Math.round((minutesPer100m - mins) * 60);
-      return `${mins}:${secs.toString().padStart(2, '0')}/100m`;
-    }
-
-    if (discipline === 'Cycling') {
-      const kmPerHour = distanceKm / duration;
-      return `${kmPerHour.toFixed(1)} km/h`;
-    }
-
-    return null;
-  };
-
-  const detectInputType = (value: string): 'pace' | 'duration' | null => {
-    if (!value) return null;
-    
-    console.log(`🔍 Detecting input type for: "${value}"`);
-    
-    // Check if it's a complete pace format (e.g., "5:30" or "1:45/100m")
-    // Require at least 2 digits for seconds to ensure complete input
-    const pacePattern = /^\d+:\d{2}/;
-    if (pacePattern.test(value)) {
-      console.log(`✅ Detected as PACE (matches pattern)`);
-      return 'pace';
-    }
-    
-    // Check if it's a cycling speed (contains "km/h" or "W")
-    if (discipline === 'Cycling' && (value.includes('km/h') || value.includes('W'))) {
-      console.log(`✅ Detected as PACE (cycling speed)`);
-      return 'pace';
-    }
-    
-    // Check if it's a number (duration in hours)
-    if (!isNaN(parseFloat(value)) && value.match(/^\d+(\.\d+)?$/)) {
-      console.log(`✅ Detected as DURATION (number only)`);
-      return 'duration';
-    }
-    
-    console.log(`❌ Could not detect type`);
-    return null;
-  };
-
   const handleInputChange = (value: string) => {
     setInputValue(value);
-    const type = detectInputType(value);
-    setDetectedType(type);
-
-    if (type === 'pace') {
-      onPaceChange(value);
-      
-      // Auto-calculate duration if we have race distance
-      if (raceDistance) {
-        const calculatedDuration = calculateDurationFromPace(value, raceDistance);
-        if (calculatedDuration !== null) {
-          console.log(`✅ Duration calculated from pace "${value}" and distance "${raceDistance}": ${calculatedDuration.toFixed(2)} hours`);
-          setCalculatedValue(`${calculatedDuration.toFixed(1)} hours`);
-          onDurationChange(calculatedDuration);
-        } else {
-          console.warn(`⚠️ Failed to calculate duration from pace "${value}" and distance "${raceDistance}"`);
-        }
-      }
-    } else if (type === 'duration') {
-      const durationNum = parseFloat(value);
-      console.log(`✅ Duration detected from input: ${durationNum} hours`);
-      onDurationChange(durationNum);
-      
-      // Auto-calculate pace if we have race distance
-      if (raceDistance) {
-        const calculatedPace = calculatePaceFromDuration(durationNum, raceDistance);
-        if (calculatedPace !== null) {
-          setCalculatedValue(calculatedPace);
-          onPaceChange(calculatedPace);
-        }
+    onPaceChange(value);
+    
+    // Auto-calculate duration if we have race distance
+    if (raceDistance) {
+      const calculatedDuration = calculateDurationFromPace(value, raceDistance);
+      if (calculatedDuration !== null) {
+        setCalculatedValue(`${calculatedDuration.toFixed(1)} hours`);
+        onDurationChange(calculatedDuration);
       }
     }
   };
@@ -233,42 +135,25 @@ export function PaceDurationCalculator({
     }
   };
 
-  const getInputPlaceholder = () => {
-    switch (discipline) {
-      case 'Swimming':
-        return 'e.g., 1:45/100m or 1.5 (hours)';
-      case 'Cycling':
-        return 'e.g., 30 km/h or 1.5 (hours)';
-      case 'Hiking':
-        return 'e.g., 15:00/km or 2 (hours)';
-      default:
-        return 'e.g., 5:00/km or 1.5 (hours)';
-    }
-  };
-
-  const getTooltipContent = () => {
-    const paceExample = getPacePlaceholder().replace('e.g., ', '');
-    return `Enter either your pace (${paceExample}) or session duration in hours (e.g., 1.5). ${raceDistance ? 'The other value will be calculated automatically based on your race distance.' : ''}`;
-  };
-
   return (
     <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Label htmlFor="pace-duration-input">
-          Pace or Session Duration *
+        <Label htmlFor="pace" className="text-foreground">
+          {getPaceLabel()}
         </Label>
-        <InfoTooltip content={getTooltipContent()} />
+        <InfoTooltip content="Enter your average pace/speed. If a race distance is selected, we'll automatically calculate the duration for you." />
       </div>
       <Input
-        id="pace-duration-input"
+        id="pace"
+        type="text"
         value={inputValue}
         onChange={(e) => handleInputChange(e.target.value)}
-        placeholder={getInputPlaceholder()}
+        placeholder={getPacePlaceholder()}
+        className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
       />
-      {raceDistance && calculatedValue && detectedType && (
+      {calculatedValue && (
         <p className="text-sm text-muted-foreground">
-          {detectedType === 'pace' ? 'Calculated duration: ' : 'Calculated pace: '}
-          {calculatedValue}
+          Calculated Duration: {calculatedValue}
         </p>
       )}
     </div>

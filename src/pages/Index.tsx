@@ -1031,7 +1031,6 @@ const Index = () => {
                 discipline={profile.disciplines?.[0] || 'Running'}
                 raceDistance={profile.hasUpcomingRace ? profile.raceDistance : undefined}
                 currentPace={profile.avgPace}
-                currentDuration={profile.sessionDuration}
                 onPaceChange={(pace) => updateProfile({ avgPace: pace })}
                 onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
               />
