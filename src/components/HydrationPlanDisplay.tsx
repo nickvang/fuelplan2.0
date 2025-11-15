@@ -969,148 +969,199 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       {/* Race Day Protocol - Only shows if user is training for a race */}
       {profile.hasUpcomingRace && (
         <div className="space-y-6">
-          <div className="text-center py-6">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase text-foreground flex items-center justify-center gap-3">
-              <span>🏁</span> Race Day Protocol <span>🏁</span>
+          {/* Header */}
+          <div className="text-center py-8 space-y-2">
+            <h2 className="text-4xl md:text-5xl font-black tracking-tight uppercase text-foreground">
+              Race Day Protocol
             </h2>
-            <p className="text-muted-foreground mt-2">Your complete race week hydration strategy</p>
+            <p className="text-lg font-semibold text-primary">Your 48-hour performance strategy</p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6">
-            {/* Day Before Race */}
-            <Card className="p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-background">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-2xl">📅</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Day Before Race</h3>
-                  <p className="text-sm text-muted-foreground">Pre-race preparation</p>
-                </div>
+          {/* Timeline Flow */}
+          <div className="relative">
+            {/* Vertical Timeline Line - Hidden on mobile */}
+            <div className="hidden md:block absolute left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-primary via-primary/50 to-primary transform -translate-x-1/2" />
+            
+            <div className="space-y-12">
+              {/* Day Before - Right Side */}
+              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
+                <div className="hidden md:block" />
+                <Card className="relative p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
+                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                    1
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">📅</span>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase">Day Before</h3>
+                      <p className="text-sm text-muted-foreground font-semibold">T-24 Hours</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-3">
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
+                      <div className="text-3xl mb-2">💧</div>
+                      <p className="text-xs font-bold text-primary uppercase">Hydrate</p>
+                      <p className="text-2xl font-black">2-3L</p>
+                      <p className="text-xs text-muted-foreground">Throughout day</p>
+                    </div>
+                    <div className="p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
+                      <div className="text-3xl mb-2">⚡</div>
+                      <p className="text-xs font-bold text-primary uppercase">Evening</p>
+                      <p className="text-2xl font-black">500ml</p>
+                      <p className="text-xs text-muted-foreground">+ 1x Supplme</p>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-sm font-semibold text-foreground">🚫 Avoid: Alcohol • New foods • Late caffeine</p>
+                  </div>
+                </Card>
               </div>
-              <div className="space-y-3 pt-2">
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Morning</p>
-                  <p className="text-sm text-muted-foreground">Drink 400-600ml water with breakfast. Maintain normal hydration throughout the day.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Throughout Day</p>
-                  <p className="text-sm text-muted-foreground">Aim for 2-3 liters total fluid intake. Monitor urine color (should be pale yellow).</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Evening (6-8 PM)</p>
-                  <p className="text-sm text-muted-foreground">Final 500ml + 1 Supplme sachet. Avoid excessive water after 8 PM to prevent night bathroom trips.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">What to Avoid</p>
-                  <p className="text-sm text-muted-foreground">Limit alcohol, caffeine after 2 PM, and new foods. Stick to familiar meals.</p>
-                </div>
-              </div>
-            </Card>
 
-            {/* Race Morning */}
-            <Card className="p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-background">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-2xl">🌅</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Race Morning</h3>
-                  <p className="text-sm text-muted-foreground">Final preparation</p>
-                </div>
+              {/* Race Morning - Left Side */}
+              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
+                <Card className="relative p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
+                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                    2
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">🌅</span>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase">Race Morning</h3>
+                      <p className="text-sm text-muted-foreground font-semibold">T-3 Hours</p>
+                    </div>
+                  </div>
+                  
+                  <div className="space-y-3">
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
+                      <span className="text-2xl font-black text-primary">-3h</span>
+                      <div>
+                        <p className="text-sm font-bold">{plan.preActivity.water}ml + Breakfast</p>
+                        <p className="text-xs text-muted-foreground">Wake up hydration</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
+                      <span className="text-2xl font-black text-primary">-2h</span>
+                      <div>
+                        <p className="text-sm font-bold">{plan.preActivity.electrolytes}x Supplme + 300ml</p>
+                        <p className="text-xs text-muted-foreground">Last substantial intake</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
+                      <span className="text-2xl font-black text-primary">-30m</span>
+                      <div>
+                        <p className="text-sm font-bold">Small sips only (100-150ml)</p>
+                        <p className="text-xs text-muted-foreground">Final bathroom break</p>
+                      </div>
+                    </div>
+                  </div>
+                </Card>
+                <div className="hidden md:block" />
               </div>
-              <div className="space-y-3 pt-2">
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Upon Waking (3-4 hrs before)</p>
-                  <p className="text-sm text-muted-foreground">Drink {plan.preActivity.water}ml water slowly with breakfast.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">2 Hours Before Start</p>
-                  <p className="text-sm text-muted-foreground">{plan.preActivity.electrolytes}x Supplme sachet with 250-350ml water. Last substantial fluid intake.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">30 Min Before Start</p>
-                  <p className="text-sm text-muted-foreground">Small sips only (100-150ml). Hit the bathroom one final time.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Check</p>
-                  <p className="text-sm text-muted-foreground">Pack {Math.ceil(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)}x Supplme sachets in race belt or pockets.</p>
-                </div>
-              </div>
-            </Card>
 
-            {/* During Race */}
-            <Card className="p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-background">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-2xl">🏃</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">During Race</h3>
-                  <p className="text-sm text-muted-foreground">Execution strategy</p>
-                </div>
+              {/* During Race - Right Side */}
+              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
+                <div className="hidden md:block" />
+                <Card className="relative p-6 space-y-4 border-4 border-primary shadow-xl" style={{ backgroundColor: '#0a0a0a' }}>
+                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                    3
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">🏁</span>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase" style={{ color: '#ffffff' }}>During Race</h3>
+                      <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Execute the plan</p>
+                    </div>
+                  </div>
+                  
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Every 15-20 min</p>
+                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{Math.round(plan.duringActivity.waterPerHour / 3)}ml</p>
+                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>WATER</p>
+                    </div>
+                    <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Every {Math.round(60 / plan.duringActivity.electrolytesPerHour)} min</p>
+                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>1x</p>
+                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>SUPPLME</p>
+                    </div>
+                  </div>
+                  
+                  <div className="flex items-center gap-2 p-3 rounded-lg" style={{ backgroundColor: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)' }}>
+                    <AlertCircle className="w-5 h-5" style={{ color: '#ff4444' }} />
+                    <p className="text-xs font-semibold" style={{ color: '#ffffff' }}>
+                      Stop if: severe cramps, dizziness, no sweat
+                    </p>
+                  </div>
+                </Card>
               </div>
-              <div className="space-y-3 pt-2">
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Every 15-20 Minutes</p>
-                  <p className="text-sm text-muted-foreground">Drink {Math.round(plan.duringActivity.waterPerHour / 3)}-{Math.round(plan.duringActivity.waterPerHour / 2.5)}ml water at aid stations. Don't wait until you're thirsty.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Electrolyte Schedule</p>
-                  <p className="text-sm text-muted-foreground">Take 1 Supplme sachet every {Math.round(60 / plan.duringActivity.electrolytesPerHour)} minutes. Set a timer or use km/mile markers.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Hot Weather Adjustment</p>
-                  <p className="text-sm text-muted-foreground">If temperature exceeds {profile.trainingTempRange.max}°C, increase fluid by 20-30% and take Supplme more frequently.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Warning Signs</p>
-                  <p className="text-sm text-muted-foreground">Stop if: severe cramping, dizziness, nausea, or no sweat. Seek medical help immediately.</p>
-                </div>
-              </div>
-            </Card>
 
-            {/* Post Race Recovery */}
-            <Card className="p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/5 to-background">
-              <div className="flex items-center gap-3">
-                <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                  <span className="text-2xl">🎯</span>
-                </div>
-                <div>
-                  <h3 className="text-xl font-bold">Post Race Recovery</h3>
-                  <p className="text-sm text-muted-foreground">Critical 4-6 hour window</p>
-                </div>
+              {/* Post Race - Left Side */}
+              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
+                <Card className="relative p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
+                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                    4
+                  </div>
+                  <div className="flex items-center gap-3">
+                    <span className="text-4xl">🎯</span>
+                    <div>
+                      <h3 className="text-2xl font-black uppercase">Recovery</h3>
+                      <p className="text-sm text-muted-foreground font-semibold">4-6 Hour Window</p>
+                    </div>
+                  </div>
+                  
+                  <div className="relative pt-4">
+                    <div className="space-y-4">
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-black text-primary-foreground">0h</div>
+                          <div className="w-0.5 h-12 bg-primary/30"></div>
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <p className="font-bold text-sm">Immediate</p>
+                          <p className="text-xs text-muted-foreground">500ml + {plan.postActivity.electrolytes}x Supplme</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-primary/70 flex items-center justify-center text-xs font-black text-primary-foreground">2h</div>
+                          <div className="w-0.5 h-12 bg-primary/30"></div>
+                        </div>
+                        <div className="flex-1 pb-4">
+                          <p className="font-bold text-sm">First Phase</p>
+                          <p className="text-xs text-muted-foreground">{Math.round(plan.postActivity.water * 0.5)}ml + protein meal</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-3">
+                        <div className="flex flex-col items-center">
+                          <div className="w-8 h-8 rounded-full bg-primary/40 flex items-center justify-center text-xs font-black text-primary-foreground">6h</div>
+                        </div>
+                        <div className="flex-1">
+                          <p className="font-bold text-sm">Complete</p>
+                          <p className="text-xs text-muted-foreground">{plan.postActivity.water}ml total (150% loss)</p>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  <div className="pt-2 border-t border-border">
+                    <p className="text-sm font-semibold text-foreground">✓ Target: Pale yellow urine by evening</p>
+                  </div>
+                </Card>
+                <div className="hidden md:block" />
               </div>
-              <div className="space-y-3 pt-2">
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Immediately After (0-30 min)</p>
-                  <p className="text-sm text-muted-foreground">Drink 300-500ml + {plan.postActivity.electrolytes}x Supplme sachet. Don't chug, sip steadily.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">First 2 Hours</p>
-                  <p className="text-sm text-muted-foreground">Target {Math.round(plan.postActivity.water * 0.5)}ml fluid intake. Include protein-rich recovery meal.</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">4-6 Hours Post Race</p>
-                  <p className="text-sm text-muted-foreground">Complete {plan.postActivity.water}ml total fluid replacement (150% of estimated loss).</p>
-                </div>
-                <div className="p-3 bg-background/50 rounded-lg border border-border">
-                  <p className="text-sm font-semibold text-primary mb-1">Recovery Check</p>
-                  <p className="text-sm text-muted-foreground">Urine should be pale yellow by evening. Dark urine = keep hydrating. Continue Supplme with evening meal if needed.</p>
-                </div>
-              </div>
-            </Card>
+            </div>
           </div>
 
-          {/* Race Day Pro Tips */}
-          <Alert className="border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-primary/5">
+          {/* Quick Tips - Compact */}
+          <Alert className="border-2 border-primary/30 bg-gradient-to-r from-primary/10 to-background">
             <Activity className="h-5 w-5 text-primary" />
-            <AlertTitle className="text-lg font-bold">Race Day Pro Tips</AlertTitle>
-            <AlertDescription className="text-sm text-muted-foreground space-y-2 mt-2">
-              <p>✓ <strong>Practice in training:</strong> Test this exact hydration protocol during long training sessions to avoid race day surprises.</p>
-              <p>✓ <strong>Aid station strategy:</strong> Know where aid stations are located. Plan Supplme intake to coincide with water availability.</p>
-              <p>✓ <strong>Weather contingency:</strong> Check forecast 48hrs before. Adjust fluid targets if conditions differ from training.</p>
-              <p>✓ <strong>Body weight check:</strong> Weigh yourself pre and post race. Ideal = lose 1-2% body weight. More = dehydrated. Gain = over hydrated.</p>
+            <AlertTitle className="text-lg font-black uppercase">Pro Tips</AlertTitle>
+            <AlertDescription className="text-sm space-y-1 mt-2">
+              <p>✓ Practice protocol in training</p>
+              <p>✓ Pack {Math.ceil(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)}x Supplme sachets</p>
+              <p>✓ Check weather 48hrs before • Adjust if needed</p>
             </AlertDescription>
           </Alert>
         </div>
