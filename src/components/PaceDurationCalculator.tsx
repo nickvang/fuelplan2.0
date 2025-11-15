@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { InfoTooltip } from '@/components/InfoTooltip';
-import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 
 interface PaceDurationCalculatorProps {
   discipline: string;
@@ -36,17 +35,20 @@ export function PaceDurationCalculator({
   onPaceChange,
   onDurationChange,
 }: PaceDurationCalculatorProps) {
-  const [inputMode, setInputMode] = useState<'pace' | 'duration'>('duration');
-  const [paceValue, setPaceValue] = useState(currentPace || '');
-  const [durationValue, setDurationValue] = useState(currentDuration?.toString() || '');
+  const [inputValue, setInputValue] = useState('');
+  const [calculatedValue, setCalculatedValue] = useState('');
+  const [detectedType, setDetectedType] = useState<'pace' | 'duration' | null>(null);
 
   useEffect(() => {
-    setPaceValue(currentPace || '');
-  }, [currentPace]);
-
-  useEffect(() => {
-    setDurationValue(currentDuration?.toString() || '');
-  }, [currentDuration]);
+    // Initialize with current values
+    if (currentDuration) {
+      setInputValue(currentDuration.toString());
+      setDetectedType('duration');
+    } else if (currentPace) {
+      setInputValue(currentPace);
+      setDetectedType('pace');
+    }
+  }, [currentPace, currentDuration]);
 
   // Calculate duration from pace
   const calculateDurationFromPace = (pace: string, distance?: string): number | null => {
@@ -119,31 +121,52 @@ export function PaceDurationCalculator({
     return null;
   };
 
-  const handlePaceChange = (value: string) => {
-    setPaceValue(value);
-    onPaceChange(value);
-
-    // Auto-calculate duration if we have race distance
-    if (raceDistance) {
-      const calculatedDuration = calculateDurationFromPace(value, raceDistance);
-      if (calculatedDuration !== null) {
-        setDurationValue(calculatedDuration.toFixed(1));
-        onDurationChange(calculatedDuration);
-      }
+  const detectInputType = (value: string): 'pace' | 'duration' | null => {
+    if (!value) return null;
+    
+    // Check if it's a pace format (contains ":" for time-based pace)
+    if (value.includes(':')) {
+      return 'pace';
     }
+    
+    // Check if it's a cycling speed (contains "km/h" or "W")
+    if (discipline === 'Cycling' && (value.includes('km/h') || value.includes('W'))) {
+      return 'pace';
+    }
+    
+    // Check if it's a number (duration in hours)
+    if (!isNaN(parseFloat(value)) && value.match(/^\d+(\.\d+)?$/)) {
+      return 'duration';
+    }
+    
+    return null;
   };
 
-  const handleDurationChange = (value: string) => {
-    setDurationValue(value);
-    const durationNum = parseFloat(value);
-    if (!isNaN(durationNum)) {
-      onDurationChange(durationNum);
+  const handleInputChange = (value: string) => {
+    setInputValue(value);
+    const type = detectInputType(value);
+    setDetectedType(type);
 
+    if (type === 'pace') {
+      onPaceChange(value);
+      
+      // Auto-calculate duration if we have race distance
+      if (raceDistance) {
+        const calculatedDuration = calculateDurationFromPace(value, raceDistance);
+        if (calculatedDuration !== null) {
+          setCalculatedValue(`${calculatedDuration.toFixed(1)} hours`);
+          onDurationChange(calculatedDuration);
+        }
+      }
+    } else if (type === 'duration') {
+      const durationNum = parseFloat(value);
+      onDurationChange(durationNum);
+      
       // Auto-calculate pace if we have race distance
       if (raceDistance) {
         const calculatedPace = calculatePaceFromDuration(durationNum, raceDistance);
         if (calculatedPace !== null) {
-          setPaceValue(calculatedPace);
+          setCalculatedValue(calculatedPace);
           onPaceChange(calculatedPace);
         }
       }
@@ -176,70 +199,43 @@ export function PaceDurationCalculator({
     }
   };
 
+  const getInputPlaceholder = () => {
+    switch (discipline) {
+      case 'Swimming':
+        return 'e.g., 1:45/100m or 1.5 (hours)';
+      case 'Cycling':
+        return 'e.g., 30 km/h or 1.5 (hours)';
+      case 'Hiking':
+        return 'e.g., 15:00/km or 2 (hours)';
+      default:
+        return 'e.g., 5:00/km or 1.5 (hours)';
+    }
+  };
+
+  const getTooltipContent = () => {
+    const paceExample = getPacePlaceholder().replace('e.g., ', '');
+    return `Enter either your pace (${paceExample}) or session duration in hours (e.g., 1.5). ${raceDistance ? 'The other value will be calculated automatically based on your race distance.' : ''}`;
+  };
+
   return (
-    <div className="space-y-4">
+    <div className="space-y-2">
       <div className="flex items-center gap-2">
-        <Label>Enter either pace or duration</Label>
-        <InfoTooltip content={raceDistance ? "Enter either your pace or duration. The other will be calculated automatically based on your race distance." : "Enter either your typical pace or session duration."} />
+        <Label htmlFor="pace-duration-input">
+          Pace or Session Duration *
+        </Label>
+        <InfoTooltip content={getTooltipContent()} />
       </div>
-
-      <RadioGroup value={inputMode} onValueChange={(value) => setInputMode(value as 'pace' | 'duration')} className="flex gap-4">
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="duration" id="duration-mode" />
-          <Label htmlFor="duration-mode" className="cursor-pointer font-normal">
-            Duration
-          </Label>
-        </div>
-        <div className="flex items-center space-x-2">
-          <RadioGroupItem value="pace" id="pace-mode" />
-          <Label htmlFor="pace-mode" className="cursor-pointer font-normal">
-            Pace
-          </Label>
-        </div>
-      </RadioGroup>
-
-      {inputMode === 'duration' ? (
-        <div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="sessionDuration">
-              Session Duration (hours) *
-            </Label>
-            <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
-          </div>
-          <Input
-            id="sessionDuration"
-            type="number"
-            step="0.5"
-            value={durationValue}
-            onChange={(e) => handleDurationChange(e.target.value)}
-            placeholder="e.g., 1.5"
-          />
-          {raceDistance && paceValue && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Calculated pace: {paceValue}
-            </p>
-          )}
-        </div>
-      ) : (
-        <div>
-          <div className="flex items-center gap-2">
-            <Label htmlFor="avgPace">
-              {getPaceLabel()}
-            </Label>
-            <InfoTooltip content={raceDistance ? "Enter your target pace. Duration will be calculated automatically." : "Enter your typical training pace."} />
-          </div>
-          <Input
-            id="avgPace"
-            value={paceValue}
-            onChange={(e) => handlePaceChange(e.target.value)}
-            placeholder={getPacePlaceholder()}
-          />
-          {raceDistance && durationValue && (
-            <p className="text-sm text-muted-foreground mt-2">
-              Calculated duration: {durationValue} hours
-            </p>
-          )}
-        </div>
+      <Input
+        id="pace-duration-input"
+        value={inputValue}
+        onChange={(e) => handleInputChange(e.target.value)}
+        placeholder={getInputPlaceholder()}
+      />
+      {raceDistance && calculatedValue && detectedType && (
+        <p className="text-sm text-muted-foreground">
+          {detectedType === 'pace' ? 'Calculated duration: ' : 'Calculated pace: '}
+          {calculatedValue}
+        </p>
       )}
     </div>
   );
