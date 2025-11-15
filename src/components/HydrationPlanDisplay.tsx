@@ -1109,19 +1109,29 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           <span className="text-muted-foreground font-mono font-medium">{plan.totalFluidLoss.toFixed(0)}ml</span>
                         </div>
                         <div className="relative h-4 bg-muted rounded-full overflow-hidden">
-                          <div 
-                            className={`h-full rounded-full transition-all duration-500 ${
-                              plan.totalFluidLoss > 2000 ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[85%]' :
-                              plan.totalFluidLoss > 1200 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[60%]' :
-                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[35%]'
-                            }`}
-                          />
+                          {(() => {
+                            // Calculate hourly rate for proper comparison
+                            const hourlyRate = plan.totalFluidLoss / profile.sessionDuration;
+                            const barWidth = hourlyRate < 600 ? '30%' : 
+                                           hourlyRate < 800 ? '50%' : 
+                                           hourlyRate < 1000 ? '65%' : 
+                                           '85%';
+                            const barColor = hourlyRate < 600 ? 'bg-gradient-to-r from-green-500 to-emerald-500' :
+                                           hourlyRate < 1000 ? 'bg-gradient-to-r from-blue-500 to-cyan-500' :
+                                           'bg-gradient-to-r from-amber-500 to-red-500';
+                            return (
+                              <div 
+                                className={`h-full rounded-full transition-all duration-500 ${barColor}`}
+                                style={{ width: barWidth }}
+                              />
+                            );
+                          })()}
                           <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
                         </div>
                         <div className="flex justify-between text-xs text-muted-foreground">
-                          <span>Low (&lt;1000ml)</span>
-                          <span className="font-medium">Average (~1500ml)</span>
-                          <span>High (&gt;2500ml)</span>
+                          <span>Low (&lt;{Math.round(600 * profile.sessionDuration)}ml)</span>
+                          <span className="font-medium">Average (~{Math.round(800 * profile.sessionDuration)}ml)</span>
+                          <span>High (&gt;{Math.round(1000 * profile.sessionDuration)}ml)</span>
                         </div>
                       </div>
 
