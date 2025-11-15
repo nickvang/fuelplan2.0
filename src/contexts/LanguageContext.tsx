@@ -34,7 +34,7 @@ export const translations = {
     // Version Selection
     'version.select': 'Choose Your Experience',
     'version.simple.title': 'Quick',
-    'version.simple.description': 'Quick hydration plan with essential info only. Perfect for getting started fast.',
+    'version.simple.description': 'Quick hydration plan using generic assumptions. Perfect for getting started fast with essential info only.',
     'version.simple.time': '2 minutes',
     'version.pro.title': 'Pro (Advanced)',
     'version.pro.description': 'Comprehensive analysis with environmental factors, sweat profile, and smartwatch integration.',
@@ -207,7 +207,7 @@ export const translations = {
     // Version Selection
     'version.select': 'Vælg Din Oplevelse',
     'version.simple.title': 'Hurtig',
-    'version.simple.description': 'Hurtig hydrationsplan med kun det nødvendige. Perfekt til at komme hurtigt i gang.',
+    'version.simple.description': 'Hurtig hydrationsplan ved brug af generelle antagelser. Perfekt til at komme hurtigt i gang med kun det nødvendige.',
     'version.simple.time': '2 minutter',
     'version.pro.title': 'Pro (Avanceret)',
     'version.pro.description': 'Omfattende analyse med miljøfaktorer, svedprofil og smartwatch-integration.',
