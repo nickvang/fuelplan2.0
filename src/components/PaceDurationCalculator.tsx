@@ -125,13 +125,13 @@ export function PaceDurationCalculator({
   const getPaceLabel = () => {
     switch (discipline) {
       case 'Swimming':
-        return 'Average Swim Pace';
+        return 'Pace';
       case 'Cycling':
-        return 'Average Power/Speed';
+        return 'Pace';
       case 'Hiking':
-        return 'Average Hiking Pace';
+        return 'Pace';
       default:
-        return 'Average Run Pace';
+        return 'Pace';
     }
   };
 
@@ -141,7 +141,7 @@ export function PaceDurationCalculator({
         <Label htmlFor="pace" className="text-foreground">
           {getPaceLabel()}
         </Label>
-        <InfoTooltip content="Enter your average pace/speed. If a race distance is selected, we'll automatically calculate the duration for you." />
+        <InfoTooltip content="Enter your average pace. If a race distance is selected, we'll automatically calculate the session duration." />
       </div>
       <Input
         id="pace"
