@@ -1167,7 +1167,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
                   <div className="space-y-3">
                     {plan.recommendations
-                      .filter(rec => !rec.includes('Each 30ml Supplme sachet provides'))
+                      .filter(rec => 
+                        !rec.includes('Each 30ml Supplme sachet provides') &&
+                        !rec.includes('Drink Supplme sachets directly')
+                      )
                       .slice(0, 5)
                       .map((rec, index) => (
                         <div 
