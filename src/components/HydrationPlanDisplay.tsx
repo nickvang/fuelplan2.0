@@ -976,6 +976,74 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </AlertDescription>
       </Alert>
 
+      {/* AI Insights Section */}
+      {aiInsights && version === 'pro' && (
+        <Card className="p-6 border-2 border-primary/20 bg-primary/5">
+          <div className="space-y-4">
+            <div className="flex items-center gap-2 mb-4">
+              <Sparkles className="w-5 h-5 text-primary" />
+              <h3 className="text-lg font-semibold">AI-Enhanced Analysis</h3>
+              <span className={`ml-auto text-xs px-3 py-1 rounded-full border ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
+                {aiInsights.confidence_level.toUpperCase()} CONFIDENCE
+              </span>
+            </div>
+            
+            <div className="space-y-4">
+              <div>
+                <h4 className="font-medium text-sm text-muted-foreground mb-1">Why These Numbers?</h4>
+                <p className="text-sm leading-relaxed">{aiInsights.personalized_insight}</p>
+              </div>
+
+              {aiInsights.performance_comparison && (
+                <div className="bg-accent/50 border border-accent p-3 rounded-lg">
+                  <h4 className="font-medium text-sm text-muted-foreground mb-1">Performance Comparison</h4>
+                  <p className="text-sm leading-relaxed">{aiInsights.performance_comparison}</p>
+                </div>
+              )}
+
+              {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
+                <div>
+                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Optimization Tips</h4>
+                  <ul className="space-y-2">
+                    {aiInsights.optimization_tips.map((tip, index) => (
+                      <li key={index} className="flex gap-2 text-sm">
+                        <span className="text-primary">•</span>
+                        <span>{tip}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+              
+              {aiInsights.risk_factors && (
+                <Alert>
+                  <AlertCircle className="h-4 w-4" />
+                  <AlertTitle>Key Risk Factors</AlertTitle>
+                  <AlertDescription>{aiInsights.risk_factors}</AlertDescription>
+                </Alert>
+              )}
+              
+              {aiInsights.professional_recommendation && (
+                <div className="bg-muted/50 p-3 rounded-lg">
+                  <p className="text-sm text-muted-foreground">
+                    <strong>Professional Recommendation:</strong> {aiInsights.professional_recommendation}
+                  </p>
+                </div>
+              )}
+            </div>
+          </div>
+        </Card>
+      )}
+
+      {loadingInsights && (
+        <Card className="p-6 border-2 border-primary/20">
+          <div className="flex items-center gap-3">
+            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
+            <p className="text-sm text-muted-foreground">Generating AI-enhanced insights...</p>
+          </div>
+        </Card>
+      )}
+
       {/* Distance Adjustment Tool */}
       <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
         <div className="space-y-4">
@@ -1294,74 +1362,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       )}
 
-
-      {/* AI Insights Section - Moved after plans */}
-      {aiInsights && version === 'pro' && (
-        <Card className="p-6 border-2 border-primary/20 bg-primary/5">
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 mb-4">
-              <Sparkles className="w-5 h-5 text-primary" />
-              <h3 className="text-lg font-semibold">AI-Enhanced Analysis</h3>
-              <span className={`ml-auto text-xs px-3 py-1 rounded-full border ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
-                {aiInsights.confidence_level.toUpperCase()} CONFIDENCE
-              </span>
-            </div>
-            
-            <div className="space-y-4">
-              <div>
-                <h4 className="font-medium text-sm text-muted-foreground mb-1">Why These Numbers?</h4>
-                <p className="text-sm leading-relaxed">{aiInsights.personalized_insight}</p>
-              </div>
-
-              {aiInsights.performance_comparison && (
-                <div className="bg-accent/50 border border-accent p-3 rounded-lg">
-                  <h4 className="font-medium text-sm text-muted-foreground mb-1">Performance Comparison</h4>
-                  <p className="text-sm leading-relaxed">{aiInsights.performance_comparison}</p>
-                </div>
-              )}
-
-              {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
-                <div>
-                  <h4 className="font-medium text-sm text-muted-foreground mb-2">Optimization Tips</h4>
-                  <ul className="space-y-2">
-                    {aiInsights.optimization_tips.map((tip, index) => (
-                      <li key={index} className="flex gap-2 text-sm">
-                        <span className="text-primary">•</span>
-                        <span>{tip}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              
-              {aiInsights.risk_factors && (
-                <Alert>
-                  <AlertCircle className="h-4 w-4" />
-                  <AlertTitle>Key Risk Factors</AlertTitle>
-                  <AlertDescription>{aiInsights.risk_factors}</AlertDescription>
-                </Alert>
-              )}
-              
-              {aiInsights.professional_recommendation && (
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <p className="text-sm text-muted-foreground">
-                    <strong>Professional Recommendation:</strong> {aiInsights.professional_recommendation}
-                  </p>
-                </div>
-              )}
-            </div>
-          </div>
-        </Card>
-      )}
-
-      {loadingInsights && (
-        <Card className="p-6 border-2 border-primary/20">
-          <div className="flex items-center gap-3">
-            <Sparkles className="w-5 h-5 text-primary animate-pulse" />
-            <p className="text-sm text-muted-foreground">Generating AI-enhanced insights...</p>
-          </div>
-        </Card>
-      )}
 
       {/* Calculation Transparency */}
       <Card className="p-6">
