@@ -1112,10 +1112,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 p-3 rounded-lg" style={{ backgroundColor: 'rgba(255,0,0,0.1)', border: '1px solid rgba(255,0,0,0.3)' }}>
-                    <AlertCircle className="w-5 h-5" style={{ color: '#ff4444' }} />
-                    <p className="text-xs font-semibold" style={{ color: '#ffffff' }}>
-                      Stop if: severe cramps, dizziness, no sweat
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/20 border border-primary/30">
+                    <Activity className="w-5 h-5 text-primary" />
+                    <p className="text-xs font-semibold text-primary-foreground">
+                      Listen to your body • Adjust as needed
                     </p>
                   </div>
                 </Card>
