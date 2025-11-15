@@ -15,6 +15,7 @@ export interface HydrationProfile {
   disciplines: string[];
   terrain?: string;
   raceDistance?: string;
+  goalTime?: string; // Target finish time (e.g., "1:30:00")
   sessionDuration: number;
   avgPace?: string;
   swimPace?: string;
