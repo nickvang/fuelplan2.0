@@ -1024,7 +1024,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   {/* Summary sentence */}
                   <p className="text-sm text-muted-foreground leading-relaxed">
                     {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                      ? `You're a high-volume sweater with elevated sodium loss—requiring aggressive electrolyte replacement to maintain performance and prevent cramping.`
+                      ? `You're a high-volume sweater with elevated sodium loss. This requires aggressive electrolyte replacement to maintain performance and prevent cramping.`
                       : profile.sweatRate === 'high'
                       ? `Your high sweat rate means you lose significantly more fluid than average athletes during exercise.`
                       : profile.sweatSaltiness === 'high'
