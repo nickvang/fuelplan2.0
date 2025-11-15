@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2, X, Loader2 } from 'lucide-react';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2, X, Loader2, Activity } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -1021,28 +1021,122 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     )}
                   </div>
 
-                  {/* Bold Headline Finding */}
-                  <div className="space-y-4">
-                    <h2 className="text-2xl md:text-3xl font-black text-foreground leading-tight">
-                      {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                        ? 'High Sodium & Fluid Loss'
-                        : profile.sweatRate === 'high'
-                        ? 'High Sweat Rate Detected'
-                        : profile.sweatSaltiness === 'high'
-                        ? 'High Sodium Loss Profile'
-                        : 'Balanced Hydration Profile'}
-                    </h2>
-                    
-                    {/* Detailed Analysis */}
-                    <p className="text-base text-muted-foreground leading-relaxed max-w-3xl">
-                      {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                        ? `You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium concentration, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration}-hour session. Each Supplme sachet delivers 500mg sodium, 250mg potassium, and 100mg magnesium—precisely calibrated to offset your high sodium losses. Without adequate replacement, you risk hyponatremia, cramping, and significant performance decline. ${aiInsights?.personalized_insight ? aiInsights.personalized_insight.split('.')[0] + '.' : ''}`
-                        : profile.sweatRate === 'high'
-                        ? `Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml of fluid during this ${profile.sessionDuration}-hour session—significantly above the average athlete. This high fluid turnover demands precise hydration timing: consuming ${plan.duringActivity.waterPerHour}ml per hour with electrolyte support every 15-20 minutes. Dehydration of just 2% body weight can reduce performance by 10-20%. Your plan ensures consistent fluid intake to maintain blood volume, thermoregulation, and cardiovascular function. ${aiInsights?.personalized_insight ? aiInsights.personalized_insight.split('.').slice(0, 2).join('. ') + '.' : ''}`
-                        : profile.sweatSaltiness === 'high'
-                        ? `Your sweat has an elevated sodium concentration, placing you at higher risk for electrolyte imbalance and exercise-associated muscle cramping. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is within normal ranges, each liter of sweat contains more sodium than average. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets per hour provide the precise electrolyte ratio—500mg sodium, 250mg potassium, 100mg magnesium—to maintain neuromuscular function and prevent cramping. ${aiInsights?.professional_recommendation || ''}`
-                        : `Your hydration profile indicates balanced sweat rate and sodium concentration, allowing for standard evidence-based hydration protocols. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration} hours aligns with ACSM guidelines (${(plan.totalFluidLoss / profile.sessionDuration / profile.weight).toFixed(1)}ml/kg/hour). Environmental factors like ${profile.trainingTempRange ? `temperatures between ${profile.trainingTempRange.min}-${profile.trainingTempRange.max}°C` : 'moderate conditions'} and ${profile.sunExposure || 'moderate'} sun exposure have been factored into your personalized plan. ${aiInsights?.personalized_insight ? aiInsights.personalized_insight.split('.')[0] + '.' : ''}`}
-                    </p>
+                  {/* Profile Analysis - Bar Graph Comparison */}
+                  <div className="space-y-6">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
+                        <Activity className="w-5 h-5 text-primary" />
+                      </div>
+                      <h3 className="text-xl font-bold">Your Profile vs. Average Athlete</h3>
+                    </div>
+
+                    {/* Visual Comparison Bars */}
+                    <div className="space-y-5">
+                      {/* Sweat Rate */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Sweat Rate</span>
+                          <span className="text-muted-foreground capitalize font-medium">{profile.sweatRate}</span>
+                        </div>
+                        <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              profile.sweatRate === 'high' ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[85%]' :
+                              profile.sweatRate === 'medium' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[55%]' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[30%]'
+                            }`}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Low</span>
+                          <span className="font-medium">Average</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+
+                      {/* Sweat Sodium */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Sweat Sodium Loss</span>
+                          <span className="text-muted-foreground capitalize font-medium">{profile.sweatSaltiness}</span>
+                        </div>
+                        <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              profile.sweatSaltiness === 'high' ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[85%]' :
+                              profile.sweatSaltiness === 'medium' ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[55%]' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[30%]'
+                            }`}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Low</span>
+                          <span className="font-medium">Average</span>
+                          <span>High</span>
+                        </div>
+                      </div>
+
+                      {/* Total Fluid Loss */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Total Fluid Loss</span>
+                          <span className="text-muted-foreground font-mono font-medium">{plan.totalFluidLoss.toFixed(0)}ml</span>
+                        </div>
+                        <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              plan.totalFluidLoss > 2000 ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[85%]' :
+                              plan.totalFluidLoss > 1200 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[60%]' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[35%]'
+                            }`}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Low (&lt;1000ml)</span>
+                          <span className="font-medium">Average (~1500ml)</span>
+                          <span>High (&gt;2500ml)</span>
+                        </div>
+                      </div>
+
+                      {/* Hydration Intensity Needs */}
+                      <div className="space-y-2">
+                        <div className="flex items-center justify-between text-sm">
+                          <span className="font-semibold text-foreground">Electrolyte Replacement Needs</span>
+                          <span className="text-muted-foreground font-medium">{plan.duringActivity.electrolytesPerHour} sachets/hr</span>
+                        </div>
+                        <div className="relative h-4 bg-muted rounded-full overflow-hidden">
+                          <div 
+                            className={`h-full rounded-full transition-all duration-500 ${
+                              plan.duringActivity.electrolytesPerHour >= 2 ? 'bg-gradient-to-r from-amber-500 to-red-500 w-[80%]' :
+                              plan.duringActivity.electrolytesPerHour >= 1.5 ? 'bg-gradient-to-r from-blue-500 to-cyan-500 w-[55%]' :
+                              'bg-gradient-to-r from-green-500 to-emerald-500 w-[30%]'
+                            }`}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-0.5 bg-foreground/30" />
+                        </div>
+                        <div className="flex justify-between text-xs text-muted-foreground">
+                          <span>Low (1/hr)</span>
+                          <span className="font-medium">Average (1.5/hr)</span>
+                          <span>High (2+/hr)</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Key Insight Summary */}
+                    <div className="mt-6 p-4 bg-muted/50 rounded-xl border border-border/50">
+                      <p className="text-sm text-muted-foreground leading-relaxed">
+                        {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
+                          ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration}-hour session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
+                          : profile.sweatRate === 'high'
+                          ? `⚡ Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml during this ${profile.sessionDuration}-hour session—above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes every 15-20 minutes to maintain performance.`
+                          : profile.sweatSaltiness === 'high'
+                          ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
+                          : `✓ Your balanced profile allows standard evidence-based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration} hours aligns with ACSM guidelines, adjusted for environmental factors.`}
+                      </p>
+                    </div>
                   </div>
                 </div>
               </Card>
