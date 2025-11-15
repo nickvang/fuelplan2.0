@@ -9,6 +9,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
 import { jsPDF } from 'jspdf';
@@ -976,15 +977,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </AlertDescription>
       </Alert>
 
-      {/* AI-Enhanced Analysis & Personalized Recommendations - Combined Section */}
+      {/* AI-Enhanced Analysis & Personalized Recommendations - Condensed with Expandables */}
       {version === 'pro' && (
         <Card className="p-6 border-2 border-primary/20 bg-gradient-to-br from-primary/5 to-background">
-          <div className="space-y-6">
-            <div className="flex items-center gap-2">
-              <Sparkles className="w-6 h-6 text-primary" />
-              <h3 className="text-2xl font-bold">Your Personalized Insights</h3>
+          <div className="space-y-5">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Sparkles className="w-6 h-6 text-primary" />
+                <h3 className="text-2xl font-bold">Your Personalized Insights</h3>
+              </div>
               {aiInsights && (
-                <span className={`ml-auto text-xs px-3 py-1 rounded-full border font-semibold ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
+                <span className={`text-xs px-3 py-1 rounded-full border font-semibold ${getConfidenceBadgeColor(aiInsights.confidence_level)}`}>
                   {aiInsights.confidence_level.toUpperCase()} CONFIDENCE
                 </span>
               )}
@@ -998,96 +1001,159 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             )}
 
             {aiInsights && (
-              <div className="grid md:grid-cols-2 gap-4">
-                {/* Key Insight Card */}
-                <div className="bg-card p-4 rounded-lg border border-border space-y-2">
-                  <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
-                      <span className="text-lg">💡</span>
-                    </div>
-                    <h4 className="font-semibold">Key Insight</h4>
-                  </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {aiInsights.personalized_insight}
-                  </p>
-                </div>
-
-                {/* Performance Comparison Card */}
-                {aiInsights.performance_comparison && (
-                  <div className="bg-card p-4 rounded-lg border border-border space-y-2">
-                    <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
-                        <span className="text-lg">📊</span>
+              <>
+                {/* Quick Summary Cards */}
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-card p-4 rounded-lg border border-border">
+                    <div className="flex items-center gap-2 mb-2">
+                      <div className="w-8 h-8 rounded-full bg-primary/20 flex items-center justify-center">
+                        <span className="text-lg">💡</span>
                       </div>
-                      <h4 className="font-semibold">Performance</h4>
+                      <h4 className="font-semibold">Key Takeaway</h4>
                     </div>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      {aiInsights.performance_comparison}
+                    <p className="text-sm text-muted-foreground line-clamp-2">
+                      {aiInsights.personalized_insight}
                     </p>
-                  </div>
-                )}
-              </div>
-            )}
-
-            {/* Recommendations Grid */}
-            <div className="space-y-3">
-              <h4 className="font-semibold text-lg flex items-center gap-2">
-                <span>✓</span> Recommendations
-              </h4>
-              <div className="grid md:grid-cols-2 gap-3">
-                {plan.recommendations.slice(0, 6).map((rec, index) => (
-                  <div key={index} className="flex gap-2 items-start bg-card p-3 rounded-lg border border-border/50">
-                    <span className="text-primary text-sm mt-0.5">•</span>
-                    <span className="text-sm text-muted-foreground">{rec}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Optimization Tips */}
-            {aiInsights?.optimization_tips && aiInsights.optimization_tips.length > 0 && (
-              <div className="bg-accent/20 border border-accent p-4 rounded-lg space-y-2">
-                <h4 className="font-semibold flex items-center gap-2">
-                  <span>⚡</span> Quick Wins
-                </h4>
-                <div className="grid md:grid-cols-2 gap-2">
-                  {aiInsights.optimization_tips.map((tip, index) => (
-                    <div key={index} className="flex gap-2 items-start">
-                      <span className="text-primary text-xs mt-1">→</span>
-                      <span className="text-sm">{tip}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Risk Factors & Professional Recommendation */}
-            {(aiInsights?.risk_factors || aiInsights?.professional_recommendation) && (
-              <div className="grid md:grid-cols-2 gap-4">
-                {aiInsights.risk_factors && (
-                  <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20">
-                    <AlertCircle className="h-4 w-4 text-amber-600" />
-                    <AlertTitle className="text-amber-900 dark:text-amber-200">Watch Out</AlertTitle>
-                    <AlertDescription className="text-amber-800 dark:text-amber-300 text-sm">
-                      {aiInsights.risk_factors}
-                    </AlertDescription>
-                  </Alert>
-                )}
-                
-                {aiInsights.professional_recommendation && (
-                  <div className="bg-primary/10 border border-primary/30 p-4 rounded-lg">
-                    <div className="flex items-start gap-2">
-                      <span className="text-lg">🎯</span>
-                      <div>
-                        <h4 className="font-semibold text-sm mb-1">Pro Tip</h4>
-                        <p className="text-sm text-muted-foreground">
-                          {aiInsights.professional_recommendation}
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-xs text-primary hover:underline mt-2 flex items-center gap-1">
+                        Read more <span className="text-[10px]">▼</span>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="mt-2">
+                        <p className="text-sm text-muted-foreground leading-relaxed">
+                          {aiInsights.personalized_insight}
                         </p>
+                      </CollapsibleContent>
+                    </Collapsible>
+                  </div>
+
+                  {aiInsights.performance_comparison && (
+                    <div className="bg-card p-4 rounded-lg border border-border">
+                      <div className="flex items-center gap-2 mb-2">
+                        <div className="w-8 h-8 rounded-full bg-accent/20 flex items-center justify-center">
+                          <span className="text-lg">📊</span>
+                        </div>
+                        <h4 className="font-semibold">vs. Average Athlete</h4>
                       </div>
+                      <p className="text-sm text-muted-foreground line-clamp-2">
+                        {aiInsights.performance_comparison}
+                      </p>
+                      <Collapsible>
+                        <CollapsibleTrigger className="text-xs text-primary hover:underline mt-2 flex items-center gap-1">
+                          Read more <span className="text-[10px]">▼</span>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent className="mt-2">
+                          <p className="text-sm text-muted-foreground leading-relaxed">
+                            {aiInsights.performance_comparison}
+                          </p>
+                        </CollapsibleContent>
+                      </Collapsible>
                     </div>
+                  )}
+                </div>
+
+                {/* Top 3 Recommendations */}
+                <div className="space-y-2">
+                  <h4 className="font-semibold flex items-center gap-2">
+                    <span>✓</span> Top Recommendations
+                  </h4>
+                  <div className="space-y-2">
+                    {plan.recommendations.slice(0, 3).map((rec, index) => (
+                      <div key={index} className="flex gap-2 items-start bg-card p-3 rounded-lg border border-border/50">
+                        <span className="text-primary text-sm mt-0.5">•</span>
+                        <span className="text-sm text-muted-foreground">{rec}</span>
+                      </div>
+                    ))}
+                  </div>
+                  {plan.recommendations.length > 3 && (
+                    <Collapsible>
+                      <CollapsibleTrigger className="text-sm text-primary hover:underline mt-2 flex items-center gap-1 w-full justify-center py-2">
+                        Show {plan.recommendations.length - 3} more <span className="text-xs">▼</span>
+                      </CollapsibleTrigger>
+                      <CollapsibleContent className="space-y-2 mt-2">
+                        {plan.recommendations.slice(3).map((rec, index) => (
+                          <div key={index + 3} className="flex gap-2 items-start bg-card p-3 rounded-lg border border-border/50">
+                            <span className="text-primary text-sm mt-0.5">•</span>
+                            <span className="text-sm text-muted-foreground">{rec}</span>
+                          </div>
+                        ))}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </div>
+
+                {/* Quick Wins - Collapsible */}
+                {aiInsights.optimization_tips && aiInsights.optimization_tips.length > 0 && (
+                  <Collapsible>
+                    <CollapsibleTrigger className="w-full bg-accent/20 border border-accent p-4 rounded-lg hover:bg-accent/30 transition-colors">
+                      <div className="flex items-center justify-between">
+                        <h4 className="font-semibold flex items-center gap-2">
+                          <span>⚡</span> Quick Wins ({aiInsights.optimization_tips.length})
+                        </h4>
+                        <span className="text-xs text-muted-foreground">Click to expand</span>
+                      </div>
+                    </CollapsibleTrigger>
+                    <CollapsibleContent className="mt-2 bg-accent/10 p-4 rounded-lg border border-accent/30">
+                      <div className="space-y-2">
+                        {aiInsights.optimization_tips.map((tip, index) => (
+                          <div key={index} className="flex gap-2 items-start">
+                            <span className="text-primary text-sm mt-0.5">→</span>
+                            <span className="text-sm">{tip}</span>
+                          </div>
+                        ))}
+                      </div>
+                    </CollapsibleContent>
+                  </Collapsible>
+                )}
+
+                {/* Important Alerts */}
+                {(aiInsights.risk_factors || aiInsights.professional_recommendation) && (
+                  <div className="grid md:grid-cols-2 gap-3">
+                    {aiInsights.risk_factors && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="w-full">
+                          <Alert className="border-amber-500/50 bg-amber-50 dark:bg-amber-950/20 text-left cursor-pointer hover:bg-amber-100 dark:hover:bg-amber-950/30 transition-colors">
+                            <AlertCircle className="h-4 w-4 text-amber-600" />
+                            <AlertTitle className="text-amber-900 dark:text-amber-200 flex items-center justify-between">
+                              Watch Out
+                              <span className="text-[10px] text-amber-700">▼</span>
+                            </AlertTitle>
+                          </Alert>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-2 p-3 bg-amber-50 dark:bg-amber-950/20 rounded-lg border border-amber-500/50">
+                            <p className="text-sm text-amber-800 dark:text-amber-300">
+                              {aiInsights.risk_factors}
+                            </p>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
+                    
+                    {aiInsights.professional_recommendation && (
+                      <Collapsible>
+                        <CollapsibleTrigger className="w-full">
+                          <div className="bg-primary/10 border border-primary/30 p-4 rounded-lg cursor-pointer hover:bg-primary/20 transition-colors text-left">
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-lg">🎯</span>
+                                <h4 className="font-semibold text-sm">Pro Tip</h4>
+                              </div>
+                              <span className="text-[10px] text-muted-foreground">▼</span>
+                            </div>
+                          </div>
+                        </CollapsibleTrigger>
+                        <CollapsibleContent>
+                          <div className="mt-2 p-3 bg-primary/5 rounded-lg border border-primary/20">
+                            <p className="text-sm text-muted-foreground">
+                              {aiInsights.professional_recommendation}
+                            </p>
+                          </div>
+                        </CollapsibleContent>
+                      </Collapsible>
+                    )}
                   </div>
                 )}
-              </div>
+              </>
             )}
           </div>
         </Card>
