@@ -23,7 +23,13 @@ export const InfoTooltip = ({ content }: InfoTooltipProps) => {
             <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
           </button>
         </TooltipTrigger>
-        <TooltipContent className="max-w-sm bg-background text-foreground border-border shadow-lg p-4">
+        <TooltipContent 
+          className="max-w-sm bg-background text-foreground border-border shadow-lg p-4 z-50" 
+          side="top"
+          align="center"
+          sideOffset={8}
+          collisionPadding={16}
+        >
           <p className="text-sm leading-relaxed">{content}</p>
         </TooltipContent>
       </Tooltip>
