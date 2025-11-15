@@ -20,7 +20,7 @@ export const InfoTooltip = ({ content }: InfoTooltipProps) => {
             className="inline-flex items-center justify-center ml-1"
             onClick={(e) => e.preventDefault()}
           >
-            <HelpCircle className="h-4 w-4 text-muted-foreground hover:text-foreground transition-colors" />
+            <HelpCircle className="h-5 w-5 text-foreground/60 hover:text-primary transition-colors" />
           </button>
         </TooltipTrigger>
         <TooltipContent className="max-w-xs bg-popover text-popover-foreground border">
