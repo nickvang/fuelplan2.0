@@ -535,7 +535,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       y += 58;
 
       // ==== AI-ENHANCED ANALYSIS ====
-      if (aiInsights) {
+      if (aiInsights && version === 'pro') {
         checkPage(100);
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
@@ -1296,7 +1296,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
 
       {/* AI Insights Section - Moved after plans */}
-      {aiInsights && (
+      {aiInsights && version === 'pro' && (
         <Card className="p-6 border-2 border-primary/20 bg-primary/5">
           <div className="space-y-4">
             <div className="flex items-center gap-2 mb-4">
