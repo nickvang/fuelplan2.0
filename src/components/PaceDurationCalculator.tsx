@@ -35,6 +35,7 @@ export function PaceDurationCalculator({
 }: PaceDurationCalculatorProps) {
   const [inputValue, setInputValue] = useState('');
   const [calculatedValue, setCalculatedValue] = useState('');
+  const [finishTime, setFinishTime] = useState('');
 
   useEffect(() => {
     // Initialize with current pace
@@ -105,6 +106,13 @@ export function PaceDurationCalculator({
       if (calculatedDuration !== null) {
         setCalculatedValue(`${calculatedDuration.toFixed(1)} hours`);
         onDurationChange(calculatedDuration);
+        
+        // Calculate finish time in HH:MM format
+        const hours = Math.floor(calculatedDuration);
+        const minutes = Math.round((calculatedDuration - hours) * 60);
+        setFinishTime(`${hours}:${minutes.toString().padStart(2, '0')}`);
+      } else {
+        setFinishTime('');
       }
     }
   };
@@ -152,9 +160,20 @@ export function PaceDurationCalculator({
         className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
       />
       {calculatedValue && (
-        <p className="text-sm text-muted-foreground">
-          Calculated Duration: {calculatedValue}
-        </p>
+        <div className="mt-3 p-4 rounded-lg bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/30 animate-fade-in">
+          <div className="flex items-center justify-between">
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Estimated Duration</p>
+              <p className="text-lg font-bold text-foreground">{calculatedValue}</p>
+            </div>
+            {finishTime && (
+              <div className="text-right">
+                <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide">Expected Finish Time</p>
+                <p className="text-2xl font-black text-primary">{finishTime}</p>
+              </div>
+            )}
+          </div>
+        </div>
       )}
     </div>
   );

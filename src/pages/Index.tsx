@@ -985,17 +985,23 @@ const Index = () => {
                 </div>
               )}
 
-              {/* Race Option */}
-              <div className="space-y-2">
-                <div className="flex items-center gap-2">
+              {/* Race Option - Enhanced with Card Style */}
+              <div className="p-4 border-2 border-primary/30 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 hover:border-primary/50 transition-all duration-300 animate-fade-in">
+                <div className="flex items-start gap-3">
                   <Checkbox
                     id="hasUpcomingRace"
                     checked={profile.hasUpcomingRace || false}
                     onCheckedChange={(checked) => updateProfile({ hasUpcomingRace: checked === true })}
+                    className="mt-1"
                   />
-                  <Label htmlFor="hasUpcomingRace" className="cursor-pointer">
-                    Are you training for a race or specific event?
-                  </Label>
+                  <div className="flex-1">
+                    <Label htmlFor="hasUpcomingRace" className="cursor-pointer text-base font-semibold flex items-center gap-2">
+                      🏁 Are you training for a race or specific event?
+                    </Label>
+                    <p className="text-sm text-muted-foreground mt-1">
+                      Get race-specific hydration guidance with finish time predictions
+                    </p>
+                  </div>
                 </div>
               </div>
 
