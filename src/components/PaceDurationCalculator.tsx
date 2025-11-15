@@ -280,33 +280,6 @@ export function PaceDurationCalculator({
           </div>
         )}
       </div>
-
-      {/* Duration Input - Only show when no distance is provided at all */}
-      {!raceDistance && (
-        <div className="space-y-2">
-          <div className="flex items-center gap-2">
-            <Label htmlFor="manualDuration" className="text-foreground">
-              Training Duration (hours)
-            </Label>
-            <InfoTooltip content="How long will your training session last? (e.g., 1.5 for 90 minutes). You can also enter a distance above and we'll calculate this for you." />
-          </div>
-          <Input
-            id="manualDuration"
-            type="number"
-            step="0.25"
-            min="0.25"
-            max="24"
-            placeholder="e.g., 1.5"
-            onChange={(e) => {
-              const duration = parseFloat(e.target.value);
-              if (!isNaN(duration) && duration > 0) {
-                onDurationChange(duration);
-              }
-            }}
-            className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-          />
-        </div>
-      )}
     </div>
   );
 }
