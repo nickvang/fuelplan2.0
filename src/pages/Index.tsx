@@ -1323,7 +1323,7 @@ const Index = () => {
               <div>
                 <div className="flex items-center mb-2">
                   <Label>{t('env.altitude')} *</Label>
-                  <InfoTooltip content="Sea-level: 0-1000m, Moderate: 1000-2500m, High: >2500m. Higher altitude increases respiratory fluid loss and dehydration risk." />
+                  <InfoTooltip content={version === 'pro' ? "Select range or specify exact altitude below. Sea-level: 0-1000m, Moderate: 1000-2500m, High: >2500m. Higher altitude increases respiratory fluid loss and dehydration risk." : "Sea-level: 0-1000m, Moderate: 1000-2500m, High: >2500m. Higher altitude increases respiratory fluid loss and dehydration risk."} />
                 </div>
                 <RadioGroup
                   value={profile.altitude || ''}
@@ -1342,6 +1342,25 @@ const Index = () => {
                     <Label htmlFor="high" className="font-normal">{t('env.highAltitude')}</Label>
                   </div>
                 </RadioGroup>
+                
+                {/* Exact altitude in meters - Pro version only */}
+                {version === 'pro' && (
+                  <div className="mt-3">
+                    <Label htmlFor="altitudeMeters" className="text-sm text-muted-foreground">
+                      Exact Altitude (meters) - Optional
+                    </Label>
+                    <Input
+                      id="altitudeMeters"
+                      type="number"
+                      min="0"
+                      max="5000"
+                      value={profile.altitudeMeters || ''}
+                      onChange={(e) => updateProfile({ altitudeMeters: e.target.value ? parseInt(e.target.value) : undefined })}
+                      placeholder="e.g., 1500"
+                      className="mt-1"
+                    />
+                  </div>
+                )}
               </div>
 
               <div>

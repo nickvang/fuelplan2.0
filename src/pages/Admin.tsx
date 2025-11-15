@@ -897,6 +897,7 @@ export default function Admin() {
                                 {pd.trainingTempRange && <p><span className="text-muted-foreground">Temp:</span> {pd.trainingTempRange.min}°C - {pd.trainingTempRange.max}°C</p>}
                                 {pd.humidity && <p><span className="text-muted-foreground">Humidity:</span> {pd.humidity}%</p>}
                                 {pd.altitude && <p><span className="text-muted-foreground">Altitude:</span> {pd.altitude}</p>}
+                                {pd.altitudeMeters && <p><span className="text-muted-foreground">Altitude (exact):</span> {pd.altitudeMeters}m</p>}
                                 {pd.sunExposure && <p><span className="text-muted-foreground">Sun:</span> {pd.sunExposure}</p>}
                                 {pd.windConditions && <p><span className="text-muted-foreground">Wind:</span> {pd.windConditions}</p>}
                                 {pd.clothingType && <p><span className="text-muted-foreground">Clothing:</span> {pd.clothingType}</p>}
