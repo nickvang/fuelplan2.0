@@ -9,6 +9,7 @@ import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import { ValidationWarning, getValidationWarnings } from '@/components/ValidationWarning';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
+import { PaceDurationCalculator } from '@/components/PaceDurationCalculator';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
@@ -1021,152 +1022,14 @@ const Index = () => {
                 </div>
               )}
 
-              <div>
-                <div className="flex items-center">
-                  <Label htmlFor="sessionDuration">
-                    {t('activity.sessionDuration')} *
-                  </Label>
-                  <InfoTooltip content="How long is your typical training session or race? Include warm-up and cool-down time." />
-                </div>
-                <Input
-                  id="sessionDuration"
-                  type="number"
-                  step="0.5"
-                  value={profile.sessionDuration || ''}
-                  onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) })}
-                  placeholder="Average"
-                />
-              </div>
-
-              {/* Race Planning Section */}
-              <div className="bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-950/30 dark:to-blue-900/20 border-2 border-blue-200/50 dark:border-blue-800/50 rounded-xl p-5 space-y-4 shadow-sm">
-                <h3 className="font-bold text-base text-blue-900 dark:text-blue-100 tracking-wide">Race Day Planning</h3>
-                <div className="flex items-start space-x-3 group">
-                  <Checkbox
-                    id="hasUpcomingRace"
-                    checked={!!profile.hasUpcomingRace}
-                    onCheckedChange={(checked) => {
-                      updateProfile({ 
-                        hasUpcomingRace: Boolean(checked),
-                        ...(checked === false && { upcomingEvents: '' })
-                      });
-                    }}
-                    className="mt-0.5"
-                  />
-                  <Label htmlFor="hasUpcomingRace" className="font-medium cursor-pointer group-hover:text-blue-900 dark:group-hover:text-blue-100 transition-colors">
-                    I want a race-specific hydration guide
-                  </Label>
-                </div>
-                
-                {profile.hasUpcomingRace && (
-                  <div className="animate-fade-in space-y-2">
-                    <Label htmlFor="upcomingEvents">
-                      {profile.disciplines?.[0] === 'Hiking' ? 'Your Upcoming Hike/Trek' : 'Your Upcoming Race'}
-                    </Label>
-                    <Input
-                      id="upcomingEvents"
-                      value={profile.upcomingEvents || ''}
-                      onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
-                      placeholder={
-                        profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K Ultra' :
-                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 50 Mile Race, Century (100 miles), Gran Fondo, Multi-day Tour' :
-                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5K Open Water, 5K Swim, 10K Marathon Swim' :
-                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint Tri, Olympic Tri, Half Ironman (70.3), Full Ironman' :
-                        profile.disciplines?.[0] === 'Hiking' ? 'e.g., 10km Day Hike, 30km Trek, Tour du Mont Blanc, Kilimanjaro' :
-                        'e.g., Half Marathon, Marathon, Ironman 70.3, Ultra 50K'
-                      }
-                    />
-                    <p className="text-xs text-blue-700 dark:text-blue-300 mt-2">
-                      {profile.disciplines?.[0] === 'Hiking' 
-                        ? "We'll create a specialized hydration strategy for your hike or trek"
-                        : "We'll create a specialized race day hydration strategy based on your event"
-                      }
-                    </p>
-                  </div>
-                )}
-              </div>
-
-              {profile.disciplines?.[0] === 'Triathlon' ? (
-                <div className="space-y-4">
-                  <div>
-                    <Label htmlFor="swimTemperature">Swim Temperature (°C)</Label>
-                    <Input
-                      id="swimTemperature"
-                      type="number"
-                      value={profile.swimTemperature || ''}
-                      onChange={(e) => updateProfile({ swimTemperature: parseFloat(e.target.value) })}
-                      placeholder="e.g., 18 or 22"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="swimPace">Swim Pace</Label>
-                    <Input
-                      id="swimPace"
-                      value={profile.swimPace || ''}
-                      onChange={(e) => updateProfile({ swimPace: e.target.value })}
-                      placeholder="e.g., 1:45/100m"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="bikePower">Bike Power/Pace</Label>
-                    <Input
-                      id="bikePower"
-                      value={profile.bikePower || ''}
-                      onChange={(e) => updateProfile({ bikePower: e.target.value })}
-                      placeholder="e.g., 250W or 30 km/h"
-                    />
-                  </div>
-                  <div>
-                    <Label htmlFor="runPace">Run Pace</Label>
-                    <Input
-                      id="runPace"
-                      value={profile.runPace || ''}
-                      onChange={(e) => updateProfile({ runPace: e.target.value })}
-                      placeholder="e.g., 5:30/km"
-                    />
-                  </div>
-                </div>
-              ) : profile.disciplines?.[0] === 'Swimming' ? (
-                <div>
-                  <Label htmlFor="avgPace">Average Swim Pace</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 1:45/100m"
-                  />
-                </div>
-              ) : profile.disciplines?.[0] === 'Cycling' ? (
-                <div>
-                  <Label htmlFor="avgPace">Average Power/Speed</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 250W or 30 km/h"
-                  />
-                </div>
-              ) : profile.disciplines?.[0] === 'Hiking' ? (
-                <div>
-                  <Label htmlFor="avgPace">Average Hiking Pace</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 3-4 km/hr or 15-20 min/km"
-                  />
-                </div>
-              ) : (
-                <div>
-                  <Label htmlFor="avgPace">Average Run Pace</Label>
-                  <Input
-                    id="avgPace"
-                    value={profile.avgPace || ''}
-                    onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                    placeholder="e.g., 5:30/km"
-                  />
-                </div>
-              )}
+              <PaceDurationCalculator
+                discipline={profile.disciplines?.[0] || 'Running'}
+                raceDistance={profile.hasUpcomingRace ? profile.raceDistance : undefined}
+                currentPace={profile.avgPace}
+                currentDuration={profile.sessionDuration}
+                onPaceChange={(pace) => updateProfile({ avgPace: pace })}
+                onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
+              />
 
               {/* Training Location */}
               {version === 'pro' && (
