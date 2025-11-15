@@ -146,23 +146,29 @@ export function PaceDurationCalculator({
   const detectInputType = (value: string): 'pace' | 'duration' | null => {
     if (!value) return null;
     
+    console.log(`🔍 Detecting input type for: "${value}"`);
+    
     // Check if it's a complete pace format (e.g., "5:30" or "1:45/100m")
     // Require at least 2 digits for seconds to ensure complete input
     const pacePattern = /^\d+:\d{2}/;
     if (pacePattern.test(value)) {
+      console.log(`✅ Detected as PACE (matches pattern)`);
       return 'pace';
     }
     
     // Check if it's a cycling speed (contains "km/h" or "W")
     if (discipline === 'Cycling' && (value.includes('km/h') || value.includes('W'))) {
+      console.log(`✅ Detected as PACE (cycling speed)`);
       return 'pace';
     }
     
     // Check if it's a number (duration in hours)
     if (!isNaN(parseFloat(value)) && value.match(/^\d+(\.\d+)?$/)) {
+      console.log(`✅ Detected as DURATION (number only)`);
       return 'duration';
     }
     
+    console.log(`❌ Could not detect type`);
     return null;
   };
 
