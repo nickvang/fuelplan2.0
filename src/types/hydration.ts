@@ -45,6 +45,7 @@ export interface HydrationProfile {
   raceTempRange?: { min: number; max: number };
   humidity: number;
   altitude: 'sea-level' | 'moderate' | 'high';
+  altitudeMeters?: number; // Exact altitude in meters for pro/advanced users
   sunExposure: 'shade' | 'partial' | 'full-sun';
   windConditions: 'calm' | 'moderate' | 'windy';
   clothingType: 'minimal' | 'light' | 'moderate' | 'heavy';

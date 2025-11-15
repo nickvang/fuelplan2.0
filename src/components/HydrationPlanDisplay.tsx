@@ -557,6 +557,19 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           doc.setFont('helvetica', 'normal');
           addText(aiInsights.personalized_insight, 8, false);
           y += 5;
+          
+          // Add altitude info if present
+          if (profile.altitudeMeters && profile.altitudeMeters > 1000) {
+            checkPage(10);
+            doc.setFontSize(8);
+            doc.setFont('helvetica', 'bold');
+            doc.text(`Training Altitude: ${profile.altitudeMeters}m`, M, y);
+            y += 4;
+            doc.setFont('helvetica', 'normal');
+            const altitudeImpact = profile.altitudeMeters > 2500 ? '15-20%' : '10-15%';
+            addText(`Altitude increases respiratory water loss by ${altitudeImpact}. This has been factored into your hydration calculations.`, 8, false);
+            y += 5;
+          }
         }
 
         if (aiInsights.performance_comparison) {
@@ -1146,6 +1159,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           : profile.sweatSaltiness === 'high'
                           ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
                           : `✓ Your balanced profile allows standard evidence-based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration} hours aligns with ACSM guidelines, adjusted for environmental factors.`}
+                        {profile.altitudeMeters && profile.altitudeMeters > 1000 && (
+                          <span className="block mt-2 font-medium text-foreground">
+                            🏔️ Training at {profile.altitudeMeters}m altitude increases respiratory water loss by {profile.altitudeMeters > 2500 ? '15-20%' : '10-15%'}—this has been factored into your plan.
+                          </span>
+                        )}
                       </p>
                     </div>
                   </div>
