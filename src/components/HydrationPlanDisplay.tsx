@@ -1627,7 +1627,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             Buy Supplme
           </a>
         </Button>
-        <Button onClick={onReset} variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
+        <Button onClick={onFullReset || onReset} variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
           <RefreshCw className="w-4 h-4" />
           Start New Plan
         </Button>
