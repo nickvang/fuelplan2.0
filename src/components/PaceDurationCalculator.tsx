@@ -178,12 +178,16 @@ export function PaceDurationCalculator({
       if (raceDistance) {
         const calculatedDuration = calculateDurationFromPace(value, raceDistance);
         if (calculatedDuration !== null) {
+          console.log(`✅ Duration calculated from pace "${value}" and distance "${raceDistance}": ${calculatedDuration.toFixed(2)} hours`);
           setCalculatedValue(`${calculatedDuration.toFixed(1)} hours`);
           onDurationChange(calculatedDuration);
+        } else {
+          console.warn(`⚠️ Failed to calculate duration from pace "${value}" and distance "${raceDistance}"`);
         }
       }
     } else if (type === 'duration') {
       const durationNum = parseFloat(value);
+      console.log(`✅ Duration detected from input: ${durationNum} hours`);
       onDurationChange(durationNum);
       
       // Auto-calculate pace if we have race distance

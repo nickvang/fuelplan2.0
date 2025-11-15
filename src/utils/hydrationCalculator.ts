@@ -1,6 +1,8 @@
 import { HydrationProfile, HydrationPlan } from '@/types/hydration';
 
 export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
+  console.log('🧮 Calculating hydration plan with session duration:', profile.sessionDuration, 'hours');
+  
   // 1. Estimate sweat rate based on temperature
   const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
   let sweatRatePerHour = 800; // Base: 0.8 L/hour (moderate 18-25°C)
@@ -35,6 +37,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
 
   // 3. Calculate total fluid loss
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
+  console.log(`💧 Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
   calculationSteps.push(`Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
 
   // 4. PRE-activity hydration: Base 5-7ml per kg bodyweight (ACSM guidelines), adjusted for conditions
