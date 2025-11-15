@@ -773,11 +773,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         {/* Background Glow Effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-chrome-light/20 via-transparent to-chrome-light/20 blur-3xl"></div>
         
-        <div className="relative text-center space-y-6 py-8">
+        <div className="relative text-center space-y-4 py-6">
           {/* Logo with Glow */}
           <div className="relative inline-block">
             <div className="absolute inset-0 glow-effect blur-3xl opacity-40"></div>
-            <img src={supplmeLogo} alt="Supplme" className="h-40 mx-auto relative z-10 performance-pulse" />
+            <img src={supplmeLogo} alt="Supplme" className="h-48 md:h-56 mx-auto relative z-10 performance-pulse" />
           </div>
           
           {/* Main Title - Athletic Energy */}
