@@ -72,7 +72,7 @@ export function PaceDurationCalculator({
     }
   }, [currentPace]);
 
-  // Calculate required pace from goal time
+  // Calculate required pace from goal time OR use default pace if no goal time
   useEffect(() => {
     if (goalTime && raceDistance) {
       const pace = calculatePaceFromGoalTime(goalTime, raceDistance);
@@ -92,10 +92,33 @@ export function PaceDurationCalculator({
           setFinishTime(`${hours}:${minutes.toString().padStart(2, '0')}`);
         }
       }
+    } else if (raceDistance && !inputValue) {
+      // No goal time and no pace entered yet - use default pace for the discipline
+      const defaultPace = getDefaultPaceForDiscipline(discipline);
+      const duration = calculateDurationFromPace(defaultPace, raceDistance);
+      if (duration !== null) {
+        onDurationChange(duration);
+      }
+      setRequiredPace('');
     } else {
       setRequiredPace('');
     }
-  }, [goalTime, raceDistance, onPaceChange, onDurationChange]);
+  }, [goalTime, raceDistance, discipline, inputValue, onPaceChange, onDurationChange]);
+
+  // Get default pace for discipline (used when no pace is entered)
+  const getDefaultPaceForDiscipline = (disc: string): string => {
+    switch (disc) {
+      case 'Swimming':
+        return '1:50/100m'; // Moderate swimming pace
+      case 'Cycling':
+        return '28 km/h'; // Moderate cycling speed
+      case 'Hiking':
+        return '18:00/km'; // Moderate hiking pace (slower than running)
+      case 'Running':
+      default:
+        return '6:00/km'; // Moderate running pace
+    }
+  };
 
   // Calculate pace from goal time
   const calculatePaceFromGoalTime = (time: string, distance: string): string | null => {
