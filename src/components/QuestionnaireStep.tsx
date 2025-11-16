@@ -26,7 +26,7 @@ export function QuestionnaireStep({
   const { t } = useLanguage();
   
   return (
-    <Card className="athletic-card p-8 md:p-10 space-y-8 border-border/50 backdrop-blur-sm animate-fade-in relative overflow-hidden group">
+    <Card id="questionnaire-step" className="athletic-card p-8 md:p-10 space-y-8 border-border/50 backdrop-blur-sm animate-fade-in relative overflow-hidden group">
       {/* Subtle gradient overlay */}
       <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
       
