@@ -1033,7 +1033,14 @@ const Index = () => {
                       id="goalTime"
                       value={profile.goalTime || ''}
                       onChange={(e) => updateProfile({ goalTime: e.target.value })}
-                      placeholder="e.g., 1:30:00 for 1 hour 30 minutes"
+                      placeholder={
+                        profile.disciplines?.[0] === 'Running' ? 'e.g., 0:25:00 for 5km, 1:30:00 for Half Marathon' :
+                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 1:30:00 for 40km, 3:00:00 for 100km' :
+                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 0:20:00 for 1km, 1:00:00 for 5km' :
+                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., 1:15:00 for Sprint, 2:30:00 for Olympic' :
+                        profile.disciplines?.[0] === 'Hiking' ? 'e.g., 1:00:00 for 5km, 2:30:00 for 15km' :
+                        'e.g., 1:30:00 for 1 hour 30 minutes'
+                      }
                     />
                     <p className="text-xs text-muted-foreground">
                       Enter your target finish time to calculate required pace
