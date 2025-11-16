@@ -178,7 +178,9 @@ const Index = () => {
       setAnalyzedData(data);
       updateProfile(data);
       setStep(getNextStep(0));
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setTimeout(() => {
+        document.getElementById('questionnaire-step')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }, 100);
     } else {
       const nextStep = getNextStep(step);
       if (nextStep === 999) {
@@ -186,14 +188,18 @@ const Index = () => {
         handleComplete();
       } else {
         setStep(nextStep);
-        window.scrollTo({ top: 0, behavior: 'smooth' });
+        setTimeout(() => {
+          document.getElementById('questionnaire-step')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }, 100);
       }
     }
   };
 
   const handleBackStep = (targetStep: number) => {
     setStep(targetStep);
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    setTimeout(() => {
+      document.getElementById('questionnaire-step')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
   };
 
   const handleComplete = async () => {
