@@ -1096,14 +1096,73 @@ const Index = () => {
                 </div>
               )}
 
-              <PaceDurationCalculator
-                discipline={profile.disciplines?.[0] || 'Running'}
-                raceDistance={profile.raceDistance}
-                goalTime={profile.hasUpcomingRace ? profile.goalTime : undefined}
-                currentPace={profile.avgPace}
-                onPaceChange={(pace) => updateProfile({ avgPace: pace })}
-                onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
-              />
+              {/* Triathlon-specific pace inputs */}
+              {profile.disciplines?.[0] === 'Triathlon' ? (
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* Swim Pace */}
+                    <div className="space-y-2">
+                      <Label htmlFor="swimPace">Swim Pace</Label>
+                      <Input
+                        id="swimPace"
+                        value={profile.swimPace || ''}
+                        onChange={(e) => updateProfile({ swimPace: e.target.value })}
+                        placeholder="e.g., 1:45/100m"
+                      />
+                      <p className="text-xs text-muted-foreground">Min:sec per 100m</p>
+                    </div>
+                    
+                    {/* Bike Power/Speed */}
+                    <div className="space-y-2">
+                      <Label htmlFor="bikePower">Bike Speed</Label>
+                      <Input
+                        id="bikePower"
+                        value={profile.bikePower || ''}
+                        onChange={(e) => updateProfile({ bikePower: e.target.value })}
+                        placeholder="e.g., 30 km/h"
+                      />
+                      <p className="text-xs text-muted-foreground">Speed or power (W)</p>
+                    </div>
+                    
+                    {/* Run Pace */}
+                    <div className="space-y-2">
+                      <Label htmlFor="runPace">Run Pace</Label>
+                      <Input
+                        id="runPace"
+                        value={profile.runPace || ''}
+                        onChange={(e) => updateProfile({ runPace: e.target.value })}
+                        placeholder="e.g., 5:30/km"
+                      />
+                      <p className="text-xs text-muted-foreground">Min:sec per km</p>
+                    </div>
+                  </div>
+                  
+                  {/* Manual duration input for triathlon */}
+                  <div className="space-y-2">
+                    <Label htmlFor="triathlonDuration">Total Race Duration (hours)</Label>
+                    <Input
+                      id="triathlonDuration"
+                      type="number"
+                      step="0.1"
+                      value={profile.sessionDuration || ''}
+                      onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) || 0 })}
+                      placeholder="e.g., 2.5 for 2 hours 30 minutes"
+                    />
+                    <p className="text-xs text-muted-foreground">
+                      Enter your expected total race time including transitions
+                    </p>
+                  </div>
+                </div>
+              ) : (
+                <PaceDurationCalculator
+                  discipline={profile.disciplines?.[0] || 'Running'}
+                  raceDistance={profile.raceDistance}
+                  goalTime={profile.hasUpcomingRace ? profile.goalTime : undefined}
+                  currentPace={profile.avgPace}
+                  onPaceChange={(pace) => updateProfile({ avgPace: pace })}
+                  onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
+                />
+              )}
             </div>
           </QuestionnaireStep>
         )}
