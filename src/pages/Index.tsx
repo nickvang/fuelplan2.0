@@ -178,6 +178,7 @@ const Index = () => {
       setAnalyzedData(data);
       updateProfile(data);
       setStep(getNextStep(0));
+      window.scrollTo({ top: 0, behavior: 'smooth' });
     } else {
       const nextStep = getNextStep(step);
       if (nextStep === 999) {
@@ -185,8 +186,14 @@ const Index = () => {
         handleComplete();
       } else {
         setStep(nextStep);
+        window.scrollTo({ top: 0, behavior: 'smooth' });
       }
     }
+  };
+
+  const handleBackStep = (targetStep: number) => {
+    setStep(targetStep);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   const handleComplete = async () => {
@@ -794,7 +801,7 @@ const Index = () => {
             title="Step 1: Activity & Terrain"
             description="Choose which activity guide you want"
             onNext={handleNextStep}
-            onBack={() => setStep(0)}
+            onBack={() => handleBackStep(0)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -1094,7 +1101,7 @@ const Index = () => {
             title="Step 2: Body & Physiology"
             description={analyzedData ? "Complete any missing information" : "Basic information to calculate your hydration needs"}
             onNext={handleNextStep}
-            onBack={() => setStep(1)}
+            onBack={() => handleBackStep(1)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -1282,7 +1289,7 @@ const Index = () => {
             title={t('step.3.title')}
             description="Training conditions affect your hydration needs"
             onNext={handleNextStep}
-            onBack={() => setStep(2)}
+            onBack={() => handleBackStep(2)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -1491,7 +1498,7 @@ const Index = () => {
             title={t('step.4.title')}
             description={analyzedData ? "Complete any missing information" : "Understanding your sweat rate and saltiness helps optimize electrolyte intake"}
             onNext={handleNextStep}
-            onBack={() => setStep(3)}
+            onBack={() => handleBackStep(3)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -1613,7 +1620,7 @@ const Index = () => {
             title={t('step.5.title')}
             description="Your everyday nutrition affects hydration needs"
             onNext={handleComplete}
-            onBack={() => setStep(4)}
+            onBack={() => handleBackStep(4)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
