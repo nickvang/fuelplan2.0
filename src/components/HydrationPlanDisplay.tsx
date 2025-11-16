@@ -1376,7 +1376,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         ) : (
                           `Please provide a session duration or distance to calculate your personalized fluid loss and hydration recommendations.`
                         )}
-                        {profile.altitudeMeters && profile.altitudeMeters > 1000 && (
+                        {profile.altitudeMeters > 1000 && (
                           <span className="block mt-2 font-medium text-foreground">
                             🏔️ Training at {profile.altitudeMeters}m altitude increases respiratory water loss by {profile.altitudeMeters > 2500 ? '15-20%' : '10-15%'}—this has been factored into your plan.
                           </span>
