@@ -136,29 +136,20 @@ const Index = () => {
           
           // Simple mode: just need basic activity info + terrain + temperature + distance
           if (version === 'simple') {
-            const distanceValid = profile.disciplines?.[0] === 'Triathlon'
-              ? !!(profile.swimDistance && profile.bikeDistance && profile.runDistance)
-              : !!profile.raceDistance;
-            
             const isValid = !!(profile.disciplines && profile.disciplines.length > 0 && 
-                     profile.terrain && distanceValid && profile.trainingTempRange?.min);
+                     profile.terrain && profile.raceDistance && profile.trainingTempRange?.min);
             console.log('Step 1 (Simple) Validation:', {
               disciplines: profile.disciplines,
               terrain: profile.terrain,
               raceDistance: profile.raceDistance,
-              triathlonDistances: { swim: profile.swimDistance, bike: profile.bikeDistance, run: profile.runDistance },
               temperature: profile.trainingTempRange?.min,
               isValid
             });
             return isValid;
           }
           // Pro mode: require activity, terrain, and mandatory distance
-          const distanceValid = profile.disciplines?.[0] === 'Triathlon'
-            ? !!(profile.swimDistance && profile.bikeDistance && profile.runDistance)
-            : !!profile.raceDistance;
-          
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.terrain && distanceValid);
+                   profile.terrain && profile.raceDistance);
         case 2:
           // Simple mode: require temperature
           if (version === 'simple') {
@@ -1021,59 +1012,21 @@ const Index = () => {
 
               {profile.hasUpcomingRace && (
                 <div className="space-y-4">
-                  {/* Triathlon-specific distance inputs */}
-                  {profile.disciplines?.[0] === 'Triathlon' ? (
-                    <div className="space-y-2">
-                      <Label>Race Distances *</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                          <Label htmlFor="swimDistance" className="text-xs">Swim (km)</Label>
-                          <Input
-                            id="swimDistance"
-                            value={profile.swimDistance || ''}
-                            onChange={(e) => updateProfile({ swimDistance: e.target.value })}
-                            placeholder="e.g., 1.5"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="bikeDistance" className="text-xs">Bike (km)</Label>
-                          <Input
-                            id="bikeDistance"
-                            value={profile.bikeDistance || ''}
-                            onChange={(e) => updateProfile({ bikeDistance: e.target.value })}
-                            placeholder="e.g., 40"
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="runDistance" className="text-xs">Run (km)</Label>
-                          <Input
-                            id="runDistance"
-                            value={profile.runDistance || ''}
-                            onChange={(e) => updateProfile({ runDistance: e.target.value })}
-                            placeholder="e.g., 10"
-                          />
-                        </div>
-                      </div>
-                      <p className="text-xs text-muted-foreground">
-                        Or choose standard: Sprint (0.75/20/5), Olympic (1.5/40/10), Half Ironman (1.9/90/21.1), Ironman (3.8/180/42.2)
-                      </p>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="raceDistance">Race Distance *</Label>
-                      <Input
-                        id="raceDistance"
-                        value={profile.raceDistance || ''}
-                        onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                        placeholder={
-                          profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
-                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
-                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
-                          'e.g., Half Marathon, Marathon, 50K'
-                        }
-                      />
-                    </div>
-                  )}
+                  <div className="space-y-2">
+                    <Label htmlFor="raceDistance">Race Distance *</Label>
+                    <Input
+                      id="raceDistance"
+                      value={profile.raceDistance || ''}
+                      onChange={(e) => updateProfile({ raceDistance: e.target.value })}
+                      placeholder={
+                        profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
+                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
+                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
+                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
+                        'e.g., Half Marathon, Marathon, 50K'
+                      }
+                    />
+                  </div>
                   <div className="space-y-2">
                     <Label htmlFor="goalTime">Goal Finish Time (optional)</Label>
                     <Input
@@ -1097,64 +1050,24 @@ const Index = () => {
               )}
 
               {!profile.hasUpcomingRace && (
-                <>
-                  {/* Triathlon-specific distance inputs */}
-                  {profile.disciplines?.[0] === 'Triathlon' ? (
-                    <div className="space-y-2">
-                      <Label>Training Distances (km) *</Label>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                        <div className="space-y-1">
-                          <Label htmlFor="swimDistance" className="text-xs">Swim (km)</Label>
-                          <Input
-                            id="swimDistance"
-                            value={profile.swimDistance || ''}
-                            onChange={(e) => updateProfile({ swimDistance: e.target.value })}
-                            placeholder="e.g., 1.5"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="bikeDistance" className="text-xs">Bike (km)</Label>
-                          <Input
-                            id="bikeDistance"
-                            value={profile.bikeDistance || ''}
-                            onChange={(e) => updateProfile({ bikeDistance: e.target.value })}
-                            placeholder="e.g., 40"
-                            required
-                          />
-                        </div>
-                        <div className="space-y-1">
-                          <Label htmlFor="runDistance" className="text-xs">Run (km)</Label>
-                          <Input
-                            id="runDistance"
-                            value={profile.runDistance || ''}
-                            onChange={(e) => updateProfile({ runDistance: e.target.value })}
-                            placeholder="e.g., 10"
-                            required
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  ) : (
-                    <div className="space-y-2">
-                      <Label htmlFor="trainingDistance">Training Distance (km) *</Label>
-                      <Input
-                        id="trainingDistance"
-                        value={profile.raceDistance || ''}
-                        onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                        placeholder={
-                          profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, Half Marathon, Marathon' :
-                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
-                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
-                          profile.disciplines?.[0] === 'Hiking' ? 'e.g., 5km, 10km, 15km, 20km' :
-                          'e.g., 10km, Half Marathon'
-                        }
-                        className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-                        required
-                      />
-                    </div>
-                  )}
-                </>
+                <div className="space-y-2">
+                  <Label htmlFor="trainingDistance">Training Distance (km) *</Label>
+                  <Input
+                    id="trainingDistance"
+                    value={profile.raceDistance || ''}
+                    onChange={(e) => updateProfile({ raceDistance: e.target.value })}
+                    placeholder={
+                      profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, Half Marathon, Marathon' :
+                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
+                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
+                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman' :
+                      profile.disciplines?.[0] === 'Hiking' ? 'e.g., 5km, 10km, 15km, 20km' :
+                      'e.g., 10km, Half Marathon'
+                    }
+                    className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+                    required
+                  />
+                </div>
               )}
 
               {/* Temperature input - Quick mode */}
