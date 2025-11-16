@@ -518,7 +518,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(60, 60, 60);
       
-      const explainerText1 = `Your body loses ${plan.totalFluidLoss.toFixed(0)}ml of fluid during this session through sweat. Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.`;
+      const explainerText1 = `Your body loses ${plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid during this session through sweat. Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.`;
       const explainerLines1 = doc.splitTextToSize(explainerText1, W - 2 * M - 10);
       doc.text(explainerLines1, M + 5, textY);
       textY += explainerLines1.length * 3.5 + 3;
@@ -921,7 +921,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   ? `${plan.duringActivity.electrolytesPerHour} sachet${plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}` 
                   : 'Not required'}
               </p>
-              {plan.duringActivity.electrolytesPerHour > 0 && (
+              {plan.duringActivity.electrolytesPerHour > 0 && profile.sessionDuration && (
                 <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                   {plan.duringActivity.electrolytesPerHour === 1 
                     ? `Take 1 after ${Math.round((profile.sessionDuration * 60) / 2)} min`
@@ -972,7 +972,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
         <AlertDescription className="text-muted-foreground space-y-2">
           <p className="leading-relaxed">
-            Your body loses <strong>{plan.totalFluidLoss.toFixed(0)}ml of fluid</strong> during this session through sweat. 
+            Your body loses <strong>{plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid</strong> during this session through sweat. 
             Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
           </p>
           <p className="leading-relaxed">
@@ -1304,11 +1304,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       </div>
 
                       {/* Total Fluid Loss */}
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between text-sm">
-                          <span className="font-semibold text-foreground">Total Fluid Loss</span>
-                          <span className="text-muted-foreground font-mono font-medium">{plan.totalFluidLoss.toFixed(0)}ml</span>
-                        </div>
+                        <div className="space-y-2">
+                          <div className="flex items-center justify-between text-sm">
+                            <span className="font-semibold text-foreground">Total Fluid Loss</span>
+                            <span className="text-muted-foreground font-mono font-medium">
+                              {plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'N/A'}ml
+                            </span>
+                          </div>
                         <div className="relative h-4 bg-muted rounded-full overflow-hidden">
                           {(() => {
                             // Calculate hourly rate for proper comparison
@@ -1363,13 +1365,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     {/* Key Insight Summary */}
                     <div className="mt-6 p-4 bg-muted/50 rounded-xl border border-border/50">
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        {profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                          ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration.toFixed(1)} hour session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
-                          : profile.sweatRate === 'high'
-                          ? `⚡ Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml during this ${profile.sessionDuration.toFixed(1)} hour session, which is above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes every 15 to 20 minutes to maintain performance.`
-                          : profile.sweatSaltiness === 'high'
-                          ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
-                          : `✓ Your balanced profile allows standard evidence based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration.toFixed(1)} hours means you're losing approximately ${Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml per hour, which is within the normal range for endurance athletes (600 to 1000ml/hr). This moderate sweat rate, combined with your medium sodium loss, means 1 sachet per hour provides optimal electrolyte replacement. Your hydration needs align with ACSM guidelines, adjusted for your environmental conditions.`}
+                        {plan.totalFluidLoss && profile.sessionDuration ? (
+                          profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
+                            ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration.toFixed(1)} hour session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
+                            : profile.sweatRate === 'high'
+                            ? `⚡ Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml during this ${profile.sessionDuration.toFixed(1)} hour session, which is above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes every 15 to 20 minutes to maintain performance.`
+                            : profile.sweatSaltiness === 'high'
+                            ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
+                            : `✓ Your balanced profile allows standard evidence based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration.toFixed(1)} hours means you're losing approximately ${Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml per hour, which is within the normal range for endurance athletes (600 to 1000ml/hr). This moderate sweat rate, combined with your medium sodium loss, means 1 sachet per hour provides optimal electrolyte replacement. Your hydration needs align with ACSM guidelines, adjusted for your environmental conditions.`
+                        ) : (
+                          `Please provide a session duration or distance to calculate your personalized fluid loss and hydration recommendations.`
+                        )}
                         {profile.altitudeMeters && profile.altitudeMeters > 1000 && (
                           <span className="block mt-2 font-medium text-foreground">
                             🏔️ Training at {profile.altitudeMeters}m altitude increases respiratory water loss by {profile.altitudeMeters > 2500 ? '15-20%' : '10-15%'}—this has been factored into your plan.
