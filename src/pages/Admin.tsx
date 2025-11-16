@@ -121,8 +121,20 @@ export default function Admin() {
       const activityMap = new Map<string, { count: number; distances: string[]; raceDayCount: number; trainingCount: number }>();
       data?.forEach((p: any) => {
         const disciplines = p.profile_data?.disciplines || [];
+        // Try multiple possible distance field names
         const distance = p.profile_data?.raceDistance || p.profile_data?.trainingDistance || '';
         const hasRace = p.profile_data?.hasUpcomingRace;
+        
+        // Debug logging
+        if (disciplines.length > 0) {
+          console.log('Profile distance data:', {
+            disciplines,
+            raceDistance: p.profile_data?.raceDistance,
+            trainingDistance: p.profile_data?.trainingDistance,
+            hasUpcomingRace: p.profile_data?.hasUpcomingRace,
+            allProfileData: Object.keys(p.profile_data || {})
+          });
+        }
         
         disciplines.forEach((activity: string) => {
           const current = activityMap.get(activity) || { count: 0, distances: [], raceDayCount: 0, trainingCount: 0 };
@@ -816,8 +828,8 @@ export default function Admin() {
                 <Activity className="w-6 h-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground font-medium">Average Age</p>
-                <p className="text-3xl font-bold text-foreground">{stats.averageAge} <span className="text-lg">years</span></p>
+                <p className="text-sm text-muted-foreground font-medium">Smartwatch Entries</p>
+                <p className="text-3xl font-bold text-foreground">{stats.withSmartwatch}</p>
               </div>
             </div>
           </Card>
@@ -828,8 +840,8 @@ export default function Admin() {
                 <Database className="w-6 h-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground font-medium">With Smartwatch Data</p>
-                <p className="text-3xl font-bold text-foreground">{stats.withSmartwatch}</p>
+                <p className="text-sm text-muted-foreground font-medium">Average Age</p>
+                <p className="text-3xl font-bold text-foreground">{stats.averageAge} <span className="text-lg">yrs</span></p>
               </div>
             </div>
           </Card>
@@ -984,41 +996,6 @@ export default function Admin() {
               })()}
             </Card>
           )}
-
-          {/* Sachets Per Activity */}
-          <Card className="p-6 lg:col-span-3">
-            <h3 className="text-lg font-semibold mb-4">Average Supplme Sachets Per Training Session</h3>
-            {stats.sachetsPerActivity.length > 0 ? (
-              <ResponsiveContainer width="100%" height={300}>
-                <BarChart data={stats.sachetsPerActivity.slice(0, 8)}>
-                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                  <XAxis 
-                    dataKey="activity" 
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    angle={-45}
-                    textAnchor="end"
-                    height={80}
-                  />
-                  <YAxis 
-                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                    label={{ value: 'Sachets', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      backgroundColor: 'hsl(var(--background))', 
-                      border: '1px solid hsl(var(--border))' 
-                    }}
-                    formatter={(value: any) => [`${value} sachets`, 'Average']}
-                  />
-                  <Bar dataKey="avgSachets" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
-                </BarChart>
-              </ResponsiveContainer>
-            ) : (
-              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
-                <p>No sachet data available yet. Data will appear once users complete hydration plans.</p>
-              </div>
-            )}
-          </Card>
         </div>
 
         {/* Actions */}
