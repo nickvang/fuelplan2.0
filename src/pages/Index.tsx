@@ -119,7 +119,7 @@ const Index = () => {
     
     // Pro mode: skip based on smartwatch data
     let nextStep = currentStep + 1;
-    while (nextStep <= 6 && shouldSkipStep(nextStep)) {
+    while (nextStep <= 5 && shouldSkipStep(nextStep)) {
       nextStep++;
     }
     return nextStep;
@@ -132,34 +132,24 @@ const Index = () => {
           return version !== null && consentGiven;
         case 1:
           // Activity & Terrain validation
-          // Check if race distance is required
-          const needsRaceDistance = profile.hasUpcomingRace;
-          const hasRequiredRaceDistance = needsRaceDistance ? profile.raceDistance : true;
+          // Training distance is now ALWAYS required (whether racing or training)
           
-          // Simple mode: just need basic activity info + terrain + temperature + race distance if applicable
-          // sessionDuration can be calculated from pace + distance, so it's not strictly required in validation
+          // Simple mode: just need basic activity info + terrain + temperature + distance
           if (version === 'simple') {
-            const hasDistanceOrDuration = profile.raceDistance || profile.sessionDuration;
             const isValid = !!(profile.disciplines && profile.disciplines.length > 0 && 
-                     profile.terrain && hasDistanceOrDuration && profile.trainingTempRange?.min && hasRequiredRaceDistance);
+                     profile.terrain && profile.raceDistance && profile.trainingTempRange?.min);
             console.log('Step 1 (Simple) Validation:', {
               disciplines: profile.disciplines,
               terrain: profile.terrain,
               raceDistance: profile.raceDistance,
-              sessionDuration: profile.sessionDuration,
-              hasDistanceOrDuration,
               temperature: profile.trainingTempRange?.min,
-              hasUpcomingRace: profile.hasUpcomingRace,
-              needsRaceDistance,
-              hasRequiredRaceDistance,
               isValid
             });
             return isValid;
           }
-          // Pro mode: need full activity details + terrain + race distance if applicable
-          const hasDistanceOrDuration = profile.raceDistance || profile.sessionDuration;
+          // Pro mode: require activity, terrain, and mandatory distance
           return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.terrain && hasDistanceOrDuration && hasRequiredRaceDistance);
+                   profile.terrain && profile.raceDistance);
         case 2:
           // Simple mode: require temperature
           if (version === 'simple') {
@@ -174,8 +164,6 @@ const Index = () => {
           return !!(profile.sweatRate && profile.sweatSaltiness);
         case 5:
           return !!(profile.dailySaltIntake);
-        case 6:
-          return !!(profile.primaryGoal);
         default:
           return false;
       }
@@ -1043,7 +1031,7 @@ const Index = () => {
 
               {!profile.hasUpcomingRace && (
                 <div className="space-y-2">
-                  <Label htmlFor="trainingDistance">Training Distance</Label>
+                  <Label htmlFor="trainingDistance">Training Distance *</Label>
                   <Input
                     id="trainingDistance"
                     value={profile.raceDistance || ''}
@@ -1056,10 +1044,9 @@ const Index = () => {
                       profile.disciplines?.[0] === 'Hiking' ? 'e.g., 5km, 10km, 15km, 20km' :
                       'e.g., 10km, Half Marathon'
                     }
+                    className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+                    required
                   />
-                  <p className="text-xs text-muted-foreground">
-                    Optional: Enter distance to auto-calculate duration from your pace
-                  </p>
                 </div>
               )}
 
@@ -1625,7 +1612,7 @@ const Index = () => {
           <QuestionnaireStep
             title={t('step.5.title')}
             description="Your everyday nutrition affects hydration needs"
-            onNext={handleNextStep}
+            onNext={handleComplete}
             onBack={() => setStep(4)}
             isValid={isStepValid()}
           >
@@ -1697,70 +1684,6 @@ const Index = () => {
                   value={profile.nutritionNotes || ''}
                   onChange={(e) => updateProfile({ nutritionNotes: e.target.value })}
                   placeholder="Any other relevant information about your diet or supplements"
-                  rows={3}
-                />
-              </div>
-            </div>
-          </QuestionnaireStep>
-        )}
-
-        {/* STEP 6: Goals & Events */}
-        {step === 6 && !isAnalyzing && (
-          <QuestionnaireStep
-            title={t('step.6.title')}
-            description="Help us tailor your plan to your objectives"
-            onNext={handleComplete}
-            onBack={() => setStep(5)}
-            isValid={isStepValid()}
-          >
-            <div className="space-y-4">
-              <div>
-                <Label>{t('goals.primary')} *</Label>
-                <RadioGroup
-                  value={profile.primaryGoal}
-                  onValueChange={(value: 'performance' | 'endurance' | 'recovery' | 'weight-loss' | 'general-health') => updateProfile({ primaryGoal: value })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="performance" id="goal-performance" />
-                    <Label htmlFor="goal-performance" className="font-normal cursor-pointer">{t('goals.performance')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="endurance" id="goal-endurance" />
-                    <Label htmlFor="goal-endurance" className="font-normal cursor-pointer">{t('goals.endurance')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="recovery" id="goal-recovery" />
-                    <Label htmlFor="goal-recovery" className="font-normal cursor-pointer">Recovery</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="weight-loss" id="goal-weight" />
-                    <Label htmlFor="goal-weight" className="font-normal cursor-pointer">{t('goals.weightLoss')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="general-health" id="goal-health" />
-                    <Label htmlFor="goal-health" className="font-normal cursor-pointer">{t('goals.health')}</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label htmlFor="upcomingEvents">{t('goals.upcomingEvents')}</Label>
-                <Textarea
-                  id="upcomingEvents"
-                  value={profile.upcomingEvents || ''}
-                  onChange={(e) => updateProfile({ upcomingEvents: e.target.value })}
-                  placeholder="List any races or events you're training for"
-                  rows={3}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="specificConcerns">{t('goals.concerns')}</Label>
-                <Textarea
-                  id="specificConcerns"
-                  value={profile.specificConcerns || ''}
-                  onChange={(e) => updateProfile({ specificConcerns: e.target.value })}
-                  placeholder="Any particular challenges or questions about hydration?"
                   rows={3}
                 />
               </div>
