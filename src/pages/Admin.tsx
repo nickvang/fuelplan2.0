@@ -32,10 +32,12 @@ export default function Admin() {
     total: 0,
     withSmartwatch: 0,
     withoutSmartwatch: 0,
+    averageAge: 0,
     genderDistribution: { male: 0, female: 0, other: 0 },
-    activityStats: [] as { activity: string; count: number }[],
+    activityStats: [] as { activity: string; count: number; distances: string[]; raceDayCount: number; trainingCount: number }[],
     sachetsPerActivity: [] as { activity: string; avgSachets: number }[],
   });
+  const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -102,6 +104,10 @@ export default function Admin() {
       const total = data?.length || 0;
       const withSmartwatch = data?.filter((p: any) => p.has_smartwatch_data).length || 0;
       
+      // Average age
+      const ages = data?.map((p: any) => p.profile_data?.age).filter((age: any) => age) || [];
+      const averageAge = ages.length > 0 ? parseFloat((ages.reduce((a: number, b: number) => a + b, 0) / ages.length).toFixed(1)) : 0;
+      
       // Gender distribution
       const genderCounts = { male: 0, female: 0, other: 0 };
       data?.forEach((p: any) => {
@@ -111,16 +117,25 @@ export default function Admin() {
         else if (sex === 'other') genderCounts.other++;
       });
       
-      // Activity popularity (count primary activities)
-      const activityMap = new Map<string, number>();
+      // Activity popularity with detailed insights
+      const activityMap = new Map<string, { count: number; distances: string[]; raceDayCount: number; trainingCount: number }>();
       data?.forEach((p: any) => {
         const disciplines = p.profile_data?.disciplines || [];
+        const distance = p.profile_data?.raceDistance || p.profile_data?.trainingDistance || '';
+        const hasRace = p.profile_data?.hasUpcomingRace;
+        
         disciplines.forEach((activity: string) => {
-          activityMap.set(activity, (activityMap.get(activity) || 0) + 1);
+          const current = activityMap.get(activity) || { count: 0, distances: [], raceDayCount: 0, trainingCount: 0 };
+          current.count++;
+          if (distance) current.distances.push(distance);
+          if (hasRace) current.raceDayCount++;
+          else current.trainingCount++;
+          activityMap.set(activity, current);
         });
       });
+      
       const activityStats = Array.from(activityMap.entries())
-        .map(([activity, count]) => ({ activity, count }))
+        .map(([activity, data]) => ({ activity, ...data }))
         .sort((a, b) => b.count - a.count);
       
       // Average sachets per activity
@@ -130,7 +145,7 @@ export default function Admin() {
         const plan = p.plan_data;
         
         if (plan?.duringActivity?.electrolytesPerHour && p.profile_data?.sessionDuration) {
-          const sachetsUsed = parseFloat((plan.duringActivity.electrolytesPerHour * p.profile_data.sessionDuration).toFixed(2));
+          const sachetsUsed = plan.duringActivity.electrolytesPerHour * p.profile_data.sessionDuration;
           
           disciplines.forEach((activity: string) => {
             const current = activitySachetsMap.get(activity) || { total: 0, count: 0 };
@@ -153,6 +168,7 @@ export default function Admin() {
         total,
         withSmartwatch,
         withoutSmartwatch: total - withSmartwatch,
+        averageAge,
         genderDistribution: genderCounts,
         activityStats,
         sachetsPerActivity,
@@ -781,7 +797,7 @@ export default function Admin() {
         </div>
 
         {/* Dashboard Stats */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-primary/20 rounded-full">
@@ -800,8 +816,8 @@ export default function Admin() {
                 <Activity className="w-6 h-6 text-blue-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground font-medium">With Smartwatch</p>
-                <p className="text-3xl font-bold text-foreground">{stats.withSmartwatch}</p>
+                <p className="text-sm text-muted-foreground font-medium">Average Age</p>
+                <p className="text-3xl font-bold text-foreground">{stats.averageAge} <span className="text-lg">years</span></p>
               </div>
             </div>
           </Card>
@@ -812,20 +828,8 @@ export default function Admin() {
                 <Database className="w-6 h-6 text-green-500" />
               </div>
               <div>
-                <p className="text-sm text-muted-foreground font-medium">Manual Entries</p>
-                <p className="text-3xl font-bold text-foreground">{stats.withoutSmartwatch}</p>
-              </div>
-            </div>
-          </Card>
-          
-          <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
-            <div className="flex items-center gap-4">
-              <div className="p-3 bg-purple-500/20 rounded-full">
-                <Zap className="w-6 h-6 text-purple-500" />
-              </div>
-              <div>
-                <p className="text-sm text-muted-foreground font-medium">Activities Tracked</p>
-                <p className="text-3xl font-bold text-foreground">{stats.activityStats.length}</p>
+                <p className="text-sm text-muted-foreground font-medium">With Smartwatch Data</p>
+                <p className="text-3xl font-bold text-foreground">{stats.withSmartwatch}</p>
               </div>
             </div>
           </Card>
@@ -835,7 +839,7 @@ export default function Admin() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Gender Distribution */}
           <Card className="p-6">
-            <h3 className="text-lg font-semibold mb-4">Gender Distribution</h3>
+            <h3 className="text-lg font-semibold mb-4">Gender & Age Distribution</h3>
             <ResponsiveContainer width="100%" height={250}>
               <PieChart>
                 <Pie
@@ -860,6 +864,10 @@ export default function Admin() {
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-4 space-y-2">
+              <div className="flex justify-between items-center p-3 bg-muted/50 rounded-lg">
+                <span className="text-sm font-medium">Average Age</span>
+                <span className="text-lg font-bold text-primary">{stats.averageAge} years</span>
+              </div>
               <div className="flex justify-between items-center text-sm">
                 <span className="flex items-center gap-2">
                   <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }} />
@@ -888,7 +896,7 @@ export default function Admin() {
 
           {/* Activity Popularity */}
           <Card className="p-6 lg:col-span-2">
-            <h3 className="text-lg font-semibold mb-4">Most Popular Activities</h3>
+            <h3 className="text-lg font-semibold mb-4">Most Popular Activities (Click to see details)</h3>
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={stats.activityStats.slice(0, 6)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -906,38 +914,110 @@ export default function Admin() {
                     border: '1px solid hsl(var(--border))' 
                   }}
                 />
-                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+                <Bar 
+                  dataKey="count" 
+                  fill="hsl(var(--primary))" 
+                  radius={[8, 8, 0, 0]}
+                  onClick={(data) => setSelectedActivity(data.activity)}
+                  className="cursor-pointer hover:opacity-80"
+                />
               </BarChart>
             </ResponsiveContainer>
           </Card>
 
+          {/* Activity Details Modal */}
+          {selectedActivity && (
+            <Card className="p-6 lg:col-span-3 bg-accent/5 border-accent">
+              <div className="flex justify-between items-start mb-4">
+                <h3 className="text-lg font-semibold">{selectedActivity} - Detailed Insights</h3>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedActivity(null)}>
+                  Close
+                </Button>
+              </div>
+              
+              {(() => {
+                const activity = stats.activityStats.find(a => a.activity === selectedActivity);
+                if (!activity) return null;
+                
+                // Count unique distances
+                const distanceCounts = new Map<string, number>();
+                activity.distances.forEach(d => {
+                  distanceCounts.set(d, (distanceCounts.get(d) || 0) + 1);
+                });
+                const sortedDistances = Array.from(distanceCounts.entries())
+                  .sort((a, b) => b[1] - a[1]);
+                
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+                    {/* Mode Usage */}
+                    <div className="space-y-3">
+                      <h4 className="font-semibold text-sm text-muted-foreground">Mode Usage</h4>
+                      <div className="space-y-2">
+                        <div className="flex justify-between items-center p-3 bg-background rounded-lg">
+                          <span className="text-sm">Race Day Mode</span>
+                          <span className="text-xl font-bold text-primary">{activity.raceDayCount}</span>
+                        </div>
+                        <div className="flex justify-between items-center p-3 bg-background rounded-lg">
+                          <span className="text-sm">Training Mode</span>
+                          <span className="text-xl font-bold text-chart-1">{activity.trainingCount}</span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Most Common Distances */}
+                    <div className="md:col-span-2 space-y-3">
+                      <h4 className="font-semibold text-sm text-muted-foreground">Most Common Distances</h4>
+                      <div className="grid grid-cols-2 gap-3">
+                        {sortedDistances.slice(0, 8).map(([distance, count]) => (
+                          <div key={distance} className="flex justify-between items-center p-3 bg-background rounded-lg">
+                            <span className="text-sm font-medium">{distance}</span>
+                            <Badge variant="secondary">{count}x</Badge>
+                          </div>
+                        ))}
+                        {sortedDistances.length === 0 && (
+                          <p className="text-sm text-muted-foreground col-span-2">No distance data available</p>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })()}
+            </Card>
+          )}
+
           {/* Sachets Per Activity */}
           <Card className="p-6 lg:col-span-3">
             <h3 className="text-lg font-semibold mb-4">Average Supplme Sachets Per Training Session</h3>
-            <ResponsiveContainer width="100%" height={300}>
-              <BarChart data={stats.sachetsPerActivity.slice(0, 8)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="activity" 
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  angle={-45}
-                  textAnchor="end"
-                  height={80}
-                />
-                <YAxis 
-                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
-                  label={{ value: 'Sachets', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
-                />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))', 
-                    border: '1px solid hsl(var(--border))' 
-                  }}
-                  formatter={(value: any) => [`${value} sachets`, 'Average']}
-                />
-                <Bar dataKey="avgSachets" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+            {stats.sachetsPerActivity.length > 0 ? (
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={stats.sachetsPerActivity.slice(0, 8)}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis 
+                    dataKey="activity" 
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    angle={-45}
+                    textAnchor="end"
+                    height={80}
+                  />
+                  <YAxis 
+                    tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                    label={{ value: 'Sachets', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                  />
+                  <Tooltip 
+                    contentStyle={{ 
+                      backgroundColor: 'hsl(var(--background))', 
+                      border: '1px solid hsl(var(--border))' 
+                    }}
+                    formatter={(value: any) => [`${value} sachets`, 'Average']}
+                  />
+                  <Bar dataKey="avgSachets" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="flex items-center justify-center h-[300px] text-muted-foreground">
+                <p>No sachet data available yet. Data will appear once users complete hydration plans.</p>
+              </div>
+            )}
           </Card>
         </div>
 
