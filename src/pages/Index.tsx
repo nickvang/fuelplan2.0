@@ -1031,7 +1031,7 @@ const Index = () => {
 
               {!profile.hasUpcomingRace && (
                 <div className="space-y-2">
-                  <Label htmlFor="trainingDistance">Training Distance *</Label>
+                  <Label htmlFor="trainingDistance">Training Distance (km) *</Label>
                   <Input
                     id="trainingDistance"
                     value={profile.raceDistance || ''}
