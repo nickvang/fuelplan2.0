@@ -4,12 +4,13 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight, FileDown } from 'lucide-react';
+import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight, FileDown, Zap } from 'lucide-react';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import supplmeLogo from '@/assets/supplme-logo.png';
 import { jsPDF } from 'jspdf';
+import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface HydrationProfileData {
   id: string;
@@ -31,6 +32,9 @@ export default function Admin() {
     total: 0,
     withSmartwatch: 0,
     withoutSmartwatch: 0,
+    genderDistribution: { male: 0, female: 0, other: 0 },
+    activityStats: [] as { activity: string; count: number }[],
+    sachetsPerActivity: [] as { activity: string; avgSachets: number }[],
   });
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -94,14 +98,64 @@ export default function Admin() {
 
       setProfiles(data || []);
       
-      // Calculate stats
+      // Calculate enhanced stats
       const total = data?.length || 0;
       const withSmartwatch = data?.filter((p: any) => p.has_smartwatch_data).length || 0;
+      
+      // Gender distribution
+      const genderCounts = { male: 0, female: 0, other: 0 };
+      data?.forEach((p: any) => {
+        const sex = p.profile_data?.sex;
+        if (sex === 'male') genderCounts.male++;
+        else if (sex === 'female') genderCounts.female++;
+        else if (sex === 'other') genderCounts.other++;
+      });
+      
+      // Activity popularity (count primary activities)
+      const activityMap = new Map<string, number>();
+      data?.forEach((p: any) => {
+        const disciplines = p.profile_data?.disciplines || [];
+        disciplines.forEach((activity: string) => {
+          activityMap.set(activity, (activityMap.get(activity) || 0) + 1);
+        });
+      });
+      const activityStats = Array.from(activityMap.entries())
+        .map(([activity, count]) => ({ activity, count }))
+        .sort((a, b) => b.count - a.count);
+      
+      // Average sachets per activity
+      const activitySachetsMap = new Map<string, { total: number; count: number }>();
+      data?.forEach((p: any) => {
+        const disciplines = p.profile_data?.disciplines || [];
+        const plan = p.plan_data;
+        
+        if (plan?.duringActivity?.electrolytesPerHour && p.profile_data?.sessionDuration) {
+          const sachetsUsed = parseFloat((plan.duringActivity.electrolytesPerHour * p.profile_data.sessionDuration).toFixed(2));
+          
+          disciplines.forEach((activity: string) => {
+            const current = activitySachetsMap.get(activity) || { total: 0, count: 0 };
+            activitySachetsMap.set(activity, {
+              total: current.total + sachetsUsed,
+              count: current.count + 1
+            });
+          });
+        }
+      });
+      
+      const sachetsPerActivity = Array.from(activitySachetsMap.entries())
+        .map(([activity, { total, count }]) => ({
+          activity,
+          avgSachets: parseFloat((total / count).toFixed(2))
+        }))
+        .sort((a, b) => b.avgSachets - a.avgSachets);
       
       setStats({
         total,
         withSmartwatch,
         withoutSmartwatch: total - withSmartwatch,
+        genderDistribution: genderCounts,
+        activityStats,
+        sachetsPerActivity,
       });
     } catch (error: any) {
       toast({
@@ -726,36 +780,164 @@ export default function Admin() {
           </Button>
         </div>
 
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card className="p-6">
+        {/* Dashboard Stats */}
+        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+          <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border-primary/20">
             <div className="flex items-center gap-4">
-              <Users className="w-10 h-10 text-primary" />
+              <div className="p-3 bg-primary/20 rounded-full">
+                <Users className="w-6 h-6 text-primary" />
+              </div>
               <div>
-                <p className="text-sm text-muted-foreground">Total Profiles</p>
-                <p className="text-3xl font-bold">{stats.total}</p>
+                <p className="text-sm text-muted-foreground font-medium">Total Profiles</p>
+                <p className="text-3xl font-bold text-foreground">{stats.total}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-6">
+          <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
             <div className="flex items-center gap-4">
-              <Activity className="w-10 h-10 text-blue-500" />
+              <div className="p-3 bg-blue-500/20 rounded-full">
+                <Activity className="w-6 h-6 text-blue-500" />
+              </div>
               <div>
-                <p className="text-sm text-muted-foreground">With Smartwatch</p>
-                <p className="text-3xl font-bold">{stats.withSmartwatch}</p>
+                <p className="text-sm text-muted-foreground font-medium">With Smartwatch</p>
+                <p className="text-3xl font-bold text-foreground">{stats.withSmartwatch}</p>
               </div>
             </div>
           </Card>
           
-          <Card className="p-6">
+          <Card className="p-6 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
             <div className="flex items-center gap-4">
-              <Database className="w-10 h-10 text-green-500" />
+              <div className="p-3 bg-green-500/20 rounded-full">
+                <Database className="w-6 h-6 text-green-500" />
+              </div>
               <div>
-                <p className="text-sm text-muted-foreground">Manual Entry</p>
-                <p className="text-3xl font-bold">{stats.withoutSmartwatch}</p>
+                <p className="text-sm text-muted-foreground font-medium">Manual Entries</p>
+                <p className="text-3xl font-bold text-foreground">{stats.withoutSmartwatch}</p>
               </div>
             </div>
+          </Card>
+          
+          <Card className="p-6 bg-gradient-to-br from-purple-500/10 to-purple-500/5 border-purple-500/20">
+            <div className="flex items-center gap-4">
+              <div className="p-3 bg-purple-500/20 rounded-full">
+                <Zap className="w-6 h-6 text-purple-500" />
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground font-medium">Activities Tracked</p>
+                <p className="text-3xl font-bold text-foreground">{stats.activityStats.length}</p>
+              </div>
+            </div>
+          </Card>
+        </div>
+
+        {/* Analytics Dashboard */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* Gender Distribution */}
+          <Card className="p-6">
+            <h3 className="text-lg font-semibold mb-4">Gender Distribution</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <PieChart>
+                <Pie
+                  data={[
+                    { name: 'Male', value: stats.genderDistribution.male },
+                    { name: 'Female', value: stats.genderDistribution.female },
+                    { name: 'Other', value: stats.genderDistribution.other },
+                  ].filter(d => d.value > 0)}
+                  cx="50%"
+                  cy="50%"
+                  labelLine={false}
+                  label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                  outerRadius={80}
+                  fill="#8884d8"
+                  dataKey="value"
+                >
+                  <Cell fill="hsl(var(--primary))" />
+                  <Cell fill="hsl(var(--chart-2))" />
+                  <Cell fill="hsl(var(--chart-3))" />
+                </Pie>
+                <Tooltip />
+              </PieChart>
+            </ResponsiveContainer>
+            <div className="mt-4 space-y-2">
+              <div className="flex justify-between items-center text-sm">
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--primary))' }} />
+                  Male
+                </span>
+                <span className="font-semibold">{stats.genderDistribution.male}</span>
+              </div>
+              <div className="flex justify-between items-center text-sm">
+                <span className="flex items-center gap-2">
+                  <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-2))' }} />
+                  Female
+                </span>
+                <span className="font-semibold">{stats.genderDistribution.female}</span>
+              </div>
+              {stats.genderDistribution.other > 0 && (
+                <div className="flex justify-between items-center text-sm">
+                  <span className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full" style={{ backgroundColor: 'hsl(var(--chart-3))' }} />
+                    Other
+                  </span>
+                  <span className="font-semibold">{stats.genderDistribution.other}</span>
+                </div>
+              )}
+            </div>
+          </Card>
+
+          {/* Activity Popularity */}
+          <Card className="p-6 lg:col-span-2">
+            <h3 className="text-lg font-semibold mb-4">Most Popular Activities</h3>
+            <ResponsiveContainer width="100%" height={250}>
+              <BarChart data={stats.activityStats.slice(0, 6)}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="activity" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))' 
+                  }}
+                />
+                <Bar dataKey="count" fill="hsl(var(--primary))" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </Card>
+
+          {/* Sachets Per Activity */}
+          <Card className="p-6 lg:col-span-3">
+            <h3 className="text-lg font-semibold mb-4">Average Supplme Sachets Per Training Session</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <BarChart data={stats.sachetsPerActivity.slice(0, 8)}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis 
+                  dataKey="activity" 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  angle={-45}
+                  textAnchor="end"
+                  height={80}
+                />
+                <YAxis 
+                  tick={{ fill: 'hsl(var(--muted-foreground))' }}
+                  label={{ value: 'Sachets', angle: -90, position: 'insideLeft', fill: 'hsl(var(--muted-foreground))' }}
+                />
+                <Tooltip 
+                  contentStyle={{ 
+                    backgroundColor: 'hsl(var(--background))', 
+                    border: '1px solid hsl(var(--border))' 
+                  }}
+                  formatter={(value: any) => [`${value} sachets`, 'Average']}
+                />
+                <Bar dataKey="avgSachets" fill="hsl(var(--chart-1))" radius={[8, 8, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
           </Card>
         </div>
 
