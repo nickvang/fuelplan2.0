@@ -894,7 +894,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </p>
         </Card>
 
-        {/* DURING - Solid Black Background with White Text */}
+        {/* DURING - Solid Black Background with White Text (Hidden for swimming races) */}
+        {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
         <Card className="athletic-card p-8 space-y-5 border-4" style={{ backgroundColor: '#0a0a0a', borderColor: '#0a0a0a' }}>
           <div className="space-y-3">
             <div className="flex items-center gap-2" style={{ color: '#ffffff', opacity: 0.7 }}>
@@ -903,6 +904,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             </div>
             <h3 className="text-5xl font-black" style={{ color: '#ffffff' }}>DURING</h3>
           </div>
+          
+          {/* Special note for indoor swimming training */}
+          {profile.disciplines?.includes('Swimming') && !profile.hasUpcomingRace && profile.indoorOutdoor === 'indoor' && (
+            <div className="p-4 rounded-xl mb-4" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
+              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>
+                💧 <strong>Pool Training Tip:</strong> Keep a water bottle with {plan.duringActivity.electrolytesPerHour} Supplme sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''} mixed in at the pool edge. Sip between sets during rest intervals.
+              </p>
+            </div>
+          )}
           
           <div className="space-y-4 py-4">
             <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
@@ -936,6 +946,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             🔥 Maintain peak performance - replace 60-80% of sweat loss
           </p>
         </Card>
+        )}
 
         {/* POST */}
         <Card className="athletic-card p-8 space-y-5 bg-card border-2 border-border">
@@ -1084,7 +1095,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 <div className="hidden md:block" />
               </div>
 
-              {/* During Race - Right Side */}
+              {/* During Race - Right Side (Hidden for swimming races) */}
+              {!(profile.disciplines?.includes('Swimming')) && (
               <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
                 <div className="hidden md:block" />
                 <Card className="relative p-6 space-y-4 border-4 border-primary shadow-xl" style={{ backgroundColor: '#0a0a0a' }}>
@@ -1120,6 +1132,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                 </Card>
               </div>
+              )}
 
               {/* Post Race - Left Side */}
               <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
