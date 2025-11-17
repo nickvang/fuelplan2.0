@@ -1408,7 +1408,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                       <span className="text-2xl">⚡</span>
                     </div>
-                    <h4 className="text-xl font-bold">Do This First</h4>
+                    <h4 className="text-xl font-bold">Tips</h4>
                   </div>
 
                   <div className="space-y-3">
