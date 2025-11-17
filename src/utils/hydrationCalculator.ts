@@ -129,22 +129,16 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Round to nearest whole number (more conservative than ceiling)
   sachetsPerHour = Math.round(sachetsPerHour);
   
-  // Dynamic cap based on session duration
-  let maxSachetsPerHour = 2; // Default cap
-  if (profile.sessionDuration > 10) {
-    maxSachetsPerHour = 2; // Keep at 2/h even for ultra-endurance
-    calculationSteps.push('Ultra-endurance: capped at 2 sachets/h');
+  // Conservative cap: maximum 1 sachet per hour
+  // This provides 500mg sodium/hour which is in the safe 300-800mg/h range
+  sachetsPerHour = Math.min(1, sachetsPerHour);
+  
+  // Minimum of 1 sachet per hour for sessions >1h, unless calculated lower
+  if (profile.sessionDuration > 1 && sachetsPerHour < 1) {
+    sachetsPerHour = 1;
   }
   
-  // Minimum of 1 sachet per hour for sessions >1h
-  if (profile.sessionDuration > 1) {
-    sachetsPerHour = Math.max(1, Math.min(maxSachetsPerHour, sachetsPerHour));
-  } else {
-    // For short sessions, allow 0 sachets if calculated value is very low
-    sachetsPerHour = Math.min(maxSachetsPerHour, sachetsPerHour);
-  }
-  
-  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (max ${maxSachetsPerHour}/hour)`);
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (conservative: max 1/hour)`);
   
   const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
 
@@ -219,45 +213,41 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
   // ====== 4. DURING-ACTIVITY HYDRATION ======
-  // FIX #1 & #3: Discipline-specific replacement rates
+  // Conservative replacement strategy: 40-50% of sweat loss
+  // Aligns with "drink to thirst" approach - body tolerates mild deficit
   let replacementRate: number;
   
   if (primaryDiscipline === 'Swimming') {
-    // FIX #3: Swimming-specific logic - much lower practical intake
-    // Pool swimming: minimal sweat, limited intake opportunity
-    replacementRate = 0.30; // 30% for swimming (reduced from 55-65%)
+    // Swimming: minimal sweat, limited intake opportunity
+    replacementRate = 0.30; // 30% for swimming
     calculationSteps.push('Swimming: 30% replacement (limited intake opportunity)');
   } else if (isRaceDay) {
-    // FIX #1: Race day capped to ensure 600-900ml/h range
-    // Use 60% instead of 65% to prevent exceeding upper limits
-    replacementRate = 0.60;
+    // Race day: slightly higher but still conservative
+    replacementRate = 0.50; // 50% for race day
   } else {
-    // Training: 50-55% range
-    replacementRate = 0.50;
+    // Training: conservative approach
+    replacementRate = 0.40; // 40% for training
   }
   
   let duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10;
   
-  // General minimum floor for practical hydration (except very short, low-sweat scenarios)
+  // Conservative minimum floor
   if (duringWaterPerHour < 250 && profile.sessionDuration < 1 && profile.sweatRate === 'low') {
-    // Allow lower intake for short sessions with low sweat
     duringWaterPerHour = Math.max(200, duringWaterPerHour);
   } else if (duringWaterPerHour < 300 && primaryDiscipline !== 'Swimming') {
-    duringWaterPerHour = 300; // Minimum practical intake for most scenarios
+    duringWaterPerHour = 300; // Minimum practical intake
   }
   
-  // FIX #1: Hard cap for race day to ensure 600-900ml/h range
-  if (isRaceDay && primaryDiscipline !== 'Swimming') {
-    if (duringWaterPerHour > 900) {
-      duringWaterPerHour = 900;
-      calculationSteps.push('Race day capped at 900ml/h for safety');
-    } else if (duringWaterPerHour < 600 && (profile.sweatRate === 'medium' || profile.sweatRate === 'high')) {
-      duringWaterPerHour = 600;
-      calculationSteps.push('Race day minimum 600ml/h for medium/high sweaters');
+  // Conservative cap: 700ml/h maximum (reduced from 900ml/h)
+  // Prevents overhydration while meeting most needs
+  if (primaryDiscipline !== 'Swimming') {
+    if (duringWaterPerHour > 700) {
+      duringWaterPerHour = 700;
+      calculationSteps.push('Conservative cap at 700ml/h (drink to thirst approach)');
     }
   }
   
-  // FIX #3: Swimming-specific cap
+  // Swimming-specific cap
   if (primaryDiscipline === 'Swimming') {
     if (duringWaterPerHour > 500) {
       duringWaterPerHour = 500;

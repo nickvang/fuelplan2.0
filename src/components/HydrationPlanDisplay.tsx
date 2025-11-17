@@ -937,20 +937,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 const minutesPerSachet = Math.round(totalMinutes / totalSachets);
                 const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
                 
-                // Determine intensity level based on sodium per hour
+                // All sachets now capped at 1/hour (500mg sodium)
                 let intensityLabel = '';
                 let intensityColor = 'rgba(255, 255, 255, 0.7)';
-                if (sodiumPerHour >= 1000) {
-                  intensityLabel = 'Extreme conditions';
-                  intensityColor = 'rgba(255, 100, 100, 0.9)';
-                } else if (sodiumPerHour >= 750) {
-                  intensityLabel = 'High intensity / Hot conditions';
-                  intensityColor = 'rgba(255, 200, 100, 0.9)';
-                } else if (sodiumPerHour >= 500) {
-                  intensityLabel = 'Moderate effort';
+                if (sodiumPerHour >= 500) {
+                  intensityLabel = 'Conservative: 500mg/h max';
                   intensityColor = 'rgba(255, 255, 255, 0.8)';
+                } else if (sodiumPerHour >= 400) {
+                  intensityLabel = 'Moderate intensity';
+                  intensityColor = 'rgba(255, 255, 255, 0.75)';
                 } else {
-                  intensityLabel = 'Light-moderate intensity';
+                  intensityLabel = 'Light intensity';
                   intensityColor = 'rgba(255, 255, 255, 0.7)';
                 }
                 
@@ -973,10 +970,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
           <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
             <p className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              🔥 Science-backed: 50-60% sodium replacement during activity
+              🎯 Conservative "drink to thirst" approach • 40-50% fluid replacement
             </p>
             <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-              Body tolerates sodium deficit during exercise • Replenish fully post-activity
+              Body tolerates mild deficit during activity • Max 1 sachet/hour (500mg sodium)
             </p>
           </div>
         </Card>
