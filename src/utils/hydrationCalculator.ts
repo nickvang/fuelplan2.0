@@ -1,165 +1,244 @@
 import { HydrationProfile, HydrationPlan } from '@/types/hydration';
 
 export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
-  console.log('🧮 Calculating hydration plan with session duration:', profile.sessionDuration, 'hours');
+  console.log('🧮 Advanced hydration calculation starting...', {
+    duration: profile.sessionDuration,
+    weight: profile.weight,
+    discipline: profile.disciplines?.[0],
+    hasSmartwatch: !!rawSmartWatchData
+  });
   
-  // 1. Estimate sweat rate based on temperature
-  const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
-  let sweatRatePerHour = 800; // Base: 0.8 L/hour (moderate 18-25°C)
-  
-  if (avgTemp < 18) {
-    sweatRatePerHour = 600; // Cool: 0.6 L/hour
-  } else if (avgTemp >= 18 && avgTemp <= 25) {
-    sweatRatePerHour = 800; // Moderate: 0.8 L/hour
-  } else if (avgTemp > 25) {
-    sweatRatePerHour = 1100; // Hot: 1.0-1.2 L/hour (average 1.1)
-  }
-
-  // 2. Adjust by sport type
-  const primaryDiscipline = profile.disciplines?.[0] || '';
-  const sportAdjustments: { [key: string]: number } = {
-    'Running': 0.10,      // +10%
-    'Triathlon': 0.10,    // +10%
-    'Cycling': 0,         // baseline
-    'Swimming': -0.15,    // -15%
-    'Gym': -0.20,         // -20%
-    'CrossFit': -0.20,    // -20% (strength training)
-    'Walking': -0.20,     // -20%
-    'Hiking': -0.20,      // -20%
-  };
-
-  const sportAdjustment = sportAdjustments[primaryDiscipline] || 0;
-  sweatRatePerHour = Math.round(sweatRatePerHour * (1 + sportAdjustment));
-
-  // Store calculation details
   const calculationSteps: string[] = [];
-  calculationSteps.push(`Base sweat rate: ${sweatRatePerHour}ml/hour (temp: ${avgTemp}°C, sport: ${primaryDiscipline})`);
-
-  // 3. Calculate total fluid loss
+  const isRaceDay = profile.raceDistance && profile.raceDistance.length > 0;
+  
+  // ====== 1. ADVANCED SWEAT RATE CALCULATION ======
+  const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
+  const primaryDiscipline = profile.disciplines?.[0] || '';
+  
+  // Base sweat rates by user-selected profile (low/medium/high/very high)
+  const baseSweatRates: { [key: string]: number } = {
+    'low': 400,      // 0.4 L/h
+    'medium': 700,   // 0.7 L/h
+    'high': 1000,    // 1.0 L/h
+    'very-high': 1300 // 1.3 L/h (for extreme sweaters)
+  };
+  
+  let sweatRatePerHour = baseSweatRates[profile.sweatRate] || 700;
+  calculationSteps.push(`Base sweat rate: ${sweatRatePerHour}ml/h (${profile.sweatRate} sweater)`);
+  
+  // Modifiers for sweat rate
+  let sweatModifier = 1.0;
+  const sweatAdjustments: string[] = [];
+  
+  // Temperature adjustment
+  if (avgTemp > 30) {
+    sweatModifier += 0.30; // +30% extreme heat
+    sweatAdjustments.push('extreme heat +30%');
+  } else if (avgTemp > 25) {
+    sweatModifier += 0.20; // +20% hot
+    sweatAdjustments.push('hot +20%');
+  } else if (avgTemp < 15) {
+    sweatModifier -= 0.15; // -15% cool
+    sweatAdjustments.push('cool -15%');
+  }
+  
+  // Body size adjustment
+  if (profile.weight < 60) {
+    sweatModifier -= 0.10; // -10% smaller body
+    sweatAdjustments.push('body <60kg -10%');
+  } else if (profile.weight > 80) {
+    sweatModifier += 0.10; // +10% larger body
+    sweatAdjustments.push('body >80kg +10%');
+  }
+  
+  // Sun exposure
+  if (profile.sunExposure === 'full-sun') {
+    sweatModifier += 0.20; // +20% full sun
+    sweatAdjustments.push('full sun +20%');
+  } else if (profile.sunExposure === 'partial') {
+    sweatModifier += 0.10; // +10% partial sun
+    sweatAdjustments.push('partial sun +10%');
+  }
+  
+  // Smartwatch HR drift (indicates dehydration/high stress)
+  if (rawSmartWatchData?.hrDrift && rawSmartWatchData.hrDrift > 5) {
+    sweatModifier += 0.15; // +15% high HR drift
+    sweatAdjustments.push('HR drift >5% +15%');
+  }
+  
+  // Sport-specific adjustment
+  const sportAdjustments: { [key: string]: number } = {
+    'Running': 0.10,
+    'Triathlon': 0.10,
+    'Cycling': 0,
+    'Swimming': -0.15,
+    'Gym': -0.20,
+    'CrossFit': -0.10,
+    'Walking': -0.20,
+    'Hiking': -0.05
+  };
+  
+  const sportAdj = sportAdjustments[primaryDiscipline] || 0;
+  if (sportAdj !== 0) {
+    sweatModifier += sportAdj;
+    sweatAdjustments.push(`${primaryDiscipline} ${sportAdj > 0 ? '+' : ''}${(sportAdj * 100).toFixed(0)}%`);
+  }
+  
+  // Apply all modifiers
+  sweatRatePerHour = Math.round(sweatRatePerHour * sweatModifier);
+  if (sweatAdjustments.length > 0) {
+    calculationSteps.push(`Sweat adjustments: ${sweatAdjustments.join(', ')}`);
+  }
+  calculationSteps.push(`Final sweat rate: ${sweatRatePerHour}ml/h`);
+  
+  // Total fluid loss
   const totalFluidLoss = sweatRatePerHour * profile.sessionDuration;
-  console.log(`💧 Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
-  calculationSteps.push(`Total fluid loss: ${sweatRatePerHour}ml/hr × ${profile.sessionDuration}hr = ${totalFluidLoss}ml`);
+  calculationSteps.push(`Total fluid loss: ${sweatRatePerHour}ml/h × ${profile.sessionDuration}h = ${totalFluidLoss}ml`);
 
-  // 4. PRE-activity hydration: Base 5-7ml per kg bodyweight (ACSM guidelines), adjusted for conditions
-  // Using 6ml/kg as baseline (middle of 5-7ml/kg range)
-  let preWaterBase = profile.weight * 6; // 6ml per kg base (ACSM: 5-7 ml/kg, 2-4 hours before)
+
+  // ====== 2. SODIUM LOSS & SACHETS CALCULATION ======
+  // Sodium concentration based on sweat saltiness
+  const sodiumConcentration: { [key: string]: number } = {
+    'low': 400,      // mg/L
+    'medium': 800,   // mg/L
+    'high': 1200,    // mg/L
+  };
+  
+  const sodiumPerLiter = sodiumConcentration[profile.sweatSaltiness] || 800;
+  const totalSodiumLoss = (sweatRatePerHour / 1000) * sodiumPerLiter * profile.sessionDuration;
+  calculationSteps.push(`Sodium loss: ${sodiumPerLiter}mg/L × ${(sweatRatePerHour * profile.sessionDuration / 1000).toFixed(2)}L = ${Math.round(totalSodiumLoss)}mg total`);
+  
+  // SUPPLME sachet = 500mg sodium
+  const SACHET_SODIUM = 500;
+  
+  // Calculate sachets per hour
+  let sachetsPerHour = (sweatRatePerHour / 1000) * sodiumPerLiter / SACHET_SODIUM;
+  
+  // Adjust for heat/intensity
+  if (avgTemp > 25 || (rawSmartWatchData?.hrDrift && rawSmartWatchData.hrDrift > 5)) {
+    sachetsPerHour *= 1.2; // +20% for high stress
+  }
+  
+  // Race day adjustment (higher precision needed)
+  if (isRaceDay) {
+    sachetsPerHour *= 1.15; // +15% for race day
+  }
+  
+  // Round to nearest whole number (1, 2, or 3 only)
+  sachetsPerHour = Math.max(1, Math.min(3, Math.round(sachetsPerHour)));
+  
+  // Minimum 1 sachet/hour for sessions > 60 min
+  if (profile.sessionDuration > 1 && sachetsPerHour < 1) {
+    sachetsPerHour = 1;
+  }
+  
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (rounded to whole number, max 3 for safety)`);
+  
+  const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
+
+  // ====== 3. PRE-ACTIVITY HYDRATION ======
+  // Base: 5-7ml/kg (ACSM), using 6ml/kg as baseline
+  let preWaterBase = profile.weight * 6;
   let preAdjustmentFactor = 1.0;
   const preAdjustments: string[] = [];
-
-  // Temperature adjustment
+  
+  // Temperature
   if (avgTemp > 25) {
-    preAdjustmentFactor += 0.20; // +20% for hot conditions
-    preAdjustments.push('hot conditions (+20%)');
-  } else if (avgTemp < 18) {
-    preAdjustmentFactor -= 0.10; // -10% for cool conditions
-    preAdjustments.push('cool conditions (-10%)');
+    preAdjustmentFactor += 0.20;
+    preAdjustments.push('hot +20%');
   }
-
-  // Sport type adjustment (high intensity sports need more pre-loading)
-  if (primaryDiscipline === 'Running' || primaryDiscipline === 'Triathlon') {
-    preAdjustmentFactor += 0.15; // +15% (higher cardiovascular demand)
-    preAdjustments.push(`${primaryDiscipline} (+15%)`);
-  } else if (primaryDiscipline === 'Swimming') {
-    preAdjustmentFactor -= 0.15; // -15% (less pre-loading needed in water)
-    preAdjustments.push('swimming (-15%)');
+  
+  // Race day
+  if (isRaceDay) {
+    preAdjustmentFactor += 0.15;
+    preAdjustments.push('race day +15%');
   }
-
-  // Session duration adjustment (longer sessions need more pre-loading)
+  
+  // Session duration
   if (profile.sessionDuration >= 3) {
-    preAdjustmentFactor += 0.25; // +25% for long sessions (>3 hours)
-    preAdjustments.push('long session 3+ hrs (+25%)');
-  } else if (profile.sessionDuration >= 2) {
-    preAdjustmentFactor += 0.15; // +15% for medium sessions (2-3 hours)
-    preAdjustments.push('medium session 2-3 hrs (+15%)');
+    preAdjustmentFactor += 0.20;
+    preAdjustments.push('long session +20%');
   }
-
-  // Altitude adjustment (increased fluid loss at altitude)
+  
+  // Altitude
   if (profile.altitude === 'high') {
-    preAdjustmentFactor += 0.15; // +15%
-    preAdjustments.push('high altitude (+15%)');
+    preAdjustmentFactor += 0.15;
+    preAdjustments.push('high altitude +15%');
   } else if (profile.altitude === 'moderate') {
-    preAdjustmentFactor += 0.10; // +10%
-    preAdjustments.push('moderate altitude (+10%)');
+    preAdjustmentFactor += 0.10;
+    preAdjustments.push('moderate altitude +10%');
   }
-
-  // Sun exposure adjustment
-  if (profile.sunExposure === 'full-sun') {
-    preAdjustmentFactor += 0.10; // +10%
-    preAdjustments.push('full sun (+10%)');
-  }
-
-  const preWater = Math.round(preWaterBase * preAdjustmentFactor);
-  const preElectrolytes = 1; // 1 sachet (standard)
-
-  calculationSteps.push(`Pre-activity base: ${preWaterBase}ml (${profile.weight}kg × 6ml/kg, ACSM guideline: 5-7ml/kg)`);
+  
+  const preWater = Math.round(preWaterBase * preAdjustmentFactor / 10) * 10; // Round to nearest 10ml
+  const preElectrolytes = (profile.sessionDuration > 1 || isRaceDay) ? 1 : 0; // Always 1 sachet if >60min or race day
+  
   if (preAdjustments.length > 0) {
-    calculationSteps.push(`Pre-activity adjustments: ${preAdjustments.join(', ')} = ${Math.round((preAdjustmentFactor - 1) * 100)}% total`);
+    calculationSteps.push(`Pre-hydration adjustments: ${preAdjustments.join(', ')}`);
   }
-  calculationSteps.push(`Pre-activity total: ${preWater}ml + ${preElectrolytes} sachet`);
+  calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
-  // 5. DURING-activity hydration: Replace 60-80% of fluid loss (use 70% average)
-  const duringWater = Math.round(sweatRatePerHour * 0.70); // 70% replacement per hour
+  // ====== 4. DURING-ACTIVITY HYDRATION ======
+  // Water replacement: 50-65% training, 65-80% race day
+  const replacementRate = isRaceDay ? 0.725 : 0.575; // Average of ranges
+  const duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10; // Round to nearest 10ml
+  const duringElectrolytesPerHour = sachetsPerHour;
   
-  // DURING sachets: Base 1 per hour, adjusted by sweat profile
-  let duringElectrolytes = 1; // Base: 1 sachet per hour
+  calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h (${(replacementRate * 100).toFixed(0)}% replacement), ${duringElectrolytesPerHour} sachet(s)/h`);
   
-  // Adjust based on sweat rate and saltiness
-  if (profile.sweatRate === 'high' && profile.sweatSaltiness === 'high') {
-    duringElectrolytes = 2; // High sweat + high sodium = 2 sachets/hr
-  } else if (profile.sweatRate === 'high' || profile.sweatSaltiness === 'high') {
-    duringElectrolytes = 1.5; // One elevated factor = 1.5 sachets/hr
-  } else if (profile.sweatRate === 'low' && profile.sweatSaltiness === 'low') {
-    duringElectrolytes = 0.5; // Low sweat + low sodium = 0.5 sachets/hr (1 sachet per 2 hours)
+  // Frequency guidance
+  let frequency = 'Every 15-20 minutes';
+  if (profile.sessionDuration >= 2) {
+    frequency = 'Every 12-15 minutes';
   }
-  // Medium sweat rate and/or medium saltiness stays at 1 sachet/hr
 
-  // 6. POST-activity hydration: 150% of remaining fluid deficit
-  // Remaining deficit = total loss - what was replaced during
-  const replacedDuring = duringWater * profile.sessionDuration;
-  const remainingDeficit = totalFluidLoss - replacedDuring;
-  const postWater = Math.round(remainingDeficit * 1.5); // 150% of remaining deficit
+  // ====== 5. POST-ACTIVITY HYDRATION ======
+  // Calculate remaining deficit
+  const totalConsumedDuring = duringWaterPerHour * profile.sessionDuration;
+  const remainingDeficit = totalFluidLoss - totalConsumedDuring;
   
-  // POST sachets: 1 per 2L of fluid replaced
-  const postElectrolytes = Math.max(1, Math.round(postWater / 2000)); // 1 per 2000ml
+  // Immediate target: 50% within 30 min
+  const postImmediate = Math.round((remainingDeficit * 0.5) / 10) * 10;
+  
+  // Total recovery: 120-150% of remaining deficit over 2-4h
+  const postTotal = Math.round((remainingDeficit * 1.35) / 10) * 10;
+  
+  // Sodium: remaining deficit
+  const sodiumConsumedDuring = duringElectrolytesPerHour * profile.sessionDuration * SACHET_SODIUM;
+  const sodiumConsumedPre = preElectrolytes * SACHET_SODIUM;
+  const remainingSodiumDeficit = totalSodiumLoss - sodiumConsumedPre - sodiumConsumedDuring;
+  
+  let postElectrolytes = Math.max(0, Math.round(remainingSodiumDeficit / SACHET_SODIUM));
+  postElectrolytes = Math.min(2, postElectrolytes); // Max 2 sachets post
+  
+  calculationSteps.push(`Post-activity: ${postTotal}ml total (${postImmediate}ml within 30min), ${postElectrolytes} sachet(s)`);
 
-  // Generate recommendations based on profile
+  // ====== 6. RECOMMENDATIONS ======
   const recommendations: string[] = [];
-
-  if (profile.sweatRate === 'high' || profile.sweatSaltiness === 'high') {
-    recommendations.push('Your high sweat rate requires extra attention to electrolyte replacement');
+  
+  if (isRaceDay) {
+    recommendations.push(`🏁 RACE DAY: Intensity is higher, sweat rate increases, margin for error shrinks. Pre-load sodium. Never wait until thirsty.`);
+  } else {
+    recommendations.push(`🏋️ TRAINING: Flexibility allowed. Test products, stress your system, build resilience.`);
   }
-
+  
+  if (rawSmartWatchData) {
+    recommendations.push(`📊 AI + SMARTWATCH VERIFIED: Plan adapts to your real effort patterns.`);
+  }
+  
+  recommendations.push(`Start hydrating 2-4 hours before. Never begin dehydrated.`);
+  recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}—don't wait until thirsty.`);
+  
   if (avgTemp > 25) {
-    recommendations.push('Hot conditions increase dehydration risk - start hydrating early');
+    recommendations.push(`High temps detected. Monitor for heat stress signs.`);
   }
-
-  if (profile.sessionDuration > 2) {
-    recommendations.push('For sessions over 2 hours, maintain consistent fluid intake every 15-20 minutes');
+  
+  if (profile.sessionDuration >= 3) {
+    recommendations.push(`For 3+ hour sessions, add carbs (30-60g/hr) alongside hydration.`);
   }
-
-  if (profile.altitude !== 'sea-level') {
-    recommendations.push('Higher altitude increases fluid loss - increase hydration by 10-20%');
-  }
-
-  if (profile.sunExposure === 'full-sun') {
-    recommendations.push('Full sun exposure increases sweat rate - prioritize shade when possible');
-  }
-
-  if (profile.elevationGain && profile.elevationGain > 500) {
-    recommendations.push('Significant elevation gain increases energy and fluid demands');
-  }
-
+  
   if (profile.crampTiming && profile.crampTiming !== 'none') {
-    recommendations.push('Cramping indicates electrolyte imbalance - consider increasing Supplme dosage');
+    recommendations.push(`Cramping history: Focus on consistent sodium intake—don't skip pre-loading.`);
   }
-
-  if (profile.dailySaltIntake === 'low') {
-    recommendations.push('Low daily salt intake may require additional electrolyte supplementation');
-  }
-
-  recommendations.push('Monitor urine color - pale yellow indicates good hydration');
-  recommendations.push('Each 30ml Supplme sachet provides 500mg sodium, 250mg potassium, and 100mg magnesium');
-  recommendations.push('Drink Supplme sachets directly - no mixing required');
 
   return {
     preActivity: {
@@ -168,14 +247,14 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
       electrolytes: preElectrolytes,
     },
     duringActivity: {
-      waterPerHour: duringWater,
-      electrolytesPerHour: duringElectrolytes,
-      frequency: 'Every 15-20 minutes',
+      waterPerHour: duringWaterPerHour,
+      electrolytesPerHour: duringElectrolytesPerHour,
+      frequency: frequency,
     },
     postActivity: {
-      water: postWater,
+      water: postTotal,
       electrolytes: postElectrolytes,
-      timing: '4-6 hours',
+      timing: `${postImmediate}ml within 30 minutes, remainder over 2-4 hours`,
     },
     totalFluidLoss: totalFluidLoss,
     recommendations,
