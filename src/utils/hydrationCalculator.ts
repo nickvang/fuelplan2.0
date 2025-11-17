@@ -137,8 +137,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
 
   // ====== 3. PRE-ACTIVITY HYDRATION ======
-  // Base: 6-8ml/kg (ACSM), using 7ml/kg as baseline
-  let preWaterBase = profile.weight * 7;
+  // Base: 6-8ml/kg (ACSM), using 8ml/kg as baseline (higher pre-loading)
+  let preWaterBase = profile.weight * 8;
   let preAdjustmentFactor = 1.0;
   const preAdjustments: string[] = [];
   
@@ -178,8 +178,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
   // ====== 4. DURING-ACTIVITY HYDRATION ======
-  // Water replacement: 60-70% training, 70-85% race day
-  const replacementRate = isRaceDay ? 0.775 : 0.65; // Average of ranges
+  // Water replacement: 50-60% training, 60-70% race day (reduced to prevent water stomach)
+  const replacementRate = isRaceDay ? 0.65 : 0.55; // Average of ranges
   const duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10; // Round to nearest 10ml
   const duringElectrolytesPerHour = sachetsPerHour;
   
@@ -196,11 +196,11 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const totalConsumedDuring = duringWaterPerHour * profile.sessionDuration;
   const remainingDeficit = totalFluidLoss - totalConsumedDuring;
   
-  // Immediate target: 60-70% within 1-2h
-  const postImmediate = Math.round((remainingDeficit * 0.65) / 10) * 10;
+  // Immediate target: 70-80% within 1-2h (higher post-recovery)
+  const postImmediate = Math.round((remainingDeficit * 0.75) / 10) * 10;
   
-  // Total recovery: 130-150% of remaining deficit over 2-4h
-  const postTotal = Math.round((remainingDeficit * 1.40) / 10) * 10;
+  // Total recovery: 140-160% of remaining deficit over 2-4h (compensate for lower during intake)
+  const postTotal = Math.round((remainingDeficit * 1.50) / 10) * 10;
   
   // Sodium: remaining deficit
   const sodiumConsumedDuring = duringElectrolytesPerHour * profile.sessionDuration * SACHET_SODIUM;
