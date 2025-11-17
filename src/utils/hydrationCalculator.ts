@@ -208,6 +208,12 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const remainingSodiumDeficit = totalSodiumLoss - sodiumConsumedPre - sodiumConsumedDuring;
   
   let postElectrolytes = Math.max(0, Math.round(remainingSodiumDeficit / SACHET_SODIUM));
+  
+  // For endurance events (2+ hours), always recommend at least 1 sachet for recovery
+  if (profile.sessionDuration >= 2 && postElectrolytes === 0) {
+    postElectrolytes = 1;
+  }
+  
   postElectrolytes = Math.min(2, postElectrolytes); // Max 2 sachets post
   
   calculationSteps.push(`Post-activity: ${postTotal}ml total (${postImmediate}ml within 30min), ${postElectrolytes} sachet(s)`);
