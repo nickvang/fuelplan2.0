@@ -226,7 +226,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   recommendations.push(`Start hydrating 2-4 hours before. Never begin dehydrated.`);
-  recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}—don't wait until thirsty.`);
+  recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}. Don't wait until thirsty.`);
   
   if (avgTemp > 25) {
     recommendations.push(`High temps detected. Monitor for heat stress signs.`);
