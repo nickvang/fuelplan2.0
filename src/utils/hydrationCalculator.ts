@@ -213,45 +213,60 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
   // ====== 4. DURING-ACTIVITY HYDRATION ======
-  // Conservative replacement strategy: 40-50% of sweat loss
-  // Aligns with "drink to thirst" approach - body tolerates mild deficit
+  // PRACTICAL APPROACH: Most runners don't carry much water
+  // Sachets are easy to carry, water is not - adjust accordingly
+  // Focus on practical hydration that matches real-world running
   let replacementRate: number;
   
   if (primaryDiscipline === 'Swimming') {
     // Swimming: minimal sweat, limited intake opportunity
     replacementRate = 0.30; // 30% for swimming
     calculationSteps.push('Swimming: 30% replacement (limited intake opportunity)');
-  } else if (isRaceDay) {
-    // Race day: slightly higher but still conservative
-    replacementRate = 0.50; // 50% for race day
+  } else if (profile.sessionDuration > 2.5) {
+    // Long runs: More likely to have hydration support/aid stations
+    replacementRate = 0.35; // 35% for long runs
+    calculationSteps.push('Long run: 35% replacement (aid station support expected)');
+  } else if (profile.sessionDuration > 1.5) {
+    // Medium runs: Might carry small bottle
+    replacementRate = 0.30; // 30% for medium runs
+    calculationSteps.push('Medium run: 30% replacement (limited water carrying capacity)');
   } else {
-    // Training: conservative approach
-    replacementRate = 0.40; // 40% for training
+    // Short runs: Most runners don't carry water
+    replacementRate = 0.25; // 25% for short runs
+    calculationSteps.push('Short run: 25% replacement (most runners carry no water)');
   }
   
   let duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10;
   
-  // Conservative minimum floor
-  if (duringWaterPerHour < 250 && profile.sessionDuration < 1 && profile.sweatRate === 'low') {
-    duringWaterPerHour = Math.max(200, duringWaterPerHour);
-  } else if (duringWaterPerHour < 300 && primaryDiscipline !== 'Swimming') {
-    duringWaterPerHour = 300; // Minimum practical intake
-  }
-  
-  // Conservative cap: 700ml/h maximum (reduced from 900ml/h)
-  // Prevents overhydration while meeting most needs
-  if (primaryDiscipline !== 'Swimming') {
-    if (duringWaterPerHour > 700) {
-      duringWaterPerHour = 700;
-      calculationSteps.push('Conservative cap at 700ml/h (drink to thirst approach)');
+  // Practical minimums and maximums based on carrying capacity
+  if (profile.sessionDuration < 1) {
+    // < 1 hour: Most don't carry water at all
+    if (duringWaterPerHour > 300) {
+      duringWaterPerHour = 300; // Max 300ml/h for short runs
+      calculationSteps.push('Short run: capped at 300ml/h (impractical to carry more)');
     }
+    duringWaterPerHour = Math.max(200, duringWaterPerHour);
+  } else if (profile.sessionDuration < 2) {
+    // 1-2 hours: Small handheld flask typical
+    if (duringWaterPerHour > 400) {
+      duringWaterPerHour = 400; // Max 400ml/h for medium runs
+      calculationSteps.push('Medium run: capped at 400ml/h (handheld flask capacity)');
+    }
+    duringWaterPerHour = Math.max(250, duringWaterPerHour);
+  } else {
+    // 2+ hours: Hydration vest or aid stations
+    if (duringWaterPerHour > 500) {
+      duringWaterPerHour = 500; // Max 500ml/h for long runs
+      calculationSteps.push('Long run: capped at 500ml/h (practical with vest/aid stations)');
+    }
+    duringWaterPerHour = Math.max(300, duringWaterPerHour);
   }
   
   // Swimming-specific cap
   if (primaryDiscipline === 'Swimming') {
-    if (duringWaterPerHour > 500) {
-      duringWaterPerHour = 500;
-      calculationSteps.push('Swimming capped at 500ml/h (practical limit)');
+    if (duringWaterPerHour > 300) {
+      duringWaterPerHour = 300;
+      calculationSteps.push('Swimming capped at 300ml/h (practical limit)');
     }
   }
   
