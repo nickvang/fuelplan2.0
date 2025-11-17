@@ -18,9 +18,9 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Base sweat rates by user-selected profile (low/medium/high/very high)
   const baseSweatRates: { [key: string]: number } = {
     'low': 400,      // 0.4 L/h
-    'medium': 700,   // 0.7 L/h
-    'high': 1000,    // 1.0 L/h
-    'very-high': 1300 // 1.3 L/h (for extreme sweaters)
+    'medium': 900,   // 0.9 L/h
+    'high': 1200,    // 1.2 L/h
+    'very-high': 1500 // 1.5 L/h (for extreme sweaters)
   };
   
   let sweatRatePerHour = baseSweatRates[profile.sweatRate] || 700;
@@ -38,8 +38,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     sweatModifier += 0.20; // +20% hot
     sweatAdjustments.push('hot +20%');
   } else if (avgTemp < 15) {
-    sweatModifier -= 0.15; // -15% cool
-    sweatAdjustments.push('cool -15%');
+    sweatModifier -= 0.10; // -10% cool
+    sweatAdjustments.push('cool -10%');
   }
   
   // Body size adjustment
@@ -137,8 +137,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
 
   // ====== 3. PRE-ACTIVITY HYDRATION ======
-  // Base: 5-7ml/kg (ACSM), using 6ml/kg as baseline
-  let preWaterBase = profile.weight * 6;
+  // Base: 6-8ml/kg (ACSM), using 7ml/kg as baseline
+  let preWaterBase = profile.weight * 7;
   let preAdjustmentFactor = 1.0;
   const preAdjustments: string[] = [];
   
@@ -148,13 +148,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     preAdjustments.push('hot +20%');
   }
   
-  // Race day
-  if (isRaceDay) {
+  // Race day or longer duration (≥75 min)
+  if (isRaceDay || profile.sessionDuration >= 1.25) {
     preAdjustmentFactor += 0.15;
-    preAdjustments.push('race day +15%');
+    preAdjustments.push(isRaceDay ? 'race day +15%' : 'duration ≥75min +15%');
   }
   
-  // Session duration
+  // Session duration (very long)
   if (profile.sessionDuration >= 3) {
     preAdjustmentFactor += 0.20;
     preAdjustments.push('long session +20%');
@@ -178,8 +178,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
   // ====== 4. DURING-ACTIVITY HYDRATION ======
-  // Water replacement: 50-65% training, 65-80% race day
-  const replacementRate = isRaceDay ? 0.725 : 0.575; // Average of ranges
+  // Water replacement: 60-70% training, 70-85% race day
+  const replacementRate = isRaceDay ? 0.775 : 0.65; // Average of ranges
   const duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10; // Round to nearest 10ml
   const duringElectrolytesPerHour = sachetsPerHour;
   
@@ -196,11 +196,11 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const totalConsumedDuring = duringWaterPerHour * profile.sessionDuration;
   const remainingDeficit = totalFluidLoss - totalConsumedDuring;
   
-  // Immediate target: 50% within 30 min
-  const postImmediate = Math.round((remainingDeficit * 0.5) / 10) * 10;
+  // Immediate target: 60-70% within 1-2h
+  const postImmediate = Math.round((remainingDeficit * 0.65) / 10) * 10;
   
-  // Total recovery: 120-150% of remaining deficit over 2-4h
-  const postTotal = Math.round((remainingDeficit * 1.35) / 10) * 10;
+  // Total recovery: 130-150% of remaining deficit over 2-4h
+  const postTotal = Math.round((remainingDeficit * 1.40) / 10) * 10;
   
   // Sodium: remaining deficit
   const sodiumConsumedDuring = duringElectrolytesPerHour * profile.sessionDuration * SACHET_SODIUM;
