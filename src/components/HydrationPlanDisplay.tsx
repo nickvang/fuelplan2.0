@@ -518,7 +518,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(60, 60, 60);
       
-      const explainerText1 = `Your body loses ${plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid during this session through sweat. Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.`;
+      const explainerText1 = `Your body loses ${plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid during this session through sweat.${profile.avgPace && profile.raceDistance ? ` This is calculated from your ${profile.sessionDuration.toFixed(1)}-hour session duration (based on your ${profile.avgPace} pace over ${profile.raceDistance}).` : profile.sessionDuration ? ` This is based on your ${profile.sessionDuration.toFixed(1)}-hour session duration.` : ''} Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.`;
       const explainerLines1 = doc.splitTextToSize(explainerText1, W - 2 * M - 10);
       doc.text(explainerLines1, M + 5, textY);
       textY += explainerLines1.length * 3.5 + 3;
@@ -984,11 +984,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <AlertDescription className="text-muted-foreground space-y-2">
           <p className="leading-relaxed">
             Your body loses <strong>{plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid</strong> during this session through sweat. 
-            Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
+            {profile.avgPace && profile.raceDistance && (
+              <> This is calculated from your <strong>{profile.sessionDuration.toFixed(1)}-hour session</strong> duration (based on your {profile.avgPace} pace over {profile.raceDistance}).</>
+            )}
+            {!profile.avgPace && profile.sessionDuration && (
+              <> This is based on your <strong>{profile.sessionDuration.toFixed(1)}-hour session</strong> duration.</>
+            )}
+            {' '}Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
           </p>
           <p className="leading-relaxed">
             The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. 
-            This isn't guesswork it's science-backed hydration optimized for your specific conditions.
+            This isn't guesswork—it's science-backed hydration optimized for your specific conditions.
           </p>
           <p className="leading-relaxed font-semibold">
             This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.
