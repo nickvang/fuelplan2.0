@@ -114,25 +114,25 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Calculate sachets per hour
   let sachetsPerHour = (sweatRatePerHour / 1000) * sodiumPerLiter / SACHET_SODIUM;
   
-  // Adjust for heat/intensity
+  // Adjust for heat/intensity (reduced from 1.2 to 1.1)
   if (avgTemp > 25 || (rawSmartWatchData?.hrDrift && rawSmartWatchData.hrDrift > 5)) {
-    sachetsPerHour *= 1.2; // +20% for high stress
+    sachetsPerHour *= 1.1; // +10% for high stress
   }
   
-  // Race day adjustment (higher precision needed)
-  if (isRaceDay) {
-    sachetsPerHour *= 1.15; // +15% for race day
-  }
+  // Race day adjustment - removed as it was making totals too high
   
-  // Round to nearest whole number (1, 2, or 3 only)
-  sachetsPerHour = Math.max(1, Math.min(3, Math.round(sachetsPerHour)));
+  // Round to nearest 0.5 (allows 1, 1.5, 2, 2.5, 3)
+  sachetsPerHour = Math.round(sachetsPerHour * 2) / 2;
+  
+  // Cap at reasonable limits
+  sachetsPerHour = Math.max(0.5, Math.min(2, sachetsPerHour));
   
   // Minimum 1 sachet/hour for sessions > 60 min
   if (profile.sessionDuration > 1 && sachetsPerHour < 1) {
     sachetsPerHour = 1;
   }
   
-  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (rounded to whole number, max 3 for safety)`);
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (max 2/hour for safety)`);
   
   const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
 
