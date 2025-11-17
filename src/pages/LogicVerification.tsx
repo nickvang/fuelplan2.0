@@ -13,7 +13,7 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((3.5 * 60) / Math.round(1 * 3.5)),
       },
       expected: "1 every 53 min, 4 total",
-      sodiumLoss: "720mg/h × 60% = 432mg/h ≈ 1 sachet/h (500mg)"
+      sodiumLoss: "720mg/h × 50% = 360mg/h ≈ 1 sachet/h (500mg, capped at 1/h)"
     },
     {
       name: "Half Marathon (1.5h)",
@@ -24,20 +24,20 @@ export default function LogicVerification() {
         totalMinutes: 1.5 * 60,
         minutesPerSachet: Math.round((1.5 * 60) / Math.round(1 * 1.5)),
       },
-      expected: "1 every 45 min, 2 total", // Fixed: 90min ÷ 2 = 45min
-      sodiumLoss: "720mg/h × 60% = 432mg/h ≈ 1 sachet/h (500mg)"
+      expected: "1 every 45 min, 2 total",
+      sodiumLoss: "720mg/h × 50% = 360mg/h ≈ 1 sachet/h (capped at 1/h)"
     },
     {
       name: "Ironman (11h)",
       duration: 11,
-      sachetsPerHour: 2,
+      sachetsPerHour: 1,
       calculation: {
-        totalSachets: Math.round(2 * 11),
+        totalSachets: Math.round(1 * 11),
         totalMinutes: 11 * 60,
-        minutesPerSachet: Math.round((11 * 60) / Math.round(2 * 11)),
+        minutesPerSachet: Math.round((11 * 60) / Math.round(1 * 11)),
       },
-      expected: "1 every 30 min, 22 total",
-      sodiumLoss: "1100mg/h × 60% = 660mg/h ≈ 1 sachet/h (capped at 2/h)"
+      expected: "1 every 60 min, 11 total",
+      sodiumLoss: "1100mg/h × 50% = 550mg/h ≈ 1 sachet/h (capped at 1/h max)"
     },
     {
       name: "10K (0.5h)",
@@ -49,19 +49,19 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((0.5 * 60) / Math.round(1 * 0.5)),
       },
       expected: "1 every 30 min, 1 total",
-      sodiumLoss: "650mg/h × 60% = 390mg/h ≈ 1 sachet/h (500mg)"
+      sodiumLoss: "650mg/h × 50% = 325mg/h ≈ 1 sachet/h (capped at 1/h)"
     },
     {
       name: "4h Ride",
       duration: 4,
-      sachetsPerHour: 2,
+      sachetsPerHour: 1,
       calculation: {
-        totalSachets: Math.round(2 * 4),
+        totalSachets: Math.round(1 * 4),
         totalMinutes: 4 * 60,
-        minutesPerSachet: Math.round((4 * 60) / Math.round(2 * 4)),
+        minutesPerSachet: Math.round((4 * 60) / Math.round(1 * 4)),
       },
-      expected: "1 every 30 min, 8 total",
-      sodiumLoss: "900mg/h × 60% = 540mg/h ≈ 1 sachet/h (capped at 2/h)"
+      expected: "1 every 60 min, 4 total",
+      sodiumLoss: "900mg/h × 50% = 450mg/h ≈ 1 sachet/h (capped at 1/h max)"
     }
   ];
 
@@ -87,7 +87,7 @@ export default function LogicVerification() {
         </h2>
         <div className="space-y-2 text-sm font-mono">
           <div className="p-3 bg-white dark:bg-slate-900 rounded border">
-            <strong>Sodium Replacement:</strong> 50-60% of sweat loss (training 50%, race 60%)
+            <strong>Sodium Replacement:</strong> 40-50% of sweat loss (training 40%, race 50%)
           </div>
           <div className="p-3 bg-white dark:bg-slate-900 rounded border">
             <strong>Sachets Per Hour:</strong> (Sweat Rate × Sodium Concentration × Replacement%) / 500mg
@@ -156,7 +156,7 @@ export default function LogicVerification() {
         <ul className="space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-            <span><strong>Sodium replacement at 50-60%</strong> prevents GI issues while maintaining performance. Body can tolerate deficit during activity.</span>
+            <span><strong>Conservative sodium: max 1 sachet/hour</strong> (500mg/h) prevents GI issues. Body tolerates deficit during activity.</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
