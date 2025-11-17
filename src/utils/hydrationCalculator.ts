@@ -121,23 +121,18 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   // Race day adjustment - removed as it was making totals too high
   
-  // Round to nearest 0.5 (allows 1, 1.5, 2, 2.5, etc.)
-  sachetsPerHour = Math.round(sachetsPerHour * 2) / 2;
+  // ALWAYS round UP to whole number (sachets can't be fractional in practice)
+  sachetsPerHour = Math.ceil(sachetsPerHour);
   
   // FIX #4: Dynamic cap based on session duration
   // Ultra-endurance (>8h) gets higher cap for adequate sodium replacement
-  let maxSachetsPerHour = 2.0; // Default cap
+  let maxSachetsPerHour = 2; // Default cap (whole number)
   if (profile.sessionDuration > 8) {
-    maxSachetsPerHour = 2.5; // Allow up to 2.5/h for ultra-endurance
-    calculationSteps.push('Ultra-endurance: increased sachet cap to 2.5/h');
+    maxSachetsPerHour = 3; // Allow up to 3/h for ultra-endurance (increased from 2.5)
+    calculationSteps.push('Ultra-endurance: increased sachet cap to 3/h');
   }
   
-  sachetsPerHour = Math.max(0.5, Math.min(maxSachetsPerHour, sachetsPerHour));
-  
-  // Minimum 1 sachet/hour for sessions > 60 min
-  if (profile.sessionDuration > 1 && sachetsPerHour < 1) {
-    sachetsPerHour = 1;
-  }
+  sachetsPerHour = Math.max(1, Math.min(maxSachetsPerHour, sachetsPerHour));
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (max ${maxSachetsPerHour}/hour)`);
   
