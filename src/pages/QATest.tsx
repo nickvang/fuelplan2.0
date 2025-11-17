@@ -225,19 +225,19 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Sachet checks - allow 0.5 increments up to 2.5 for ultra-endurance
+    // Sachet checks - must be whole numbers only
     const duringSachets = plan.duringActivity.electrolytesPerHour;
-    if (duringSachets % 0.5 !== 0) {
-      flags.push(`Sachets ${duringSachets}/h not whole or half number`);
-      severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+    if (duringSachets % 1 !== 0) {
+      flags.push(`Sachets ${duringSachets}/h not a whole number`);
+      severity = 'ERROR';
     }
     
     // Check sachet cap is reasonable for session duration
-    if (scenario.duration > 8 && duringSachets > 2.5) {
-      flags.push(`Ultra-endurance sachets ${duringSachets}/h exceeds 2.5/h cap`);
+    if (scenario.duration > 8 && duringSachets > 3) {
+      flags.push(`Ultra-endurance sachets ${duringSachets}/h exceeds 3/h cap`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
-    } else if (scenario.duration <= 8 && duringSachets > 2.0) {
-      flags.push(`Sachets ${duringSachets}/h exceeds 2.0/h cap`);
+    } else if (scenario.duration <= 8 && duringSachets > 2) {
+      flags.push(`Sachets ${duringSachets}/h exceeds 2/h cap`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
 
