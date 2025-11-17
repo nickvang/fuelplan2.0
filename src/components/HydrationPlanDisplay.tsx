@@ -931,19 +931,21 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   ? `${plan.duringActivity.electrolytesPerHour} sachet${plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}` 
                   : 'Not required'}
               </p>
-              {plan.duringActivity.electrolytesPerHour > 0 && (
-                <>
-                  <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                    {plan.duringActivity.electrolytesPerHour >= 1 
-                      ? `1 every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
-                      : `${plan.duringActivity.electrolytesPerHour} per hour`
-                    }
-                  </p>
-                  <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                    Total: {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet{Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) > 1 ? 's' : ''} for {profile.sessionDuration}h
-                  </p>
-                </>
-              )}
+              {plan.duringActivity.electrolytesPerHour > 0 && (() => {
+                const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
+                const totalMinutes = profile.sessionDuration * 60;
+                const minutesPerSachet = Math.round(totalMinutes / totalSachets);
+                return (
+                  <>
+                    <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                      1 every {minutesPerSachet} min
+                    </p>
+                    <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
+                      Total: {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {profile.sessionDuration}h
+                    </p>
+                  </>
+                );
+              })()}
             </div>
           </div>
 
@@ -1131,15 +1133,21 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
                       <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme per hour</p>
                       <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.electrolytesPerHour} sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}</p>
-                      <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                        {plan.duringActivity.electrolytesPerHour >= 1 
-                          ? `1 every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
-                          : `${plan.duringActivity.electrolytesPerHour} per hour`
-                        }
-                      </p>
-                      <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                        {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} total
-                      </p>
+                      {(() => {
+                        const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
+                        const totalMinutes = profile.sessionDuration * 60;
+                        const minutesPerSachet = Math.round(totalMinutes / totalSachets);
+                        return (
+                          <>
+                            <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                              1 every {minutesPerSachet} min
+                            </p>
+                            <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                              {totalSachets} total
+                            </p>
+                          </>
+                        );
+                      })()}
                     </div>
                   </div>
                   
