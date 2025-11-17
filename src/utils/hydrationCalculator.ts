@@ -281,15 +281,32 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
 
   // ====== 5. POST-ACTIVITY HYDRATION ======
-  // Calculate remaining deficit
+  // SAFETY FIRST: Prevent dangerous rapid rehydration
+  // Safe rehydration rate: max 800-1000ml per hour
+  // Initial 30min: max 400ml (safe gastric emptying rate)
+  
   const totalConsumedDuring = duringWaterPerHour * profile.sessionDuration;
   const remainingDeficit = totalFluidLoss - totalConsumedDuring;
   
-  // Immediate target: 70-80% within 1-2h (higher post-recovery)
-  const postImmediate = Math.round((remainingDeficit * 0.75) / 10) * 10;
+  // Immediate intake (first 30 min): SAFE MAXIMUM 400ml
+  // Prevents hyponatremia and GI distress
+  let postImmediate = Math.min(400, Math.round((remainingDeficit * 0.30) / 10) * 10);
   
-  // Total recovery: 140-160% of remaining deficit over 2-4h (compensate for lower during intake)
-  const postTotal = Math.round((remainingDeficit * 1.50) / 10) * 10;
+  // Ensure reasonable minimum for short sessions
+  if (postImmediate < 200 && remainingDeficit > 500) {
+    postImmediate = 200;
+  }
+  
+  calculationSteps.push(`Post immediate (30min): ${postImmediate}ml (safe rate: max 400ml/30min)`);
+  
+  // Total recovery over 2-4 hours: aim for 120-150% of remaining deficit
+  // This accounts for ongoing losses and full rehydration
+  let postTotal = Math.round((remainingDeficit * 1.25) / 10) * 10;
+  
+  // Cap total post recovery at reasonable amount (max 3000ml over 4-6h)
+  postTotal = Math.min(3000, postTotal);
+  
+  calculationSteps.push(`Post total (2-4h): ${postTotal}ml at steady pace (max 800ml/hour)`);
   
   // Sodium: remaining deficit
   const sodiumConsumedDuring = duringElectrolytesPerHour * profile.sessionDuration * SACHET_SODIUM;
@@ -298,12 +315,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   let postElectrolytes = Math.max(0, Math.round(remainingSodiumDeficit / SACHET_SODIUM));
   
-  // For endurance events (2+ hours), always recommend at least 1 sachet for recovery
+  // Conservative post-activity sodium (max 2 sachets)
+  postElectrolytes = Math.min(2, postElectrolytes);
+  
+  // Minimum 1 sachet for sessions >2h
   if (profile.sessionDuration >= 2 && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
-  
-  postElectrolytes = Math.min(2, postElectrolytes); // Max 2 sachets post
   
   calculationSteps.push(`Post-activity: ${postTotal}ml total (${postImmediate}ml within 30min), ${postElectrolytes} sachet(s)`);
 
