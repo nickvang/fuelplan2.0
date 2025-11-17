@@ -925,7 +925,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
             </div>
             <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme Sachets</p>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme per hour</p>
               <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
                   ? `${plan.duringActivity.electrolytesPerHour} sachet${plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}` 
@@ -1124,7 +1124,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
                     </div>
                     <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme Sachets</p>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme per hour</p>
                       <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.electrolytesPerHour} sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}</p>
                       <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
                         {plan.duringActivity.electrolytesPerHour >= 1 
