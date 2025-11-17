@@ -1748,16 +1748,16 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                 ) : profile.disciplines?.[0] === 'Run' ? (
                   <ul className="space-y-2 text-sm">
-                    <li>• <strong>Every 30 minutes:</strong> 1 Supplme sachet at aid station</li>
+                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet at aid station</li>
                     {plan.duringActivity.waterPerHour > 0 && (
                       <li>• Drink {Math.round(plan.duringActivity.waterPerHour / 2)}ml water every 15 minutes</li>
                     )}
-                    <li>• For marathons: Aim for 3-4 sachets total during race</li>
-                    <li>• For ultras: 1 sachet per hour minimum</li>
+                    <li>• For marathons: Aim for {Math.round(plan.duringActivity.electrolytesPerHour * (profile.sessionDuration || 3.5))} sachets total during race</li>
+                    <li>• For ultras: {plan.duringActivity.electrolytesPerHour} sachet(s) per hour minimum</li>
                   </ul>
                 ) : profile.disciplines?.[0] === 'Bike' ? (
                   <ul className="space-y-2 text-sm">
-                    <li>• <strong>Every 45-60 minutes:</strong> 1 Supplme sachet</li>
+                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
                     {plan.duringActivity.waterPerHour > 0 && (
                       <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour in small sips</li>
                     )}
@@ -1776,7 +1776,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                 ) : (
                   <ul className="space-y-2 text-sm">
-                    <li>• <strong>Every 30-45 minutes:</strong> 1 Supplme sachet</li>
+                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
                     {plan.duringActivity.waterPerHour > 0 && (
                       <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour</li>
                     )}
