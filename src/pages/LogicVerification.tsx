@@ -13,7 +13,7 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((3.5 * 60) / Math.round(1 * 3.5)),
       },
       expected: "1 every 53 min, 4 total",
-      sodiumLoss: "720mg/h × 70% = 504mg/h = 1 sachet/h (500mg)"
+      sodiumLoss: "720mg/h × 60% = 432mg/h ≈ 1 sachet/h (500mg)"
     },
     {
       name: "Half Marathon (1.5h)",
@@ -25,7 +25,7 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((1.5 * 60) / Math.round(1 * 1.5)),
       },
       expected: "1 every 45 min, 2 total", // Fixed: 90min ÷ 2 = 45min
-      sodiumLoss: "720mg/h × 70% = 504mg/h = 1 sachet/h (500mg)"
+      sodiumLoss: "720mg/h × 60% = 432mg/h ≈ 1 sachet/h (500mg)"
     },
     {
       name: "Ironman (11h)",
@@ -37,7 +37,7 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((11 * 60) / Math.round(2 * 11)),
       },
       expected: "1 every 30 min, 22 total",
-      sodiumLoss: "1100mg/h × 70% = 770mg/h = 2 sachets/h (1000mg)"
+      sodiumLoss: "1100mg/h × 60% = 660mg/h ≈ 1 sachet/h (capped at 2/h)"
     },
     {
       name: "10K (0.5h)",
@@ -49,7 +49,7 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((0.5 * 60) / Math.round(1 * 0.5)),
       },
       expected: "1 every 30 min, 1 total",
-      sodiumLoss: "650mg/h × 70% = 455mg/h = 1 sachet/h (500mg)"
+      sodiumLoss: "650mg/h × 60% = 390mg/h ≈ 1 sachet/h (500mg)"
     },
     {
       name: "4h Ride",
@@ -61,7 +61,7 @@ export default function LogicVerification() {
         minutesPerSachet: Math.round((4 * 60) / Math.round(2 * 4)),
       },
       expected: "1 every 30 min, 8 total",
-      sodiumLoss: "900mg/h × 70% = 630mg/h = 2 sachets/h (1000mg)"
+      sodiumLoss: "900mg/h × 60% = 540mg/h ≈ 1 sachet/h (capped at 2/h)"
     }
   ];
 
@@ -87,7 +87,7 @@ export default function LogicVerification() {
         </h2>
         <div className="space-y-2 text-sm font-mono">
           <div className="p-3 bg-white dark:bg-slate-900 rounded border">
-            <strong>Sodium Replacement:</strong> 60-70% of sweat loss (not 100%)
+            <strong>Sodium Replacement:</strong> 50-60% of sweat loss (training 50%, race 60%)
           </div>
           <div className="p-3 bg-white dark:bg-slate-900 rounded border">
             <strong>Sachets Per Hour:</strong> (Sweat Rate × Sodium Concentration × Replacement%) / 500mg
@@ -156,7 +156,7 @@ export default function LogicVerification() {
         <ul className="space-y-2 text-sm">
           <li className="flex items-start gap-2">
             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
-            <span><strong>Sodium replacement at 60-70%</strong> prevents GI issues while maintaining performance (McCubbin 2025, Performance Nutrition)</span>
+            <span><strong>Sodium replacement at 50-60%</strong> prevents GI issues while maintaining performance. Body can tolerate deficit during activity.</span>
           </li>
           <li className="flex items-start gap-2">
             <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />

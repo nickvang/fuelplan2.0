@@ -111,10 +111,10 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // SUPPLME sachet = 500mg sodium
   const SACHET_SODIUM = 500;
   
-  // Calculate sodium replacement target (NOT 100% - we replace 60-80% during activity)
+  // Calculate sodium replacement target (NOT 100% - we replace 50-60% during activity)
   // Scientific evidence shows full replacement during exercise can cause GI issues
-  // and is unnecessary - body can tolerate some sodium deficit during activity
-  const sodiumReplacementRate = isRaceDay ? 0.70 : 0.60; // 70% race, 60% training
+  // Body can tolerate sodium deficit during activity and replenish post-exercise
+  const sodiumReplacementRate = isRaceDay ? 0.60 : 0.50; // 60% race, 50% training
   const targetSodiumPerHour = (sweatRatePerHour / 1000) * sodiumPerLiter * sodiumReplacementRate;
   
   calculationSteps.push(`Target sodium replacement: ${Math.round(targetSodiumPerHour)}mg/h (${(sodiumReplacementRate * 100)}% of loss)`);
@@ -122,25 +122,27 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Calculate sachets per hour based on target replacement (not full loss)
   let sachetsPerHour = targetSodiumPerHour / SACHET_SODIUM;
   
-  // Adjust for heat/intensity (reduced from 1.2 to 1.1)
-  if (avgTemp > 25 || (rawSmartWatchData?.hrDrift && rawSmartWatchData.hrDrift > 5)) {
-    sachetsPerHour *= 1.1; // +10% for high stress
-  }
+  // Heat/intensity adjustment removed to provide more conservative recommendations
   
   // Race day adjustment - removed as it was making totals too high
   
-  // ALWAYS round UP to whole number (sachets can't be fractional in practice)
-  sachetsPerHour = Math.ceil(sachetsPerHour);
+  // Round to nearest whole number (more conservative than ceiling)
+  sachetsPerHour = Math.round(sachetsPerHour);
   
-  // FIX #4: Dynamic cap based on session duration
-  // Ultra-endurance (>8h) gets higher cap for adequate sodium replacement
-  let maxSachetsPerHour = 2; // Default cap (whole number)
-  if (profile.sessionDuration > 8) {
-    maxSachetsPerHour = 3; // Allow up to 3/h for ultra-endurance (increased from 2.5)
-    calculationSteps.push('Ultra-endurance: increased sachet cap to 3/h');
+  // Dynamic cap based on session duration
+  let maxSachetsPerHour = 2; // Default cap
+  if (profile.sessionDuration > 10) {
+    maxSachetsPerHour = 2; // Keep at 2/h even for ultra-endurance
+    calculationSteps.push('Ultra-endurance: capped at 2 sachets/h');
   }
   
-  sachetsPerHour = Math.max(1, Math.min(maxSachetsPerHour, sachetsPerHour));
+  // Minimum of 1 sachet per hour for sessions >1h
+  if (profile.sessionDuration > 1) {
+    sachetsPerHour = Math.max(1, Math.min(maxSachetsPerHour, sachetsPerHour));
+  } else {
+    // For short sessions, allow 0 sachets if calculated value is very low
+    sachetsPerHour = Math.min(maxSachetsPerHour, sachetsPerHour);
+  }
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (max ${maxSachetsPerHour}/hour)`);
   

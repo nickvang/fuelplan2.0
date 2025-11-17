@@ -940,11 +940,14 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 // Determine intensity level based on sodium per hour
                 let intensityLabel = '';
                 let intensityColor = 'rgba(255, 255, 255, 0.7)';
-                if (sodiumPerHour >= 700) {
+                if (sodiumPerHour >= 1000) {
+                  intensityLabel = 'Extreme conditions';
+                  intensityColor = 'rgba(255, 100, 100, 0.9)';
+                } else if (sodiumPerHour >= 750) {
                   intensityLabel = 'High intensity / Hot conditions';
                   intensityColor = 'rgba(255, 200, 100, 0.9)';
                 } else if (sodiumPerHour >= 500) {
-                  intensityLabel = 'Moderate conditions';
+                  intensityLabel = 'Moderate effort';
                   intensityColor = 'rgba(255, 255, 255, 0.8)';
                 } else {
                   intensityLabel = 'Light-moderate intensity';
@@ -970,10 +973,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
           <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
             <p className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              🔥 Science-backed: 60-70% sodium replacement during activity
+              🔥 Science-backed: 50-60% sodium replacement during activity
             </p>
             <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-              Guidelines: 500-750ml/h fluid • 300-800mg/h sodium (up to 1000mg/h for hot conditions)
+              Body tolerates sodium deficit during exercise • Replenish fully post-activity
             </p>
           </div>
         </Card>
