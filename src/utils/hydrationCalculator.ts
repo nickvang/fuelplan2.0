@@ -111,8 +111,16 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // SUPPLME sachet = 500mg sodium
   const SACHET_SODIUM = 500;
   
-  // Calculate sachets per hour
-  let sachetsPerHour = (sweatRatePerHour / 1000) * sodiumPerLiter / SACHET_SODIUM;
+  // Calculate sodium replacement target (NOT 100% - we replace 60-80% during activity)
+  // Scientific evidence shows full replacement during exercise can cause GI issues
+  // and is unnecessary - body can tolerate some sodium deficit during activity
+  const sodiumReplacementRate = isRaceDay ? 0.70 : 0.60; // 70% race, 60% training
+  const targetSodiumPerHour = (sweatRatePerHour / 1000) * sodiumPerLiter * sodiumReplacementRate;
+  
+  calculationSteps.push(`Target sodium replacement: ${Math.round(targetSodiumPerHour)}mg/h (${(sodiumReplacementRate * 100)}% of loss)`);
+  
+  // Calculate sachets per hour based on target replacement (not full loss)
+  let sachetsPerHour = targetSodiumPerHour / SACHET_SODIUM;
   
   // Adjust for heat/intensity (reduced from 1.2 to 1.1)
   if (avgTemp > 25 || (rawSmartWatchData?.hrDrift && rawSmartWatchData.hrDrift > 5)) {
