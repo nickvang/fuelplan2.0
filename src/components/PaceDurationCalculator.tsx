@@ -262,6 +262,19 @@ export function PaceDurationCalculator({
     }
   };
 
+  const getPaceTooltip = () => {
+    switch (discipline) {
+      case 'Swimming':
+        return 'Enter your swim pace in minutes:seconds per 100 meters. For example, 1:45/100m means 1 minute 45 seconds per 100 meters.';
+      case 'Cycling':
+        return 'Enter your cycling speed in km/h (e.g., 30 km/h) or power in watts (e.g., 250W). Use the format that best represents your effort.';
+      case 'Hiking':
+        return 'Enter your hiking pace as speed in km/h (e.g., 4 km/h) or time per km (e.g., 15:00/km for 15 minutes per kilometer).';
+      default:
+        return 'Enter your running pace in minutes:seconds per kilometer. For example, 5:00/km means 5 minutes per kilometer. This is required to calculate accurate fluid needs.';
+    }
+  };
+
   return (
     <div className="space-y-4">
       {/* Pace Input */}
@@ -270,7 +283,7 @@ export function PaceDurationCalculator({
           <Label htmlFor="pace" className="text-foreground">
             {getPaceLabel()} *
           </Label>
-          <InfoTooltip content="Enter your average pace. This is required to calculate accurate fluid needs for pre, during, and post-activity hydration. If a race distance is selected, we'll automatically calculate the session duration." />
+          <InfoTooltip content={getPaceTooltip()} />
         </div>
         <Input
           id="pace"
