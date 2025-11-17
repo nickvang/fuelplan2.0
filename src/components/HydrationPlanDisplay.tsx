@@ -935,6 +935,22 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                 const totalMinutes = profile.sessionDuration * 60;
                 const minutesPerSachet = Math.round(totalMinutes / totalSachets);
+                const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
+                
+                // Determine intensity level based on sodium per hour
+                let intensityLabel = '';
+                let intensityColor = 'rgba(255, 255, 255, 0.7)';
+                if (sodiumPerHour >= 700) {
+                  intensityLabel = 'High intensity / Hot conditions';
+                  intensityColor = 'rgba(255, 200, 100, 0.9)';
+                } else if (sodiumPerHour >= 500) {
+                  intensityLabel = 'Moderate conditions';
+                  intensityColor = 'rgba(255, 255, 255, 0.8)';
+                } else {
+                  intensityLabel = 'Light-moderate intensity';
+                  intensityColor = 'rgba(255, 255, 255, 0.7)';
+                }
+                
                 return (
                   <>
                     <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
@@ -943,15 +959,23 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                       Total: {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {profile.sessionDuration}h
                     </p>
+                    <p className="text-[10px] font-medium mt-1" style={{ color: intensityColor }}>
+                      {sodiumPerHour}mg/h sodium • {intensityLabel}
+                    </p>
                   </>
                 );
               })()}
             </div>
           </div>
 
-          <p className="text-sm font-medium pt-4" style={{ color: 'rgba(255, 255, 255, 0.85)', borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
-            🔥 Maintain peak performance - replace 60-80% of sweat loss
-          </p>
+          <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
+            <p className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+              🔥 Science-backed: 60-70% sodium replacement during activity
+            </p>
+            <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+              Guidelines: 500-750ml/h fluid • 300-800mg/h sodium (up to 1000mg/h for hot conditions)
+            </p>
+          </div>
         </Card>
         )}
 
@@ -1137,13 +1161,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                         const totalMinutes = profile.sessionDuration * 60;
                         const minutesPerSachet = Math.round(totalMinutes / totalSachets);
+                        const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
+                        
                         return (
                           <>
                             <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                               1 every {minutesPerSachet} min
                             </p>
                             <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                              {totalSachets} total
+                              {totalSachets} total ({sodiumPerHour}mg/h)
                             </p>
                           </>
                         );
