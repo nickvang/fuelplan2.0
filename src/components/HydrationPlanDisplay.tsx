@@ -957,7 +957,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       1 every {minutesPerSachet} min
                     </p>
                     <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                      Total: {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {profile.sessionDuration}h
+                      Total: {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {Math.round(profile.sessionDuration * 10) / 10}h
                     </p>
                     <p className="text-[10px] font-medium mt-1" style={{ color: intensityColor }}>
                       {sodiumPerHour}mg/h sodium • {intensityLabel}
