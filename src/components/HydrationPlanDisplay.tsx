@@ -4,7 +4,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2, X, Loader2, Activity } from 'lucide-react';
+import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2, X, Loader2, Activity, Flag, Target, Zap } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
@@ -843,8 +843,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               : `${profile.sessionDuration.toFixed(1)} hour`} {profile.disciplines?.[0] || 'activity'}
           </p>
           {hasSmartWatchData && (
-            <p className="text-sm font-semibold text-chrome-dark">
-              ⚡ Calculated from your actual training data
+            <p className="text-sm font-semibold text-chrome-dark flex items-center gap-2">
+              <Zap className="w-4 h-4" /> Calculated from your actual training data
             </p>
           )}
         </div>
@@ -889,8 +889,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             </div>
           </div>
 
-          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4">
-            ⚡ Prime your body with optimal fluid balance before you start
+          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4 flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Prime your body with optimal fluid balance before you start
           </p>
         </Card>
 
@@ -908,8 +908,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           {/* Special note for indoor swimming training */}
           {profile.disciplines?.includes('Swimming') && !profile.hasUpcomingRace && profile.indoorOutdoor === 'indoor' && (
             <div className="p-4 rounded-xl mb-4" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-              <p className="text-sm font-semibold" style={{ color: '#ffffff' }}>
-                💧 <strong>Pool Training Tip:</strong> Keep a water bottle with {plan.duringActivity.electrolytesPerHour} Supplme sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''} mixed in at the pool edge. Sip between sets during rest intervals.
+              <p className="text-sm font-semibold flex items-center gap-2" style={{ color: '#ffffff' }}>
+                <Droplets className="w-4 h-4" /> <strong>Pool Training Tip:</strong> Keep a water bottle with {plan.duringActivity.electrolytesPerHour} Supplme sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''} mixed in at the pool edge. Sip between sets during rest intervals.
               </p>
             </div>
           )}
@@ -969,8 +969,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
 
           <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
-            <p className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              💧 Practical approach: Most runners carry minimal water
+            <p className="text-sm font-medium flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+              <Droplets className="w-4 h-4" /> Practical approach: Most runners carry minimal water
             </p>
             <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
               Sachets are easy to carry • Water recommendations match typical carrying capacity
@@ -1002,8 +1002,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             </div>
           </div>
 
-          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4">
-            💪 Accelerate recovery and restore your body to peak condition
+          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4 flex items-center gap-2">
+            <Zap className="w-4 h-4" /> Accelerate recovery and restore your body to peak condition
           </p>
         </Card>
       </div>
@@ -1072,13 +1072,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   
                   <div className="grid grid-cols-2 gap-3">
                     <div className="p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
-                      <div className="text-3xl mb-2">💧</div>
+                      <Droplets className="w-8 h-8 mb-2 text-foreground" />
                       <p className="text-xs font-bold text-primary uppercase">Hydrate</p>
                       <p className="text-2xl font-black">2-3L</p>
                       <p className="text-xs text-muted-foreground">Throughout day</p>
                     </div>
                     <div className="p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
-                      <div className="text-3xl mb-2">⚡</div>
+                      <Zap className="w-8 h-8 mb-2 text-foreground" />
                       <p className="text-xs font-bold text-primary uppercase">Evening</p>
                       <p className="text-2xl font-black">500ml</p>
                       <p className="text-xs text-muted-foreground">+ 1x Supplme</p>
@@ -1141,7 +1141,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     3
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl">🏁</span>
+                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
+                      <Flag className="w-6 h-6" style={{ color: '#ffffff' }} />
+                    </div>
                     <div>
                       <h3 className="text-2xl font-black uppercase" style={{ color: '#ffffff' }}>During Race</h3>
                       <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Execute the plan</p>
@@ -1194,7 +1196,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     4
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-4xl">🎯</span>
+                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
+                      <Target className="w-6 h-6 text-primary" />
+                    </div>
                     <div>
                       <h3 className="text-2xl font-black uppercase">Recovery</h3>
                       <p className="text-sm text-muted-foreground font-semibold">4-6 Hour Window</p>
@@ -1459,7 +1463,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 <div className="p-6 md:p-8 space-y-5">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                      <span className="text-2xl">⚡</span>
+                      <Zap className="w-5 h-5 text-primary" />
                     </div>
                     <h4 className="text-xl font-bold">Tips</h4>
                   </div>
@@ -1510,7 +1514,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       <div className="p-6 space-y-3">
                         <div className="flex items-center gap-3">
                           <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
-                            <span className="text-xl">🎯</span>
+                            <Target className="w-5 h-5 text-primary" />
                           </div>
                           <h4 className="text-base font-bold">Expert Recommendation</h4>
                         </div>
