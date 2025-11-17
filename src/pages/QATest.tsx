@@ -180,30 +180,34 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Water per hour checks (discipline-specific)
+    // Water per hour checks - UPDATED FOR PRACTICAL APPROACH
     const isDiscipline = (disc: string) => scenario.discipline.includes(disc);
     
     if (isDiscipline('Swimming')) {
       // Swimming has much lower practical intake limits
-      if (duringWater < 150 || duringWater > 500) {
-        flags.push(`Swimming water ${duringWater}ml/h out of range [150-500]`);
+      if (duringWater < 150 || duringWater > 350) {
+        flags.push(`Swimming water ${duringWater}ml/h out of range [150-350]`);
         severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
       }
     } else {
-      // Allow lower minimum for short sessions with low sweat
-      const minWater = (scenario.duration < 1 && scenario.sweatRate === 'low') ? 200 : 300;
+      // Practical limits based on typical carrying capacity and duration
+      let minWater = 200;
+      let maxWater = 600;
       
-      if (duringWater < minWater || duringWater > 1100) {
-        flags.push(`Water ${duringWater}ml/h out of range [${minWater}-1100]`);
-        severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+      if (scenario.duration < 1) {
+        // Short runs: most don't carry water
+        maxWater = 350;
+      } else if (scenario.duration < 2) {
+        // Medium runs: handheld flask typical
+        maxWater = 450;
+      } else {
+        // Long runs: vest or aid stations
+        maxWater = 600;
       }
       
-      // Race day checks for non-swimming - now expects 600-900ml/h range
-      if (scenario.isRaceDay && (scenario.sweatRate === 'medium' || scenario.sweatRate === 'high') && !isDiscipline('Swimming')) {
-        if (duringWater < 550 || duringWater > 950) {
-          flags.push(`Race day water ${duringWater}ml/h outside expected 600-900 range`);
-          severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
-        }
+      if (duringWater < minWater || duringWater > maxWater) {
+        flags.push(`Water ${duringWater}ml/h out of practical range [${minWater}-${maxWater}]`);
+        severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
       }
     }
 
@@ -225,19 +229,16 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Sachet checks - must be whole numbers only
+    // Sachet checks - UPDATED: Max 1/hour conservative approach
     const duringSachets = plan.duringActivity.electrolytesPerHour;
     if (duringSachets % 1 !== 0) {
       flags.push(`Sachets ${duringSachets}/h not a whole number`);
       severity = 'ERROR';
     }
     
-    // Check sachet cap is reasonable for session duration
-    if (scenario.duration > 8 && duringSachets > 3) {
-      flags.push(`Ultra-endurance sachets ${duringSachets}/h exceeds 3/h cap`);
-      severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
-    } else if (scenario.duration <= 8 && duringSachets > 2) {
-      flags.push(`Sachets ${duringSachets}/h exceeds 2/h cap`);
+    // Conservative cap: max 1 sachet per hour
+    if (duringSachets > 1) {
+      flags.push(`Sachets ${duringSachets}/h exceeds conservative 1/h cap`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
 
