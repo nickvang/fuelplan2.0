@@ -1119,19 +1119,19 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   
                   <div className="grid grid-cols-2 gap-4">
                     <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>{plan.duringActivity.frequency}</p>
-                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{Math.round(plan.duringActivity.waterPerHour / 3)}ml</p>
-                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>WATER</p>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Water per hour</p>
+                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.waterPerHour}ml</p>
+                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
                     </div>
                     <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme Sachets</p>
+                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.electrolytesPerHour} sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}</p>
+                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>
                         {plan.duringActivity.electrolytesPerHour >= 1 
-                          ? `Every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
-                          : `1 every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
+                          ? `1 every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
+                          : `${plan.duringActivity.electrolytesPerHour} per hour`
                         }
                       </p>
-                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.electrolytesPerHour >= 1 ? '1x' : `${plan.duringActivity.electrolytesPerHour}x`}</p>
-                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>SUPPLME</p>
                     </div>
                   </div>
                   
