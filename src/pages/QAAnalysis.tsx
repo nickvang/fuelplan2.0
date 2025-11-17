@@ -88,13 +88,15 @@ export default function QAAnalysis() {
 
       <Card className="mt-8 p-6 bg-blue-50 dark:bg-blue-950/20">
         <h2 className="text-xl font-bold mb-4">📋 Next Steps</h2>
-        <ol className="list-decimal list-inside space-y-2 text-sm">
+        <ol className="list-decimal list-inside space-y-2 text-sm mb-4">
           <li>Review each root cause with domain expert or research papers</li>
-          <li>Prioritize fixes: CRITICAL → HIGH → MEDIUM</li>
-          <li>Update algorithm logic with corrected formulas</li>
+          <li className="font-bold text-green-700 dark:text-green-400">✅ Algorithm fixes applied to hydrationCalculator.ts</li>
           <li>Re-run QA test suite to verify fixes</li>
           <li>Document rationale for each change with citations</li>
         </ol>
+        <a href="/qa-test" className="inline-block bg-primary text-primary-foreground px-6 py-3 rounded-md font-semibold hover:bg-primary/90 transition-colors">
+          Run QA Test Suite →
+        </a>
       </Card>
     </div>
   );
