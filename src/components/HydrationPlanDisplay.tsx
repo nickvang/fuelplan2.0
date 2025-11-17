@@ -970,10 +970,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
           <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
             <p className="text-sm font-medium" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              🎯 Conservative "drink to thirst" approach • 40-50% fluid replacement
+              💧 Practical approach: Most runners carry minimal water
             </p>
             <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
-              Body tolerates mild deficit during activity • Max 1 sachet/hour (500mg sodium)
+              Sachets are easy to carry • Water recommendations match typical carrying capacity
             </p>
           </div>
         </Card>
