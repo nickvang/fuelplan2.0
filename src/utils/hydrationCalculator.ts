@@ -121,55 +121,91 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   // Race day adjustment - removed as it was making totals too high
   
-  // Round to nearest 0.5 (allows 1, 1.5, 2, 2.5, 3)
+  // Round to nearest 0.5 (allows 1, 1.5, 2, 2.5, etc.)
   sachetsPerHour = Math.round(sachetsPerHour * 2) / 2;
   
-  // Cap at reasonable limits
-  sachetsPerHour = Math.max(0.5, Math.min(2, sachetsPerHour));
+  // FIX #4: Dynamic cap based on session duration
+  // Ultra-endurance (>8h) gets higher cap for adequate sodium replacement
+  let maxSachetsPerHour = 2.0; // Default cap
+  if (profile.sessionDuration > 8) {
+    maxSachetsPerHour = 2.5; // Allow up to 2.5/h for ultra-endurance
+    calculationSteps.push('Ultra-endurance: increased sachet cap to 2.5/h');
+  }
+  
+  sachetsPerHour = Math.max(0.5, Math.min(maxSachetsPerHour, sachetsPerHour));
   
   // Minimum 1 sachet/hour for sessions > 60 min
   if (profile.sessionDuration > 1 && sachetsPerHour < 1) {
     sachetsPerHour = 1;
   }
   
-  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (max 2/hour for safety)`);
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (max ${maxSachetsPerHour}/hour)`);
   
   const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
 
   // ====== 3. PRE-ACTIVITY HYDRATION ======
-  // Base: 6-8ml/kg (ACSM), using 8ml/kg as baseline (higher pre-loading)
-  let preWaterBase = profile.weight * 8;
+  // Base: 6-8ml/kg (ACSM), using 7ml/kg as baseline (reduced from 8)
+  // FIX #2: Cap final result at 10ml/kg to prevent excessive pre-loading
+  let preWaterBase = profile.weight * 7;
   let preAdjustmentFactor = 1.0;
   const preAdjustments: string[] = [];
   
-  // Temperature
+  // FIX #5: Scale down pre-hydration for short sessions with low sweat rate
+  // to prevent excessive total replacement percentages
+  if (profile.sessionDuration < 1 && profile.sweatRate === 'low') {
+    preAdjustmentFactor *= 0.60; // -40% for short + low sweat combo
+    preAdjustments.push('short + low sweat -40%');
+  } else if (profile.sessionDuration < 1) {
+    preAdjustmentFactor *= 0.75; // -25% for short sessions
+    preAdjustments.push('short session -25%');
+  }
+  
+  // Temperature (reduced from +20% to +15%)
   if (avgTemp > 25) {
-    preAdjustmentFactor += 0.20;
-    preAdjustments.push('hot +20%');
+    preAdjustmentFactor += 0.15;
+    preAdjustments.push('hot +15%');
   }
   
-  // Race day or longer duration (≥75 min)
+  // Race day or longer duration (≥75 min) - reduced from +15% to +10%
   if (isRaceDay || profile.sessionDuration >= 1.25) {
-    preAdjustmentFactor += 0.15;
-    preAdjustments.push(isRaceDay ? 'race day +15%' : 'duration ≥75min +15%');
-  }
-  
-  // Session duration (very long)
-  if (profile.sessionDuration >= 3) {
-    preAdjustmentFactor += 0.20;
-    preAdjustments.push('long session +20%');
-  }
-  
-  // Altitude
-  if (profile.altitude === 'high') {
-    preAdjustmentFactor += 0.15;
-    preAdjustments.push('high altitude +15%');
-  } else if (profile.altitude === 'moderate') {
     preAdjustmentFactor += 0.10;
-    preAdjustments.push('moderate altitude +10%');
+    preAdjustments.push(isRaceDay ? 'race day +10%' : 'duration ≥75min +10%');
   }
   
-  const preWater = Math.round(preWaterBase * preAdjustmentFactor / 10) * 10; // Round to nearest 10ml
+  // Session duration (very long) - reduced from +20% to +10%
+  if (profile.sessionDuration >= 3) {
+    preAdjustmentFactor += 0.10;
+    preAdjustments.push('long session +10%');
+  }
+  
+  // Altitude - reduced modifiers
+  if (profile.altitude === 'high') {
+    preAdjustmentFactor += 0.10;
+    preAdjustments.push('high altitude +10%');
+  } else if (profile.altitude === 'moderate') {
+    preAdjustmentFactor += 0.05;
+    preAdjustments.push('moderate altitude +5%');
+  }
+  
+  let preWater = Math.round(preWaterBase * preAdjustmentFactor / 10) * 10; // Round to nearest 10ml
+  
+  // FIX #2: Hard cap at 10ml/kg (safety limit)
+  const maxPreWater = profile.weight * 10;
+  if (preWater > maxPreWater) {
+    preWater = maxPreWater;
+    preAdjustments.push(`capped at 10ml/kg`);
+  }
+  
+  // FIX #5: For very short sessions with low sweat, cap at reasonable absolute minimum
+  // to prevent excessive total replacement percentages for minimal fluid loss
+  if (profile.sessionDuration < 1 && profile.sweatRate === 'low') {
+    const estimatedSweatLoss = sweatRatePerHour * profile.sessionDuration;
+    if (estimatedSweatLoss < 300 && preWater > 350) {
+      preWater = 350; // Cap at 350ml for ultra-low loss scenarios
+      preAdjustments.push('ultra-low loss cap at 350ml');
+    }
+  }
+  
   const preElectrolytes = (profile.sessionDuration > 1 || isRaceDay) ? 1 : 0; // Always 1 sachet if >60min or race day
   
   if (preAdjustments.length > 0) {
@@ -178,9 +214,52 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
   // ====== 4. DURING-ACTIVITY HYDRATION ======
-  // Water replacement: 50-60% training, 60-70% race day (reduced to prevent water stomach)
-  const replacementRate = isRaceDay ? 0.65 : 0.55; // Average of ranges
-  const duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10; // Round to nearest 10ml
+  // FIX #1 & #3: Discipline-specific replacement rates
+  let replacementRate: number;
+  
+  if (primaryDiscipline === 'Swimming') {
+    // FIX #3: Swimming-specific logic - much lower practical intake
+    // Pool swimming: minimal sweat, limited intake opportunity
+    replacementRate = 0.30; // 30% for swimming (reduced from 55-65%)
+    calculationSteps.push('Swimming: 30% replacement (limited intake opportunity)');
+  } else if (isRaceDay) {
+    // FIX #1: Race day capped to ensure 600-900ml/h range
+    // Use 60% instead of 65% to prevent exceeding upper limits
+    replacementRate = 0.60;
+  } else {
+    // Training: 50-55% range
+    replacementRate = 0.50;
+  }
+  
+  let duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10;
+  
+  // General minimum floor for practical hydration (except very short, low-sweat scenarios)
+  if (duringWaterPerHour < 250 && profile.sessionDuration < 1 && profile.sweatRate === 'low') {
+    // Allow lower intake for short sessions with low sweat
+    duringWaterPerHour = Math.max(200, duringWaterPerHour);
+  } else if (duringWaterPerHour < 300 && primaryDiscipline !== 'Swimming') {
+    duringWaterPerHour = 300; // Minimum practical intake for most scenarios
+  }
+  
+  // FIX #1: Hard cap for race day to ensure 600-900ml/h range
+  if (isRaceDay && primaryDiscipline !== 'Swimming') {
+    if (duringWaterPerHour > 900) {
+      duringWaterPerHour = 900;
+      calculationSteps.push('Race day capped at 900ml/h for safety');
+    } else if (duringWaterPerHour < 600 && (profile.sweatRate === 'medium' || profile.sweatRate === 'high')) {
+      duringWaterPerHour = 600;
+      calculationSteps.push('Race day minimum 600ml/h for medium/high sweaters');
+    }
+  }
+  
+  // FIX #3: Swimming-specific cap
+  if (primaryDiscipline === 'Swimming') {
+    if (duringWaterPerHour > 500) {
+      duringWaterPerHour = 500;
+      calculationSteps.push('Swimming capped at 500ml/h (practical limit)');
+    }
+  }
+  
   const duringElectrolytesPerHour = sachetsPerHour;
   
   calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h (${(replacementRate * 100).toFixed(0)}% replacement), ${duringElectrolytesPerHour} sachet(s)/h`);
