@@ -1725,11 +1725,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
             <div className="space-y-4">
               <div className="bg-background p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">Pre-Race (Day Before & Morning)</h4>
+                <h4 className="font-semibold mb-3">Pre-Race Strategy</h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• Day before: Maintain normal hydration + {plan.preActivity.water}ml extra</li>
-                  <li>• 2 hours before start: {plan.preActivity.water}ml water + <strong>{plan.preActivity.electrolytes}x Supplme sachet</strong></li>
-                  <li>• 30 min before start: 200-300ml water (sips only)</li>
+                  <li>• <strong>{plan.preActivity.timing}:</strong> {plan.preActivity.water}ml water + <strong>{plan.preActivity.electrolytes}x Supplme sachet</strong></li>
+                  <li className="text-muted-foreground italic">Race-day bonus: Day before race, add {plan.preActivity.water}ml extra throughout the day to ensure full hydration stores</li>
+                  <li className="text-muted-foreground italic">Optional: 30 min before start, take 200-300ml water in sips if comfortable (not included in main totals)</li>
                 </ul>
               </div>
 
@@ -1767,11 +1767,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className="space-y-3">
                     <p className="text-sm font-medium">For Football (Soccer):</p>
                     <ul className="space-y-2 text-sm">
-                      <li>• <strong>Pre-Match (60-90 min before):</strong> {Math.round(plan.preActivity.water / 2)}ml water + {plan.preActivity.electrolytes}x Supplme sachet</li>
-                      <li>• <strong>Pre-Match (30 min before):</strong> {Math.round(plan.preActivity.water / 3)}ml water</li>
-                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + 200-300ml water</li>
-                      <li>• <strong>Post-Match (immediately):</strong> {plan.postActivity.water}ml water + {plan.postActivity.electrolytes}x Supplme sachet</li>
-                      <li>• <strong>Post-Match (within 2 hours):</strong> Continue hydrating with water based on urine color</li>
+                      <li>• <strong>Pre-Match:</strong> {plan.preActivity.water}ml water + {plan.preActivity.electrolytes}x Supplme sachet ({plan.preActivity.timing})</li>
+                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + {Math.round(plan.duringActivity.waterPerHour / 2)}ml water</li>
+                      <li>• <strong>Post-Match:</strong> {plan.postActivity.water}ml water + {plan.postActivity.electrolytes}x Supplme sachet ({plan.postActivity.timing})</li>
                     </ul>
                   </div>
                 ) : (
@@ -1788,9 +1786,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <div className="bg-background p-4 rounded-lg">
                 <h4 className="font-semibold mb-3">Post-Race Recovery</h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• Start immediately: <strong>{plan.postActivity.electrolytes}x Supplme sachets</strong> over 4-6 hours with the water intake</li>
-                  <li>• Over 4-6 hours: {plan.postActivity.water}ml water gradually</li>
-                  <li>• Monitor urine color - aim for pale yellow</li>
+                  <li>• <strong>{plan.postActivity.timing}:</strong> {plan.postActivity.water}ml water + <strong>{plan.postActivity.electrolytes}x Supplme sachet(s)</strong></li>
+                  <li>• Continue sipping water over next 2-4 hours until reaching total</li>
+                  <li>• Monitor urine color - aim for pale yellow within 2-3 hours post-race</li>
                 </ul>
               </div>
             </div>
