@@ -239,15 +239,30 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Pre-activity: ${preWater}ml water, ${preElectrolytes} sachet(s)`);
 
   // ====== 4. DURING-ACTIVITY HYDRATION ======
-  // PRACTICAL APPROACH: Most runners don't carry much water
-  // Sachets are easy to carry, water is not - adjust accordingly
-  // Focus on practical hydration that matches real-world running
+  // PRACTICAL APPROACH: Different sports have different hydration logistics
+  // Sachets are easy to carry, water carrying capacity varies by activity
   let replacementRate: number;
   
   if (primaryDiscipline === 'Swimming') {
     // Swimming: minimal sweat, limited intake opportunity
     replacementRate = 0.30; // 30% for swimming
     calculationSteps.push('Swimming: 30% replacement (limited intake opportunity)');
+  } else if (primaryDiscipline === 'Hiking') {
+    // Hiking: Lower intensity, can carry water bladder/bottles, frequent water stops possible
+    if (profile.sessionDuration > 2.5) {
+      replacementRate = 0.40; // 40% for long hikes (can carry more, lower intensity)
+      calculationSteps.push('Long hike: 40% replacement (backpack hydration system)');
+    } else if (profile.sessionDuration > 1.5) {
+      replacementRate = 0.35; // 35% for medium hikes
+      calculationSteps.push('Medium hike: 35% replacement (water bottle/bladder capacity)');
+    } else {
+      replacementRate = 0.30; // 30% for short hikes
+      calculationSteps.push('Short hike: 30% replacement (standard water bottle)');
+    }
+  } else if (primaryDiscipline === 'Cycling') {
+    // Cycling: Can carry multiple bottles
+    replacementRate = 0.40; // 40% for cycling
+    calculationSteps.push('Cycling: 40% replacement (multiple bottle capacity)');
   } else if (profile.sessionDuration > 2.5) {
     // Long runs: More likely to have hydration support/aid stations
     replacementRate = 0.35; // 35% for long runs
@@ -264,23 +279,39 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   let duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10;
   
-  // Practical minimums and maximums based on carrying capacity
-  if (profile.sessionDuration < 1) {
-    // < 1 hour: Most don't carry water at all
+  // Practical minimums and maximums based on carrying capacity per discipline
+  if (primaryDiscipline === 'Hiking') {
+    // Hikers typically carry backpacks with hydration bladders/bottles
+    if (profile.sessionDuration < 1) {
+      duringWaterPerHour = Math.min(500, Math.max(300, duringWaterPerHour));
+      if (duringWaterPerHour === 500) calculationSteps.push('Short hike: 500ml/h (standard bottle)');
+    } else if (profile.sessionDuration < 2) {
+      duringWaterPerHour = Math.min(600, Math.max(400, duringWaterPerHour));
+      if (duringWaterPerHour === 600) calculationSteps.push('Medium hike: 600ml/h (hydration bladder)');
+    } else {
+      duringWaterPerHour = Math.min(700, Math.max(500, duringWaterPerHour));
+      if (duringWaterPerHour === 700) calculationSteps.push('Long hike: 700ml/h (full backpack system)');
+    }
+  } else if (primaryDiscipline === 'Cycling') {
+    // Cyclists can carry multiple bottles
+    duringWaterPerHour = Math.min(700, Math.max(400, duringWaterPerHour));
+    if (duringWaterPerHour === 700) calculationSteps.push('Cycling: 700ml/h (multiple bottles)');
+  } else if (profile.sessionDuration < 1) {
+    // < 1 hour running: Most don't carry water at all
     if (duringWaterPerHour > 300) {
       duringWaterPerHour = 300; // Max 300ml/h for short runs
       calculationSteps.push('Short run: capped at 300ml/h (impractical to carry more)');
     }
     duringWaterPerHour = Math.max(200, duringWaterPerHour);
   } else if (profile.sessionDuration < 2) {
-    // 1-2 hours: Small handheld flask typical
+    // 1-2 hours running: Small handheld flask typical
     if (duringWaterPerHour > 400) {
       duringWaterPerHour = 400; // Max 400ml/h for medium runs
       calculationSteps.push('Medium run: capped at 400ml/h (handheld flask capacity)');
     }
     duringWaterPerHour = Math.max(250, duringWaterPerHour);
   } else {
-    // 2+ hours: Hydration vest or aid stations
+    // 2+ hours running: Hydration vest or aid stations
     if (duringWaterPerHour > 500) {
       duringWaterPerHour = 500; // Max 500ml/h for long runs
       calculationSteps.push('Long run: capped at 500ml/h (practical with vest/aid stations)');
@@ -300,9 +331,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h (${(replacementRate * 100).toFixed(0)}% replacement), ${totalDuringSachets} total sachet(s)`);
   
-  // Frequency guidance
+  // Frequency guidance based on discipline
   let frequency = 'Every 15-20 minutes';
-  if (profile.sessionDuration >= 2) {
+  if (primaryDiscipline === 'Hiking') {
+    frequency = profile.sessionDuration >= 2 ? 'Every 20-30 minutes' : 'Every 25-30 minutes';
+  } else if (primaryDiscipline === 'Cycling') {
+    frequency = profile.sessionDuration >= 2 ? 'Every 15-20 minutes' : 'Every 20-25 minutes';
+  } else if (profile.sessionDuration >= 2) {
     frequency = 'Every 12-15 minutes';
   }
 
@@ -366,14 +401,26 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   recommendations.push(`Start hydrating 2-4 hours before. Never begin dehydrated.`);
-  recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}. Don't wait until thirsty.`);
+  
+  // Discipline-specific drinking guidance
+  if (primaryDiscipline === 'Hiking') {
+    recommendations.push(`Drink ${Math.round(duringWaterPerHour / 3)}ml every ${frequency.toLowerCase()}. Sip regularly during breaks.`);
+  } else if (primaryDiscipline === 'Cycling') {
+    recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}. Easy access from bottles.`);
+  } else {
+    recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}. Don't wait until thirsty.`);
+  }
   
   if (avgTemp > 25) {
     recommendations.push(`High temps detected. Monitor for heat stress signs.`);
   }
   
   if (profile.sessionDuration >= 3) {
-    recommendations.push(`For 3+ hour sessions, add carbs (30-60g/hr) alongside hydration.`);
+    if (primaryDiscipline === 'Hiking') {
+      recommendations.push(`For 3+ hour hikes, pack trail snacks (nuts, dried fruit) alongside hydration.`);
+    } else {
+      recommendations.push(`For 3+ hour sessions, add carbs (30-60g/hr) alongside hydration.`);
+    }
   }
   
   if (profile.crampTiming && profile.crampTiming !== 'none') {
