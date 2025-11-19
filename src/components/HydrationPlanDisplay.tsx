@@ -909,7 +909,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           {profile.disciplines?.includes('Swimming') && !profile.hasUpcomingRace && profile.indoorOutdoor === 'indoor' && (
             <div className="p-4 rounded-xl mb-4" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
               <p className="text-sm font-semibold flex items-center gap-2" style={{ color: '#ffffff' }}>
-                <Droplets className="w-4 h-4" /> <strong>Pool Training Tip:</strong> Keep a water bottle with {plan.duringActivity.electrolytesPerHour} Supplme sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''} mixed in at the pool edge. Sip between sets during rest intervals.
+                <Droplets className="w-4 h-4" /> <strong>Pool Training Tip:</strong> Keep a water bottle with {Math.ceil(plan.duringActivity.electrolytesPerHour)} Supplme sachet{Math.ceil(plan.duringActivity.electrolytesPerHour) > 1 ? 's' : ''} mixed in at the pool edge. Sip between sets during rest intervals.
               </p>
             </div>
           )}
@@ -928,7 +928,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme per hour</p>
               <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
-                  ? `${plan.duringActivity.electrolytesPerHour} sachet${plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}` 
+                  ? `${Math.ceil(plan.duringActivity.electrolytesPerHour)} sachet${Math.ceil(plan.duringActivity.electrolytesPerHour) > 1 ? 's' : ''}` 
                   : 'Not required'}
               </p>
               {plan.duringActivity.electrolytesPerHour > 0 && (() => {
