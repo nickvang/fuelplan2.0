@@ -688,12 +688,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                     <div className="p-3 sm:p-4 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
                       <p className="text-[10px] sm:text-xs md:text-xs font-bold uppercase tracking-wider mb-1 sm:mb-1.5 md:mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Water per hour</p>
-                      <p className="text-2xl sm:text-3xl md:text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.waterPerHour}ml</p>
-                      <p className="text-[10px] sm:text-xs md:text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
+                      <p className="text-xl sm:text-2xl md:text-4xl font-black mb-1 leading-tight" style={{ color: '#ffffff' }}>{plan.duringActivity.waterPerHour}ml</p>
+                      <p className="text-[10px] sm:text-xs md:text-xs font-semibold break-words" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
                     </div>
                     <div className="p-3 sm:p-4 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
                       <p className="text-[10px] sm:text-xs md:text-xs font-bold uppercase tracking-wider mb-1 sm:mb-1.5 md:mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme total</p>
-                      <p className="text-2xl sm:text-3xl md:text-4xl font-black mb-1 break-words" style={{ color: '#ffffff' }}>
+                      <p className="text-xl sm:text-2xl md:text-4xl font-black mb-1 break-words leading-tight" style={{ color: '#ffffff' }}>
                         {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet
                         {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) !== 1 ? 's' : ''}
                       </p>
@@ -705,12 +705,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         
                         return totalSachets > 0 ? (
                           <>
-                            <p className="text-[10px] sm:text-xs md:text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                            <p className="text-[10px] sm:text-xs md:text-xs font-semibold mb-1 break-words" style={{ color: 'rgba(255,255,255,0.7)' }}>
                               1 every {minutesPerSachet >= 60 
                                 ? formatHoursAsTime(minutesPerSachet / 60)
                                 : `${minutesPerSachet} min`}
                             </p>
-                            <p className="text-[9px] sm:text-[10px] md:text-xs font-bold pt-1 sm:pt-1.5 md:pt-2 border-t border-white/20 break-words" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                            <p className="text-[9px] sm:text-[10px] md:text-xs font-bold pt-1 sm:pt-1.5 md:pt-2 border-t border-white/20 break-words leading-tight" style={{ color: 'rgba(255,255,255,0.9)' }}>
                               {totalSachets} total ({sodiumPerHour}mg/h)
                             </p>
                           </>
