@@ -8,6 +8,17 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     hasSmartwatch: !!rawSmartWatchData
   });
   
+  // CRITICAL: Validate required inputs to prevent NaN values
+  if (!profile.sessionDuration || profile.sessionDuration <= 0 || isNaN(profile.sessionDuration)) {
+    console.error('❌ Invalid sessionDuration:', profile.sessionDuration);
+    throw new Error('Session duration must be a valid number greater than 0');
+  }
+  
+  if (!profile.weight || profile.weight <= 0 || isNaN(profile.weight)) {
+    console.error('❌ Invalid weight:', profile.weight);
+    throw new Error('Weight must be a valid number greater than 0');
+  }
+  
   const calculationSteps: string[] = [];
   const isRaceDay = profile.raceDistance && profile.raceDistance.length > 0;
   

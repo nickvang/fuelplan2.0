@@ -24,6 +24,14 @@ interface HydrationPlanDisplayProps {
   version?: 'simple' | 'pro';
 }
 
+// Helper function to safely display numeric values and prevent NaN
+const safeNumber = (value: number | null | undefined, fallback: number = 0): number => {
+  if (value === null || value === undefined || isNaN(value) || !isFinite(value)) {
+    return fallback;
+  }
+  return value;
+};
+
 export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, onFullReset, hasSmartWatchData = false, rawSmartWatchData, version }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
@@ -430,15 +438,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <div className="p-3 md:p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total Water</p>
               <p className="text-2xl md:text-3xl font-black mb-2 md:mb-3" style={{ color: '#ffffff' }}>
-                {plan.duringActivity.waterPerHour > 0 
-                  ? `${Math.round(plan.duringActivity.waterPerHour * profile.sessionDuration)} ml` 
+                {safeNumber(plan.duringActivity.waterPerHour) > 0 
+                  ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
                   : 'As needed'}
               </p>
               <p className="text-sm font-semibold" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-                {plan.duringActivity.waterPerHour > 0 ? `${plan.duringActivity.waterPerHour} ml per hour` : ''}
+                {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `${safeNumber(plan.duringActivity.waterPerHour)} ml per hour` : ''}
               </p>
               <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                {plan.duringActivity.waterPerHour > 0 ? `Sip ${plan.duringActivity.frequency.toLowerCase()}` : ''}
+                {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `Sip ${plan.duringActivity.frequency.toLowerCase()}` : ''}
               </p>
             </div>
             <div className="p-3 md:p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
@@ -527,12 +535,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           <div className="space-y-3 md:space-y-4 py-3 md:py-4">
             <div className="bg-secondary p-3 md:p-4 rounded-xl border border-border">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water (150% of loss)</p>
-              <p className="text-2xl md:text-3xl font-black text-foreground">{plan.postActivity.water} ml</p>
+              <p className="text-2xl md:text-3xl font-black text-foreground">{safeNumber(plan.postActivity.water)} ml</p>
               <p className="text-xs font-semibold text-muted-foreground mt-2">Over 4-6 hours</p>
             </div>
             <div className="bg-secondary p-3 md:p-4 rounded-xl border border-border">
               <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet</p>
-              <p className="text-2xl md:text-3xl font-black text-foreground">{plan.postActivity.electrolytes}x</p>
+              <p className="text-2xl md:text-3xl font-black text-foreground">{safeNumber(plan.postActivity.electrolytes)}x</p>
               <p className="text-xs font-semibold text-muted-foreground mt-2">With water intake</p>
             </div>
           </div>
@@ -549,7 +557,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
         <AlertDescription className="text-muted-foreground space-y-2">
           <p className="leading-relaxed">
-            Your body loses <strong>{plan.totalFluidLoss ? Math.round(plan.totalFluidLoss) : 'approximately 1000'}ml of fluid</strong> during this session through sweat. 
+            Your body loses <strong>{safeNumber(plan.totalFluidLoss) ? Math.round(safeNumber(plan.totalFluidLoss)) : 'approximately 1000'}ml of fluid</strong> during this session through sweat.
             {profile.avgPace && profile.raceDistance && (
               <> This is calculated from your <strong>{formatHoursAsTime(profile.sessionDuration)} session</strong> duration (based on your {profile.avgPace} pace over {profile.raceDistance}).</>
             )}
@@ -688,7 +696,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className="grid grid-cols-2 gap-2 sm:gap-3 md:gap-4">
                     <div className="p-3 sm:p-4 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
                       <p className="text-[10px] sm:text-xs md:text-xs font-bold uppercase tracking-wider mb-1 sm:mb-1.5 md:mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Water per hour</p>
-                      <p className="text-xl sm:text-2xl md:text-4xl font-black mb-1 leading-tight" style={{ color: '#ffffff' }}>{plan.duringActivity.waterPerHour}ml</p>
+                      <p className="text-xl sm:text-2xl md:text-4xl font-black mb-1 leading-tight" style={{ color: '#ffffff' }}>{safeNumber(plan.duringActivity.waterPerHour)}ml</p>
                       <p className="text-[10px] sm:text-xs md:text-xs font-semibold break-words" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
                     </div>
                     <div className="p-3 sm:p-4 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
@@ -754,7 +762,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         </div>
                         <div className="flex-1 pb-3 sm:pb-3.5 md:pb-4 min-w-0">
                           <p className="font-bold text-xs sm:text-sm md:text-sm">Immediate</p>
-                          <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground break-words">500ml + {plan.postActivity.electrolytes}x Supplme</p>
+                          <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground break-words">500ml + {safeNumber(plan.postActivity.electrolytes)}x Supplme</p>
                         </div>
                       </div>
                       <div className="flex gap-2 sm:gap-2.5 md:gap-3">
@@ -764,7 +772,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         </div>
                         <div className="flex-1 pb-3 sm:pb-3.5 md:pb-4 min-w-0">
                           <p className="font-bold text-xs sm:text-sm md:text-sm">First Phase</p>
-                          <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground break-words">{Math.round(plan.postActivity.water * 0.5)}ml + protein meal</p>
+                          <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground break-words">{safeNumber(Math.round(plan.postActivity.water * 0.5))}ml + protein meal</p>
                         </div>
                       </div>
                       <div className="flex gap-2 sm:gap-2.5 md:gap-3">
@@ -773,7 +781,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-bold text-xs sm:text-sm md:text-sm">Complete</p>
-                          <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground break-words">{plan.postActivity.water}ml total (150% loss)</p>
+                          <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground break-words">{safeNumber(plan.postActivity.water)}ml total (150% loss)</p>
                         </div>
                       </div>
                     </div>
@@ -918,7 +926,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           <div className="flex items-center justify-between text-sm">
                             <span className="font-semibold text-foreground">Total Fluid Loss</span>
                             <span className="text-muted-foreground font-mono font-medium">
-                              {plan.totalFluidLoss ? Math.round(plan.totalFluidLoss) : 'N/A'}ml
+                              {safeNumber(plan.totalFluidLoss) ? Math.round(safeNumber(plan.totalFluidLoss)) : 'N/A'}ml
                             </span>
                           </div>
                         <div className="relative h-4 bg-muted rounded-full overflow-hidden">
@@ -975,14 +983,14 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     {/* Key Insight Summary */}
                     <div className="mt-6 p-4 bg-muted/50 rounded-xl border border-border/50">
                       <p className="text-sm text-muted-foreground leading-relaxed">
-                        {plan.totalFluidLoss && profile.sessionDuration ? (
+                        {safeNumber(plan.totalFluidLoss) && profile.sessionDuration ? (
                           profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                            ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${Math.round(plan.totalFluidLoss)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${formatHoursAsTime(profile.sessionDuration)} session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
+                            ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${Math.round(safeNumber(plan.totalFluidLoss))}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${formatHoursAsTime(profile.sessionDuration)} session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
                             : profile.sweatRate === 'high'
-                            ? `⚡ Your elevated sweat rate means you'll lose approximately ${Math.round(plan.totalFluidLoss)}ml during this ${formatHoursAsTime(profile.sessionDuration)} session, which is above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes ${plan.duringActivity.frequency.toLowerCase()} to maintain performance.`
+                            ? `⚡ Your elevated sweat rate means you'll lose approximately ${Math.round(safeNumber(plan.totalFluidLoss))}ml during this ${formatHoursAsTime(profile.sessionDuration)} session, which is above average. Precise timing is critical: consume ${safeNumber(plan.duringActivity.waterPerHour)}ml/hr with electrolytes ${plan.duringActivity.frequency.toLowerCase()} to maintain performance.`
                             : profile.sweatSaltiness === 'high'
-                            ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${Math.round(plan.totalFluidLoss)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
-                            : `✓ Your balanced profile allows standard evidence based protocols. Your ${Math.round(plan.totalFluidLoss)}ml total fluid loss over ${formatHoursAsTime(profile.sessionDuration)} means you're losing approximately ${Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml per hour, which is within the normal range for endurance athletes (600 to 1000ml/hr). This moderate sweat rate, combined with your medium sodium loss, means 1 sachet per hour provides optimal electrolyte replacement. Your hydration needs align with ACSM guidelines, adjusted for your environmental conditions.`
+                            ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${Math.round(safeNumber(plan.totalFluidLoss))}ml) is normal, each liter contains more sodium. The ${safeNumber(plan.duringActivity.electrolytesPerHour)} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
+                            : `✓ Your balanced profile allows standard evidence based protocols. Your ${Math.round(safeNumber(plan.totalFluidLoss))}ml total fluid loss over ${formatHoursAsTime(profile.sessionDuration)} means you're losing approximately ${Math.round(safeNumber(plan.totalFluidLoss) / profile.sessionDuration)}ml per hour, which is within the normal range for endurance athletes (600 to 1000ml/hr). This moderate sweat rate, combined with your medium sodium loss, means 1 sachet per hour provides optimal electrolyte replacement. Your hydration needs align with ACSM guidelines, adjusted for your environmental conditions.`
                         ) : (
                           `Please provide a session duration or distance to calculate your personalized fluid loss and hydration recommendations.`
                         )}
@@ -1340,7 +1348,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       
                       <div className="border-l-4 border-purple-500 pl-3">
                         <p className="text-sm font-semibold">🚴 <strong>Bike Segment</strong></p>
-                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 45-60 minutes{plan.duringActivity.waterPerHour > 0 ? ` + ${Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour` : ''}</p>
+                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 45-60 minutes{safeNumber(plan.duringActivity.waterPerHour) > 0 ? ` + ${Math.round(safeNumber(plan.duringActivity.waterPerHour) * 0.85)}ml water/hour` : ''}</p>
                         <p className="text-xs text-muted-foreground italic mt-1">Tip: Set timer on watch, keep sachets in jersey pocket or bento box</p>
                         <p className="text-xs text-muted-foreground italic mt-1">Sip water consistently throughout - don't gulp</p>
                       </div>
@@ -1372,17 +1380,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 ) : profile.disciplines?.[0] === 'Running' ? (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet at aid station</li>
-                    {plan.duringActivity.waterPerHour > 0 && (
-                      <li>• Drink {Math.round(plan.duringActivity.waterPerHour / 2)}ml water every 15 minutes</li>
+                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
+                      <li>• Drink {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 2)}ml water every 15 minutes</li>
                     )}
-                    <li>• For marathons: Aim for {Math.round(plan.duringActivity.electrolytesPerHour * (profile.sessionDuration || 3.5))} sachets total during race</li>
-                    <li>• For ultras: {plan.duringActivity.electrolytesPerHour} sachet(s) per hour minimum</li>
+                    <li>• For marathons: Aim for {Math.round(safeNumber(plan.duringActivity.electrolytesPerHour) * (profile.sessionDuration || 3.5))} sachets total during race</li>
+                    <li>• For ultras: {safeNumber(plan.duringActivity.electrolytesPerHour)} sachet(s) per hour minimum</li>
                   </ul>
                 ) : profile.disciplines?.[0] === 'Bike' ? (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
-                    {plan.duringActivity.waterPerHour > 0 && (
-                      <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour in small sips</li>
+                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
+                      <li>• Drink {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour in small sips</li>
                     )}
                     <li>• Keep sachets in jersey pocket or bike bag for easy access</li>
                   </ul>
@@ -1391,15 +1399,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <p className="text-sm font-medium">For Football (Soccer):</p>
                     <ul className="space-y-2 text-sm">
                       <li>• <strong>Pre-Match:</strong> {plan.preActivity.water}ml water + {plan.preActivity.electrolytes}x Supplme sachet ({plan.preActivity.timing})</li>
-                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + {Math.round(plan.duringActivity.waterPerHour / 2)}ml water</li>
-                      <li>• <strong>Post-Match:</strong> {plan.postActivity.water}ml water + {plan.postActivity.electrolytes}x Supplme sachet ({plan.postActivity.timing})</li>
+                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 2)}ml water</li>
+                      <li>• <strong>Post-Match:</strong> {safeNumber(plan.postActivity.water)}ml water + {safeNumber(plan.postActivity.electrolytes)}x Supplme sachet ({plan.postActivity.timing})</li>
                     </ul>
                   </div>
                 ) : (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
-                    {plan.duringActivity.waterPerHour > 0 && (
-                      <li>• Drink {plan.duringActivity.waterPerHour}ml water per hour</li>
+                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
+                      <li>• Drink {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour</li>
                     )}
                     <li>• Adjust based on aid station availability</li>
                   </ul>
@@ -1409,7 +1417,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <div className="bg-background p-4 rounded-lg">
                 <h4 className="font-semibold mb-3">Post-Race Recovery</h4>
                 <ul className="space-y-2 text-sm">
-                  <li>• <strong>{plan.postActivity.timing}:</strong> {plan.postActivity.water}ml water + <strong>{plan.postActivity.electrolytes}x Supplme sachet(s)</strong></li>
+                  <li>• <strong>{plan.postActivity.timing}:</strong> {safeNumber(plan.postActivity.water)}ml water + <strong>{safeNumber(plan.postActivity.electrolytes)}x Supplme sachet(s)</strong></li>
                   <li>• Continue sipping water over next 2-4 hours until reaching total</li>
                   <li>• Monitor urine color - aim for pale yellow within 2-3 hours post-race</li>
                 </ul>
