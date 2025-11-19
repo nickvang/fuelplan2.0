@@ -191,12 +191,17 @@ export default function QATest() {
     const isDiscipline = (disc: string) => scenario.discipline.includes(disc);
     
     if (isDiscipline('Swimming')) {
-      // Swimming: Impractical to drink during activity unless training
-      // <2h: expect 0ml/h, 2-3h: max 200ml/h, 3h+: max 300ml/h
+      // Swimming: Impractical to drink during activity unless training with breaks
+      // RACE DAY: always 0ml/h (cannot drink during races)
+      // TRAINING: <2h: 0ml/h, 2-3h: max 200ml/h, 3h+: max 300ml/h
       let minWater = 0;
       let maxWater = 0;
       
-      if (scenario.duration < 2) {
+      if (scenario.isRaceDay) {
+        // Race day: always zero
+        minWater = 0;
+        maxWater = 0;
+      } else if (scenario.duration < 2) {
         minWater = 0;
         maxWater = 0;
       } else if (scenario.duration < 3) {
@@ -208,7 +213,7 @@ export default function QATest() {
       }
       
       if (duringWater < minWater || duringWater > maxWater) {
-        flags.push(`Swimming water ${duringWater}ml/h out of range [${minWater}-${maxWater}] for ${scenario.duration}h`);
+        flags.push(`Swimming water ${duringWater}ml/h out of range [${minWater}-${maxWater}] for ${scenario.isRaceDay ? 'race' : 'training'} ${scenario.duration}h`);
         severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
       }
     } else if (isDiscipline('Hiking')) {
