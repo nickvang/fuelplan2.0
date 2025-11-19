@@ -1025,25 +1025,27 @@ const Index = () => {
                       }
                     />
                   </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="goalTime">Goal Finish Time (optional)</Label>
-                    <Input
-                      id="goalTime"
-                      value={profile.goalTime || ''}
-                      onChange={(e) => updateProfile({ goalTime: e.target.value })}
-                      placeholder={
-                        profile.disciplines?.[0] === 'Running' ? 'e.g., 0:25:00 for 5km, 1:30:00 for Half Marathon' :
-                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 1:30:00 for 40km, 3:00:00 for 100km' :
-                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 0:20:00 for 1km, 1:00:00 for 5km' :
-                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., 1:15:00 for Sprint, 2:30:00 for Olympic' :
-                        profile.disciplines?.[0] === 'Hiking' ? 'e.g., 1:00:00 for 5km, 2:30:00 for 15km' :
-                        'e.g., 1:30:00 for 1 hour 30 minutes'
-                      }
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Format: H:MM:SS (e.g., 1:45:00 for 1 hour 45 minutes). Enter your target finish time to calculate required pace.
-                    </p>
-                  </div>
+                  {/* Hide Goal Finish Time for Triathlons - calculated automatically */}
+                  {profile.disciplines?.[0] !== 'Triathlon' && (
+                    <div className="space-y-2">
+                      <Label htmlFor="goalTime">Goal Finish Time (optional)</Label>
+                      <Input
+                        id="goalTime"
+                        value={profile.goalTime || ''}
+                        onChange={(e) => updateProfile({ goalTime: e.target.value })}
+                        placeholder={
+                          profile.disciplines?.[0] === 'Running' ? 'e.g., 0:25:00 for 5km, 1:30:00 for Half Marathon' :
+                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 1:30:00 for 40km, 3:00:00 for 100km' :
+                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 0:20:00 for 1km, 1:00:00 for 5km' :
+                          profile.disciplines?.[0] === 'Hiking' ? 'e.g., 1:00:00 for 5km, 2:30:00 for 15km' :
+                          'e.g., 1:30:00 for 1 hour 30 minutes'
+                        }
+                      />
+                      <p className="text-xs text-muted-foreground">
+                        Format: H:MM:SS (e.g., 1:45:00 for 1 hour 45 minutes). Enter your target finish time to calculate required pace.
+                      </p>
+                    </div>
+                  )}
                 </div>
               )}
 
@@ -1159,38 +1161,19 @@ const Index = () => {
                     </div>
                   </div>
                   
-                  {/* Show calculated duration and breakdown */}
+                  {/* Show calculated total time in h:m format */}
                   {(() => {
                     const breakdown = getTriathlonBreakdown(profile);
-                    const distances = profile.raceDistance ? TRIATHLON_DISTANCES[profile.raceDistance as keyof typeof TRIATHLON_DISTANCES] : null;
                     
-                    if (breakdown && distances) {
+                    if (breakdown) {
+                      const hours = Math.floor(breakdown.total);
+                      const minutes = Math.round((breakdown.total % 1) * 60);
+                      
                       return (
-                        <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-semibold">Auto-Calculated Race Duration:</p>
-                            <p className="text-lg font-bold text-primary">
-                              {Math.floor(breakdown.total)}:{String(Math.round((breakdown.total % 1) * 60)).padStart(2, '0')}
-                            </p>
-                          </div>
-                          
-                          <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border/50">
-                            <div>
-                              <p className="text-xs text-muted-foreground">Swim ({distances.swim}km)</p>
-                              <p className="font-semibold">{Math.floor(breakdown.swim.duration * 60)} min</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Bike ({distances.bike}km)</p>
-                              <p className="font-semibold">{Math.floor(breakdown.bike.duration * 60)} min</p>
-                            </div>
-                            <div>
-                              <p className="text-xs text-muted-foreground">Run ({distances.run}km)</p>
-                              <p className="font-semibold">{Math.floor(breakdown.run.duration * 60)} min</p>
-                            </div>
-                          </div>
-                          
-                          <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
-                            ℹ️ Duration calculated from your individual paces/speeds. Transitions not included.
+                        <div className="text-center py-4">
+                          <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
+                          <p className="text-4xl font-black text-primary">
+                            {hours}:{String(minutes).padStart(2, '0')}
                           </p>
                         </div>
                       );
