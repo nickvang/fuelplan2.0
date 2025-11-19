@@ -428,13 +428,18 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           
           <div className="space-y-4 py-4">
             <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Water per hour</p>
-              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total Water</p>
+              <p className="text-3xl font-black mb-3" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.waterPerHour > 0 
-                  ? `${plan.duringActivity.waterPerHour} ml` 
+                  ? `${Math.round(plan.duringActivity.waterPerHour * profile.sessionDuration)} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
+              <p className="text-sm font-semibold" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+                {plan.duringActivity.waterPerHour > 0 ? `${plan.duringActivity.waterPerHour} ml per hour` : ''}
+              </p>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+                {plan.duringActivity.waterPerHour > 0 ? `Sip ${plan.duringActivity.frequency.toLowerCase()}` : ''}
+              </p>
             </div>
             <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
               <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total Supplme sachets</p>
