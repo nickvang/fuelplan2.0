@@ -74,7 +74,10 @@ export function PaceDurationCalculator({
 
   // Calculate required pace from goal time OR use default pace if no goal time
   useEffect(() => {
-    if (goalTime && raceDistance) {
+    // If user has manually entered a pace, don't override it from goalTime
+    const hasManualPace = !!inputValue;
+
+    if (goalTime && raceDistance && !hasManualPace) {
       const pace = calculatePaceFromGoalTime(goalTime, raceDistance);
       if (pace) {
         setRequiredPace(pace);
