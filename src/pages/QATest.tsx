@@ -41,6 +41,7 @@ export default function QATest() {
   const [results, setResults] = useState<TestResult[]>([]);
   const [isRunning, setIsRunning] = useState(false);
   const [filter, setFilter] = useState<'ALL' | 'OK' | 'WARNING' | 'ERROR'>('ALL');
+  const [disciplineFilter, setDisciplineFilter] = useState<string>('ALL');
   const [autoRan, setAutoRan] = useState(false);
 
   // Auto-run tests on mount for iterative fixing
@@ -371,10 +372,21 @@ export default function QATest() {
     setIsRunning(false);
   };
 
-  const filteredResults = results.filter(r => filter === 'ALL' || r.severity === filter);
+  const filteredResults = results.filter(r => {
+    const severityMatch = filter === 'ALL' || r.severity === filter;
+    const disciplineMatch = disciplineFilter === 'ALL' || r.discipline.includes(disciplineFilter);
+    return severityMatch && disciplineMatch;
+  });
+  
   const errorCount = results.filter(r => r.severity === 'ERROR').length;
   const warningCount = results.filter(r => r.severity === 'WARNING').length;
   const okCount = results.filter(r => r.severity === 'OK').length;
+
+  // Extract unique disciplines for filter
+  const uniqueDisciplines = Array.from(new Set(results.map(r => {
+    const match = r.discipline.match(/\(([^)]+)\)/);
+    return match ? match[1] : r.discipline;
+  }))).sort();
 
   const worstCases = [...results]
     .filter(r => r.severity === 'ERROR' || r.severity === 'WARNING')
@@ -438,19 +450,47 @@ export default function QATest() {
               </div>
             </div>
 
-            <div className="flex gap-2 mb-4">
-              <Button variant={filter === 'ALL' ? 'default' : 'outline'} onClick={() => setFilter('ALL')}>
-                All ({results.length})
-              </Button>
-              <Button variant={filter === 'ERROR' ? 'default' : 'outline'} onClick={() => setFilter('ERROR')}>
-                Errors ({errorCount})
-              </Button>
-              <Button variant={filter === 'WARNING' ? 'default' : 'outline'} onClick={() => setFilter('WARNING')}>
-                Warnings ({warningCount})
-              </Button>
-              <Button variant={filter === 'OK' ? 'default' : 'outline'} onClick={() => setFilter('OK')}>
-                OK ({okCount})
-              </Button>
+            <div className="space-y-3">
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Filter by Severity</h3>
+                <div className="flex gap-2 flex-wrap">
+                  <Button variant={filter === 'ALL' ? 'default' : 'outline'} onClick={() => setFilter('ALL')} size="sm">
+                    All ({results.length})
+                  </Button>
+                  <Button variant={filter === 'ERROR' ? 'default' : 'outline'} onClick={() => setFilter('ERROR')} size="sm">
+                    Errors ({errorCount})
+                  </Button>
+                  <Button variant={filter === 'WARNING' ? 'default' : 'outline'} onClick={() => setFilter('WARNING')} size="sm">
+                    Warnings ({warningCount})
+                  </Button>
+                  <Button variant={filter === 'OK' ? 'default' : 'outline'} onClick={() => setFilter('OK')} size="sm">
+                    OK ({okCount})
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <h3 className="text-sm font-semibold mb-2">Filter by Activity</h3>
+                <div className="flex gap-2 flex-wrap">
+                  <Button 
+                    variant={disciplineFilter === 'ALL' ? 'default' : 'outline'} 
+                    onClick={() => setDisciplineFilter('ALL')} 
+                    size="sm"
+                  >
+                    All
+                  </Button>
+                  {uniqueDisciplines.map(disc => (
+                    <Button 
+                      key={disc}
+                      variant={disciplineFilter === disc ? 'default' : 'outline'} 
+                      onClick={() => setDisciplineFilter(disc)} 
+                      size="sm"
+                    >
+                      {disc}
+                    </Button>
+                  ))}
+                </div>
+              </div>
             </div>
           </Card>
 
