@@ -1051,7 +1051,12 @@ const Index = () => {
 
               {!profile.hasUpcomingRace && (
                 <div className="space-y-2">
-                  <Label htmlFor="trainingDistance">Training Distance (km) *</Label>
+                  <Label htmlFor="trainingDistance">
+                    {profile.disciplines?.[0] === 'Triathlon' 
+                      ? 'Race Type (e.g., Ironman, Olympic) or Distance (km) *'
+                      : 'Training Distance (km) *'
+                    }
+                  </Label>
                   <Input
                     id="trainingDistance"
                     value={profile.raceDistance || ''}
@@ -1060,7 +1065,7 @@ const Index = () => {
                       profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, Half Marathon, Marathon' :
                       profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
                       profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
-                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman' :
+                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman, Ironman' :
                       profile.disciplines?.[0] === 'Hiking' ? 'e.g., 5km, 10km, 15km, 20km' :
                       'e.g., 10km, Half Marathon'
                     }
