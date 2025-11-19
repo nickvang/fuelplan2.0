@@ -1040,7 +1040,7 @@ const Index = () => {
                       }
                     />
                     <p className="text-xs text-muted-foreground">
-                      Enter your target finish time to calculate required pace
+                      Format: H:MM:SS (e.g., 1:45:00 for 1 hour 45 minutes). Enter your target finish time to calculate required pace.
                     </p>
                   </div>
                 </div>
