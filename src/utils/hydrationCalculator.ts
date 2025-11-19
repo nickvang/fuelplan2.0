@@ -141,10 +141,10 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour even for very long sessions
   }
   
-  // Swimming override: No sachets during swims <2h (can't drink while swimming)
-  if (primaryDiscipline === 'Swimming' && profile.sessionDuration < 2) {
+  // Swimming override: No sachets during swims when racing or <2h training (can't drink while swimming)
+  if (primaryDiscipline === 'Swimming' && (isRaceDay || profile.sessionDuration < 2)) {
     sachetsPerHour = 0;
-    calculationSteps.push('Swimming <2h: 0 sachets/hour (impractical to consume during swim)');
+    calculationSteps.push(`Swimming ${isRaceDay ? 'race' : '<2h'}: 0 sachets/hour (impractical to consume during swim)`);
   }
   
   // Ensure whole numbers only (no decimals) - standard rounding
@@ -328,18 +328,22 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Swimming-specific adjustments - PRACTICAL REALITY
   // Swimming is unique: very difficult to drink during activity unless pool training
   if (primaryDiscipline === 'Swimming') {
-    if (profile.sessionDuration < 2) {
-      // <2h swim: Zero during-hydration (impractical for most swimmers)
+    if (isRaceDay) {
+      // RACE DAY: Always zero during-hydration (impossible to drink during races)
+      duringWaterPerHour = 0;
+      calculationSteps.push('Swimming race: 0ml/h during (cannot drink during race - focus on pre/post)');
+    } else if (profile.sessionDuration < 2) {
+      // TRAINING <2h: Zero during-hydration (impractical for most swimmers)
       duringWaterPerHour = 0;
       calculationSteps.push('Swimming <2h: 0ml/h during (impractical to drink while swimming - focus on pre/post)');
     } else if (profile.sessionDuration < 3) {
-      // 2-3h swim: Minimal (only long pool training with breaks)
+      // TRAINING 2-3h: Minimal (only long pool training with breaks)
       duringWaterPerHour = Math.min(200, duringWaterPerHour);
-      calculationSteps.push('Swimming 2-3h: max 200ml/h (pool training with breaks only)');
+      calculationSteps.push('Swimming 2-3h training: max 200ml/h (pool training with breaks only)');
     } else {
-      // 3+ hours: Some hydration possible (open water or long pool sessions with planned breaks)
+      // TRAINING 3+ hours: Some hydration possible (open water or long pool sessions with planned breaks)
       duringWaterPerHour = Math.min(300, duringWaterPerHour);
-      calculationSteps.push('Swimming 3h+: max 300ml/h (long training with planned hydration breaks)');
+      calculationSteps.push('Swimming 3h+ training: max 300ml/h (long training with planned hydration breaks)');
     }
   }
   
