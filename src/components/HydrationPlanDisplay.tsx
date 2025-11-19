@@ -954,7 +954,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 return totalSachets > 0 ? (
                   <>
                     <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                      1 every {minutesPerSachet} min
+                      1 every {minutesPerSachet >= 60 
+                        ? `${(minutesPerSachet / 60).toFixed(1)}h` 
+                        : `${minutesPerSachet} min`}
                     </p>
                     <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                       Total: {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {Math.round(profile.sessionDuration * 10) / 10}h
@@ -1187,7 +1189,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         return totalSachets > 0 ? (
                           <>
                             <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
-                              1 every {minutesPerSachet} min
+                              1 every {minutesPerSachet >= 60 
+                                ? `${(minutesPerSachet / 60).toFixed(1)}h` 
+                                : `${minutesPerSachet} min`}
                             </p>
                             <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
                               {totalSachets} total ({sodiumPerHour}mg/h)
