@@ -111,10 +111,10 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // SUPPLME sachet = 500mg sodium
   const SACHET_SODIUM = 500;
   
-  // Calculate sodium replacement target (NOT 100% - we replace 50-60% during activity)
+  // Calculate sodium replacement target (NOT 100% - we replace 40-50% during activity)
   // Scientific evidence shows full replacement during exercise can cause GI issues
   // Body can tolerate sodium deficit during activity and replenish post-exercise
-  const sodiumReplacementRate = isRaceDay ? 0.60 : 0.50; // 60% race, 50% training
+  const sodiumReplacementRate = isRaceDay ? 0.50 : 0.40; // 50% race, 40% training
   const targetSodiumPerHour = (sweatRatePerHour / 1000) * sodiumPerLiter * sodiumReplacementRate;
   
   calculationSteps.push(`Target sodium replacement: ${Math.round(targetSodiumPerHour)}mg/h (${(sodiumReplacementRate * 100)}% of loss)`);
@@ -129,16 +129,18 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Round to nearest whole number (more conservative than ceiling)
   sachetsPerHour = Math.round(sachetsPerHour);
   
-  // Very conservative cap: reduce baseline recommendations
-  // Only recommend sachets for longer/more intense sessions
-  if (profile.sessionDuration < 1.5) {
-    sachetsPerHour = Math.min(0.5, sachetsPerHour); // Max 0.5/hour for shorter sessions
+  // Ultra conservative cap: minimize sachet usage across all activities
+  // Most athletes don't need as many sachets as previously recommended
+  if (profile.sessionDuration < 2) {
+    sachetsPerHour = 0; // No during-activity sachets for sessions under 2h
+  } else if (profile.sessionDuration < 3) {
+    sachetsPerHour = Math.min(0.5, sachetsPerHour); // Max 0.5/hour for 2-3h sessions
   } else {
-    sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour for longer sessions
+    sachetsPerHour = Math.min(0.75, sachetsPerHour); // Max 0.75/hour even for very long sessions
   }
   
-  // Round to nearest 0.5
-  sachetsPerHour = Math.round(sachetsPerHour * 2) / 2;
+  // Round to nearest 0.25
+  sachetsPerHour = Math.round(sachetsPerHour * 4) / 4;
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (conservative: max 1/hour)`);
   
@@ -207,8 +209,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     }
   }
   
-  // More conservative: only pre-load for longer sessions or race day
-  const preElectrolytes = (profile.sessionDuration >= 2 || isRaceDay) ? 1 : 0;
+  // Very conservative: only pre-load for very long sessions (3h+) or race day
+  const preElectrolytes = (profile.sessionDuration >= 3 || (isRaceDay && profile.sessionDuration >= 2)) ? 1 : 0;
   
   if (preAdjustments.length > 0) {
     calculationSteps.push(`Pre-hydration adjustments: ${preAdjustments.join(', ')}`);
@@ -318,11 +320,11 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   let postElectrolytes = Math.max(0, Math.round(remainingSodiumDeficit / SACHET_SODIUM));
   
-  // Very conservative post-activity sodium (max 1 sachet)
+  // Ultra conservative post-activity sodium (max 1 sachet, only for extreme sessions)
   postElectrolytes = Math.min(1, postElectrolytes);
   
-  // Only require post-sachet for very long sessions (≥3h)
-  if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
+  // Only require post-sachet for ultra-long sessions (≥4h)
+  if (profile.sessionDuration >= 4 && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
   
