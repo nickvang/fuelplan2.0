@@ -65,25 +65,30 @@ export default function QATest() {
     // Discipline scenarios
     const disciplines = [
       // Running
-      { name: '10K', duration: 0.5, discipline: 'Running' },
-      { name: 'Half Marathon', duration: 1.5, discipline: 'Running' },
-      { name: 'Marathon', duration: 3.5, discipline: 'Running' },
-      { name: 'Long Trail Run', duration: 6, discipline: 'Running' },
+      { name: '10K (Running)', duration: 0.5, discipline: 'Running' },
+      { name: 'Half Marathon (Running)', duration: 1.5, discipline: 'Running' },
+      { name: 'Marathon (Running)', duration: 3.5, discipline: 'Running' },
+      { name: 'Long Trail Run (Running)', duration: 6, discipline: 'Running' },
+      
+      // Hiking
+      { name: '10km Hike (Hiking)', duration: 2, discipline: 'Hiking' },
+      { name: 'Day Hike (Hiking)', duration: 4, discipline: 'Hiking' },
+      { name: 'Mountain Trek (Hiking)', duration: 7, discipline: 'Hiking' },
       
       // Cycling
-      { name: '2h Ride', duration: 2, discipline: 'Cycling' },
-      { name: '4h Ride', duration: 4, discipline: 'Cycling' },
-      { name: '6h Ride', duration: 6, discipline: 'Cycling' },
+      { name: '2h Ride (Cycling)', duration: 2, discipline: 'Cycling' },
+      { name: '4h Ride (Cycling)', duration: 4, discipline: 'Cycling' },
+      { name: '6h Ride (Cycling)', duration: 6, discipline: 'Cycling' },
       
       // Swimming
-      { name: 'Pool 1h', duration: 1, discipline: 'Swimming' },
-      { name: 'Open Water 1.5h', duration: 1.5, discipline: 'Swimming' },
-      { name: 'Long Swim 3h', duration: 3, discipline: 'Swimming' },
+      { name: 'Pool 1h (Swimming)', duration: 1, discipline: 'Swimming' },
+      { name: 'Open Water 1.5h (Swimming)', duration: 1.5, discipline: 'Swimming' },
+      { name: 'Long Swim 3h (Swimming)', duration: 3, discipline: 'Swimming' },
       
       // Triathlon
-      { name: 'Olympic Tri', duration: 2.5, discipline: 'Triathlon' },
-      { name: '70.3 Tri', duration: 5.5, discipline: 'Triathlon' },
-      { name: 'Ironman', duration: 11, discipline: 'Triathlon' },
+      { name: 'Olympic Tri (Triathlon)', duration: 2.5, discipline: 'Triathlon' },
+      { name: '70.3 Tri (Triathlon)', duration: 5.5, discipline: 'Triathlon' },
+      { name: 'Ironman (Triathlon)', duration: 11, discipline: 'Triathlon' },
     ];
 
     // Environment scenarios
@@ -180,7 +185,7 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Water per hour checks - UPDATED FOR PRACTICAL APPROACH
+    // Water per hour checks - UPDATED FOR PRACTICAL APPROACH + HIKING
     const isDiscipline = (disc: string) => scenario.discipline.includes(disc);
     
     if (isDiscipline('Swimming')) {
@@ -189,8 +194,32 @@ export default function QATest() {
         flags.push(`Swimming water ${duringWater}ml/h out of range [150-350]`);
         severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
       }
+    } else if (isDiscipline('Hiking')) {
+      // Hiking: can carry more in backpacks, lower intensity
+      let minWater = 300;
+      let maxWater = 700;
+      
+      if (scenario.duration < 1) {
+        maxWater = 500;
+      } else if (scenario.duration < 2) {
+        maxWater = 600;
+      }
+      
+      if (duringWater < minWater || duringWater > maxWater) {
+        flags.push(`Hiking water ${duringWater}ml/h out of range [${minWater}-${maxWater}]`);
+        severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+      }
+    } else if (isDiscipline('Cycling')) {
+      // Cycling: can carry multiple bottles
+      let minWater = 300;
+      let maxWater = 750;
+      
+      if (duringWater < minWater || duringWater > maxWater) {
+        flags.push(`Cycling water ${duringWater}ml/h out of range [${minWater}-${maxWater}]`);
+        severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+      }
     } else {
-      // Practical limits based on typical carrying capacity and duration
+      // Running/other: Practical limits based on typical carrying capacity and duration
       let minWater = 200;
       let maxWater = 600;
       
@@ -229,16 +258,45 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Sachet checks - UPDATED: Max 1/hour conservative approach
+    // Sachet checks - UPDATED: Ultra-conservative approach
     const duringSachets = plan.duringActivity.electrolytesPerHour;
-    if (duringSachets % 1 !== 0) {
-      flags.push(`Sachets ${duringSachets}/h not a whole number`);
-      severity = 'ERROR';
+    const totalDuringSachets = duringSachets * scenario.duration;
+    
+    // Allow 0 or fractional per-hour values since total during-sachets are capped and then divided by duration
+    // What matters is that the TOTAL is reasonable, not per-hour
+    
+    // Check total during-sachets based on duration (ultra-conservative)
+    let maxTotalDuring = 0;
+    if (scenario.duration < 3) {
+      maxTotalDuring = 0; // <3h: 0 during-sachets
+    } else if (scenario.duration < 5) {
+      maxTotalDuring = 1; // 3-5h: max 1 during-sachet
+    } else {
+      maxTotalDuring = 2; // 5h+: max 2 during-sachets
     }
     
-    // Conservative cap: max 1 sachet per hour
-    if (duringSachets > 1) {
-      flags.push(`Sachets ${duringSachets}/h exceeds conservative 1/h cap`);
+    if (totalDuringSachets > maxTotalDuring + 0.1) { // +0.1 tolerance for rounding
+      flags.push(`Total during-sachets ${totalDuringSachets.toFixed(1)} exceeds conservative cap of ${maxTotalDuring} for ${scenario.duration}h`);
+      severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+    }
+    
+    // Pre-sachets check: should always be 1 (cramping prevention)
+    const preSachets = plan.preActivity.electrolytes;
+    if (preSachets !== 1) {
+      flags.push(`Pre-sachets ${preSachets} should be 1 (cramping prevention)`);
+      severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+    }
+    
+    // Post-sachets check: conservative, race-aware
+    const postSachets = plan.postActivity.electrolytes;
+    const maxPost = scenario.isRaceDay ? 2 : 1;
+    const maxPostHiking = 1; // Hiking is lower intensity
+    
+    if (isDiscipline('Hiking') && postSachets > maxPostHiking) {
+      flags.push(`Hiking post-sachets ${postSachets} exceeds max ${maxPostHiking} (lower intensity)`);
+      severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
+    } else if (!isDiscipline('Hiking') && postSachets > maxPost) {
+      flags.push(`Post-sachets ${postSachets} exceeds max ${maxPost} (race: ${scenario.isRaceDay})`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
 
