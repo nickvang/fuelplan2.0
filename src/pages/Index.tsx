@@ -1169,13 +1169,15 @@ const Index = () => {
                     
                     if (breakdown) {
                       const hours = Math.floor(breakdown.total);
-                      const minutes = Math.round((breakdown.total % 1) * 60);
+                      const remainingMinutes = (breakdown.total % 1) * 60;
+                      const minutes = Math.floor(remainingMinutes);
+                      const seconds = Math.round((remainingMinutes % 1) * 60);
                       
                       return (
                         <div className="text-center py-4">
                           <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
                           <p className="text-4xl font-black text-primary">
-                            {hours}:{String(minutes).padStart(2, '0')}
+                            {String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}
                           </p>
                         </div>
                       );
