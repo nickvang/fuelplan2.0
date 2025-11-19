@@ -377,11 +377,20 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   let postElectrolytes = Math.ceil(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
   
   // More balanced post-activity sodium recommendations
-  // Allow up to 2 sachets for race efforts, 1 for training
-  postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
+  // Hiking is lower intensity - more conservative even on race day
+  if (primaryDiscipline === 'Hiking') {
+    postElectrolytes = Math.min(1, postElectrolytes); // Max 1 sachet for hiking (lower intensity)
+  } else {
+    // Allow up to 2 sachets for race efforts, 1 for training
+    postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
+  }
   
-  // Minimum 1 post-sachet for longer sessions (≥3h)
-  if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
+  // Minimum 1 post-sachet for longer sessions (≥3h), but not for hiking unless ≥4h
+  if (primaryDiscipline === 'Hiking') {
+    if (profile.sessionDuration >= 4 && postElectrolytes === 0) {
+      postElectrolytes = 1;
+    }
+  } else if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
   
