@@ -280,17 +280,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
   const downloadPDF = () => {
     try {
-      // Set document title so print-to-PDF uses this as default filename
-      const originalTitle = document.title;
-      document.title = 'Supplme Hydration Guide';
-      
       // Use browser print dialog so users can "Save as PDF" with full on-screen layout
       window.print();
-      
-      // Restore original title after print dialog
-      setTimeout(() => {
-        document.title = originalTitle;
-      }, 1000);
     } catch (error) {
       console.error('Print Error:', error);
       toast({
