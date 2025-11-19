@@ -22,6 +22,7 @@ export interface HydrationProfile {
   swimDistance?: string;
   swimTemperature?: number; // Triathlon swim temperature in Celsius
   bikePower?: string;
+  bikeSpeed?: string; // Bike speed in km/h for triathlons
   bikeDistance?: string;
   runPace?: string;
   runDistance?: string;

@@ -3,6 +3,7 @@ import { HydrationProfile } from '@/types/hydration';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import { validateAndSanitizeProfile } from '@/utils/profileValidation';
 import { parseSmartWatchFiles } from '@/utils/garminDataParser';
+import { calculateTriathlonDuration, getTriathlonBreakdown, TRIATHLON_DISTANCES } from '@/utils/triathlonCalculator';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
@@ -1095,7 +1096,7 @@ const Index = () => {
 
               {/* Triathlon-specific pace inputs */}
               {profile.disciplines?.[0] === 'Triathlon' ? (
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* Swim Pace */}
                     <div className="space-y-2">
@@ -1103,22 +1104,38 @@ const Index = () => {
                       <Input
                         id="swimPace"
                         value={profile.swimPace || ''}
-                        onChange={(e) => updateProfile({ swimPace: e.target.value })}
+                        onChange={(e) => {
+                          const newProfile = { ...profile, swimPace: e.target.value };
+                          updateProfile({ swimPace: e.target.value });
+                          // Auto-calculate duration
+                          const duration = calculateTriathlonDuration(newProfile);
+                          if (duration) {
+                            updateProfile({ sessionDuration: duration });
+                          }
+                        }}
                         placeholder="e.g., 1:45/100m"
                       />
                       <p className="text-xs text-muted-foreground">Min:sec per 100m</p>
                     </div>
                     
-                    {/* Bike Power/Speed */}
+                    {/* Bike Speed */}
                     <div className="space-y-2">
-                      <Label htmlFor="bikePower">Bike Speed</Label>
+                      <Label htmlFor="bikeSpeed">Bike Speed</Label>
                       <Input
-                        id="bikePower"
-                        value={profile.bikePower || ''}
-                        onChange={(e) => updateProfile({ bikePower: e.target.value })}
+                        id="bikeSpeed"
+                        value={profile.bikeSpeed || profile.bikePower || ''}
+                        onChange={(e) => {
+                          const newProfile = { ...profile, bikeSpeed: e.target.value };
+                          updateProfile({ bikeSpeed: e.target.value });
+                          // Auto-calculate duration
+                          const duration = calculateTriathlonDuration(newProfile);
+                          if (duration) {
+                            updateProfile({ sessionDuration: duration });
+                          }
+                        }}
                         placeholder="e.g., 30 km/h"
                       />
-                      <p className="text-xs text-muted-foreground">Speed or power (W)</p>
+                      <p className="text-xs text-muted-foreground">Average speed in km/h</p>
                     </div>
                     
                     {/* Run Pace */}
@@ -1127,28 +1144,60 @@ const Index = () => {
                       <Input
                         id="runPace"
                         value={profile.runPace || ''}
-                        onChange={(e) => updateProfile({ runPace: e.target.value })}
+                        onChange={(e) => {
+                          const newProfile = { ...profile, runPace: e.target.value };
+                          updateProfile({ runPace: e.target.value });
+                          // Auto-calculate duration
+                          const duration = calculateTriathlonDuration(newProfile);
+                          if (duration) {
+                            updateProfile({ sessionDuration: duration });
+                          }
+                        }}
                         placeholder="e.g., 5:30/km"
                       />
                       <p className="text-xs text-muted-foreground">Min:sec per km</p>
                     </div>
                   </div>
                   
-                  {/* Manual duration input for triathlon */}
-                  <div className="space-y-2">
-                    <Label htmlFor="triathlonDuration">Total Race Duration (hours)</Label>
-                    <Input
-                      id="triathlonDuration"
-                      type="number"
-                      step="0.1"
-                      defaultValue=""
-                      onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) || 0 })}
-                      placeholder="e.g., 2.5 for 2 hours 30 minutes"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Enter your expected total race time including transitions
-                    </p>
-                  </div>
+                  {/* Show calculated duration and breakdown */}
+                  {(() => {
+                    const breakdown = getTriathlonBreakdown(profile);
+                    const distances = profile.raceDistance ? TRIATHLON_DISTANCES[profile.raceDistance as keyof typeof TRIATHLON_DISTANCES] : null;
+                    
+                    if (breakdown && distances) {
+                      return (
+                        <div className="p-4 rounded-lg bg-muted/50 border border-border space-y-3">
+                          <div className="flex items-center justify-between">
+                            <p className="text-sm font-semibold">Auto-Calculated Race Duration:</p>
+                            <p className="text-lg font-bold text-primary">
+                              {Math.floor(breakdown.total)}:{String(Math.round((breakdown.total % 1) * 60)).padStart(2, '0')}
+                            </p>
+                          </div>
+                          
+                          <div className="grid grid-cols-3 gap-4 pt-2 border-t border-border/50">
+                            <div>
+                              <p className="text-xs text-muted-foreground">Swim ({distances.swim}km)</p>
+                              <p className="font-semibold">{Math.floor(breakdown.swim.duration * 60)} min</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Bike ({distances.bike}km)</p>
+                              <p className="font-semibold">{Math.floor(breakdown.bike.duration * 60)} min</p>
+                            </div>
+                            <div>
+                              <p className="text-xs text-muted-foreground">Run ({distances.run}km)</p>
+                              <p className="font-semibold">{Math.floor(breakdown.run.duration * 60)} min</p>
+                            </div>
+                          </div>
+                          
+                          <p className="text-xs text-muted-foreground pt-2 border-t border-border/50">
+                            ℹ️ Duration calculated from your individual paces/speeds. Transitions not included.
+                          </p>
+                        </div>
+                      );
+                    }
+                    
+                    return null;
+                  })()}
                 </div>
               ) : (
                 <PaceDurationCalculator

@@ -17,6 +17,11 @@ export const profileSchema = z.object({
   sessionDuration: z.number().min(0.25, "Session must be at least 15 minutes").max(168, "Session must be less than 7 days").optional(),
   indoorOutdoor: z.enum(['indoor', 'outdoor', 'both']).optional(),
   
+  // Triathlon-specific pace/speed fields
+  swimPace: z.string().max(20, "Swim pace too long").optional().or(z.literal('')),
+  bikeSpeed: z.string().max(20, "Bike speed too long").optional().or(z.literal('')),
+  runPace: z.string().max(20, "Run pace too long").optional().or(z.literal('')),
+  
   // Environment Data
   trainingTemp: z.number().min(-20).max(50).optional(),
   trainingTempRange: z.object({
@@ -84,6 +89,17 @@ export const validateAndSanitizeProfile = (profile: any) => {
   }
   if (profile.clothingType) {
     profile.clothingType = sanitizeString(profile.clothingType);
+  }
+  
+  // Sanitize triathlon pace fields
+  if (profile.swimPace) {
+    profile.swimPace = sanitizeString(profile.swimPace);
+  }
+  if (profile.bikeSpeed) {
+    profile.bikeSpeed = sanitizeString(profile.bikeSpeed);
+  }
+  if (profile.runPace) {
+    profile.runPace = sanitizeString(profile.runPace);
   }
   
   // Validate with zod
