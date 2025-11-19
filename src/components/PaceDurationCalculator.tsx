@@ -184,10 +184,16 @@ export function PaceDurationCalculator({
     if (discipline === 'Running' || discipline === 'Hiking') {
       // Try speed format first for hiking (km/h)
       if (discipline === 'Hiking') {
-        const speedMatch = pace.match(/(\d+(?:\.\d+)?)\s*(?:km\/h)?$/);
+        // Try to parse as simple number first (most common input)
+        const simpleNumber = parseFloat(pace.trim());
+        if (!isNaN(simpleNumber) && simpleNumber >= 1 && simpleNumber <= 10) {
+          return distanceKm / simpleNumber;
+        }
+        
+        // Try "X km/h" format
+        const speedMatch = pace.match(/(\d+(?:\.\d+)?)\s*km\/h/);
         if (speedMatch) {
           const kmPerHour = parseFloat(speedMatch[1]);
-          // If it's a reasonable hiking speed (1-10 km/h), treat as speed
           if (kmPerHour >= 1 && kmPerHour <= 10) {
             return distanceKm / kmPerHour;
           }
