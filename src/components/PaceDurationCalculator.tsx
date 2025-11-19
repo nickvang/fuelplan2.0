@@ -74,14 +74,12 @@ export function PaceDurationCalculator({
 
   // Calculate required pace from goal time OR use default pace if no goal time
   useEffect(() => {
-    // If user has manually entered a pace, don't override it from goalTime
-    const hasManualPace = !!inputValue;
-
-    if (goalTime && raceDistance && !hasManualPace) {
+    // Goal time always takes priority - auto-calculate pace from goal time
+    if (goalTime && raceDistance) {
       const pace = calculatePaceFromGoalTime(goalTime, raceDistance);
       if (pace) {
         setRequiredPace(pace);
-        // Also update the main pace field
+        // Always update the pace field to match goal time
         setInputValue(pace);
         onPaceChange(pace);
         
@@ -315,7 +313,14 @@ export function PaceDurationCalculator({
           onChange={(e) => handleInputChange(e.target.value)}
           placeholder={getPacePlaceholder()}
           className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+          disabled={!!goalTime}
+          readOnly={!!goalTime}
         />
+        {goalTime && inputValue && (
+          <p className="text-xs text-muted-foreground italic">
+            ✓ Pace auto-calculated from goal finish time
+          </p>
+        )}
         {requiredPace && (
           <div className="mt-2 p-3 rounded-lg bg-primary/10 border border-primary/30 animate-fade-in">
             <p className="text-xs font-medium text-primary uppercase tracking-wide">Required Pace to Hit Goal</p>
