@@ -96,15 +96,8 @@ export function PaceDurationCalculator({
           setFinishTime(goalTime); // Display the goal time as-is
         }
       }
-    } else if (raceDistance && !inputValue) {
-      // No goal time and no pace entered yet - use default pace for the discipline
-      const defaultPace = getDefaultPaceForDiscipline(discipline);
-      const duration = calculateDurationFromPace(defaultPace, raceDistance);
-      if (duration !== null) {
-        onDurationChange(duration);
-      }
-      setRequiredPace('');
     } else {
+      // No goal time - clear required pace but don't set default duration
       setRequiredPace('');
     }
   }, [goalTime, raceDistance, discipline, inputValue, onPaceChange, onDurationChange]);
