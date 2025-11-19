@@ -28,6 +28,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
   
+  // Helper function to format hours as hh:mm
+  const formatHoursAsTime = (hours: number): string => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}:${String(m).padStart(2, '0')}`;
+  };
+  
   // Extract initial distance from raceDistance string (e.g., "5 km" -> 5)
   const getInitialDistance = () => {
     if (initialProfile.raceDistance) {
@@ -174,13 +181,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       
       toast({
         title: "Plan Updated",
-        description: `Recalculated for ${newDistance} km (${newDuration.toFixed(1)} hours at ${paceMinPerKm} min/km pace)`,
+        description: `Recalculated for ${newDistance} km (${formatHoursAsTime(newDuration)} at ${paceMinPerKm} min/km pace)`,
       });
     } catch (error) {
       console.error('Error fetching AI insights:', error);
       toast({
         title: "Plan Updated",
-        description: `Recalculated for ${newDistance} km (${newDuration.toFixed(1)} hours)`,
+        description: `Recalculated for ${newDistance} km (${formatHoursAsTime(newDuration)})`,
       });
     } finally {
       setIsRegenerating(false);
@@ -363,14 +370,14 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       doc.setFontSize(48);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
-      doc.text(`${liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1)} L`, W / 2, y + 33, { align: 'center' });
+      doc.text(`${Math.round(liters * 10) / 10} L`, W / 2, y + 33, { align: 'center' });
       
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 100, 100);
       const durText = profile.sessionDuration < 1 
         ? `${Math.round(profile.sessionDuration * 60)} minute` 
-        : `${profile.sessionDuration.toFixed(1)} hour`;
+        : formatHoursAsTime(profile.sessionDuration);
       doc.text(`during your ${durText} ${profile.disciplines?.[0] || 'activity'}`, W / 2, y + 43, { align: 'center' });
       
       y += 60;
@@ -396,7 +403,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       doc.setFontSize(10);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(100, 100, 100);
-      doc.text(`${profile.sessionDuration.toFixed(1)} HOUR ${(profile.disciplines?.[0] || 'ACTIVITY').toUpperCase()} SESSION`, W / 2, y, { align: 'center' });
+      doc.text(`${formatHoursAsTime(profile.sessionDuration).toUpperCase()} ${(profile.disciplines?.[0] || 'ACTIVITY').toUpperCase()} SESSION`, W / 2, y, { align: 'center' });
       y += 15;
 
       // ==== THREE PHASE PLAN ====
@@ -541,7 +548,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(60, 60, 60);
       
-      const explainerText1 = `Your body loses ${plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid during this session through sweat.${profile.avgPace && profile.raceDistance ? ` This is calculated from your ${profile.sessionDuration.toFixed(1)}-hour session duration (based on your ${profile.avgPace} pace over ${profile.raceDistance}).` : profile.sessionDuration ? ` This is based on your ${profile.sessionDuration.toFixed(1)}-hour session duration.` : ''} Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.`;
+      const explainerText1 = `Your body loses ${plan.totalFluidLoss ? Math.round(plan.totalFluidLoss) : 'approximately 1000'}ml of fluid during this session through sweat.${profile.avgPace && profile.raceDistance ? ` This is calculated from your ${formatHoursAsTime(profile.sessionDuration)} session duration (based on your ${profile.avgPace} pace over ${profile.raceDistance}).` : profile.sessionDuration ? ` This is based on your ${formatHoursAsTime(profile.sessionDuration)} session duration.` : ''} Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.`;
       const explainerLines1 = doc.splitTextToSize(explainerText1, W - 2 * M - 10);
       doc.text(explainerLines1, M + 5, textY);
       textY += explainerLines1.length * 3.5 + 3;
@@ -857,13 +864,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           <p className="text-6xl font-black text-foreground">
             {(() => {
               const liters = plan.totalFluidLoss / 1000;
-              return liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1);
+              return Math.round(liters * 10) / 10;
             })()} L
           </p>
           <p className="text-base font-semibold text-muted-foreground">
             during your {profile.sessionDuration < 1 
               ? `${Math.round(profile.sessionDuration * 60)} minute` 
-              : `${profile.sessionDuration.toFixed(1)} hour`} {profile.disciplines?.[0] || 'activity'}
+              : formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'activity'}
           </p>
           {hasSmartWatchData && (
             <p className="text-sm font-semibold text-chrome-dark flex items-center gap-2">
@@ -884,7 +891,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
         )}
         <p className="text-xl font-bold text-muted-foreground uppercase tracking-wide">
-          {profile.sessionDuration.toFixed(1)} Hour {profile.disciplines?.[0] || 'Activity'} Session
+          {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
         </p>
       </div>
 
@@ -958,7 +965,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                 const totalMinutes = profile.sessionDuration * 60;
                 const minutesPerSachet = totalSachets > 0 ? Math.round(totalMinutes / totalSachets) : 0;
-                const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
+                const sodiumPerHour = Math.round(plan.duringActivity.electrolytesPerHour * 500);
                 
                 // All sachets now capped at 1/hour (500mg sodium)
                 let intensityLabel = '';
@@ -978,11 +985,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <>
                     <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                       1 every {minutesPerSachet >= 60 
-                        ? `${(minutesPerSachet / 60).toFixed(1)}h` 
+                        ? formatHoursAsTime(minutesPerSachet / 60)
                         : `${minutesPerSachet} min`}
                     </p>
                     <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                      Total: {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {Math.round(profile.sessionDuration * 10) / 10}h
+                      Total {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {formatHoursAsTime(profile.sessionDuration)}
                     </p>
                     <p className="text-[10px] font-medium mt-1" style={{ color: intensityColor }}>
                       {sodiumPerHour}mg/h sodium • {intensityLabel}
@@ -1055,17 +1062,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
         <AlertDescription className="text-muted-foreground space-y-2">
           <p className="leading-relaxed">
-            Your body loses <strong>{plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'approximately 1000'}ml of fluid</strong> during this session through sweat. 
+            Your body loses <strong>{plan.totalFluidLoss ? Math.round(plan.totalFluidLoss) : 'approximately 1000'}ml of fluid</strong> during this session through sweat. 
             {profile.avgPace && profile.raceDistance && (
-              <> This is calculated from your <strong>{profile.sessionDuration.toFixed(1)}-hour session</strong> duration (based on your {profile.avgPace} pace over {profile.raceDistance}).</>
+              <> This is calculated from your <strong>{formatHoursAsTime(profile.sessionDuration)} session</strong> duration (based on your {profile.avgPace} pace over {profile.raceDistance}).</>
             )}
             {!profile.avgPace && profile.sessionDuration && (
-              <> This is based on your <strong>{profile.sessionDuration.toFixed(1)}-hour session</strong> duration.</>
+              <> This is based on your <strong>{formatHoursAsTime(profile.sessionDuration)} session</strong> duration.</>
             )}
             {' '}Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
           </p>
           <p className="leading-relaxed">
-            The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping. 
+            The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping.
             This isn't guesswork—it's science-backed hydration optimized for your specific conditions.
           </p>
           <p className="leading-relaxed font-semibold">
@@ -1207,13 +1214,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                         const totalMinutes = profile.sessionDuration * 60;
                         const minutesPerSachet = totalSachets > 0 ? Math.round(totalMinutes / totalSachets) : 0;
-                        const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
+                        const sodiumPerHour = Math.round(plan.duringActivity.electrolytesPerHour * 500);
                         
                         return totalSachets > 0 ? (
                           <>
                             <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                               1 every {minutesPerSachet >= 60 
-                                ? `${(minutesPerSachet / 60).toFixed(1)}h` 
+                                ? formatHoursAsTime(minutesPerSachet / 60)
                                 : `${minutesPerSachet} min`}
                             </p>
                             <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
@@ -1424,7 +1431,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           <div className="flex items-center justify-between text-sm">
                             <span className="font-semibold text-foreground">Total Fluid Loss</span>
                             <span className="text-muted-foreground font-mono font-medium">
-                              {plan.totalFluidLoss ? plan.totalFluidLoss.toFixed(0) : 'N/A'}ml
+                              {plan.totalFluidLoss ? Math.round(plan.totalFluidLoss) : 'N/A'}ml
                             </span>
                           </div>
                         <div className="relative h-4 bg-muted rounded-full overflow-hidden">
@@ -1483,12 +1490,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {plan.totalFluidLoss && profile.sessionDuration ? (
                           profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' 
-                            ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${profile.sessionDuration.toFixed(1)} hour session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
+                            ? `⚡ You lose significantly more sodium and fluid than the average athlete. Your estimated ${Math.round(plan.totalFluidLoss)}ml total fluid loss, combined with elevated sweat sodium, requires aggressive electrolyte replacement throughout your ${formatHoursAsTime(profile.sessionDuration)} session. Without adequate replacement, you risk hyponatremia, cramping, and performance decline.`
                             : profile.sweatRate === 'high'
-                            ? `⚡ Your elevated sweat rate means you'll lose approximately ${plan.totalFluidLoss.toFixed(0)}ml during this ${profile.sessionDuration.toFixed(1)} hour session, which is above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes ${plan.duringActivity.frequency.toLowerCase()} to maintain performance.`
+                            ? `⚡ Your elevated sweat rate means you'll lose approximately ${Math.round(plan.totalFluidLoss)}ml during this ${formatHoursAsTime(profile.sessionDuration)} session, which is above average. Precise timing is critical: consume ${plan.duringActivity.waterPerHour}ml/hr with electrolytes ${plan.duringActivity.frequency.toLowerCase()} to maintain performance.`
                             : profile.sweatSaltiness === 'high'
-                            ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${plan.totalFluidLoss.toFixed(0)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
-                            : `✓ Your balanced profile allows standard evidence based protocols. Your ${plan.totalFluidLoss.toFixed(0)}ml total fluid loss over ${profile.sessionDuration.toFixed(1)} hours means you're losing approximately ${Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml per hour, which is within the normal range for endurance athletes (600 to 1000ml/hr). This moderate sweat rate, combined with your medium sodium loss, means 1 sachet per hour provides optimal electrolyte replacement. Your hydration needs align with ACSM guidelines, adjusted for your environmental conditions.`
+                            ? `⚡ Your sweat has elevated sodium concentration, increasing cramping risk. While your fluid loss (${Math.round(plan.totalFluidLoss)}ml) is normal, each liter contains more sodium. The ${plan.duringActivity.electrolytesPerHour} Supplme sachets/hr provide precise electrolyte ratios to maintain neuromuscular function.`
+                            : `✓ Your balanced profile allows standard evidence based protocols. Your ${Math.round(plan.totalFluidLoss)}ml total fluid loss over ${formatHoursAsTime(profile.sessionDuration)} means you're losing approximately ${Math.round(plan.totalFluidLoss / profile.sessionDuration)}ml per hour, which is within the normal range for endurance athletes (600 to 1000ml/hr). This moderate sweat rate, combined with your medium sodium loss, means 1 sachet per hour provides optimal electrolyte replacement. Your hydration needs align with ACSM guidelines, adjusted for your environmental conditions.`
                         ) : (
                           `Please provide a session duration or distance to calculate your personalized fluid loss and hydration recommendations.`
                         )}
