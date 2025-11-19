@@ -22,13 +22,13 @@ const planSchema = z.object({
   }),
   duringActivity: z.object({
     waterPerHour: z.number().min(0).max(5000),
-    electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)])
+    electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)]).nullable()
   }),
   postActivity: z.object({
-    water: z.number().min(0).max(15000),
-    electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)])
+    water: z.number().min(0).max(15000).nullable(),
+    electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)]).nullable()
   }),
-  totalFluidLoss: z.number().min(0).max(50000)
+  totalFluidLoss: z.number().min(0).max(50000).nullable()
 }).passthrough();
 
 const requestSchema = z.object({
