@@ -829,18 +829,82 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         if (profile.disciplines?.[0] === 'Triathlon') {
           doc.setFont('helvetica', 'bold');
           doc.text('For Triathlon:', M + 8, duringY);
+          duringY += 6;
+          
+          // Swim
+          doc.setFontSize(9);
+          doc.setTextColor(0, 100, 200);
+          doc.text('Swim Segment', M + 8, duringY);
+          duringY += 5;
+          doc.setFontSize(8);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          doc.text('• Pre-loaded from pre-race sachet (taken 2 hours before)', M + 12, duringY);
+          duringY += 4;
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100, 100, 100);
+          doc.text('  No additional nutrition needed during swim', M + 12, duringY);
+          duringY += 6;
+          
+          // T1
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0, 150, 100);
+          doc.text('T1 Transition (Swim to Bike)', M + 8, duringY);
           duringY += 5;
           doc.setFont('helvetica', 'normal');
-          doc.text(`• Swim: Pre-loaded from pre-race sachet`, M + 8, duringY);
+          doc.setTextColor(60, 60, 60);
+          doc.text('• Take 1 Supplme sachet immediately in transition area', M + 12, duringY);
+          duringY += 4;
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100, 100, 100);
+          doc.text('  Have it ready in transition bag - mix with water or take straight', M + 12, duringY);
+          duringY += 6;
+          
+          // Bike
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(128, 0, 128);
+          doc.text('Bike Segment', M + 8, duringY);
           duringY += 5;
-          doc.text(`• T1 Transition: Take 1 Supplme sachet`, M + 8, duringY);
-          duringY += 5;
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
           const bikeWater = plan.duringActivity.waterPerHour > 0 ? ` + ${Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour` : '';
-          doc.text(`• Bike: 1 sachet every 45-60 minutes${bikeWater}`, M + 8, duringY);
+          doc.text(`• 1 sachet every 45-60 minutes${bikeWater}`, M + 12, duringY);
+          duringY += 4;
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100, 100, 100);
+          doc.text('  Set timer, keep sachets in jersey pocket or bento box', M + 12, duringY);
+          duringY += 4;
+          doc.text('  Sip water consistently - don\'t gulp', M + 12, duringY);
+          duringY += 6;
+          
+          // T2
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(0, 150, 100);
+          doc.text('T2 Transition (Bike to Run)', M + 8, duringY);
           duringY += 5;
-          doc.text(`• T2 Transition: Take 1 Supplme sachet`, M + 8, duringY);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          doc.text('• Take 1 Supplme sachet as you enter T2 or immediately after', M + 12, duringY);
+          duringY += 4;
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100, 100, 100);
+          doc.text('  Critical: Take early so stomach settles before run', M + 12, duringY);
+          duringY += 6;
+          
+          // Run
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(255, 140, 0);
+          doc.text('Run Segment', M + 8, duringY);
           duringY += 5;
-          doc.text(`• Run: 1 sachet every 30-45 minutes at aid stations + water as tolerated`, M + 8, duringY);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(60, 60, 60);
+          doc.text('• 1 sachet every 30-45 minutes at aid stations + water as tolerated', M + 12, duringY);
+          duringY += 4;
+          doc.setFont('helvetica', 'italic');
+          doc.setTextColor(100, 100, 100);
+          doc.text('  Aim for sachets at every 2nd-3rd aid station', M + 12, duringY);
+          duringY += 4;
+          doc.text('  Carry 1-2 backup sachets if aid stations are far apart', M + 12, duringY);
         } else if (profile.disciplines?.[0] === 'Running') {
           doc.text(`• ${plan.duringActivity.frequency}: Supplme sachet at aid station`, M + 8, duringY);
           duringY += 5;
@@ -1959,17 +2023,53 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <div className="bg-background p-4 rounded-lg">
                 <h4 className="font-semibold mb-3">During Race - Supplme Sachet Schedule</h4>
                 {profile.disciplines?.[0] === 'Triathlon' ? (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium">For Triathlon:</p>
-                    <ul className="space-y-2 text-sm">
-                      <li>• <strong>Swim:</strong> Pre-loaded from pre-race sachet</li>
-                      <li>• <strong>T1 Transition:</strong> Take 1 Supplme sachet</li>
-                      <li>• <strong>Bike:</strong> 1 sachet every 45-60 minutes{plan.duringActivity.waterPerHour > 0 ? ` + ${Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour` : ''}</li>
-                      <li>• <strong>T2 Transition:</strong> Take 1 Supplme sachet</li>
-                      <li>• <strong>Run:</strong> 1 sachet every 30-45 minutes at aid stations + water as tolerated</li>
-                    </ul>
+                  <div className="space-y-4">
+                    <p className="text-sm font-bold text-primary">For Triathlon:</p>
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <p className="text-sm font-semibold">🏊 <strong>Swim Segment</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">Pre-loaded from pre-race sachet (taken 2 hours before)</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">No additional nutrition needed during swim</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <p className="text-sm font-semibold">🏃 <strong>T1 Transition (Swim → Bike)</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">Take 1 Supplme sachet immediately in transition area</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Mix with water or take straight - have it ready in transition bag</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <p className="text-sm font-semibold">🚴 <strong>Bike Segment</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 45-60 minutes{plan.duringActivity.waterPerHour > 0 ? ` + ${Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour` : ''}</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Tip: Set timer on watch, keep sachets in jersey pocket or bento box</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Sip water consistently throughout - don't gulp</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <p className="text-sm font-semibold">🏃 <strong>T2 Transition (Bike → Run)</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">Take 1 Supplme sachet as you enter T2 or immediately after mounting</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Critical timing: Stomach needs to settle before run - take early in transition</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <p className="text-sm font-semibold">🏃 <strong>Run Segment</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 30-45 minutes at aid stations + water as tolerated</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Aim for sachets at every 2nd-3rd aid station depending on spacing</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Carry 1-2 backup sachets in race belt/pocket if aid stations are far apart</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <p className="text-sm font-semibold text-primary mb-2">💡 Pro Tip for Transitions:</p>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Pre-open sachet caps slightly for quick access in T1/T2</li>
+                        <li>• Place sachets in dedicated pockets of transition bags</li>
+                        <li>• Practice your nutrition timing during training</li>
+                        <li>• If feeling nauseated, prioritize the transition sachets</li>
+                      </ul>
+                    </div>
                   </div>
-                ) : profile.disciplines?.[0] === 'Run' ? (
+                ) : profile.disciplines?.[0] === 'Running' ? (
                   <ul className="space-y-2 text-sm">
                     <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet at aid station</li>
                     {plan.duringActivity.waterPerHour > 0 && (
