@@ -149,13 +149,14 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Calculate total during-activity sachets
   let totalDuringSachets = sachetsPerHour * profile.sessionDuration;
   
+  // Since we now give 1 sachet pre-activity, reduce during by 1 to keep total reasonable
   // Ultra-conservative caps on total during-sachets
   if (profile.sessionDuration < 3) {
-    totalDuringSachets = Math.min(1, totalDuringSachets); // Max 1 sachet for 2-3h
+    totalDuringSachets = Math.max(0, Math.min(1, totalDuringSachets) - 1); // Subtract 1 for pre-sachet
   } else if (profile.sessionDuration < 5) {
-    totalDuringSachets = Math.min(2, totalDuringSachets); // Max 2 sachets for 3-5h
+    totalDuringSachets = Math.max(1, Math.min(2, totalDuringSachets) - 1); // Max 1 for 3-5h (was 2)
   } else {
-    totalDuringSachets = Math.min(3, totalDuringSachets); // Max 3 sachets for 5h+
+    totalDuringSachets = Math.max(1, Math.min(3, totalDuringSachets) - 1); // Max 2 for 5h+ (was 3)
   }
   
   // Always round up to whole numbers
@@ -228,8 +229,9 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     }
   }
   
-  // Very conservative: only pre-load for very long sessions (3h+) or race day
-  const preElectrolytes = (profile.sessionDuration >= 3 || (isRaceDay && profile.sessionDuration >= 2)) ? 1 : 0;
+  // Always recommend 1 pre-activity sachet for cramping prevention (high citrate + magnesium)
+  // Take 1-2 hours before activity
+  const preElectrolytes = 1;
   
   if (preAdjustments.length > 0) {
     calculationSteps.push(`Pre-hydration adjustments: ${preAdjustments.join(', ')}`);
