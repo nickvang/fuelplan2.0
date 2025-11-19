@@ -1173,8 +1173,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
                     </div>
                     <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme per hour</p>
-                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.electrolytesPerHour} sachet{plan.duringActivity.electrolytesPerHour > 1 ? 's' : ''}</p>
+                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme total</p>
+                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>
+                        {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet
+                        {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) !== 1 ? 's' : ''}
+                      </p>
                       {(() => {
                         const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                         const totalMinutes = profile.sessionDuration * 60;
