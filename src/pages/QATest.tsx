@@ -549,7 +549,7 @@ export default function QATest() {
                     <th className="text-right p-2">During (ml/h)</th>
                     <th className="text-right p-2">Post (ml)</th>
                     <th className="text-right p-2">Total (ml)</th>
-                    <th className="text-right p-2">Sachets Pre/Hr/Post</th>
+                    <th className="text-right p-2">Sachets Pre/During/Post</th>
                     <th className="text-left p-2">Status</th>
                     <th className="text-left p-2">Flags</th>
                   </tr>
@@ -573,7 +573,9 @@ export default function QATest() {
                       <td className="p-2 text-right font-semibold">{result.duringWaterPerHour}</td>
                       <td className="p-2 text-right">{result.postWater}</td>
                       <td className="p-2 text-right">{result.totalWater}</td>
-                      <td className="p-2 text-right">{result.preSachets}/{result.duringSachetsPerHour}/{result.postSachets}</td>
+                      <td className="p-2 text-right">
+                        {result.preSachets}/{Math.round(result.duringSachetsPerHour * result.duration)}/{result.postSachets}
+                      </td>
                       <td className="p-2">
                         <Badge variant={
                           result.severity === 'OK' ? 'default' :
