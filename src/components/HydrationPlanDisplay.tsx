@@ -593,73 +593,73 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               {/* Day Before - Right Side */}
               <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
                 <div className="hidden md:block" />
-                <Card className="relative p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
+                <Card className="relative p-4 md:p-6 space-y-3 md:space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
                   <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
                     1
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">📅</span>
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className="text-3xl md:text-4xl">🗓️</span>
                     <div>
-                      <h3 className="text-2xl font-black uppercase">Day Before</h3>
-                      <p className="text-sm text-muted-foreground font-semibold">T-24 Hours</p>
+                      <h3 className="text-lg md:text-2xl font-black uppercase">Day Before</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground font-semibold">T-24 Hours</p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
-                      <Droplets className="w-8 h-8 mb-2 text-foreground" />
-                      <p className="text-xs font-bold text-primary uppercase">Hydrate</p>
-                      <p className="text-2xl font-black">2-3L</p>
-                      <p className="text-xs text-muted-foreground">Throughout day</p>
+                  <div className="grid grid-cols-2 gap-2 md:gap-3">
+                    <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
+                      <Droplets className="w-6 h-6 md:w-8 md:h-8 mb-1 md:mb-2 text-foreground" />
+                      <p className="text-[10px] md:text-xs font-bold text-primary uppercase">Hydrate</p>
+                      <p className="text-xl md:text-2xl font-black">2-3L</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Throughout day</p>
                     </div>
-                    <div className="p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
-                      <Zap className="w-8 h-8 mb-2 text-foreground" />
-                      <p className="text-xs font-bold text-primary uppercase">Evening</p>
-                      <p className="text-2xl font-black">500ml + 2x Supplme</p>
-                      <p className="text-xs text-muted-foreground">Pre-load electrolytes</p>
+                    <div className="p-3 md:p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
+                      <Zap className="w-6 h-6 md:w-8 md:h-8 mb-1 md:mb-2 text-foreground" />
+                      <p className="text-[10px] md:text-xs font-bold text-primary uppercase">Evening</p>
+                      <p className="text-base md:text-2xl font-black break-words">500ml + 2x Supplme</p>
+                      <p className="text-[10px] md:text-xs text-muted-foreground">Pre-load electrolytes</p>
                     </div>
                   </div>
                   
                   <div className="pt-2 border-t border-border">
-                    <p className="text-sm font-semibold text-foreground">🚫 Avoid: Alcohol • New foods • Late caffeine</p>
+                    <p className="text-xs md:text-sm font-semibold text-foreground">🚫 Avoid: Alcohol • New foods • Late caffeine</p>
                   </div>
                 </Card>
               </div>
 
               {/* Race Morning - Left Side */}
               <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
-                <Card className="relative p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
+                <Card className="relative p-4 md:p-6 space-y-3 md:space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
                   <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
                     2
                   </div>
-                  <div className="flex items-center gap-3">
-                    <span className="text-4xl">🌅</span>
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <span className="text-3xl md:text-4xl">🌅</span>
                     <div>
-                      <h3 className="text-2xl font-black uppercase">Race Morning</h3>
-                      <p className="text-sm text-muted-foreground font-semibold">T-3 Hours</p>
+                      <h3 className="text-lg md:text-2xl font-black uppercase">Race Morning</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground font-semibold">T-3 Hours</p>
                     </div>
                   </div>
                   
-                  <div className="space-y-3">
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
-                      <span className="text-2xl font-black text-primary">-3h</span>
-                      <div>
-                        <p className="text-sm font-bold">{plan.preActivity.water}ml + Breakfast</p>
-                        <p className="text-xs text-muted-foreground">Wake up hydration</p>
+                  <div className="space-y-2 md:space-y-3">
+                    <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
+                      <span className="text-xl md:text-2xl font-black text-primary flex-shrink-0">-3h</span>
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-bold truncate">{plan.preActivity.water}ml + Breakfast</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Wake up hydration</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
-                      <span className="text-2xl font-black text-primary">-2h</span>
-                      <div>
-                        <p className="text-sm font-bold">{plan.preActivity.electrolytes}x Supplme + 300ml</p>
-                        <p className="text-xs text-muted-foreground">Last substantial intake</p>
+                    <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
+                      <span className="text-xl md:text-2xl font-black text-primary flex-shrink-0">-2h</span>
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-bold break-words">{plan.preActivity.electrolytes}x Supplme + 300ml</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Last substantial intake</p>
                       </div>
                     </div>
-                    <div className="flex items-center gap-3 p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
-                      <span className="text-2xl font-black text-primary">-30m</span>
-                      <div>
-                        <p className="text-sm font-bold">Small sips only (100-150ml)</p>
-                        <p className="text-xs text-muted-foreground">Final bathroom break</p>
+                    <div className="flex items-center gap-2 md:gap-3 p-2 md:p-3 rounded-lg bg-gradient-to-r from-primary/20 to-background border-l-4 border-primary">
+                      <span className="text-xl md:text-2xl font-black text-primary flex-shrink-0">-30m</span>
+                      <div className="min-w-0">
+                        <p className="text-xs md:text-sm font-bold break-words">Small sips only (100-150ml)</p>
+                        <p className="text-[10px] md:text-xs text-muted-foreground">Final bathroom break</p>
                       </div>
                     </div>
                   </div>
@@ -671,29 +671,29 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               {!(profile.disciplines?.includes('Swimming')) && (
               <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
                 <div className="hidden md:block" />
-                <Card className="relative p-6 space-y-4 border-4 border-primary shadow-xl" style={{ backgroundColor: '#0a0a0a' }}>
+                <Card className="relative p-4 md:p-6 space-y-3 md:space-y-4 border-4 border-primary shadow-xl" style={{ backgroundColor: '#0a0a0a' }}>
                   <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
                     3
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-white/10 flex items-center justify-center">
-                      <Flag className="w-6 h-6" style={{ color: '#ffffff' }} />
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-white/10 flex items-center justify-center flex-shrink-0">
+                      <Flag className="w-5 h-5 md:w-6 md:h-6" style={{ color: '#ffffff' }} />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black uppercase" style={{ color: '#ffffff' }}>During Race</h3>
-                      <p className="text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Execute the plan</p>
+                      <h3 className="text-lg md:text-2xl font-black uppercase" style={{ color: '#ffffff' }}>During Race</h3>
+                      <p className="text-xs md:text-sm font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Execute the plan</p>
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Water per hour</p>
-                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.waterPerHour}ml</p>
-                      <p className="text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
+                  <div className="grid grid-cols-2 gap-2 md:gap-4">
+                    <div className="p-3 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
+                      <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1 md:mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Water per hour</p>
+                      <p className="text-2xl md:text-4xl font-black mb-1" style={{ color: '#ffffff' }}>{plan.duringActivity.waterPerHour}ml</p>
+                      <p className="text-[10px] md:text-xs font-semibold" style={{ color: 'rgba(255,255,255,0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
                     </div>
-                    <div className="p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
-                      <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme total</p>
-                      <p className="text-4xl font-black mb-1" style={{ color: '#ffffff' }}>
+                    <div className="p-3 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
+                      <p className="text-[10px] md:text-xs font-bold uppercase tracking-wider mb-1 md:mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme total</p>
+                      <p className="text-2xl md:text-4xl font-black mb-1 break-words" style={{ color: '#ffffff' }}>
                         {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet
                         {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) !== 1 ? 's' : ''}
                       </p>
@@ -705,13 +705,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         
                         return totalSachets > 0 ? (
                           <>
-                            <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
+                            <p className="text-[10px] md:text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                               1 every {minutesPerSachet >= 60 
                                 ? formatHoursAsTime(minutesPerSachet / 60)
                                 : `${minutesPerSachet} min`}
                             </p>
-                            <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                              {totalSachets} total ({sodiumPerHour}mg/h of sodium)
+                            <p className="text-[9px] md:text-xs font-bold pt-1 md:pt-2 border-t border-white/20 break-words" style={{ color: 'rgba(255,255,255,0.9)' }}>
+                              {totalSachets} total ({sodiumPerHour}mg/h)
                             </p>
                           </>
                         ) : null;
@@ -719,9 +719,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     </div>
                   </div>
                   
-                  <div className="flex items-center gap-2 p-3 rounded-lg bg-primary/20 border border-primary/30">
-                    <Activity className="w-5 h-5 text-primary" />
-                    <p className="text-xs font-semibold text-primary-foreground">
+                  <div className="flex items-center gap-2 p-2 md:p-3 rounded-lg bg-primary/20 border border-primary/30">
+                    <Activity className="w-4 h-4 md:w-5 md:h-5 text-primary flex-shrink-0" />
+                    <p className="text-[10px] md:text-xs font-semibold text-primary-foreground">
                       Listen to your body • Adjust as needed
                     </p>
                   </div>
@@ -731,56 +731,56 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
               {/* Post Race - Left Side */}
               <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
-                <Card className="relative p-6 space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
+                <Card className="relative p-4 md:p-6 space-y-3 md:space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
                   <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
                     4
                   </div>
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 rounded-full bg-primary/20 flex items-center justify-center">
-                      <Target className="w-6 h-6 text-primary" />
+                  <div className="flex items-center gap-2 md:gap-3">
+                    <div className="w-10 h-10 md:w-12 md:h-12 rounded-full bg-primary/20 flex items-center justify-center flex-shrink-0">
+                      <Target className="w-5 h-5 md:w-6 md:h-6 text-primary" />
                     </div>
                     <div>
-                      <h3 className="text-2xl font-black uppercase">Recovery</h3>
-                      <p className="text-sm text-muted-foreground font-semibold">4-6 Hour Window</p>
+                      <h3 className="text-lg md:text-2xl font-black uppercase">Recovery</h3>
+                      <p className="text-xs md:text-sm text-muted-foreground font-semibold">4-6 Hour Window</p>
                     </div>
                   </div>
                   
-                  <div className="relative pt-4">
-                    <div className="space-y-4">
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary flex items-center justify-center text-xs font-black text-primary-foreground">0h</div>
-                          <div className="w-0.5 h-12 bg-primary/30"></div>
+                  <div className="relative pt-3 md:pt-4">
+                    <div className="space-y-3 md:space-y-4">
+                      <div className="flex gap-2 md:gap-3">
+                        <div className="flex flex-col items-center flex-shrink-0">
+                          <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary flex items-center justify-center text-[10px] md:text-xs font-black text-primary-foreground">0h</div>
+                          <div className="w-0.5 h-10 md:h-12 bg-primary/30"></div>
                         </div>
-                        <div className="flex-1 pb-4">
-                          <p className="font-bold text-sm">Immediate</p>
-                          <p className="text-xs text-muted-foreground">500ml + {plan.postActivity.electrolytes}x Supplme</p>
-                        </div>
-                      </div>
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary/70 flex items-center justify-center text-xs font-black text-primary-foreground">2h</div>
-                          <div className="w-0.5 h-12 bg-primary/30"></div>
-                        </div>
-                        <div className="flex-1 pb-4">
-                          <p className="font-bold text-sm">First Phase</p>
-                          <p className="text-xs text-muted-foreground">{Math.round(plan.postActivity.water * 0.5)}ml + protein meal</p>
+                        <div className="flex-1 pb-3 md:pb-4 min-w-0">
+                          <p className="font-bold text-xs md:text-sm">Immediate</p>
+                          <p className="text-[10px] md:text-xs text-muted-foreground break-words">500ml + {plan.postActivity.electrolytes}x Supplme</p>
                         </div>
                       </div>
-                      <div className="flex gap-3">
-                        <div className="flex flex-col items-center">
-                          <div className="w-8 h-8 rounded-full bg-primary/40 flex items-center justify-center text-xs font-black text-primary-foreground">6h</div>
+                      <div className="flex gap-2 md:gap-3">
+                        <div className="flex flex-col items-center flex-shrink-0">
+                          <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary/70 flex items-center justify-center text-[10px] md:text-xs font-black text-primary-foreground">2h</div>
+                          <div className="w-0.5 h-10 md:h-12 bg-primary/30"></div>
                         </div>
-                        <div className="flex-1">
-                          <p className="font-bold text-sm">Complete</p>
-                          <p className="text-xs text-muted-foreground">{plan.postActivity.water}ml total (150% loss)</p>
+                        <div className="flex-1 pb-3 md:pb-4 min-w-0">
+                          <p className="font-bold text-xs md:text-sm">First Phase</p>
+                          <p className="text-[10px] md:text-xs text-muted-foreground break-words">{Math.round(plan.postActivity.water * 0.5)}ml + protein meal</p>
+                        </div>
+                      </div>
+                      <div className="flex gap-2 md:gap-3">
+                        <div className="flex flex-col items-center flex-shrink-0">
+                          <div className="w-7 h-7 md:w-8 md:h-8 rounded-full bg-primary/40 flex items-center justify-center text-[10px] md:text-xs font-black text-primary-foreground">6h</div>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-bold text-xs md:text-sm">Complete</p>
+                          <p className="text-[10px] md:text-xs text-muted-foreground break-words">{plan.postActivity.water}ml total (150% loss)</p>
                         </div>
                       </div>
                     </div>
                   </div>
                   
                   <div className="pt-2 border-t border-border">
-                    <p className="text-sm font-semibold text-foreground">✓ Target: Pale yellow urine by evening</p>
+                    <p className="text-xs md:text-sm font-semibold text-foreground">✓ Target: Pale yellow urine by evening</p>
                   </div>
                 </Card>
                 <div className="hidden md:block" />
