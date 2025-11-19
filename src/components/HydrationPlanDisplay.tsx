@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { HydrationPlan, HydrationProfile, AIEnhancedInsights } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -12,7 +12,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
-import html2canvas from 'html2canvas';
+import { jsPDF } from 'jspdf';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -27,7 +27,6 @@ interface HydrationPlanDisplayProps {
 export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, onFullReset, hasSmartWatchData = false, rawSmartWatchData, version }: HydrationPlanDisplayProps) {
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
-  const planRef = useRef<HTMLDivElement | null>(null);
   
   // Helper function to format hours as hh:mm:ss
   const formatHoursAsTime = (hours: number): string => {
