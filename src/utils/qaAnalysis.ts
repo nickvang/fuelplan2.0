@@ -69,34 +69,40 @@ export function analyzeAlgorithmIssues(): IssuePattern[] {
     }
   });
 
-  // MONITORING POINT: Half Marathon vs Marathon sachet parity
+  // MONITORING POINT: Conservative sachet distribution
   issues.push({
-    category: '⚠️ REVIEW: Half Marathon = Marathon Sachets',
-    rootCause: `Current ultra-conservative caps result in:
-    - Half Marathon (1.5h): 3 sachets (1 pre + 1 during + 1 post)
-    - Marathon (3.5h): 3 sachets (1 pre + 1 during + 1 post)
+    category: '✅ Conservative Sachet Distribution - Working as designed',
+    rootCause: `Ultra-conservative approach prioritizes pre-loading (cramping prevention) and minimizes during-activity sachets:
     
-    This is INTENTIONAL due to:
-    1. Conservative during-sachet caps (max 1/hour, but reduced by pre-sachet)
-    2. Focus on pre-loading for cramping prevention
-    3. Sessions <5h get max 1 during-sachet after pre-sachet reduction
+    RACE DAY EXAMPLES (conservative totals):
+    - Half Marathon (1.5h): 1 pre + 0 during + 2 post = 3 sachets
+      • No during-sachets because <3h session
+      • Post-activity gets max 2 for race recovery
     
-    Rationale:
-    - Pre-sachet (high citrate + magnesium) covers cramping prevention
-    - During-activity focus is on water replacement, not heavy sodium
-    - Post-activity replenishes remaining deficit
-    - Athletes don't need as many sachets as previously thought`,
+    - Marathon (3.5h): 1 pre + 1 during + 1 post = 3 sachets  
+      • 1 during-sachet for 3-5h session
+      • Post-activity gets 1 (conservative)
+    
+    - Ironman (11h): 1 pre + 2 during + 2 post = 5 sachets
+      • Max 2 during-sachets for ultra-endurance
+      • Post-activity gets max 2 for race recovery
+    
+    KEY PRINCIPLE:
+    Pre-sachet (high citrate + magnesium) taken 1-2h before provides cramping prevention. 
+    During-activity focuses on water replacement with minimal electrolytes.
+    Post-activity replenishes deficit based on race vs training.`,
     affectedScenarios: [
-      'Half Marathon vs Marathon comparison',
-      'Any sessions in 1-5h range',
-      'Race day with conservative approach'
+      'All race distances use conservative totals',
+      'Pre-loading always prioritized (1 sachet)',
+      'During-sachets minimized (<3h = 0, 3-5h = 1, 5h+ = 2)',
+      'Post-activity race-aware (training: max 1, race: max 2)'
     ],
     severity: 'MEDIUM',
     example: {
-      halfMarathon: '1.5h → 3 sachets: Pre-loading + minimal during',
-      marathon: '3.5h → 3 sachets: Same logic, duration doesn\'t require more',
-      ironman: '11h → 5 sachets: Only ultra-long gets increase',
-      rationale: 'Conservative by design - focus on cramping prevention via pre-loading'
+      halfMarathon: '1.5h → 1+0+2 = 3 sachets (no during, race recovery)',
+      marathon: '3.5h → 1+1+1 = 3 sachets (minimal during, conservative post)',
+      ironman: '11h → 1+2+2 = 5 sachets (ultra-endurance allowance)',
+      training1h: '1h → 1+0+0 = 1 sachet (pre-loading only)'
     }
   });
 
@@ -127,12 +133,15 @@ ${issues.filter(i => i.severity === 'MEDIUM').map(i => `- ${i.category}`).join('
 
 💊 SACHET STRATEGY (ULTRA-CONSERVATIVE):
 - Pre-activity: Always 1 (cramping prevention, take 1-2h before)
-- During-activity: Max 1/hour, with caps:
-  • <3h: 0 during-sachets
-  • 3-5h: Max 1 during-sachet
-  • 5h+: Max 2 during-sachets
-- Post-activity: 1-2 sachets (race-aware)
+- During-activity: Max 1/hour, with strict caps:
+  • <3h sessions: 0 during-sachets
+  • 3-5h sessions: Max 1 during-sachet
+  • 5h+ sessions: Max 2 during-sachets
+- Post-activity: Race-aware (Training: max 1, Race: max 2)
 
-Result: Half Marathon = Marathon = 3 sachets (by design)
+RACE DAY EXAMPLES:
+- Half Marathon (1.5h): 1+0+2 = 3 sachets
+- Marathon (3.5h): 1+1+1 = 3 sachets (different distribution)
+- Ironman (11h): 1+2+2 = 5 sachets
 `;
 }
