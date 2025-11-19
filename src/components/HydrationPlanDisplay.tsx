@@ -934,7 +934,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               {plan.duringActivity.electrolytesPerHour > 0 && (() => {
                 const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                 const totalMinutes = profile.sessionDuration * 60;
-                const minutesPerSachet = Math.round(totalMinutes / totalSachets);
+                const minutesPerSachet = totalSachets > 0 ? Math.round(totalMinutes / totalSachets) : 0;
                 const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
                 
                 // All sachets now capped at 1/hour (500mg sodium)
@@ -951,7 +951,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   intensityColor = 'rgba(255, 255, 255, 0.7)';
                 }
                 
-                return (
+                return totalSachets > 0 ? (
                   <>
                     <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                       1 every {minutesPerSachet} min
@@ -963,7 +963,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       {sodiumPerHour}mg/h sodium • {intensityLabel}
                     </p>
                   </>
-                );
+                ) : null;
               })()}
             </div>
           </div>
@@ -1162,10 +1162,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       {(() => {
                         const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
                         const totalMinutes = profile.sessionDuration * 60;
-                        const minutesPerSachet = Math.round(totalMinutes / totalSachets);
+                        const minutesPerSachet = totalSachets > 0 ? Math.round(totalMinutes / totalSachets) : 0;
                         const sodiumPerHour = plan.duringActivity.electrolytesPerHour * 500;
                         
-                        return (
+                        return totalSachets > 0 ? (
                           <>
                             <p className="text-xs font-semibold mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>
                               1 every {minutesPerSachet} min
@@ -1174,7 +1174,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                               {totalSachets} total ({sodiumPerHour}mg/h)
                             </p>
                           </>
-                        );
+                        ) : null;
                       })()}
                     </div>
                   </div>
