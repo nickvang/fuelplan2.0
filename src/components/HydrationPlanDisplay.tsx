@@ -970,7 +970,23 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
           <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
             <p className="text-sm font-medium flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              <Droplets className="w-4 h-4" /> Practical approach: Most runners carry minimal water
+              <Droplets className="w-4 h-4" /> 
+              {(() => {
+                const discipline = profile.disciplines?.[0] || 'Running';
+                switch (discipline) {
+                  case 'Hiking':
+                    return 'Practical approach: Most hikers carry limited water';
+                  case 'Cycling':
+                    return 'Practical approach: Cyclists can carry more water in bottles';
+                  case 'Swimming':
+                    return 'Practical approach: Limited water intake during swimming';
+                  case 'Triathlon':
+                    return 'Practical approach: Water access varies by discipline';
+                  case 'Running':
+                  default:
+                    return 'Practical approach: Most runners carry minimal water';
+                }
+              })()}
             </p>
             <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
               Sachets are easy to carry • Water recommendations match typical carrying capacity
