@@ -5,6 +5,7 @@ import { HydrationProfile } from '@/types/hydration';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Loader2 } from 'lucide-react';
 
 interface TestScenario {
   id: string;
@@ -407,6 +408,7 @@ export default function QATest() {
               View Analysis
             </a>
             <Button onClick={runTests} disabled={isRunning} size="lg">
+              {isRunning && <Loader2 className="mr-2 h-4 w-4 animate-spin" />}
               {isRunning ? 'Running Tests...' : 'Run All Tests'}
             </Button>
           </div>
