@@ -141,8 +141,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour even for very long sessions
   }
   
-  // Ensure whole numbers only (no decimals)
-  sachetsPerHour = Math.ceil(sachetsPerHour);
+  // Ensure whole numbers only (no decimals) - standard rounding
+  sachetsPerHour = Math.round(sachetsPerHour);
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (race-aware: allows 1 for race day 1-2h)`);
   
@@ -159,8 +159,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     totalDuringSachets = Math.max(1, Math.min(3, totalDuringSachets) - 1); // Max 2 for 5h+ (was 3)
   }
   
-  // Always round up to whole numbers
-  totalDuringSachets = Math.ceil(totalDuringSachets);
+  // Always round to whole numbers using standard rounding
+  totalDuringSachets = Math.round(totalDuringSachets);
   
   calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (ultra-conservative caps)`);
   
@@ -376,7 +376,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const sodiumConsumedPre = preElectrolytes * SACHET_SODIUM;
   const remainingSodiumDeficit = totalSodiumLoss - sodiumConsumedPre - sodiumConsumedDuring;
   
-  let postElectrolytes = Math.ceil(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
+  let postElectrolytes = Math.round(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
   
   // More balanced post-activity sodium recommendations
   // Hiking is lower intensity - more conservative even on race day
