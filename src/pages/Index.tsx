@@ -1113,12 +1113,11 @@ const Index = () => {
                         value={profile.swimPace || ''}
                         onChange={(e) => {
                           const newProfile = { ...profile, swimPace: e.target.value };
-                          updateProfile({ swimPace: e.target.value });
-                          // Auto-calculate duration
                           const duration = calculateTriathlonDuration(newProfile);
-                          if (duration) {
-                            updateProfile({ sessionDuration: duration });
-                          }
+                          updateProfile({ 
+                            swimPace: e.target.value,
+                            ...(duration && { sessionDuration: duration })
+                          });
                         }}
                         placeholder="e.g., 1:45/100m"
                       />
@@ -1133,12 +1132,11 @@ const Index = () => {
                         value={profile.bikeSpeed || profile.bikePower || ''}
                         onChange={(e) => {
                           const newProfile = { ...profile, bikeSpeed: e.target.value };
-                          updateProfile({ bikeSpeed: e.target.value });
-                          // Auto-calculate duration
                           const duration = calculateTriathlonDuration(newProfile);
-                          if (duration) {
-                            updateProfile({ sessionDuration: duration });
-                          }
+                          updateProfile({ 
+                            bikeSpeed: e.target.value,
+                            ...(duration && { sessionDuration: duration })
+                          });
                         }}
                         placeholder="e.g., 30 km/h"
                       />
@@ -1153,12 +1151,11 @@ const Index = () => {
                         value={profile.runPace || ''}
                         onChange={(e) => {
                           const newProfile = { ...profile, runPace: e.target.value };
-                          updateProfile({ runPace: e.target.value });
-                          // Auto-calculate duration
                           const duration = calculateTriathlonDuration(newProfile);
-                          if (duration) {
-                            updateProfile({ sessionDuration: duration });
-                          }
+                          updateProfile({ 
+                            runPace: e.target.value,
+                            ...(duration && { sessionDuration: duration })
+                          });
                         }}
                         placeholder="e.g., 5:30/km"
                       />
