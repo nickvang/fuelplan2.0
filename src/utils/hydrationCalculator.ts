@@ -477,15 +477,15 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     },
     duringActivity: {
       waterPerHour: duringWaterPerHour,
-      electrolytesPerHour: duringElectrolytesPerHour,
+      electrolytesPerHour: duringElectrolytesPerHour || 0,
       frequency: frequency,
     },
     postActivity: {
-      water: postTotal,
-      electrolytes: postElectrolytes,
+      water: postTotal || 0,
+      electrolytes: postElectrolytes || 0,
       timing: `${postImmediate}ml within 30 minutes, remainder over 2-4 hours`,
     },
-    totalFluidLoss: totalFluidLoss,
+    totalFluidLoss: totalFluidLoss || 0,
     recommendations,
     calculationSteps,
     scientificReferences: [
