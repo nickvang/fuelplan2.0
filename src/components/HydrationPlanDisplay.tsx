@@ -771,6 +771,123 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       });
       y += 10;
 
+      // ==== RACE PLANNER - DETAILED INSTRUCTIONS ====
+      if (profile.hasUpcomingRace) {
+        doc.addPage();
+        y = 20;
+        
+        doc.setFontSize(16);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('RACE DAY PLANNER', W / 2, y, { align: 'center' });
+        y += 15;
+
+        // Pre-Race Strategy
+        doc.setFillColor(250, 250, 250);
+        doc.roundedRect(M, y, W - 2 * M, 40, 3, 3, 'F');
+        doc.setDrawColor(200, 200, 200);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(M, y, W - 2 * M, 40, 3, 3, 'S');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('Pre-Race Strategy', M + 5, y + 8);
+        
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        
+        let strategyY = y + 15;
+        doc.text(`• ${plan.preActivity.timing}: ${plan.preActivity.water}ml water + ${plan.preActivity.electrolytes}x Supplme sachet`, M + 8, strategyY);
+        strategyY += 5;
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Day before race: Add ${plan.preActivity.water}ml extra throughout the day`, M + 8, strategyY);
+        strategyY += 5;
+        doc.text(`Optional: 30 min before start, take 200-300ml water in sips`, M + 8, strategyY);
+        
+        y += 48;
+
+        // During Race Strategy
+        doc.setFillColor(250, 250, 250);
+        doc.roundedRect(M, y, W - 2 * M, 50, 3, 3, 'F');
+        doc.setDrawColor(200, 200, 200);
+        doc.roundedRect(M, y, W - 2 * M, 50, 3, 3, 'S');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('During Race - Supplme Sachet Schedule', M + 5, y + 8);
+        
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        
+        let duringY = y + 15;
+        
+        if (profile.disciplines?.[0] === 'Triathlon') {
+          doc.setFont('helvetica', 'bold');
+          doc.text('For Triathlon:', M + 8, duringY);
+          duringY += 5;
+          doc.setFont('helvetica', 'normal');
+          doc.text(`• Swim: Pre-loaded from pre-race sachet`, M + 8, duringY);
+          duringY += 5;
+          doc.text(`• T1 Transition: Take 1 Supplme sachet`, M + 8, duringY);
+          duringY += 5;
+          const bikeWater = plan.duringActivity.waterPerHour > 0 ? ` + ${Math.round(plan.duringActivity.waterPerHour * 0.85)}ml water/hour` : '';
+          doc.text(`• Bike: 1 sachet every 45-60 minutes${bikeWater}`, M + 8, duringY);
+          duringY += 5;
+          doc.text(`• T2 Transition: Take 1 Supplme sachet`, M + 8, duringY);
+          duringY += 5;
+          doc.text(`• Run: 1 sachet every 30-45 minutes at aid stations + water as tolerated`, M + 8, duringY);
+        } else if (profile.disciplines?.[0] === 'Running') {
+          doc.text(`• ${plan.duringActivity.frequency}: Supplme sachet at aid station`, M + 8, duringY);
+          duringY += 5;
+          if (plan.duringActivity.waterPerHour > 0) {
+            doc.text(`• Drink ${Math.round(plan.duringActivity.waterPerHour / 2)}ml water every 15 minutes`, M + 8, duringY);
+            duringY += 5;
+          }
+          doc.text(`• For marathons: Aim for ${Math.round(plan.duringActivity.electrolytesPerHour * (profile.sessionDuration || 3.5))} sachets total`, M + 8, duringY);
+          duringY += 5;
+          doc.text(`• For ultras: ${plan.duringActivity.electrolytesPerHour} sachet(s) per hour minimum`, M + 8, duringY);
+        } else {
+          doc.text(`• ${plan.duringActivity.frequency}: Supplme sachet`, M + 8, duringY);
+          duringY += 5;
+          if (plan.duringActivity.waterPerHour > 0) {
+            doc.text(`• Water: ${plan.duringActivity.waterPerHour}ml per hour`, M + 8, duringY);
+          }
+        }
+        
+        y += 58;
+
+        // Post-Race Recovery
+        doc.setFillColor(250, 250, 250);
+        doc.roundedRect(M, y, W - 2 * M, 35, 3, 3, 'F');
+        doc.setDrawColor(200, 200, 200);
+        doc.roundedRect(M, y, W - 2 * M, 35, 3, 3, 'S');
+        
+        doc.setFontSize(10);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(0, 0, 0);
+        doc.text('Post-Race Recovery', M + 5, y + 8);
+        
+        doc.setFontSize(8);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(60, 60, 60);
+        
+        let postY = y + 15;
+        doc.text(`• Start immediately: ${plan.postActivity.electrolytes}x Supplme over 4-6 hours`, M + 8, postY);
+        postY += 5;
+        doc.text(`• Gradually: ${plan.postActivity.water}ml water over 4-6 hours`, M + 8, postY);
+        postY += 5;
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(100, 100, 100);
+        doc.text(`Target: Pale yellow urine by evening`, M + 8, postY);
+        
+        y += 45;
+      }
+
       // ==== SCIENTIFIC REFERENCES ====
       checkPage(25);
       doc.setFontSize(11);
