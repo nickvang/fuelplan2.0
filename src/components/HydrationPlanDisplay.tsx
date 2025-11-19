@@ -1175,7 +1175,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       Total {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {formatHoursAsTime(profile.sessionDuration)}
                     </p>
                     <p className="text-[10px] font-medium mt-1" style={{ color: intensityColor }}>
-                      {sodiumPerHour}mg/h sodium • {intensityLabel}
+                      {sodiumPerHour}mg/h of sodium • {intensityLabel}
                     </p>
                   </>
                 ) : null;
@@ -1407,7 +1407,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                                 : `${minutesPerSachet} min`}
                             </p>
                             <p className="text-xs font-bold pt-2 border-t border-white/20" style={{ color: 'rgba(255,255,255,0.9)' }}>
-                              {totalSachets} total ({sodiumPerHour}mg/h)
+                              {totalSachets} total ({sodiumPerHour}mg/h of sodium)
                             </p>
                           </>
                         ) : null;
