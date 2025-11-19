@@ -1141,7 +1141,7 @@ const Index = () => {
                       id="triathlonDuration"
                       type="number"
                       step="0.1"
-                      value={profile.sessionDuration || ''}
+                      defaultValue=""
                       onChange={(e) => updateProfile({ sessionDuration: parseFloat(e.target.value) || 0 })}
                       placeholder="e.g., 2.5 for 2 hours 30 minutes"
                     />
