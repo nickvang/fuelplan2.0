@@ -28,11 +28,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const [aiInsights, setAiInsights] = useState<AIEnhancedInsights | null>(null);
   const [loadingInsights, setLoadingInsights] = useState(true);
   
-  // Helper function to format hours as hh:mm
+  // Helper function to format hours as hh:mm:ss
   const formatHoursAsTime = (hours: number): string => {
     const h = Math.floor(hours);
-    const m = Math.round((hours - h) * 60);
-    return `${h}:${String(m).padStart(2, '0')}`;
+    const remainingMinutes = (hours - h) * 60;
+    const m = Math.floor(remainingMinutes);
+    const s = Math.round((remainingMinutes - m) * 60);
+    return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
   
   // Extract initial distance from raceDistance string (e.g., "5 km" -> 5)
@@ -955,10 +957,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Sip {plan.duringActivity.frequency.toLowerCase()}</p>
             </div>
             <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Supplme per hour</p>
+              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total Supplme sachets</p>
               <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
-                  ? `${Math.ceil(plan.duringActivity.electrolytesPerHour)} sachet${Math.ceil(plan.duringActivity.electrolytesPerHour) > 1 ? 's' : ''}` 
+                  ? `${Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet${Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) > 1 ? 's' : ''}` 
                   : 'Not required'}
               </p>
               {plan.duringActivity.electrolytesPerHour > 0 && (() => {
@@ -986,7 +988,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
                       1 every {minutesPerSachet >= 60 
                         ? formatHoursAsTime(minutesPerSachet / 60)
-                        : `${minutesPerSachet} min`}
+                        : `${Math.floor(minutesPerSachet / 60)}:${String(minutesPerSachet % 60).padStart(2, '0')}:00`}
                     </p>
                     <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
                       Total {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {formatHoursAsTime(profile.sessionDuration)}
