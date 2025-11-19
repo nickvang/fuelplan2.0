@@ -36,6 +36,14 @@ function parseSwimPace(paceStr: string): number | null {
     }
   }
   
+  // If just a number (e.g., "1.5"), treat it as minutes (1:30)
+  if (parts.length === 1) {
+    const minutes = parseFloat(parts[0]);
+    if (!isNaN(minutes)) {
+      return minutes;
+    }
+  }
+  
   return null;
 }
 
@@ -59,7 +67,7 @@ function parseBikeSpeed(speedStr: string): number | null {
 }
 
 /**
- * Parse run pace from string format (e.g., "5:30/km" or "5:30")
+ * Parse run pace from string format (e.g., "5:30/km" or "5:30" or "5")
  * @returns run pace in minutes per km
  */
 function parseRunPace(paceStr: string): number | null {
@@ -75,6 +83,14 @@ function parseRunPace(paceStr: string): number | null {
     const seconds = parseInt(parts[1], 10);
     if (!isNaN(minutes) && !isNaN(seconds)) {
       return minutes + seconds / 60;
+    }
+  }
+  
+  // If just a number (e.g., "5"), treat it as minutes (5:00)
+  if (parts.length === 1) {
+    const minutes = parseFloat(parts[0]);
+    if (!isNaN(minutes)) {
+      return minutes;
     }
   }
   
