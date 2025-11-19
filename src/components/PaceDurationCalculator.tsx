@@ -83,14 +83,17 @@ export function PaceDurationCalculator({
         setInputValue(pace);
         onPaceChange(pace);
         
-        // Calculate duration
-        const duration = calculateDurationFromPace(pace, raceDistance);
-        if (duration !== null) {
+        // Duration equals goal time (parse the goal time directly)
+        const timeMatch = goalTime.match(/(\d+):(\d+)(?::(\d+))?/);
+        if (timeMatch) {
+          const hours = parseInt(timeMatch[1]);
+          const minutes = parseInt(timeMatch[2]);
+          const seconds = timeMatch[3] ? parseInt(timeMatch[3]) : 0;
+          const duration = hours + minutes / 60 + seconds / 3600;
+          
           setCalculatedValue(`${duration.toFixed(1)} hours`);
           onDurationChange(duration);
-          const hours = Math.floor(duration);
-          const minutes = Math.round((duration - hours) * 60);
-          setFinishTime(`${hours}:${minutes.toString().padStart(2, '0')}`);
+          setFinishTime(goalTime); // Display the goal time as-is
         }
       }
     } else if (raceDistance && !inputValue) {
