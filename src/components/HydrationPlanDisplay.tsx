@@ -591,10 +591,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             
             <div className="space-y-12">
               {/* Day Before - Right Side */}
-              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
-                <div className="hidden md:block" />
+              <div className="relative lg:grid lg:grid-cols-2 lg:gap-12 items-center">
+                <div className="hidden lg:block" />
                 <Card className="relative p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
-                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden lg:flex">
                     1
                   </div>
                   <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3">
@@ -627,9 +627,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               </div>
 
               {/* Race Morning - Left Side */}
-              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
+              <div className="relative lg:grid lg:grid-cols-2 lg:gap-12 items-center">
                 <Card className="relative p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
-                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden lg:flex">
                     2
                   </div>
                   <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3">
@@ -669,10 +669,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
               {/* During Race - Right Side (Hidden for swimming races) */}
               {!(profile.disciplines?.includes('Swimming')) && (
-              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
-                <div className="hidden md:block" />
+              <div className="relative lg:grid lg:grid-cols-2 lg:gap-12 items-center">
+                <div className="hidden lg:block" />
                 <Card className="relative p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 border-4 border-primary shadow-xl" style={{ backgroundColor: '#0a0a0a' }}>
-                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                  <div className="absolute -left-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden lg:flex">
                     3
                   </div>
                   <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3">
@@ -730,9 +730,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               )}
 
               {/* Post Race - Left Side */}
-              <div className="relative md:grid md:grid-cols-2 md:gap-12 items-center">
+              <div className="relative lg:grid lg:grid-cols-2 lg:gap-12 items-center">
                 <Card className="relative p-4 sm:p-5 md:p-6 space-y-3 sm:space-y-3.5 md:space-y-4 border-2 border-primary/30 bg-gradient-to-br from-primary/10 via-background to-background shadow-lg">
-                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden md:flex">
+                  <div className="absolute -right-6 top-1/2 transform -translate-y-1/2 w-12 h-12 rounded-full bg-primary flex items-center justify-center text-2xl font-black text-primary-foreground hidden lg:flex">
                     4
                   </div>
                   <div className="flex items-center gap-2 sm:gap-2.5 md:gap-3">
