@@ -191,9 +191,24 @@ export default function QATest() {
     const isDiscipline = (disc: string) => scenario.discipline.includes(disc);
     
     if (isDiscipline('Swimming')) {
-      // Swimming has much lower practical intake limits
-      if (duringWater < 150 || duringWater > 350) {
-        flags.push(`Swimming water ${duringWater}ml/h out of range [150-350]`);
+      // Swimming: Impractical to drink during activity unless training
+      // <2h: expect 0ml/h, 2-3h: max 200ml/h, 3h+: max 300ml/h
+      let minWater = 0;
+      let maxWater = 0;
+      
+      if (scenario.duration < 2) {
+        minWater = 0;
+        maxWater = 0;
+      } else if (scenario.duration < 3) {
+        minWater = 0;
+        maxWater = 200;
+      } else {
+        minWater = 0;
+        maxWater = 300;
+      }
+      
+      if (duringWater < minWater || duringWater > maxWater) {
+        flags.push(`Swimming water ${duringWater}ml/h out of range [${minWater}-${maxWater}] for ${scenario.duration}h`);
         severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
       }
     } else if (isDiscipline('Hiking')) {
