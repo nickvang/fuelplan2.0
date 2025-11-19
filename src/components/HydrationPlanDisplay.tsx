@@ -1263,10 +1263,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             Start Completely Fresh
           </Button>
         )}
-        <Button onClick={downloadPDF} variant="default" size="lg" className="gap-2">
-          <Download className="w-4 h-4" />
-          Download Plan
-        </Button>
       </div>
 
       {/* Supplme Product Info - Moved here */}
