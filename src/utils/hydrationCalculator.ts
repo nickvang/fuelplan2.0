@@ -129,14 +129,16 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Round to nearest whole number (more conservative than ceiling)
   sachetsPerHour = Math.round(sachetsPerHour);
   
-  // Conservative cap: maximum 1 sachet per hour
-  // This provides 500mg sodium/hour which is in the safe 300-800mg/h range
-  sachetsPerHour = Math.min(1, sachetsPerHour);
-  
-  // Minimum of 1 sachet per hour for sessions >1h, unless calculated lower
-  if (profile.sessionDuration > 1 && sachetsPerHour < 1) {
-    sachetsPerHour = 1;
+  // Very conservative cap: reduce baseline recommendations
+  // Only recommend sachets for longer/more intense sessions
+  if (profile.sessionDuration < 1.5) {
+    sachetsPerHour = Math.min(0.5, sachetsPerHour); // Max 0.5/hour for shorter sessions
+  } else {
+    sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour for longer sessions
   }
+  
+  // Round to nearest 0.5
+  sachetsPerHour = Math.round(sachetsPerHour * 2) / 2;
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (conservative: max 1/hour)`);
   
@@ -205,7 +207,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     }
   }
   
-  const preElectrolytes = (profile.sessionDuration > 1 || isRaceDay) ? 1 : 0; // Always 1 sachet if >60min or race day
+  // More conservative: only pre-load for longer sessions or race day
+  const preElectrolytes = (profile.sessionDuration >= 2 || isRaceDay) ? 1 : 0;
   
   if (preAdjustments.length > 0) {
     calculationSteps.push(`Pre-hydration adjustments: ${preAdjustments.join(', ')}`);
@@ -315,11 +318,11 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   let postElectrolytes = Math.max(0, Math.round(remainingSodiumDeficit / SACHET_SODIUM));
   
-  // Conservative post-activity sodium (max 2 sachets)
-  postElectrolytes = Math.min(2, postElectrolytes);
+  // Very conservative post-activity sodium (max 1 sachet)
+  postElectrolytes = Math.min(1, postElectrolytes);
   
-  // Minimum 1 sachet for sessions >2h
-  if (profile.sessionDuration >= 2 && postElectrolytes === 0) {
+  // Only require post-sachet for very long sessions (≥3h)
+  if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
   
