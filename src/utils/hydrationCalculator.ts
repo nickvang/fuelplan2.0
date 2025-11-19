@@ -147,19 +147,19 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Calculate total during-activity sachets
   let totalDuringSachets = sachetsPerHour * profile.sessionDuration;
   
-  // Hard caps on total during-sachets regardless of duration
+  // Ultra-conservative caps on total during-sachets
   if (profile.sessionDuration < 3) {
-    totalDuringSachets = Math.min(2, totalDuringSachets); // Max 2 sachets for 2-3h
+    totalDuringSachets = Math.min(1, totalDuringSachets); // Max 1 sachet for 2-3h
   } else if (profile.sessionDuration < 5) {
-    totalDuringSachets = Math.min(3, totalDuringSachets); // Max 3 sachets for 3-5h
+    totalDuringSachets = Math.min(2, totalDuringSachets); // Max 2 sachets for 3-5h
   } else {
-    totalDuringSachets = Math.min(4, totalDuringSachets); // Max 4 sachets for 5h+
+    totalDuringSachets = Math.min(3, totalDuringSachets); // Max 3 sachets for 5h+
   }
   
   // Always round up to whole numbers
   totalDuringSachets = Math.ceil(totalDuringSachets);
   
-  calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (whole number, capped based on duration)`);
+  calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (ultra-conservative caps)`);
   
   const totalSachetsNeeded = totalDuringSachets;
 
@@ -321,14 +321,14 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   calculationSteps.push(`Post immediate (30min): ${postImmediate}ml (safe rate: max 400ml/30min)`);
   
-  // Total recovery over 2-4 hours: aim for 120-150% of remaining deficit
-  // This accounts for ongoing losses and full rehydration
-  let postTotal = Math.round((remainingDeficit * 1.25) / 10) * 10;
+  // Total recovery over 2-4 hours: more conservative - aim for 100% of remaining deficit
+  // Reduced from 125% to prevent excessive post-activity hydration recommendations
+  let postTotal = Math.round((remainingDeficit * 1.0) / 10) * 10;
   
-  // Cap total post recovery at reasonable amount (max 3000ml over 4-6h)
-  postTotal = Math.min(3000, postTotal);
+  // Conservative cap: max 1500ml over 2-4h (prevents excessive recommendations)
+  postTotal = Math.min(1500, postTotal);
   
-  calculationSteps.push(`Post total (2-4h): ${postTotal}ml at steady pace (max 800ml/hour)`);
+  calculationSteps.push(`Post total (2-4h): ${postTotal}ml steady pace (conservative cap: 1500ml max)`);
   
   // Sodium: remaining deficit
   const sodiumConsumedDuring = totalDuringSachets * SACHET_SODIUM;
