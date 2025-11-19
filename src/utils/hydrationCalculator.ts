@@ -327,7 +327,9 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     }
   }
   
-  const duringElectrolytesPerHour = Math.ceil(totalDuringSachets / profile.sessionDuration);
+  const duringElectrolytesPerHour = totalDuringSachets === 0 
+    ? 0 
+    : totalDuringSachets / profile.sessionDuration;
   
   calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h (${(replacementRate * 100).toFixed(0)}% replacement), ${totalDuringSachets} total sachet(s)`);
   
