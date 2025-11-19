@@ -180,7 +180,21 @@ export function PaceDurationCalculator({
     }
 
     // Parse running/hiking pace (e.g., "5:30" means 5 minutes 30 seconds per km)
+    // OR parse hiking speed (e.g., "5" or "5 km/h" means 5 kilometers per hour)
     if (discipline === 'Running' || discipline === 'Hiking') {
+      // Try speed format first for hiking (km/h)
+      if (discipline === 'Hiking') {
+        const speedMatch = pace.match(/(\d+(?:\.\d+)?)\s*(?:km\/h)?$/);
+        if (speedMatch) {
+          const kmPerHour = parseFloat(speedMatch[1]);
+          // If it's a reasonable hiking speed (1-10 km/h), treat as speed
+          if (kmPerHour >= 1 && kmPerHour <= 10) {
+            return distanceKm / kmPerHour;
+          }
+        }
+      }
+      
+      // Parse pace format (min:sec per km)
       const paceMatch = pace.match(/(\d+):(\d{2})/);
       if (paceMatch) {
         const minutes = parseInt(paceMatch[1]);
@@ -243,7 +257,7 @@ export function PaceDurationCalculator({
       case 'Cycling':
         return 'e.g., 30 km/h or 250W';
       case 'Hiking':
-        return 'e.g., 3-4 km/hr or 15-20 min/km';
+        return 'e.g., 5 km/h or 15:00/km';
       default:
         return 'e.g., 5:30/km';
     }
