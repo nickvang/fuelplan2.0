@@ -126,7 +126,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   // Race day adjustment - removed as it was making totals too high
   
-  // Round to nearest whole number (more conservative than ceiling)
+  // Round to nearest whole number
   sachetsPerHour = Math.round(sachetsPerHour);
   
   // Ultra conservative cap: minimize sachet usage across all activities
@@ -134,29 +134,32 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   if (profile.sessionDuration < 2) {
     sachetsPerHour = 0; // No during-activity sachets for sessions under 2h
   } else if (profile.sessionDuration < 3) {
-    sachetsPerHour = Math.min(0.5, sachetsPerHour); // Max 0.5/hour for 2-3h sessions
+    sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour for 2-3h sessions
   } else {
-    sachetsPerHour = Math.min(0.5, sachetsPerHour); // Max 0.5/hour even for very long sessions
+    sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour even for very long sessions
   }
   
-  calculationSteps.push(`Sachets per hour: ${sachetsPerHour.toFixed(2)} (ultra conservative: max 0.5/hour)`);
+  // Ensure whole numbers only (no decimals)
+  sachetsPerHour = Math.ceil(sachetsPerHour);
   
-  // Calculate total and cap it further
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (ultra conservative: max 1/hour, whole numbers only)`);
+  
+  // Calculate total during-activity sachets
   let totalDuringSachets = sachetsPerHour * profile.sessionDuration;
   
   // Hard caps on total during-sachets regardless of duration
   if (profile.sessionDuration < 3) {
-    totalDuringSachets = Math.min(1, totalDuringSachets); // Max 1 sachet for 2-3h
+    totalDuringSachets = Math.min(2, totalDuringSachets); // Max 2 sachets for 2-3h
   } else if (profile.sessionDuration < 5) {
-    totalDuringSachets = Math.min(2, totalDuringSachets); // Max 2 sachets for 3-5h
+    totalDuringSachets = Math.min(3, totalDuringSachets); // Max 3 sachets for 3-5h
   } else {
-    totalDuringSachets = Math.min(3, totalDuringSachets); // Max 3 sachets for 5h+
+    totalDuringSachets = Math.min(4, totalDuringSachets); // Max 4 sachets for 5h+
   }
   
   // Always round up to whole numbers
   totalDuringSachets = Math.ceil(totalDuringSachets);
   
-  calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (capped based on duration)`);
+  calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (whole number, capped based on duration)`);
   
   const totalSachetsNeeded = totalDuringSachets;
 
@@ -289,7 +292,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     }
   }
   
-  const duringElectrolytesPerHour = totalDuringSachets / profile.sessionDuration;
+  const duringElectrolytesPerHour = Math.ceil(totalDuringSachets / profile.sessionDuration);
   
   calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h (${(replacementRate * 100).toFixed(0)}% replacement), ${totalDuringSachets} total sachet(s)`);
   
