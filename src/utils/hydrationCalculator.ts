@@ -131,8 +131,10 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   // Ultra conservative cap: minimize sachet usage across all activities
   // Most athletes don't need as many sachets as previously recommended
+  // Exception: Race day efforts need electrolytes even if shorter duration
   if (profile.sessionDuration < 2) {
-    sachetsPerHour = 0; // No during-activity sachets for sessions under 2h
+    // For race day, allow 1 sachet even for sessions 1-2h
+    sachetsPerHour = isRaceDay && profile.sessionDuration >= 1 ? 1 : 0;
   } else if (profile.sessionDuration < 3) {
     sachetsPerHour = Math.min(1, sachetsPerHour); // Max 1/hour for 2-3h sessions
   } else {
@@ -142,7 +144,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // Ensure whole numbers only (no decimals)
   sachetsPerHour = Math.ceil(sachetsPerHour);
   
-  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (ultra conservative: max 1/hour, whole numbers only)`);
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (race-aware: allows 1 for race day 1-2h)`);
   
   // Calculate total during-activity sachets
   let totalDuringSachets = sachetsPerHour * profile.sessionDuration;
@@ -337,15 +339,16 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   let postElectrolytes = Math.ceil(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
   
-  // Ultra conservative post-activity sodium (max 1 sachet, only for extreme sessions)
-  postElectrolytes = Math.min(1, postElectrolytes);
+  // More balanced post-activity sodium recommendations
+  // Allow up to 2 sachets for race efforts, 1 for training
+  postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
   
-  // Only require post-sachet for ultra-long sessions (≥4h)
-  if (profile.sessionDuration >= 4 && postElectrolytes === 0) {
+  // Minimum 1 post-sachet for longer sessions (≥3h)
+  if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
   
-  calculationSteps.push(`Post-activity: ${postTotal}ml total (${postImmediate}ml within 30min), ${postElectrolytes} sachet(s)`);
+  calculationSteps.push(`Post-activity: ${postTotal}ml total (${postImmediate}ml within 30min), ${postElectrolytes} sachet(s) (race-aware)`);
 
   // ====== 6. RECOMMENDATIONS ======
   const recommendations: string[] = [];
