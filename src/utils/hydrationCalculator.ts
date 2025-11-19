@@ -134,17 +134,17 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   if (profile.sessionDuration < 2) {
     sachetsPerHour = 0; // No during-activity sachets for sessions under 2h
   } else if (profile.sessionDuration < 3) {
-    sachetsPerHour = Math.min(0.5, sachetsPerHour); // Max 0.5/hour for 2-3h sessions
+    sachetsPerHour = Math.min(1, Math.ceil(sachetsPerHour)); // Max 1/hour for 2-3h sessions, round up
   } else {
-    sachetsPerHour = Math.min(0.75, sachetsPerHour); // Max 0.75/hour even for very long sessions
+    sachetsPerHour = Math.min(1, Math.ceil(sachetsPerHour)); // Max 1/hour even for very long sessions, round up
   }
   
-  // Round to nearest 0.25
-  sachetsPerHour = Math.round(sachetsPerHour * 4) / 4;
+  // Ensure whole numbers only
+  sachetsPerHour = Math.ceil(sachetsPerHour);
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (conservative: max 1/hour)`);
   
-  const totalSachetsNeeded = Math.round(sachetsPerHour * profile.sessionDuration);
+  const totalSachetsNeeded = Math.ceil(sachetsPerHour * profile.sessionDuration);
 
   // ====== 3. PRE-ACTIVITY HYDRATION ======
   // Base: 6-8ml/kg (ACSM), using 7ml/kg as baseline (reduced from 8)
@@ -318,7 +318,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const sodiumConsumedPre = preElectrolytes * SACHET_SODIUM;
   const remainingSodiumDeficit = totalSodiumLoss - sodiumConsumedPre - sodiumConsumedDuring;
   
-  let postElectrolytes = Math.max(0, Math.round(remainingSodiumDeficit / SACHET_SODIUM));
+  let postElectrolytes = Math.ceil(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
   
   // Ultra conservative post-activity sodium (max 1 sachet, only for extreme sessions)
   postElectrolytes = Math.min(1, postElectrolytes);
