@@ -273,10 +273,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       const doc = new jsPDF();
       const W = doc.internal.pageSize.width;
       const H = doc.internal.pageSize.height;
-      const M = 15; // margin
+      const M = 15;
       let y = 20;
 
-      const checkPage = (space: number = 30) => {
+      const checkPage = (space: number = 40) => {
         if (y + space > H - 20) {
           doc.addPage();
           y = 20;
@@ -295,85 +295,108 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         });
       };
 
-      // ==== HEADER ====
-      doc.setFillColor(250, 250, 250);
-      doc.rect(0, 0, W, 40, 'F');
-      doc.setFontSize(24);
+      // ==== HEADER - EPIC STYLE (matching on-screen) ====
+      
+      // SUPPLME Logo Text
+      doc.setFontSize(28);
       doc.setFont('helvetica', 'bold');
-      doc.text('SUPPLME', M, 20);
+      doc.setTextColor(255, 255, 255);
+      doc.text('SUPPLME', W / 2, 25, { align: 'center' });
+      
+      // Elite Plan Title
+      doc.setFontSize(20);
+      doc.text('YOUR ELITE PLAN', W / 2, 40, { align: 'center' });
+      
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(100, 100, 100);
-      doc.text('Your Elite Hydration Strategy', M, 30);
-      y = 50;
+      doc.setTextColor(200, 200, 200);
+      doc.text('Your Personalized Hydration Strategy', W / 2, 50, { align: 'center' });
+      
+      y = 70;
 
-      // ==== USER INFO ====
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.text(profile.fullName || 'Athlete', M, y);
-      y += 6;
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(120, 120, 120);
-      doc.text((profile.disciplines || []).join(', '), M, y);
-      y += 4;
-      doc.text(new Date().toLocaleString(), M, y);
-      y += 15;
-
-      // ==== SMARTWATCH DATA ALERT ====
+      // ==== SMARTWATCH BADGE ====
       if (hasSmartWatchData) {
-        checkPage(25);
+        checkPage(15);
+        doc.setFillColor(230, 240, 250);
+        doc.roundedRect(M, y, W - 2 * M, 12, 2, 2, 'F');
+        doc.setFontSize(9);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(50, 50, 50);
+        doc.text('✨ ENHANCED WITH YOUR DATA', W / 2, y + 8, { align: 'center' });
+        y += 20;
+
+        // ==== PERFORMANCE OPTIMIZED ALERT ====
         doc.setFillColor(240, 248, 255);
-        doc.rect(M, y, W - 2 * M, 20, 'F');
-        y += 7;
+        doc.roundedRect(M, y, W - 2 * M, 25, 3, 3, 'F');
+        doc.setDrawColor(100, 150, 255);
+        doc.setLineWidth(0.5);
+        doc.roundedRect(M, y, W - 2 * M, 25, 3, 3, 'S');
+        
         doc.setFontSize(10);
         doc.setFont('helvetica', 'bold');
         doc.setTextColor(0, 0, 0);
-        doc.text('⚡ Performance Optimized with Your Metrics', M + 3, y);
-        y += 6;
+        doc.text('✨ Performance Optimized with Your Metrics', M + 5, y + 10);
+        
         doc.setFontSize(8);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(100, 100, 100);
-        addText('This plan leverages your physiological data, sleep patterns, activity history, and recovery metrics for elite-level accuracy.', 8, false, [100, 100, 100]);
-        y += 10;
+        doc.setTextColor(80, 80, 80);
+        const alertText = 'This plan leverages your physiological data, sleep patterns, activity history, and recovery metrics for elite-level accuracy.';
+        const alertLines = doc.splitTextToSize(alertText, W - 2 * M - 10);
+        doc.text(alertLines, M + 5, y + 17);
+        y += 35;
       }
 
-      // ==== FLUID LOSS CARD ====
-      checkPage(50);
-      doc.setFillColor(250, 250, 250);
-      doc.rect(M, y, W - 2 * M, 45, 'F');
-      y += 10;
+      // ==== FLUID LOSS SUMMARY - HERO CARD ====
+      checkPage(55);
+      doc.setFillColor(245, 245, 250);
+      doc.roundedRect(M, y, W - 2 * M, 50, 4, 4, 'F');
+      doc.setDrawColor(200, 200, 220);
+      doc.setLineWidth(1);
+      doc.roundedRect(M, y, W - 2 * M, 50, 4, 4, 'S');
+      
       doc.setFontSize(9);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(120, 120, 120);
-      doc.text('TOTAL FLUID LOSS', W / 2, y, { align: 'center' });
-      y += 15;
-      doc.setFontSize(36);
+      doc.text('TOTAL FLUID LOSS', W / 2, y + 15, { align: 'center' });
+      
+      const liters = plan.totalFluidLoss / 1000;
+      doc.setFontSize(48);
+      doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
-      const liters = (plan.totalFluidLoss / 1000).toFixed(1);
-      doc.text(`${liters} L`, W / 2, y, { align: 'center' });
-      y += 10;
+      doc.text(`${liters < 0.5 ? liters.toFixed(2) : liters.toFixed(1)} L`, W / 2, y + 33, { align: 'center' });
+      
       doc.setFontSize(9);
+      doc.setFont('helvetica', 'normal');
       doc.setTextColor(100, 100, 100);
-      const dur = profile.sessionDuration < 1 ? `${Math.round(profile.sessionDuration * 60)} minute` : `${profile.sessionDuration.toFixed(1)} hour`;
-      doc.text(`during your ${dur} ${profile.disciplines?.[0] || 'activity'}`, W / 2, y, { align: 'center' });
-      y += 20;
+      const durText = profile.sessionDuration < 1 
+        ? `${Math.round(profile.sessionDuration * 60)} minute` 
+        : `${profile.sessionDuration.toFixed(1)} hour`;
+      doc.text(`during your ${durText} ${profile.disciplines?.[0] || 'activity'}`, W / 2, y + 43, { align: 'center' });
+      
+      y += 60;
 
-      // ==== PERFORMANCE PROTOCOL HEADER ====
-      checkPage(30);
-      doc.setFontSize(16);
+      // ==== YOUR PERFORMANCE PROTOCOL HEADER ====
+      checkPage(40);
+      doc.setFontSize(18);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text('YOUR PERFORMANCE PROTOCOL', W / 2, y, { align: 'center' });
-      y += 8;
+      y += 10;
+      
       if (profile.raceDistance) {
+        doc.setFillColor(10, 10, 10);
+        doc.roundedRect(W / 2 - 25, y, 50, 12, 3, 3, 'F');
         doc.setFontSize(14);
-        doc.text(`${adjustedDistance} KM`, W / 2, y, { align: 'center' });
-        y += 6;
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(255, 255, 255);
+        doc.text(`${adjustedDistance} KM`, W / 2, y + 8, { align: 'center' });
+        y += 18;
       }
+      
       doc.setFontSize(10);
-      doc.setTextColor(120, 120, 120);
-      doc.text(`${profile.sessionDuration.toFixed(1)} Hour ${profile.disciplines?.[0] || 'Activity'} Session`, W / 2, y, { align: 'center' });
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(100, 100, 100);
+      doc.text(`${profile.sessionDuration.toFixed(1)} HOUR ${(profile.disciplines?.[0] || 'ACTIVITY').toUpperCase()} SESSION`, W / 2, y, { align: 'center' });
       y += 15;
 
       // ==== THREE PHASE PLAN ====
