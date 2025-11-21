@@ -446,10 +446,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </Button>
       </div>
 
-      {/* Shareable Section - Optimized for Export */}
+      {/* Shareable Section - Optimized for Export (Hidden from view, only for image generation) */}
       <div 
         id="share-protocol-section" 
         style={{ 
+          position: 'fixed',
+          left: '-9999px',
+          top: '0',
           width: '1200px',
           height: '1400px',
           background: '#000000',
