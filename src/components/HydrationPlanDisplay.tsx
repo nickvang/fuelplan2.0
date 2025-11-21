@@ -317,7 +317,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       const blob = await domtoimage.toBlob(element, {
         width: 1200,
         height: 1400,
-        bgcolor: '#000000',
+        bgcolor: 'transparent',
         quality: 1,
         scale: 2,
         style: {
@@ -577,7 +577,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           top: '0',
           width: '1200px',
           height: '1400px',
-          background: '#000000',
+          background: 'transparent',
           padding: '60px',
           boxSizing: 'border-box',
           fontFamily: 'system-ui, -apple-system, sans-serif'
