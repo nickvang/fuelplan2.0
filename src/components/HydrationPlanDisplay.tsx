@@ -317,7 +317,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       const blob = await domtoimage.toBlob(element, {
         width: 1200,
         height: 1400,
-        bgcolor: 'transparent',
+        bgcolor: '#ffffff',
         quality: 1,
         scale: 2,
         style: {
@@ -577,175 +577,143 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           top: '0',
           width: '1200px',
           height: '1400px',
-          background: 'transparent',
+          background: '#ffffff',
           padding: '60px',
           boxSizing: 'border-box',
           fontFamily: 'system-ui, -apple-system, sans-serif'
         }}
       >
-        {/* Header - NO BORDERS */}
+        {/* Header - ultra clean, no boxes */}
         <div style={{ 
-          padding: '40px 0',
-          marginBottom: '40px',
+          padding: '20px 0 40px 0',
+          marginBottom: '20px',
           textAlign: 'center'
         }}>
-          <div style={{ marginBottom: '30px' }}>
+          <div style={{ marginBottom: '24px' }}>
             <h1 style={{ 
-              color: '#ffffff',
-              fontSize: '64px',
+              color: '#000000',
+              fontSize: '52px',
               fontWeight: '900',
               margin: '0',
               letterSpacing: '3px',
               textTransform: 'uppercase',
-              lineHeight: '1.1',
-              border: 'none'
+              lineHeight: '1.1'
             }}>
               YOUR PERFORMANCE PROTOCOL
             </h1>
           </div>
-          
-          <div style={{
-            background: '#ffffff',
-            display: 'inline-block',
-            padding: '25px 60px',
-            borderRadius: '20px',
-            marginBottom: '25px',
-            border: 'none'
-          }}>
+          <div style={{ marginBottom: '16px' }}>
             <p style={{
               color: '#000000',
-              fontSize: '80px',
+              fontSize: '64px',
               fontWeight: '900',
-              margin: '0',
-              lineHeight: '1',
-              border: 'none'
+              margin: '0'
             }}>
               {adjustedDistance} KM
             </p>
           </div>
-          
-          <div style={{ marginTop: '20px' }}>
+          <div>
             <p style={{
-              color: '#ffffff',
-              fontSize: '36px',
+              color: '#000000',
+              fontSize: '24px',
               fontWeight: '700',
               margin: '0',
               textTransform: 'uppercase',
               letterSpacing: '2px',
-              opacity: '0.9',
-              border: 'none'
+              opacity: '0.9'
             }}>
               {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
             </p>
           </div>
         </div>
 
-        {/* Three Columns - NO BORDERS */}
+        {/* Three Columns - clean cards, no inner boxes */}
         <div style={{ display: 'flex', gap: '30px' }}>
-          {/* PRE - NO BORDERS */}
-          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px', border: 'none', outline: 'none' }}>
-            <div style={{ marginBottom: '25px' }}>
+          {/* PRE */}
+          <div style={{ flex: '1', background: '#ffffff', padding: '20px 0' }}>
+            <div style={{ marginBottom: '16px' }}>
               <p style={{ 
-                fontSize: '14px', 
+                fontSize: '13px', 
                 fontWeight: '700', 
-                color: '#666', 
-                margin: '0 0 10px 0',
+                color: '#888888', 
+                margin: '0 0 6px 0',
                 textTransform: 'uppercase',
                 letterSpacing: '1px'
               }}>
                 2-4 HOURS BEFORE
               </p>
               <h2 style={{ 
-                fontSize: '72px', 
+                fontSize: '40px', 
                 fontWeight: '900', 
-                color: '#000', 
+                color: '#000000', 
                 margin: '0',
-                lineHeight: '1'
+                lineHeight: '1.1'
               }}>
                 PRE
               </h2>
             </div>
-
-            <div style={{ marginBottom: '20px', background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>WATER</p>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0 0 5px 0', lineHeight: '1' }}>{plan.preActivity.water} ml</p>
-              <p style={{ fontSize: '13px', fontWeight: '600', color: '#666', margin: '0' }}>Drink 2 hours before</p>
-            </div>
-
-            <div style={{ background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>SUPPLME SACHET (30ML)</p>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0', lineHeight: '1' }}>{plan.preActivity.electrolytes}x</p>
-            </div>
-
+            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>WATER</p>
+            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>{plan.preActivity.water} ml</p>
+            <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 16px 0' }}>Drink 2 hours before</p>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>SUPPLME SACHET (30ML)</p>
+            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 12px 0' }}>{plan.preActivity.electrolytes}x</p>
             <p style={{ 
               fontSize: '13px', 
               fontWeight: '600', 
-              color: '#666', 
-              margin: '25px 0 0 0',
-              paddingTop: '20px',
-              borderTop: 'none',
+              color: '#666666', 
+              margin: '16px 0 0 0',
               lineHeight: '1.4'
             }}>
               ⚡ Prime your body with optimal fluid balance before you start
             </p>
           </div>
 
-          {/* DURING - NO BORDERS */}
+          {/* DURING */}
           {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
-          <div style={{ flex: '1', background: '#0a0a0a', borderRadius: '20px', padding: '40px 30px', border: 'none', outline: 'none' }}>
-            <div style={{ marginBottom: '25px' }}>
+          <div style={{ flex: '1', background: '#ffffff', padding: '20px 0' }}>
+            <div style={{ marginBottom: '16px' }}>
               <p style={{ 
-                fontSize: '14px', 
+                fontSize: '13px', 
                 fontWeight: '700', 
-                color: '#999', 
-                margin: '0 0 10px 0',
+                color: '#888888', 
+                margin: '0 0 6px 0',
                 textTransform: 'uppercase',
                 letterSpacing: '1px'
               }}>
                 EVERY 12-15 MINUTES
               </p>
               <h2 style={{ 
-                fontSize: '72px', 
+                fontSize: '40px', 
                 fontWeight: '900', 
-                color: '#fff', 
+                color: '#000000', 
                 margin: '0',
-                lineHeight: '1'
+                lineHeight: '1.1'
               }}>
                 DURING
               </h2>
             </div>
-
-            <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#999', margin: '0 0 8px 0', textTransform: 'uppercase' }}>TOTAL WATER</p>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', lineHeight: '1' }}>
-                {safeNumber(plan.duringActivity.waterPerHour) > 0 
-                  ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
-                  : 'As needed'}
+            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>TOTAL WATER</p>
+            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>
+              {safeNumber(plan.duringActivity.waterPerHour) > 0 
+                ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
+                : 'As needed'}
+            </p>
+            {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
+              <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 12px 0' }}>
+                {safeNumber(plan.duringActivity.waterPerHour)} ml per hour • Sip every 12-15 minutes
               </p>
-              <p style={{ fontSize: '15px', fontWeight: '700', color: '#ddd', margin: '0 0 3px 0' }}>
-                {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `${safeNumber(plan.duringActivity.waterPerHour)} ml per hour` : ''}
-              </p>
-              <p style={{ fontSize: '12px', fontWeight: '600', color: '#999', margin: '0' }}>
-                {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `Sip every 12-15 minutes` : ''}
-              </p>
-            </div>
-
-            <div style={{ background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#999', margin: '0 0 8px 0', textTransform: 'uppercase' }}>TOTAL SUPPLME SACHETS</p>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#fff', margin: '0', lineHeight: '1' }}>
-                {plan.duringActivity.electrolytesPerHour > 0 
-                  ? Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)
-                  : 'Not required'}
-              </p>
-            </div>
-
+            )}
+            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>TOTAL SUPPLME SACHETS</p>
+            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 12px 0' }}>
+              {plan.duringActivity.electrolytesPerHour > 0 
+                ? Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)
+                : 'Not required'}
+            </p>
             <p style={{ 
               fontSize: '13px', 
               fontWeight: '600', 
-              color: '#999', 
-              margin: '25px 0 0 0',
-              paddingTop: '20px',
-              borderTop: 'none',
+              color: '#666666', 
+              margin: '16px 0 0 0',
               lineHeight: '1.4'
             }}>
               ⚡ {profile.disciplines?.includes('Running') ? 'Practical approach: Most runners carry minimal water' : 'Maintain performance throughout'}
@@ -753,11 +721,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             {profile.disciplines?.includes('Running') && (
               <p style={{ 
                 fontSize: '11px', 
-                fontWeight: '600', 
-                color: '#888', 
-                margin: '15px 0 0 0',
-                paddingTop: '15px',
-                borderTop: 'none',
+                fontWeight: '500', 
+                color: '#777777', 
+                margin: '10px 0 0 0',
                 lineHeight: '1.4'
               }}>
                 Sachets are easy to carry • Water recommendations match typical carrying capacity
@@ -766,49 +732,40 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
           )}
 
-          {/* POST - NO BORDERS */}
-          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px', border: 'none', outline: 'none' }}>
-            <div style={{ marginBottom: '25px' }}>
+          {/* POST */}
+          <div style={{ flex: '1', background: '#ffffff', padding: '20px 0' }}>
+            <div style={{ marginBottom: '16px' }}>
               <p style={{ 
-                fontSize: '14px', 
+                fontSize: '13px', 
                 fontWeight: '700', 
-                color: '#666', 
-                margin: '0 0 10px 0',
+                color: '#888888', 
+                margin: '0 0 6px 0',
                 textTransform: 'uppercase',
                 letterSpacing: '1px'
               }}>
                 400ML WITHIN 30 MINUTES, REMAINDER OVER 2-4 HOURS
               </p>
               <h2 style={{ 
-                fontSize: '72px', 
+                fontSize: '40px', 
                 fontWeight: '900', 
-                color: '#000', 
+                color: '#000000', 
                 margin: '0',
-                lineHeight: '1'
+                lineHeight: '1.1'
               }}>
                 POST
               </h2>
             </div>
-
-            <div style={{ marginBottom: '20px', background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>WATER (150% OF LOSS)</p>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0 0 5px 0', lineHeight: '1' }}>{safeNumber(plan.postActivity.water)} ml</p>
-              <p style={{ fontSize: '13px', fontWeight: '600', color: '#666', margin: '0' }}>Over 4-6 hours</p>
-            </div>
-
-            <div style={{ background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
-              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>SUPPLME SACHET</p>
-              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0 0 5px 0', lineHeight: '1' }}>{safeNumber(plan.postActivity.electrolytes)}x</p>
-              <p style={{ fontSize: '13px', fontWeight: '600', color: '#666', margin: '0' }}>With water intake</p>
-            </div>
-
+            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>WATER (150% OF LOSS)</p>
+            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>{safeNumber(plan.postActivity.water)} ml</p>
+            <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 12px 0' }}>Over 4-6 hours</p>
+            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>SUPPLME SACHET</p>
+            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>{safeNumber(plan.postActivity.electrolytes)}x</p>
+            <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 12px 0' }}>With water intake</p>
             <p style={{ 
               fontSize: '13px', 
               fontWeight: '600', 
-              color: '#666', 
-              margin: '25px 0 0 0',
-              paddingTop: '20px',
-              borderTop: 'none',
+              color: '#666666', 
+              margin: '16px 0 0 0',
               lineHeight: '1.4'
             }}>
               ⚡ Accelerate recovery and restore your body to peak condition
