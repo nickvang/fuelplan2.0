@@ -585,7 +585,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       >
         {/* Header */}
         <div style={{ 
-          border: '4px solid #ffffff',
           padding: '40px 50px',
           marginBottom: '40px',
           textAlign: 'center'
@@ -685,7 +684,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
           {/* DURING */}
           {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
-          <div style={{ flex: '1', background: '#0a0a0a', borderRadius: '20px', padding: '40px 30px', border: '3px solid #333' }}>
+          <div style={{ flex: '1', background: '#0a0a0a', borderRadius: '20px', padding: '40px 30px' }}>
             <div style={{ marginBottom: '25px' }}>
               <p style={{ 
                 fontSize: '14px', 
