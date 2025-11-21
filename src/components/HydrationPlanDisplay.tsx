@@ -415,46 +415,48 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       </Card>
 
-      {/* Training Plan Header - Epic Style */}
-      <div className="text-center py-4 md:py-6 space-y-3 md:space-y-4">
-        <h2 className="text-2xl md:text-3xl lg:text-4xl font-black tracking-tight uppercase text-foreground px-4">Your Performance Protocol</h2>
-        {profile.raceDistance && (
-          <div className="inline-block athletic-card px-4 md:px-8 py-3 md:py-4 rounded-2xl" style={{ backgroundColor: '#0a0a0a' }}>
-            <p className="text-2xl md:text-3xl font-black" style={{ color: '#ffffff' }}>
-              {adjustedDistance} KM
-            </p>
-          </div>
-        )}
-        <p className="text-base md:text-xl font-bold text-muted-foreground uppercase tracking-wide px-4">
-          {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
-        </p>
-        
-        {/* Share Button */}
-        <div className="pt-2">
-          <Button 
-            onClick={handleShare} 
-            disabled={isSharing}
-            variant="outline"
-            size="lg"
-            className="gap-2 font-bold"
-          >
-            {isSharing ? (
-              <>
-                <Loader2 className="w-5 h-5 animate-spin" />
-                Preparing...
-              </>
-            ) : (
-              <>
-                <Share2 className="w-5 h-5" />
-                Share Protocol
-              </>
-            )}
-          </Button>
-        </div>
+      {/* Share Button */}
+      <div className="text-center pt-2 pb-4">
+        <Button 
+          onClick={handleShare} 
+          disabled={isSharing}
+          variant="outline"
+          size="lg"
+          className="gap-2 font-bold"
+        >
+          {isSharing ? (
+            <>
+              <Loader2 className="w-5 h-5 animate-spin" />
+              Preparing...
+            </>
+          ) : (
+            <>
+              <Share2 className="w-5 h-5" />
+              Share Protocol
+            </>
+          )}
+        </Button>
       </div>
 
-      {/* Three Phase Plan - Simple High Contrast Cards */}
-      <div id="share-protocol-section" className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 p-8 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(10,10,10,0.95) 0%, rgba(30,30,30,0.95) 100%)' }}>
+      {/* Shareable Section */}
+      <div id="share-protocol-section" className="p-6 md:p-10 rounded-3xl space-y-6 md:space-y-8" style={{ background: 'linear-gradient(135deg, rgba(10,10,10,0.98) 0%, rgba(30,30,30,0.98) 100%)' }}>
+        {/* Header for Share */}
+        <div className="text-center space-y-3 md:space-y-4">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase" style={{ color: '#ffffff' }}>YOUR PERFORMANCE PROTOCOL</h2>
+          {profile.raceDistance && (
+            <div className="inline-block px-6 md:px-10 py-3 md:py-5 rounded-2xl" style={{ backgroundColor: '#ffffff' }}>
+              <p className="text-3xl md:text-4xl lg:text-5xl font-black" style={{ color: '#0a0a0a' }}>
+                {adjustedDistance} KM
+              </p>
+            </div>
+          )}
+          <p className="text-lg md:text-2xl font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.8)' }}>
+            {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
+          </p>
+        </div>
+
+        {/* Three Phase Plan */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* PRE */}
         <Card className="athletic-card p-4 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
           <div className="space-y-2 md:space-y-3">
@@ -617,6 +619,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <Zap className="w-4 h-4" /> Accelerate recovery and restore your body to peak condition
           </p>
         </Card>
+      </div>
       </div>
 
       {/* Why So Many Sachets? Explainer */}
