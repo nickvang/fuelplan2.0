@@ -13,7 +13,6 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
 import { jsPDF } from 'jspdf';
-import html2canvas from 'html2canvas';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -304,54 +303,28 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const handleShare = async () => {
     setIsSharing(true);
     try {
-      const element = document.getElementById('performance-protocol');
-      if (!element) {
-        throw new Error('Element not found');
-      }
-
-      // Capture the element as canvas
-      const canvas = await html2canvas(element, {
-        scale: 2,
-        backgroundColor: '#ffffff',
-        logging: false,
-        useCORS: true,
-      });
-
-      // Convert to blob
-      const blob = await new Promise<Blob>((resolve) => {
-        canvas.toBlob((blob) => {
-          resolve(blob!);
-        }, 'image/png', 1.0);
-      });
-
-      const file = new File([blob], 'performance-protocol.png', { type: 'image/png' });
-
-      // Check if Web Share API is available
-      if (navigator.share && navigator.canShare({ files: [file] })) {
+      if (navigator.share) {
         await navigator.share({
           title: 'My Performance Protocol',
-          text: 'Check out my personalized hydration protocol!',
-          files: [file],
+          text: 'Check out my personalized hydration protocol.',
+          url: window.location.href,
         });
-        
-        toast({
-          title: "Shared Successfully",
-          description: "Your performance protocol has been shared!",
-        });
-      } else {
-        // Fallback: download the image
-        const url = URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = 'performance-protocol.png';
-        document.body.appendChild(link);
-        link.click();
-        document.body.removeChild(link);
-        URL.revokeObjectURL(url);
 
         toast({
-          title: "Image Downloaded",
-          description: "Share the downloaded image from your device!",
+          title: "Shared Successfully",
+          description: "Your performance protocol link has been shared!",
+        });
+      } else if (navigator.clipboard) {
+        await navigator.clipboard.writeText(window.location.href);
+        toast({
+          title: "Link Copied",
+          description: "Performance protocol link copied to clipboard. Paste it into Instagram, WhatsApp or SMS.",
+        });
+      } else {
+        toast({
+          title: "Sharing Not Supported",
+          description: "Your browser does not support direct sharing. Please copy the URL manually.",
+          variant: "destructive",
         });
       }
     } catch (error) {
