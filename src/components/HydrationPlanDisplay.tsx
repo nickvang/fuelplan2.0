@@ -303,22 +303,40 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const handleShare = async () => {
     setIsSharing(true);
     try {
+      const shareText = `🏃 MY PERFORMANCE PROTOCOL
+
+📍 Distance: ${adjustedDistance} km
+⏱️ Session: ${formatHoursAsTime(profile.sessionDuration)} ${profile.disciplines?.[0] || 'Activity'}
+
+PRE-ACTIVITY:
+💧 Water: ${Math.round(safeNumber(plan.preActivity.water))} ml
+⚡ Electrolytes: ${Math.round(safeNumber(plan.preActivity.electrolytes))} mg
+
+DURING ACTIVITY:
+💧 Water: ${Math.round(safeNumber(plan.duringActivity.waterPerHour))} ml/hour
+⚡ Electrolytes: ${Math.round(safeNumber(plan.duringActivity.electrolytesPerHour))} mg/hour
+
+POST-ACTIVITY:
+💧 Water: ${Math.round(safeNumber(plan.postActivity.water))} ml
+⚡ Electrolytes: ${Math.round(safeNumber(plan.postActivity.electrolytes))} mg
+
+Get your personalized plan: ${window.location.href}`;
+
       if (navigator.share) {
         await navigator.share({
           title: 'My Performance Protocol',
-          text: 'Check out my personalized hydration protocol.',
-          url: window.location.href,
+          text: shareText,
         });
 
         toast({
           title: "Shared Successfully",
-          description: "Your performance protocol link has been shared!",
+          description: "Your performance protocol has been shared!",
         });
       } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(window.location.href);
+        await navigator.clipboard.writeText(shareText);
         toast({
-          title: "Link Copied",
-          description: "Performance protocol link copied to clipboard. Paste it into Instagram, WhatsApp or SMS.",
+          title: "Protocol Copied",
+          description: "Performance protocol copied to clipboard. Paste it into Instagram, WhatsApp or SMS.",
         });
       } else {
         toast({
