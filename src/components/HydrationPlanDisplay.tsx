@@ -323,15 +323,35 @@ POST-ACTIVITY:
 Get your personalized plan: ${window.location.href}`;
 
       if (navigator.share) {
-        await navigator.share({
-          title: 'My Performance Protocol',
-          text: shareText,
-        });
+        try {
+          await navigator.share({
+            title: 'My Performance Protocol',
+            text: shareText,
+          });
 
-        toast({
-          title: "Shared Successfully",
-          description: "Your performance protocol has been shared!",
-        });
+          toast({
+            title: "Shared Successfully",
+            description: "Your performance protocol has been shared!",
+          });
+        } catch (shareError: any) {
+          // User canceled the share dialog
+          if (shareError.name === 'AbortError') {
+            console.log('Share canceled by user');
+            return;
+          }
+          
+          // If share API failed, fall back to clipboard
+          console.log('Share API failed, trying clipboard fallback');
+          if (navigator.clipboard) {
+            await navigator.clipboard.writeText(shareText);
+            toast({
+              title: "Protocol Copied",
+              description: "Share dialog unavailable. Protocol copied to clipboard - paste into Instagram, WhatsApp or SMS.",
+            });
+          } else {
+            throw shareError;
+          }
+        }
       } else if (navigator.clipboard) {
         await navigator.clipboard.writeText(shareText);
         toast({
