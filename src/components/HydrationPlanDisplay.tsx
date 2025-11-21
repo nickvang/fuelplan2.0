@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
 import { jsPDF } from 'jspdf';
+import html2canvas from 'html2canvas';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -102,6 +103,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const [isRegenerating, setIsRegenerating] = useState(false);
   const [plan, setPlan] = useState(initialPlan);
   const [profile, setProfile] = useState(initialProfile);
+  const [isSharing, setIsSharing] = useState(false);
   const { toast } = useToast();
 
   const handleDistanceChange = async (newDistance: number) => {
@@ -298,6 +300,71 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       });
     }
   };
+
+  const handleShare = async () => {
+    setIsSharing(true);
+    try {
+      const element = document.getElementById('performance-protocol');
+      if (!element) {
+        throw new Error('Element not found');
+      }
+
+      // Capture the element as canvas
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        backgroundColor: '#ffffff',
+        logging: false,
+        useCORS: true,
+      });
+
+      // Convert to blob
+      const blob = await new Promise<Blob>((resolve) => {
+        canvas.toBlob((blob) => {
+          resolve(blob!);
+        }, 'image/png', 1.0);
+      });
+
+      const file = new File([blob], 'performance-protocol.png', { type: 'image/png' });
+
+      // Check if Web Share API is available
+      if (navigator.share && navigator.canShare({ files: [file] })) {
+        await navigator.share({
+          title: 'My Performance Protocol',
+          text: 'Check out my personalized hydration protocol!',
+          files: [file],
+        });
+        
+        toast({
+          title: "Shared Successfully",
+          description: "Your performance protocol has been shared!",
+        });
+      } else {
+        // Fallback: download the image
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = 'performance-protocol.png';
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(url);
+
+        toast({
+          title: "Image Downloaded",
+          description: "Share the downloaded image from your device!",
+        });
+      }
+    } catch (error) {
+      console.error('Share error:', error);
+      toast({
+        title: "Share Failed",
+        description: "Unable to share. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSharing(false);
+    }
+  };
       
 
   return (
@@ -383,10 +450,33 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <p className="text-base md:text-xl font-bold text-muted-foreground uppercase tracking-wide px-4">
           {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
         </p>
+        
+        {/* Share Button */}
+        <div className="pt-2">
+          <Button 
+            onClick={handleShare} 
+            disabled={isSharing}
+            variant="outline"
+            size="lg"
+            className="gap-2 font-bold"
+          >
+            {isSharing ? (
+              <>
+                <Loader2 className="w-5 h-5 animate-spin" />
+                Preparing...
+              </>
+            ) : (
+              <>
+                <Share2 className="w-5 h-5" />
+                Share Protocol
+              </>
+            )}
+          </Button>
+        </div>
       </div>
 
       {/* Three Phase Plan - Simple High Contrast Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div id="performance-protocol" className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
         {/* PRE */}
         <Card className="athletic-card p-4 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
           <div className="space-y-2 md:space-y-3">
