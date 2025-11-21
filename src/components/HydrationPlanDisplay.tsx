@@ -683,7 +683,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               color: '#666', 
               margin: '25px 0 0 0',
               paddingTop: '20px',
-              borderTop: '2px solid #d0d0d0',
+              borderTop: 'none',
               lineHeight: '1.4'
             }}>
               ⚡ Prime your body with optimal fluid balance before you start
@@ -745,7 +745,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               color: '#999', 
               margin: '25px 0 0 0',
               paddingTop: '20px',
-              borderTop: '2px solid #333',
+              borderTop: 'none',
               lineHeight: '1.4'
             }}>
               ⚡ {profile.disciplines?.includes('Running') ? 'Practical approach: Most runners carry minimal water' : 'Maintain performance throughout'}
@@ -757,7 +757,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 color: '#888', 
                 margin: '15px 0 0 0',
                 paddingTop: '15px',
-                borderTop: '1px solid #333',
+                borderTop: 'none',
                 lineHeight: '1.4'
               }}>
                 Sachets are easy to carry • Water recommendations match typical carrying capacity
@@ -808,7 +808,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               color: '#666', 
               margin: '25px 0 0 0',
               paddingTop: '20px',
-              borderTop: '2px solid #d0d0d0',
+              borderTop: 'none',
               lineHeight: '1.4'
             }}>
               ⚡ Accelerate recovery and restore your body to peak condition
