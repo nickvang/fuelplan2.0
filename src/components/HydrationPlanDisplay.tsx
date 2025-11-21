@@ -583,59 +583,67 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           fontFamily: 'system-ui, -apple-system, sans-serif'
         }}
       >
-        {/* Header */}
+        {/* Header - NO BORDERS */}
         <div style={{ 
-          padding: '40px 50px',
+          padding: '40px 0',
           marginBottom: '40px',
           textAlign: 'center'
         }}>
-          <h1 style={{ 
-            color: '#ffffff',
-            fontSize: '64px',
-            fontWeight: '900',
-            margin: '0 0 30px 0',
-            letterSpacing: '3px',
-            textTransform: 'uppercase',
-            lineHeight: '1.1'
-          }}>
-            YOUR PERFORMANCE PROTOCOL
-          </h1>
+          <div style={{ marginBottom: '30px' }}>
+            <h1 style={{ 
+              color: '#ffffff',
+              fontSize: '64px',
+              fontWeight: '900',
+              margin: '0',
+              letterSpacing: '3px',
+              textTransform: 'uppercase',
+              lineHeight: '1.1',
+              border: 'none'
+            }}>
+              YOUR PERFORMANCE PROTOCOL
+            </h1>
+          </div>
           
           <div style={{
             background: '#ffffff',
             display: 'inline-block',
             padding: '25px 60px',
             borderRadius: '20px',
-            marginBottom: '20px'
+            marginBottom: '25px',
+            border: 'none'
           }}>
             <p style={{
               color: '#000000',
               fontSize: '80px',
               fontWeight: '900',
               margin: '0',
-              lineHeight: '1'
+              lineHeight: '1',
+              border: 'none'
             }}>
               {adjustedDistance} KM
             </p>
           </div>
           
-          <p style={{
-            color: '#ffffff',
-            fontSize: '36px',
-            fontWeight: '700',
-            margin: '0',
-            textTransform: 'uppercase',
-            letterSpacing: '2px',
-            opacity: '0.9'
-          }}>
-            {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
-          </p>
+          <div style={{ marginTop: '20px' }}>
+            <p style={{
+              color: '#ffffff',
+              fontSize: '36px',
+              fontWeight: '700',
+              margin: '0',
+              textTransform: 'uppercase',
+              letterSpacing: '2px',
+              opacity: '0.9',
+              border: 'none'
+            }}>
+              {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
+            </p>
+          </div>
         </div>
 
-        {/* Three Columns */}
+        {/* Three Columns - NO BORDERS */}
         <div style={{ display: 'flex', gap: '30px' }}>
-          {/* PRE */}
-          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px' }}>
+          {/* PRE - NO BORDERS */}
+          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px', border: 'none', outline: 'none' }}>
             <div style={{ marginBottom: '25px' }}>
               <p style={{ 
                 fontSize: '14px', 
@@ -682,9 +690,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             </p>
           </div>
 
-          {/* DURING */}
+          {/* DURING - NO BORDERS */}
           {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
-          <div style={{ flex: '1', background: '#0a0a0a', borderRadius: '20px', padding: '40px 30px' }}>
+          <div style={{ flex: '1', background: '#0a0a0a', borderRadius: '20px', padding: '40px 30px', border: 'none', outline: 'none' }}>
             <div style={{ marginBottom: '25px' }}>
               <p style={{ 
                 fontSize: '14px', 
@@ -707,7 +715,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               </h2>
             </div>
 
-            <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px' }}>
               <p style={{ fontSize: '13px', fontWeight: '700', color: '#999', margin: '0 0 8px 0', textTransform: 'uppercase' }}>TOTAL WATER</p>
               <p style={{ fontSize: '48px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {safeNumber(plan.duringActivity.waterPerHour) > 0 
@@ -722,7 +730,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               </p>
             </div>
 
-            <div style={{ background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)' }}>
+            <div style={{ background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px' }}>
               <p style={{ fontSize: '13px', fontWeight: '700', color: '#999', margin: '0 0 8px 0', textTransform: 'uppercase' }}>TOTAL SUPPLME SACHETS</p>
               <p style={{ fontSize: '48px', fontWeight: '900', color: '#fff', margin: '0', lineHeight: '1' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
@@ -758,8 +766,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
           )}
 
-          {/* POST */}
-          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px' }}>
+          {/* POST - NO BORDERS */}
+          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px', border: 'none', outline: 'none' }}>
             <div style={{ marginBottom: '25px' }}>
               <p style={{ 
                 fontSize: '14px', 
