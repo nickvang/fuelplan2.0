@@ -315,9 +315,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       });
 
       const blob = await domtoimage.toBlob(element, {
-        bgcolor: 'transparent',
+        width: 1200,
+        height: 1400,
+        bgcolor: '#000000',
         quality: 1,
         scale: 2,
+        style: {
+          transform: 'scale(1)',
+          transformOrigin: 'top left',
+          width: '1200px',
+          height: '1400px'
+        }
       });
 
       // Create download link
@@ -330,7 +338,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
       toast({
         title: "Image Saved!",
-        description: "Your transparent protocol image is ready to share on Instagram, WhatsApp, or SMS!",
+        description: "Your protocol image is ready to share on Instagram, WhatsApp, or SMS!",
       });
     } catch (error) {
       console.error('Share error:', error);
@@ -438,127 +446,243 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </Button>
       </div>
 
-      {/* Shareable Section */}
-      <div id="share-protocol-section" className="p-8 md:p-12 rounded-3xl space-y-8" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
-        {/* Header for Share */}
-        <div className="text-center space-y-4">
-          <h2 className="text-3xl md:text-5xl font-black tracking-tight uppercase" style={{ color: '#ffffff', letterSpacing: '0.05em' }}>YOUR PERFORMANCE PROTOCOL</h2>
-          {profile.raceDistance && (
-            <div className="inline-block px-8 py-4 rounded-2xl" style={{ backgroundColor: '#ffffff' }}>
-              <p className="text-4xl md:text-5xl font-black" style={{ color: '#0a0a0a' }}>
-                {adjustedDistance} KM
-              </p>
-            </div>
-          )}
-          <p className="text-xl md:text-2xl font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>
+      {/* Shareable Section - Optimized for Export */}
+      <div 
+        id="share-protocol-section" 
+        style={{ 
+          width: '1200px',
+          height: '1400px',
+          background: '#000000',
+          padding: '60px',
+          boxSizing: 'border-box',
+          fontFamily: 'system-ui, -apple-system, sans-serif'
+        }}
+      >
+        {/* Header */}
+        <div style={{ 
+          border: '4px solid #ffffff',
+          padding: '40px 50px',
+          marginBottom: '40px',
+          textAlign: 'center'
+        }}>
+          <h1 style={{ 
+            color: '#ffffff',
+            fontSize: '64px',
+            fontWeight: '900',
+            margin: '0 0 30px 0',
+            letterSpacing: '3px',
+            textTransform: 'uppercase',
+            lineHeight: '1.1'
+          }}>
+            YOUR PERFORMANCE PROTOCOL
+          </h1>
+          
+          <div style={{
+            background: '#ffffff',
+            display: 'inline-block',
+            padding: '25px 60px',
+            borderRadius: '20px',
+            marginBottom: '20px'
+          }}>
+            <p style={{
+              color: '#000000',
+              fontSize: '80px',
+              fontWeight: '900',
+              margin: '0',
+              lineHeight: '1'
+            }}>
+              {adjustedDistance} KM
+            </p>
+          </div>
+          
+          <p style={{
+            color: '#ffffff',
+            fontSize: '36px',
+            fontWeight: '700',
+            margin: '0',
+            textTransform: 'uppercase',
+            letterSpacing: '2px',
+            opacity: '0.9'
+          }}>
             {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
           </p>
         </div>
 
-        {/* Three Phase Plan */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-        {/* PRE */}
-        <div className="p-6 space-y-4 rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
-              <Clock className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
+        {/* Three Columns */}
+        <div style={{ display: 'flex', gap: '30px' }}>
+          {/* PRE */}
+          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px' }}>
+            <div style={{ marginBottom: '25px' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                fontWeight: '700', 
+                color: '#666', 
+                margin: '0 0 10px 0',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}>
+                2-4 HOURS BEFORE
+              </p>
+              <h2 style={{ 
+                fontSize: '72px', 
+                fontWeight: '900', 
+                color: '#000', 
+                margin: '0',
+                lineHeight: '1'
+              }}>
+                PRE
+              </h2>
             </div>
-            <h3 className="text-4xl md:text-5xl font-black" style={{ color: '#0a0a0a' }}>PRE</h3>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>WATER</p>
-              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{plan.preActivity.water} ml</p>
-              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(0,0,0,0.5)' }}>Drink 2 hours before</p>
+
+            <div style={{ marginBottom: '20px', background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>WATER</p>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0 0 5px 0', lineHeight: '1' }}>{plan.preActivity.water} ml</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#666', margin: '0' }}>Drink 2 hours before</p>
             </div>
-            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>SUPPLME SACHET (30ML)</p>
-              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{plan.preActivity.electrolytes}x</p>
+
+            <div style={{ background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>SUPPLME SACHET (30ML)</p>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0', lineHeight: '1' }}>{plan.preActivity.electrolytes}x</p>
             </div>
+
+            <p style={{ 
+              fontSize: '13px', 
+              fontWeight: '600', 
+              color: '#666', 
+              margin: '25px 0 0 0',
+              paddingTop: '20px',
+              borderTop: '2px solid #d0d0d0',
+              lineHeight: '1.4'
+            }}>
+              ⚡ Prime your body with optimal fluid balance before you start
+            </p>
           </div>
 
-          <p className="text-sm font-medium border-t pt-3 flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)', borderColor: 'rgba(0,0,0,0.1)' }}>
-            <Zap className="w-4 h-4" /> Prime your body with optimal fluid balance before you start
-          </p>
-        </div>
-
-        {/* DURING - Solid Black Background */}
-        {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
-        <div className="p-6 space-y-4 rounded-2xl" style={{ backgroundColor: '#0a0a0a', border: '2px solid rgba(255,255,255,0.1)' }}>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
-              <TrendingUp className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
+          {/* DURING */}
+          {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
+          <div style={{ flex: '1', background: '#0a0a0a', borderRadius: '20px', padding: '40px 30px', border: '3px solid #333' }}>
+            <div style={{ marginBottom: '25px' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                fontWeight: '700', 
+                color: '#999', 
+                margin: '0 0 10px 0',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}>
+                EVERY 12-15 MINUTES
+              </p>
+              <h2 style={{ 
+                fontSize: '72px', 
+                fontWeight: '900', 
+                color: '#fff', 
+                margin: '0',
+                lineHeight: '1'
+              }}>
+                DURING
+              </h2>
             </div>
-            <h3 className="text-4xl md:text-5xl font-black" style={{ color: '#ffffff' }}>DURING</h3>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>TOTAL WATER</p>
-              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
+
+            <div style={{ marginBottom: '20px', background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#999', margin: '0 0 8px 0', textTransform: 'uppercase' }}>TOTAL WATER</p>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#fff', margin: '0 0 8px 0', lineHeight: '1' }}>
                 {safeNumber(plan.duringActivity.waterPerHour) > 0 
                   ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-sm font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>
+              <p style={{ fontSize: '15px', fontWeight: '700', color: '#ddd', margin: '0 0 3px 0' }}>
                 {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `${safeNumber(plan.duringActivity.waterPerHour)} ml per hour` : ''}
               </p>
-              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
-                {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `Sip ${plan.duringActivity.frequency.toLowerCase()}` : ''}
+              <p style={{ fontSize: '12px', fontWeight: '600', color: '#999', margin: '0' }}>
+                {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `Sip every 12-15 minutes` : ''}
               </p>
             </div>
-            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>TOTAL SUPPLME SACHETS</p>
-              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
+
+            <div style={{ background: 'rgba(255,255,255,0.12)', padding: '25px', borderRadius: '15px', border: '1px solid rgba(255,255,255,0.2)' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#999', margin: '0 0 8px 0', textTransform: 'uppercase' }}>TOTAL SUPPLME SACHETS</p>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#fff', margin: '0', lineHeight: '1' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
-                  ? `${Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)}` 
+                  ? Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)
                   : 'Not required'}
               </p>
             </div>
-          </div>
 
-          <p className="text-sm font-medium border-t pt-3 flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.1)' }}>
-            <Zap className="w-4 h-4" /> {profile.disciplines?.includes('Running') ? 'Practical approach: Most runners carry minimal water' : 'Maintain performance throughout your activity'}
-          </p>
-          {profile.disciplines?.includes('Running') && (
-            <p className="text-xs font-medium pt-2" style={{ color: 'rgba(255,255,255,0.6)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
-              Sachets are easy to carry • Water recommendations match typical carrying capacity
+            <p style={{ 
+              fontSize: '13px', 
+              fontWeight: '600', 
+              color: '#999', 
+              margin: '25px 0 0 0',
+              paddingTop: '20px',
+              borderTop: '2px solid #333',
+              lineHeight: '1.4'
+            }}>
+              ⚡ {profile.disciplines?.includes('Running') ? 'Practical approach: Most runners carry minimal water' : 'Maintain performance throughout'}
             </p>
+            {profile.disciplines?.includes('Running') && (
+              <p style={{ 
+                fontSize: '11px', 
+                fontWeight: '600', 
+                color: '#888', 
+                margin: '15px 0 0 0',
+                paddingTop: '15px',
+                borderTop: '1px solid #333',
+                lineHeight: '1.4'
+              }}>
+                Sachets are easy to carry • Water recommendations match typical carrying capacity
+              </p>
+            )}
+          </div>
           )}
-        </div>
-        )}
 
-        {/* POST */}
-        <div className="p-6 space-y-4 rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}>
-          <div className="space-y-2">
-            <div className="flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
-              <Clock className="w-4 h-4" />
-              <span className="text-xs font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
+          {/* POST */}
+          <div style={{ flex: '1', background: '#f5f5f5', borderRadius: '20px', padding: '40px 30px' }}>
+            <div style={{ marginBottom: '25px' }}>
+              <p style={{ 
+                fontSize: '14px', 
+                fontWeight: '700', 
+                color: '#666', 
+                margin: '0 0 10px 0',
+                textTransform: 'uppercase',
+                letterSpacing: '1px'
+              }}>
+                400ML WITHIN 30 MINUTES, REMAINDER OVER 2-4 HOURS
+              </p>
+              <h2 style={{ 
+                fontSize: '72px', 
+                fontWeight: '900', 
+                color: '#000', 
+                margin: '0',
+                lineHeight: '1'
+              }}>
+                POST
+              </h2>
             </div>
-            <h3 className="text-4xl md:text-5xl font-black" style={{ color: '#0a0a0a' }}>POST</h3>
-          </div>
-          
-          <div className="space-y-3">
-            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>WATER (150% OF LOSS)</p>
-              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{safeNumber(plan.postActivity.water)} ml</p>
-              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(0,0,0,0.5)' }}>Over 4-6 hours</p>
-            </div>
-            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>SUPPLME SACHET</p>
-              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{safeNumber(plan.postActivity.electrolytes)}x</p>
-              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(0,0,0,0.5)' }}>With water intake</p>
-            </div>
-          </div>
 
-          <p className="text-sm font-medium border-t pt-3 flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)', borderColor: 'rgba(0,0,0,0.1)' }}>
-            <Zap className="w-4 h-4" /> Accelerate recovery and restore your body to peak condition
-          </p>
+            <div style={{ marginBottom: '20px', background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>WATER (150% OF LOSS)</p>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0 0 5px 0', lineHeight: '1' }}>{safeNumber(plan.postActivity.water)} ml</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#666', margin: '0' }}>Over 4-6 hours</p>
+            </div>
+
+            <div style={{ background: '#e0e0e0', padding: '25px', borderRadius: '15px' }}>
+              <p style={{ fontSize: '13px', fontWeight: '700', color: '#666', margin: '0 0 8px 0', textTransform: 'uppercase' }}>SUPPLME SACHET</p>
+              <p style={{ fontSize: '48px', fontWeight: '900', color: '#000', margin: '0 0 5px 0', lineHeight: '1' }}>{safeNumber(plan.postActivity.electrolytes)}x</p>
+              <p style={{ fontSize: '13px', fontWeight: '600', color: '#666', margin: '0' }}>With water intake</p>
+            </div>
+
+            <p style={{ 
+              fontSize: '13px', 
+              fontWeight: '600', 
+              color: '#666', 
+              margin: '25px 0 0 0',
+              paddingTop: '20px',
+              borderTop: '2px solid #d0d0d0',
+              lineHeight: '1.4'
+            }}>
+              ⚡ Accelerate recovery and restore your body to peak condition
+            </p>
+          </div>
         </div>
-      </div>
       </div>
 
       {/* Why So Many Sachets? Explainer */}
