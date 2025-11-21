@@ -446,7 +446,129 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </Button>
       </div>
 
-      {/* Shareable Section - Optimized for Export (Hidden from view, only for image generation) */}
+      {/* Responsive Display Version - Visible on all devices */}
+      <div className="space-y-6 md:space-y-8">
+        {/* Header */}
+        <div className="text-center space-y-4 p-6 md:p-8 border-4 border-foreground rounded-2xl bg-background">
+          <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase text-foreground" style={{ letterSpacing: '0.05em' }}>
+            YOUR PERFORMANCE PROTOCOL
+          </h2>
+          
+          {profile.raceDistance && (
+            <div className="inline-block px-6 md:px-10 py-3 md:py-5 rounded-2xl bg-foreground">
+              <p className="text-3xl md:text-5xl lg:text-6xl font-black text-background">
+                {adjustedDistance} KM
+              </p>
+            </div>
+          )}
+          
+          <p className="text-lg md:text-2xl font-bold uppercase tracking-wide text-foreground opacity-90">
+            {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
+          </p>
+        </div>
+
+        {/* Three Phase Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+          {/* PRE */}
+          <Card className="p-6 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground">PRE</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="bg-secondary/50 p-4 md:p-5 rounded-xl border border-border">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">WATER</p>
+                <p className="text-3xl md:text-4xl font-black text-foreground">{plan.preActivity.water} ml</p>
+                <p className="text-xs font-semibold text-muted-foreground mt-2">Drink 2 hours before</p>
+              </div>
+              <div className="bg-secondary/50 p-4 md:p-5 rounded-xl border border-border">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">SUPPLME SACHET (30ML)</p>
+                <p className="text-3xl md:text-4xl font-black text-foreground">{plan.preActivity.electrolytes}x</p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4 flex items-center gap-2">
+              <Zap className="w-4 h-4" /> Prime your body with optimal fluid balance
+            </p>
+          </Card>
+
+          {/* DURING */}
+          {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
+          <Card className="p-6 md:p-8 space-y-4 md:space-y-5 bg-foreground border-2 border-foreground">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-background/70">
+                <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl lg:text-6xl font-black text-background">DURING</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="bg-background/10 p-4 md:p-5 rounded-xl border border-background/20">
+                <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">TOTAL WATER</p>
+                <p className="text-3xl md:text-4xl font-black text-background">
+                  {safeNumber(plan.duringActivity.waterPerHour) > 0 
+                    ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
+                    : 'As needed'}
+                </p>
+                <p className="text-sm font-semibold text-background/85 mt-2">
+                  {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `${safeNumber(plan.duringActivity.waterPerHour)} ml per hour` : ''}
+                </p>
+                <p className="text-xs font-semibold text-background/60 mt-1">
+                  {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `Sip every 12-15 minutes` : ''}
+                </p>
+              </div>
+              <div className="bg-background/10 p-4 md:p-5 rounded-xl border border-background/20">
+                <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">TOTAL SUPPLME SACHETS</p>
+                <p className="text-3xl md:text-4xl font-black text-background">
+                  {plan.duringActivity.electrolytesPerHour > 0 
+                    ? Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)
+                    : 'Not required'}
+                </p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-background/70 border-t border-background/20 pt-4 flex items-center gap-2">
+              <Zap className="w-4 h-4" /> {profile.disciplines?.includes('Running') ? 'Most runners carry minimal water' : 'Maintain performance'}
+            </p>
+          </Card>
+          )}
+
+          {/* POST */}
+          <Card className="p-6 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <Clock className="w-4 h-4 md:w-5 md:h-5" />
+                <span className="text-xs md:text-sm font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
+              </div>
+              <h3 className="text-4xl md:text-5xl lg:text-6xl font-black text-foreground">POST</h3>
+            </div>
+            
+            <div className="space-y-3">
+              <div className="bg-secondary/50 p-4 md:p-5 rounded-xl border border-border">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">WATER (150% OF LOSS)</p>
+                <p className="text-3xl md:text-4xl font-black text-foreground">{safeNumber(plan.postActivity.water)} ml</p>
+                <p className="text-xs font-semibold text-muted-foreground mt-2">Over 4-6 hours</p>
+              </div>
+              <div className="bg-secondary/50 p-4 md:p-5 rounded-xl border border-border">
+                <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">SUPPLME SACHET</p>
+                <p className="text-3xl md:text-4xl font-black text-foreground">{safeNumber(plan.postActivity.electrolytes)}x</p>
+                <p className="text-xs font-semibold text-muted-foreground mt-2">With water intake</p>
+              </div>
+            </div>
+
+            <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4 flex items-center gap-2">
+              <Zap className="w-4 h-4" /> Accelerate recovery and restore
+            </p>
+          </Card>
+        </div>
+      </div>
+
+      {/* Hidden Export Version - Fixed size for image generation */}
       <div 
         id="share-protocol-section" 
         style={{ 
