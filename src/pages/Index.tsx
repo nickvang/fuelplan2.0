@@ -403,9 +403,9 @@ const Index = () => {
             )}
           </div>
           
-          {/* Demo Buttons - Only visible in development mode */}
-          {import.meta.env.DEV && !showPlan && (
-            <div className="flex gap-3 mt-4 flex-wrap justify-center">
+          {/* Demo Buttons - Visible in preview */}
+          {!showPlan && (
+            <div className="flex gap-3 mt-6 flex-wrap justify-center">
               <button
                 onClick={() => {
                   // Set Quick mode demo profile
@@ -436,7 +436,7 @@ const Index = () => {
                   setConsentGiven(true);
                   setShowPlan(true);
                 }}
-                className="px-6 py-2 bg-green-500 hover:bg-green-600 text-white font-bold rounded-lg transition-colors shadow-lg"
+                className="px-6 py-2.5 bg-primary text-primary-foreground hover:bg-primary/90 font-bold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
                 🏃 Quick Mode Demo
               </button>
@@ -472,7 +472,7 @@ const Index = () => {
                   setConsentGiven(true);
                   setShowPlan(true);
                 }}
-                className="px-6 py-2 bg-purple-500 hover:bg-purple-600 text-white font-bold rounded-lg transition-colors shadow-lg"
+                className="px-6 py-2.5 bg-secondary text-secondary-foreground hover:bg-secondary/80 font-bold rounded-lg transition-all shadow-lg hover:shadow-xl hover:scale-105"
               >
                 🔬 Pro Mode Demo
               </button>
