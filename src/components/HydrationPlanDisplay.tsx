@@ -13,6 +13,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
 import { jsPDF } from 'jspdf';
+import domtoimage from 'dom-to-image-more';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -303,73 +304,39 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   const handleShare = async () => {
     setIsSharing(true);
     try {
-      const shareText = `🏃 MY PERFORMANCE PROTOCOL
-
-📍 Distance: ${adjustedDistance} km
-⏱️ Session: ${formatHoursAsTime(profile.sessionDuration)} ${profile.disciplines?.[0] || 'Activity'}
-
-PRE-ACTIVITY:
-💧 Water: ${Math.round(safeNumber(plan.preActivity.water))} ml
-⚡ Electrolytes: ${Math.round(safeNumber(plan.preActivity.electrolytes))} mg
-
-DURING ACTIVITY:
-💧 Water: ${Math.round(safeNumber(plan.duringActivity.waterPerHour))} ml/hour
-⚡ Electrolytes: ${Math.round(safeNumber(plan.duringActivity.electrolytesPerHour))} mg/hour
-
-POST-ACTIVITY:
-💧 Water: ${Math.round(safeNumber(plan.postActivity.water))} ml
-⚡ Electrolytes: ${Math.round(safeNumber(plan.postActivity.electrolytes))} mg
-
-Get your personalized plan: ${window.location.href}`;
-
-      if (navigator.share) {
-        try {
-          await navigator.share({
-            title: 'My Performance Protocol',
-            text: shareText,
-          });
-
-          toast({
-            title: "Shared Successfully",
-            description: "Your performance protocol has been shared!",
-          });
-        } catch (shareError: any) {
-          // User canceled the share dialog
-          if (shareError.name === 'AbortError') {
-            console.log('Share canceled by user');
-            return;
-          }
-          
-          // If share API failed, fall back to clipboard
-          console.log('Share API failed, trying clipboard fallback');
-          if (navigator.clipboard) {
-            await navigator.clipboard.writeText(shareText);
-            toast({
-              title: "Protocol Copied",
-              description: "Share dialog unavailable. Protocol copied to clipboard - paste into Instagram, WhatsApp or SMS.",
-            });
-          } else {
-            throw shareError;
-          }
-        }
-      } else if (navigator.clipboard) {
-        await navigator.clipboard.writeText(shareText);
-        toast({
-          title: "Protocol Copied",
-          description: "Performance protocol copied to clipboard. Paste it into Instagram, WhatsApp or SMS.",
-        });
-      } else {
-        toast({
-          title: "Sharing Not Supported",
-          description: "Your browser does not support direct sharing. Please copy the URL manually.",
-          variant: "destructive",
-        });
+      const element = document.getElementById('share-protocol-section');
+      if (!element) {
+        throw new Error('Protocol section not found');
       }
+
+      toast({
+        title: "Generating Image...",
+        description: "Creating your shareable protocol image",
+      });
+
+      const blob = await domtoimage.toBlob(element, {
+        bgcolor: 'transparent',
+        quality: 1,
+        scale: 2,
+      });
+
+      // Create download link
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `performance-protocol-${adjustedDistance}km.png`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+
+      toast({
+        title: "Image Saved!",
+        description: "Your transparent protocol image is ready to share on Instagram, WhatsApp, or SMS!",
+      });
     } catch (error) {
       console.error('Share error:', error);
       toast({
         title: "Share Failed",
-        description: "Unable to share. Please try again.",
+        description: "Unable to generate image. Please try again.",
         variant: "destructive",
       });
     } finally {
@@ -487,7 +454,7 @@ Get your personalized plan: ${window.location.href}`;
       </div>
 
       {/* Three Phase Plan - Simple High Contrast Cards */}
-      <div id="performance-protocol" className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+      <div id="share-protocol-section" className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6 p-8 rounded-2xl" style={{ background: 'linear-gradient(135deg, rgba(10,10,10,0.95) 0%, rgba(30,30,30,0.95) 100%)' }}>
         {/* PRE */}
         <Card className="athletic-card p-4 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
           <div className="space-y-2 md:space-y-3">
