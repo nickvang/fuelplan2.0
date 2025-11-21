@@ -439,186 +439,125 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       </div>
 
       {/* Shareable Section */}
-      <div id="share-protocol-section" className="p-6 md:p-10 rounded-3xl space-y-6 md:space-y-8" style={{ background: 'linear-gradient(135deg, rgba(10,10,10,0.98) 0%, rgba(30,30,30,0.98) 100%)' }}>
+      <div id="share-protocol-section" className="p-8 md:p-12 rounded-3xl space-y-8" style={{ background: 'linear-gradient(135deg, #0a0a0a 0%, #1a1a1a 100%)' }}>
         {/* Header for Share */}
-        <div className="text-center space-y-3 md:space-y-4">
-          <h2 className="text-2xl md:text-4xl lg:text-5xl font-black tracking-tight uppercase" style={{ color: '#ffffff' }}>YOUR PERFORMANCE PROTOCOL</h2>
+        <div className="text-center space-y-4">
+          <h2 className="text-3xl md:text-5xl font-black tracking-tight uppercase" style={{ color: '#ffffff', letterSpacing: '0.05em' }}>YOUR PERFORMANCE PROTOCOL</h2>
           {profile.raceDistance && (
-            <div className="inline-block px-6 md:px-10 py-3 md:py-5 rounded-2xl" style={{ backgroundColor: '#ffffff' }}>
-              <p className="text-3xl md:text-4xl lg:text-5xl font-black" style={{ color: '#0a0a0a' }}>
+            <div className="inline-block px-8 py-4 rounded-2xl" style={{ backgroundColor: '#ffffff' }}>
+              <p className="text-4xl md:text-5xl font-black" style={{ color: '#0a0a0a' }}>
                 {adjustedDistance} KM
               </p>
             </div>
           )}
-          <p className="text-lg md:text-2xl font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.8)' }}>
+          <p className="text-xl md:text-2xl font-bold uppercase tracking-wide" style={{ color: 'rgba(255,255,255,0.85)' }}>
             {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
           </p>
         </div>
 
         {/* Three Phase Plan */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         {/* PRE */}
-        <Card className="athletic-card p-4 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
-          <div className="space-y-2 md:space-y-3">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
+        <div className="p-6 space-y-4 rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
+              <Clock className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">{plan.preActivity.timing}</span>
             </div>
-            <h3 className="text-3xl md:text-5xl font-black text-foreground">PRE</h3>
+            <h3 className="text-4xl md:text-5xl font-black" style={{ color: '#0a0a0a' }}>PRE</h3>
           </div>
           
-          <div className="space-y-3 md:space-y-4 py-3 md:py-4">
-            <div className="bg-secondary p-3 md:p-4 rounded-xl border border-border">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water</p>
-              <p className="text-2xl md:text-3xl font-black text-foreground">{plan.preActivity.water} ml</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-2">Drink 2 hours before</p>
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>WATER</p>
+              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{plan.preActivity.water} ml</p>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(0,0,0,0.5)' }}>Drink 2 hours before</p>
             </div>
-            <div className="bg-secondary p-3 md:p-4 rounded-xl border border-border">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet (30ml)</p>
-              <p className="text-2xl md:text-3xl font-black text-foreground">{plan.preActivity.electrolytes}x</p>
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>SUPPLME SACHET (30ML)</p>
+              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{plan.preActivity.electrolytes}x</p>
             </div>
           </div>
 
-          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4 flex items-center gap-2">
+          <p className="text-sm font-medium border-t pt-3 flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)', borderColor: 'rgba(0,0,0,0.1)' }}>
             <Zap className="w-4 h-4" /> Prime your body with optimal fluid balance before you start
           </p>
-        </Card>
+        </div>
 
-        {/* DURING - Solid Black Background with White Text (Hidden for swimming races) */}
+        {/* DURING - Solid Black Background */}
         {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
-        <Card className="athletic-card p-4 md:p-8 space-y-4 md:space-y-5 border-4" style={{ backgroundColor: '#0a0a0a', borderColor: '#0a0a0a' }}>
-          <div className="space-y-2 md:space-y-3">
-            <div className="flex items-center gap-2" style={{ color: '#ffffff', opacity: 0.7 }}>
-              <TrendingUp className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
+        <div className="p-6 space-y-4 rounded-2xl" style={{ backgroundColor: '#0a0a0a', border: '2px solid rgba(255,255,255,0.1)' }}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.7)' }}>
+              <TrendingUp className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">{plan.duringActivity.frequency}</span>
             </div>
-            <h3 className="text-3xl md:text-5xl font-black" style={{ color: '#ffffff' }}>DURING</h3>
+            <h3 className="text-4xl md:text-5xl font-black" style={{ color: '#ffffff' }}>DURING</h3>
           </div>
           
-          {/* Special note for indoor swimming training */}
-          {profile.disciplines?.includes('Swimming') && !profile.hasUpcomingRace && profile.indoorOutdoor === 'indoor' && (
-            <div className="p-4 rounded-xl mb-4" style={{ backgroundColor: 'rgba(59, 130, 246, 0.2)', border: '1px solid rgba(59, 130, 246, 0.4)' }}>
-              <p className="text-sm font-semibold flex items-center gap-2" style={{ color: '#ffffff' }}>
-                <Droplets className="w-4 h-4" /> <strong>Pool Training Tip:</strong> Keep a water bottle with {Math.ceil(plan.duringActivity.electrolytesPerHour)} Supplme sachet{Math.ceil(plan.duringActivity.electrolytesPerHour) > 1 ? 's' : ''} mixed in at the pool edge. Sip between sets during rest intervals.
-              </p>
-            </div>
-          )}
-          
-          <div className="space-y-3 md:space-y-4 py-3 md:py-4">
-            <div className="p-3 md:p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total Water</p>
-              <p className="text-2xl md:text-3xl font-black mb-2 md:mb-3" style={{ color: '#ffffff' }}>
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>TOTAL WATER</p>
+              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {safeNumber(plan.duringActivity.waterPerHour) > 0 
                   ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
                   : 'As needed'}
               </p>
-              <p className="text-sm font-semibold" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
+              <p className="text-sm font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.85)' }}>
                 {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `${safeNumber(plan.duringActivity.waterPerHour)} ml per hour` : ''}
               </p>
-              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(255,255,255,0.6)' }}>
                 {safeNumber(plan.duringActivity.waterPerHour) > 0 ? `Sip ${plan.duringActivity.frequency.toLowerCase()}` : ''}
               </p>
             </div>
-            <div className="p-3 md:p-4 rounded-xl" style={{ backgroundColor: 'rgba(255, 255, 255, 0.15)', border: '1px solid rgba(255, 255, 255, 0.25)' }}>
-              <p className="text-xs font-bold uppercase tracking-wider mb-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>Total Supplme sachets</p>
-              <p className="text-2xl md:text-3xl font-black" style={{ color: '#ffffff' }}>
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '1px solid rgba(255,255,255,0.15)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(255,255,255,0.7)' }}>TOTAL SUPPLME SACHETS</p>
+              <p className="text-3xl font-black" style={{ color: '#ffffff' }}>
                 {plan.duringActivity.electrolytesPerHour > 0 
-                  ? `${Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet${Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) > 1 ? 's' : ''}` 
+                  ? `${Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)}` 
                   : 'Not required'}
               </p>
-              {plan.duringActivity.electrolytesPerHour > 0 && (() => {
-                const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
-                const totalMinutes = profile.sessionDuration * 60;
-                const minutesPerSachet = totalSachets > 0 ? Math.round(totalMinutes / totalSachets) : 0;
-                const sodiumPerHour = Math.round(plan.duringActivity.electrolytesPerHour * 500);
-                
-                // All sachets now capped at 1/hour (500mg sodium)
-                let intensityLabel = '';
-                let intensityColor = 'rgba(255, 255, 255, 0.7)';
-                if (sodiumPerHour >= 500) {
-                  intensityLabel = 'Conservative: 500mg/h max';
-                  intensityColor = 'rgba(255, 255, 255, 0.8)';
-                } else if (sodiumPerHour >= 400) {
-                  intensityLabel = 'Moderate intensity';
-                  intensityColor = 'rgba(255, 255, 255, 0.75)';
-                } else {
-                  intensityLabel = 'Light intensity';
-                  intensityColor = 'rgba(255, 255, 255, 0.7)';
-                }
-                
-                return totalSachets > 0 ? (
-                  <>
-                    <p className="text-xs font-semibold mt-2" style={{ color: 'rgba(255, 255, 255, 0.7)' }}>
-                      1 every {minutesPerSachet >= 60 
-                        ? formatHoursAsTime(minutesPerSachet / 60)
-                        : `${Math.floor(minutesPerSachet / 60)}:${String(minutesPerSachet % 60).padStart(2, '0')}:00`}
-                    </p>
-                    <p className="text-xs font-bold mt-1 pt-2 border-t border-white/20" style={{ color: 'rgba(255, 255, 255, 0.9)' }}>
-                      Total {totalSachets} sachet{totalSachets > 1 ? 's' : ''} for {formatHoursAsTime(profile.sessionDuration)}
-                    </p>
-                    <p className="text-[10px] font-medium mt-1" style={{ color: intensityColor }}>
-                      {sodiumPerHour}mg/h of sodium • {intensityLabel}
-                    </p>
-                  </>
-                ) : null;
-              })()}
             </div>
           </div>
 
-          <div className="pt-4 space-y-2" style={{ borderTop: '1px solid rgba(255, 255, 255, 0.2)' }}>
-            <p className="text-sm font-medium flex items-center gap-2" style={{ color: 'rgba(255, 255, 255, 0.85)' }}>
-              <Droplets className="w-4 h-4" /> 
-              {(() => {
-                const discipline = profile.disciplines?.[0] || 'Running';
-                switch (discipline) {
-                  case 'Hiking':
-                    return 'Practical approach: Most hikers carry limited water';
-                  case 'Cycling':
-                    return 'Practical approach: Cyclists can carry more water in bottles';
-                  case 'Swimming':
-                    return 'Practical approach: Limited water intake during swimming';
-                  case 'Triathlon':
-                    return 'Practical approach: Water access varies by discipline';
-                  case 'Running':
-                  default:
-                    return 'Practical approach: Most runners carry minimal water';
-                }
-              })()}
-            </p>
-            <p className="text-xs" style={{ color: 'rgba(255, 255, 255, 0.6)' }}>
+          <p className="text-sm font-medium border-t pt-3 flex items-center gap-2" style={{ color: 'rgba(255,255,255,0.7)', borderColor: 'rgba(255,255,255,0.1)' }}>
+            <Zap className="w-4 h-4" /> {profile.disciplines?.includes('Running') ? 'Practical approach: Most runners carry minimal water' : 'Maintain performance throughout your activity'}
+          </p>
+          {profile.disciplines?.includes('Running') && (
+            <p className="text-xs font-medium pt-2" style={{ color: 'rgba(255,255,255,0.6)', borderTop: '1px solid rgba(255,255,255,0.1)' }}>
               Sachets are easy to carry • Water recommendations match typical carrying capacity
             </p>
-          </div>
-        </Card>
+          )}
+        </div>
         )}
 
         {/* POST */}
-        <Card className="athletic-card p-4 md:p-8 space-y-4 md:space-y-5 bg-card border-2 border-border">
-          <div className="space-y-2 md:space-y-3">
-            <div className="flex items-center gap-2 text-muted-foreground">
-              <Clock className="w-4 h-4 md:w-5 md:h-5" />
-              <span className="text-xs md:text-sm font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
+        <div className="p-6 space-y-4 rounded-2xl" style={{ backgroundColor: 'rgba(255,255,255,0.95)' }}>
+          <div className="space-y-2">
+            <div className="flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)' }}>
+              <Clock className="w-4 h-4" />
+              <span className="text-xs font-bold uppercase tracking-wider">{plan.postActivity.timing}</span>
             </div>
-            <h3 className="text-3xl md:text-5xl font-black text-foreground">POST</h3>
+            <h3 className="text-4xl md:text-5xl font-black" style={{ color: '#0a0a0a' }}>POST</h3>
           </div>
           
-          <div className="space-y-3 md:space-y-4 py-3 md:py-4">
-            <div className="bg-secondary p-3 md:p-4 rounded-xl border border-border">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Water (150% of loss)</p>
-              <p className="text-2xl md:text-3xl font-black text-foreground">{safeNumber(plan.postActivity.water)} ml</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-2">Over 4-6 hours</p>
+          <div className="space-y-3">
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>WATER (150% OF LOSS)</p>
+              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{safeNumber(plan.postActivity.water)} ml</p>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(0,0,0,0.5)' }}>Over 4-6 hours</p>
             </div>
-            <div className="bg-secondary p-3 md:p-4 rounded-xl border border-border">
-              <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground mb-2">Supplme Sachet</p>
-              <p className="text-2xl md:text-3xl font-black text-foreground">{safeNumber(plan.postActivity.electrolytes)}x</p>
-              <p className="text-xs font-semibold text-muted-foreground mt-2">With water intake</p>
+            <div className="p-4 rounded-xl" style={{ backgroundColor: 'rgba(0,0,0,0.08)' }}>
+              <p className="text-xs font-bold uppercase tracking-wider mb-1" style={{ color: 'rgba(0,0,0,0.6)' }}>SUPPLME SACHET</p>
+              <p className="text-3xl font-black" style={{ color: '#0a0a0a' }}>{safeNumber(plan.postActivity.electrolytes)}x</p>
+              <p className="text-xs font-semibold mt-1" style={{ color: 'rgba(0,0,0,0.5)' }}>With water intake</p>
             </div>
           </div>
 
-          <p className="text-sm font-medium text-muted-foreground border-t border-border pt-4 flex items-center gap-2">
+          <p className="text-sm font-medium border-t pt-3 flex items-center gap-2" style={{ color: 'rgba(0,0,0,0.6)', borderColor: 'rgba(0,0,0,0.1)' }}>
             <Zap className="w-4 h-4" /> Accelerate recovery and restore your body to peak condition
           </p>
-        </Card>
+        </div>
       </div>
       </div>
 
