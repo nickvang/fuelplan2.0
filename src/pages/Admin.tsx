@@ -1180,20 +1180,20 @@ export default function Admin() {
                               <div className="space-y-2 text-sm">
                                 <div className="space-y-1">
                                   <p className="font-medium">PRE-Activity:</p>
-                                  {plan.preActivity?.water && <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.preActivity.water}ml</p>}
-                                  {plan.preActivity?.electrolytes && <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.preActivity.electrolytes}</p>}
+                                  <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.preActivity?.water || 0}ml</p>
+                                  <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.preActivity?.electrolytes || 0}</p>
                                   {plan.preActivity?.timing && <p className="pl-2"><span className="text-muted-foreground">Timing:</span> {plan.preActivity.timing}</p>}
                                 </div>
                                 <div className="space-y-1">
                                   <p className="font-medium">DURING Activity:</p>
-                                  {plan.duringActivity?.waterPerHour && <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.duringActivity.waterPerHour}ml/hr</p>}
-                                  {plan.duringActivity?.electrolytesPerHour !== undefined && <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.duringActivity.electrolytesPerHour}/hr</p>}
+                                  <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.duringActivity?.waterPerHour || 0}ml/hr</p>
+                                  <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.duringActivity?.electrolytesPerHour ?? 0}/hr</p>
                                   {plan.duringActivity?.frequency && <p className="pl-2"><span className="text-muted-foreground">Frequency:</span> {plan.duringActivity.frequency}</p>}
                                 </div>
                                 <div className="space-y-1">
                                   <p className="font-medium">POST-Activity:</p>
-                                  {plan.postActivity?.water && <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.postActivity.water}ml</p>}
-                                  {plan.postActivity?.electrolytes && <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.postActivity.electrolytes}</p>}
+                                  <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.postActivity?.water || 0}ml</p>
+                                  <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.postActivity?.electrolytes || 0}</p>
                                   {plan.postActivity?.timing && <p className="pl-2"><span className="text-muted-foreground">Timing:</span> {plan.postActivity.timing}</p>}
                                 </div>
                                 {plan.totalFluidLoss && (
