@@ -186,12 +186,6 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   let sachetsPerHour = baseSachetsPerHour * weightMultiplier * envMultiplier * sweatRateMultiplier;
   calculationSteps.push(`Calculated sachets/hour: ${baseSachetsPerHour.toFixed(2)} × ${weightMultiplier} × ${envMultiplier} × ${sweatRateMultiplier} = ${sachetsPerHour.toFixed(2)}`);
   
-  // CRITICAL MINIMUM: Never below 1 sachet/hour for efforts > 2 hours
-  if (profile.sessionDuration > 2 && sachetsPerHour < 1) {
-    sachetsPerHour = 1;
-    calculationSteps.push(`⚠️ Applied minimum: 1 sachet/hour for 2h+ efforts`);
-  }
-  
   // Swimming override: No sachets during swims when racing (can't drink while swimming)
   if (primaryDiscipline === 'Swimming' && isRaceDay) {
     sachetsPerHour = 0;
@@ -200,20 +194,11 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   // Round to whole numbers only - no decimals
   sachetsPerHour = Math.round(sachetsPerHour);
-  if (sachetsPerHour < 1 && profile.sessionDuration >= 1) {
-    sachetsPerHour = 1; // Minimum 1 sachet/hour for 1h+ efforts
-  }
   
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (whole number)`);
   
   // Calculate total during-activity sachets
   let totalDuringSachets = Math.round(sachetsPerHour * profile.sessionDuration);
-  
-  // Ensure minimum for long efforts
-  if (profile.sessionDuration > 2 && totalDuringSachets < 2) {
-    totalDuringSachets = 2;
-    calculationSteps.push(`Minimum 2 sachets for 2h+ efforts`);
-  }
   
   calculationSteps.push(`Total during-sachets: ${totalDuringSachets}`);
   
