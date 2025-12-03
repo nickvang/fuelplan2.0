@@ -109,8 +109,6 @@ export function PaceDurationCalculator({
         return '1:50/100m'; // Moderate swimming pace
       case 'Cycling':
         return '28 km/h'; // Moderate cycling speed
-      case 'Hiking':
-        return '18:00/km'; // Moderate hiking pace (slower than running)
       case 'Running':
       default:
         return '6:00/km'; // Moderate running pace
@@ -142,7 +140,7 @@ export function PaceDurationCalculator({
     }
 
     // Calculate required pace
-    if (discipline === 'Running' || discipline === 'Hiking') {
+    if (discipline === 'Running') {
       const minutesPerKm = totalMinutes / distanceKm;
       const paceMinutes = Math.floor(minutesPerKm);
       const paceSeconds = Math.round((minutesPerKm - paceMinutes) * 60);
@@ -176,27 +174,8 @@ export function PaceDurationCalculator({
       }
     }
 
-    // Parse running/hiking pace (e.g., "5:30" means 5 minutes 30 seconds per km)
-    // OR parse hiking speed (e.g., "5" or "5 km/h" means 5 kilometers per hour)
-    if (discipline === 'Running' || discipline === 'Hiking') {
-      // Try speed format first for hiking (km/h)
-      if (discipline === 'Hiking') {
-        // Try to parse as simple number first (most common input)
-        const simpleNumber = parseFloat(pace.trim());
-        if (!isNaN(simpleNumber) && simpleNumber >= 1 && simpleNumber <= 10) {
-          return distanceKm / simpleNumber;
-        }
-        
-        // Try "X km/h" format
-        const speedMatch = pace.match(/(\d+(?:\.\d+)?)\s*km\/h/);
-        if (speedMatch) {
-          const kmPerHour = parseFloat(speedMatch[1]);
-          if (kmPerHour >= 1 && kmPerHour <= 10) {
-            return distanceKm / kmPerHour;
-          }
-        }
-      }
-      
+    // Parse running pace (e.g., "5:30" means 5 minutes 30 seconds per km)
+    if (discipline === 'Running') {
       // Parse pace format (min:sec per km)
       const paceMatch = pace.match(/(\d+):(\d{2})/);
       if (paceMatch) {
@@ -259,8 +238,6 @@ export function PaceDurationCalculator({
         return 'e.g., 1:45/100m';
       case 'Cycling':
         return 'e.g., 30 km/h or 250W';
-      case 'Hiking':
-        return 'e.g., 5 km/h or 15:00/km';
       default:
         return 'e.g., 5:30/km';
     }
@@ -271,8 +248,6 @@ export function PaceDurationCalculator({
       case 'Swimming':
         return 'Pace';
       case 'Cycling':
-        return 'Pace';
-      case 'Hiking':
         return 'Pace';
       default:
         return 'Pace';
@@ -285,8 +260,6 @@ export function PaceDurationCalculator({
         return 'Enter your swim pace in minutes:seconds per 100 meters. For example, 1:45/100m means 1 minute 45 seconds per 100 meters.';
       case 'Cycling':
         return 'Enter your cycling speed in km/h (e.g., 30 km/h) or power in watts (e.g., 250W). Use the format that best represents your effort.';
-      case 'Hiking':
-        return 'Enter your hiking pace as speed in km/h (e.g., 4 km/h) or time per km (e.g., 15:00/km for 15 minutes per kilometer).';
       default:
         return 'Enter your running pace in minutes:seconds per kilometer. For example, 5:00/km means 5 minutes per kilometer. This is required to calculate accurate fluid needs.';
     }

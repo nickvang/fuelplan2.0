@@ -820,7 +820,6 @@ const Index = () => {
                     { value: 'Swimming', label: 'Swim', icon: '🏊' },
                     { value: 'Cycling', label: 'Bike', icon: '🚴' },
                     { value: 'Triathlon', label: 'Triathlon', icon: '🏅' },
-                    { value: 'Hiking', label: 'Hiking', icon: '🥾' },
                   ].map((activity) => (
                     <button
                       key={activity.value}
@@ -860,7 +859,6 @@ const Index = () => {
                      profile.disciplines?.[0] === 'Swimming' ? 'Swimming Environment *' :
                      profile.disciplines?.[0] === 'Cycling' ? 'Cycling Type *' :
                      profile.disciplines?.[0] === 'Triathlon' ? 'Primary Terrain *' :
-                     profile.disciplines?.[0] === 'Hiking' ? 'Hiking Type *' :
                      'Terrain *'}
                   </Label>
                   <RadioGroup
@@ -960,30 +958,6 @@ const Index = () => {
                         </label>
                       </>
                     )}
-                    {profile.disciplines?.[0] === 'Hiking' && (
-                      <>
-                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                          <RadioGroupItem value="day-hike" id="terrain-day-hike" />
-                          <Label htmlFor="terrain-day-hike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Day Hike</Label>
-                        </label>
-                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                          <RadioGroupItem value="backpacking" id="terrain-backpacking" />
-                          <Label htmlFor="terrain-backpacking" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Backpacking/Multi-Day</Label>
-                        </label>
-                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                          <RadioGroupItem value="mountaineering" id="terrain-mountaineering" />
-                          <Label htmlFor="terrain-mountaineering" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mountaineering</Label>
-                        </label>
-                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                          <RadioGroupItem value="alpine" id="terrain-alpine" />
-                          <Label htmlFor="terrain-alpine" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Alpine</Label>
-                        </label>
-                        <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                          <RadioGroupItem value="trekking" id="terrain-trekking" />
-                          <Label htmlFor="terrain-trekking" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Trekking</Label>
-                        </label>
-                      </>
-                    )}
                   </RadioGroup>
                 </div>
               )}
@@ -1037,7 +1011,6 @@ const Index = () => {
                           profile.disciplines?.[0] === 'Running' ? 'e.g., 0:25:00 for 5km, 1:30:00 for Half Marathon' :
                           profile.disciplines?.[0] === 'Cycling' ? 'e.g., 1:30:00 for 40km, 3:00:00 for 100km' :
                           profile.disciplines?.[0] === 'Swimming' ? 'e.g., 0:20:00 for 1km, 1:00:00 for 5km' :
-                          profile.disciplines?.[0] === 'Hiking' ? 'e.g., 1:00:00 for 5km, 2:30:00 for 15km' :
                           'e.g., 1:30:00 for 1 hour 30 minutes'
                         }
                       />
@@ -1066,7 +1039,6 @@ const Index = () => {
                       profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
                       profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
                       profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman, Ironman' :
-                      profile.disciplines?.[0] === 'Hiking' ? 'e.g., 5km, 10km, 15km, 20km' :
                       'e.g., 10km, Half Marathon'
                     }
                     className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"

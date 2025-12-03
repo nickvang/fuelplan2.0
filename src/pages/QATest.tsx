@@ -72,11 +72,6 @@ export default function QATest() {
       { name: 'Marathon (Running)', duration: 3.5, discipline: 'Running' },
       { name: 'Long Trail Run (Running)', duration: 6, discipline: 'Running' },
       
-      // Hiking
-      { name: '10km Hike (Hiking)', duration: 2, discipline: 'Hiking' },
-      { name: 'Day Hike (Hiking)', duration: 4, discipline: 'Hiking' },
-      { name: 'Mountain Trek (Hiking)', duration: 7, discipline: 'Hiking' },
-      
       // Cycling
       { name: '2h Ride (Cycling)', duration: 2, discipline: 'Cycling' },
       { name: '4h Ride (Cycling)', duration: 4, discipline: 'Cycling' },
@@ -187,7 +182,7 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Water per hour checks - UPDATED FOR PRACTICAL APPROACH + HIKING
+    // Water per hour checks - UPDATED FOR PRACTICAL APPROACH
     const isDiscipline = (disc: string) => scenario.discipline.includes(disc);
     
     if (isDiscipline('Swimming')) {
@@ -214,21 +209,6 @@ export default function QATest() {
       
       if (duringWater < minWater || duringWater > maxWater) {
         flags.push(`Swimming water ${duringWater}ml/h out of range [${minWater}-${maxWater}] for ${scenario.isRaceDay ? 'race' : 'training'} ${scenario.duration}h`);
-        severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
-      }
-    } else if (isDiscipline('Hiking')) {
-      // Hiking: can carry more in backpacks, lower intensity
-      let minWater = 300;
-      let maxWater = 700;
-      
-      if (scenario.duration < 1) {
-        maxWater = 500;
-      } else if (scenario.duration < 2) {
-        maxWater = 600;
-      }
-      
-      if (duringWater < minWater || duringWater > maxWater) {
-        flags.push(`Hiking water ${duringWater}ml/h out of range [${minWater}-${maxWater}]`);
         severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
       }
     } else if (isDiscipline('Cycling')) {
