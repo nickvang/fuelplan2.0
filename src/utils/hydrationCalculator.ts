@@ -369,7 +369,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   let postElectrolytes = Math.round(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
   
   // More balanced post-activity sodium recommendations
-  postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
+  // For activities under 2h (no during-sachets), allow higher post to compensate
+  if (profile.sessionDuration < 2) {
+    // No during-sachets, so post can be higher to cover deficit
+    postElectrolytes = Math.min(isRaceDay ? 2 : 2, postElectrolytes);
+  } else {
+    postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
+  }
   
   // Minimum 1 post-sachet for longer sessions
   if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
