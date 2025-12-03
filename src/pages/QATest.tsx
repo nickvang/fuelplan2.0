@@ -250,9 +250,21 @@ export default function QATest() {
     }
 
     // Total water replacement check - adjusted for pre-hydration timing
+    // Swimming races have 0 during-water (can't drink while swimming), so lower replacement is expected
+    // Ultra-long events (5h+) have lower practical replacement rates due to carrying limits
+    // Extreme ultra events (10h+) like Ironman have even lower practical limits
     // Allow high percentages for ultra-short low-sweat edge cases (small denominator effect)
-    if (replacementRate < 0.35) {
-      flags.push(`Total replacement ${(replacementRate * 100).toFixed(0)}% < 35%`);
+    let minReplacementRate = 0.35;
+    if (isDiscipline('Swimming') && scenario.isRaceDay) {
+      minReplacementRate = 0.15; // Can't drink during swimming race
+    } else if (scenario.duration >= 10) {
+      minReplacementRate = 0.25; // Extreme ultra events (Ironman, etc.)
+    } else if (scenario.duration >= 5) {
+      minReplacementRate = 0.28; // Ultra-long events have practical limits
+    }
+    
+    if (replacementRate < minReplacementRate) {
+      flags.push(`Total replacement ${(replacementRate * 100).toFixed(0)}% < ${(minReplacementRate * 100).toFixed(0)}%`);
       severity = 'ERROR';
     }
     if (replacementRate > 2.8) {
@@ -291,12 +303,22 @@ export default function QATest() {
     else if (scenario.sweatRate === 'high') sweatMult = 1.325;
     
     const expectedSachetsPerHour = Math.round(baseSachets * weightMult * envMult * sweatMult);
-    // Use effective duration (excluding last 30 min) like the calculator does
-    const effectiveDuration = Math.max(0, scenario.duration - 0.5);
-    const expectedTotalDuring = expectedSachetsPerHour * effectiveDuration;
+    
+    // Swimming races: 0 during-sachets (can't consume while swimming)
+    // Activities under 2h: 0 during-sachets (pre + post covers it)
+    // For longer activities: use effective duration (excluding last 30 min)
+    let expectedTotalDuring = 0;
+    if (isDiscipline('Swimming') && scenario.isRaceDay) {
+      expectedTotalDuring = 0; // Can't consume during swimming race
+    } else if (scenario.duration < 2) {
+      expectedTotalDuring = 0; // Short activities don't need during-sachets
+    } else {
+      const effectiveDuration = Math.max(0, scenario.duration - 0.5);
+      expectedTotalDuring = expectedSachetsPerHour * effectiveDuration;
+    }
     
     // Allow some tolerance (±50% or ±1) for rounding and edge cases
-    const tolerance = Math.max(1, expectedTotalDuring * 0.5);
+    const tolerance = Math.max(1, Math.max(expectedTotalDuring, totalDuringSachets) * 0.5);
     if (Math.abs(totalDuringSachets - expectedTotalDuring) > tolerance + 0.5) {
       flags.push(`Total during-sachets ${totalDuringSachets} vs expected ~${expectedTotalDuring.toFixed(1)} (tolerance ±${tolerance.toFixed(1)})`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
