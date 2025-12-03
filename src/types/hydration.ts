@@ -103,6 +103,7 @@ export interface HydrationPlan {
   duringActivity: {
     waterPerHour: number;
     electrolytesPerHour: number;
+    totalElectrolytes: number;
     frequency: string;
   };
   postActivity: {

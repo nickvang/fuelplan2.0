@@ -262,7 +262,7 @@ export default function QATest() {
 
     // Sachet checks - UPDATED: Based on new formula (sodium loss / 500)
     const duringSachets = plan.duringActivity.electrolytesPerHour;
-    const totalDuringSachets = duringSachets * scenario.duration;
+    const totalDuringSachets = plan.duringActivity.totalElectrolytes;
     
     // New formula: sachets/hour = sodium need per hour ÷ 500
     // Sodium loss per hour: low=400, medium=650, high=1100
@@ -291,12 +291,14 @@ export default function QATest() {
     else if (scenario.sweatRate === 'high') sweatMult = 1.325;
     
     const expectedSachetsPerHour = Math.round(baseSachets * weightMult * envMult * sweatMult);
-    const expectedTotalDuring = expectedSachetsPerHour * scenario.duration;
+    // Use effective duration (excluding last 30 min) like the calculator does
+    const effectiveDuration = Math.max(0, scenario.duration - 0.5);
+    const expectedTotalDuring = expectedSachetsPerHour * effectiveDuration;
     
     // Allow some tolerance (±50% or ±1) for rounding and edge cases
     const tolerance = Math.max(1, expectedTotalDuring * 0.5);
     if (Math.abs(totalDuringSachets - expectedTotalDuring) > tolerance + 0.5) {
-      flags.push(`Total during-sachets ${totalDuringSachets.toFixed(1)} vs expected ~${expectedTotalDuring.toFixed(1)} (tolerance ±${tolerance.toFixed(1)})`);
+      flags.push(`Total during-sachets ${totalDuringSachets} vs expected ~${expectedTotalDuring.toFixed(1)} (tolerance ±${tolerance.toFixed(1)})`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
     
@@ -362,7 +364,7 @@ export default function QATest() {
       const validation = validateResult(scenario, plan);
 
       const totalSachets = plan.preActivity.electrolytes + 
-                          (plan.duringActivity.electrolytesPerHour * scenario.duration) + 
+                          plan.duringActivity.totalElectrolytes + 
                           plan.postActivity.electrolytes;
 
       testResults.push({

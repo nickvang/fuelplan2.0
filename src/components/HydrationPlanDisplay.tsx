@@ -404,8 +404,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               <div className="bg-background/10 p-4 md:p-5 rounded-xl border border-background/20">
                 <p className="text-xs font-bold uppercase tracking-wider text-background/70 mb-2">TOTAL SUPPLME SACHETS</p>
                 <p className="text-3xl md:text-4xl font-black text-background">
-                  {plan.duringActivity.electrolytesPerHour > 0 
-                    ? Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)
+                  {plan.duringActivity.totalElectrolytes > 0 
+                    ? plan.duringActivity.totalElectrolytes
                     : 'Not required'}
                 </p>
               </div>
@@ -584,8 +584,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             )}
             <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>TOTAL SUPPLME SACHETS</p>
             <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 12px 0' }}>
-              {plan.duringActivity.electrolytesPerHour > 0 
-                ? Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)
+              {plan.duringActivity.totalElectrolytes > 0 
+                ? plan.duringActivity.totalElectrolytes
                 : 'Not required'}
             </p>
             <p style={{ 
@@ -958,11 +958,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <div className="p-3 sm:p-4 md:p-5 rounded-xl text-center" style={{ backgroundColor: 'rgba(255,255,255,0.1)', border: '2px solid rgba(255,255,255,0.2)' }}>
                       <p className="text-[10px] sm:text-xs md:text-xs font-bold uppercase tracking-wider mb-1 sm:mb-1.5 md:mb-2" style={{ color: 'rgba(255,255,255,0.6)' }}>Supplme total</p>
                       <p className="text-xl sm:text-2xl md:text-4xl font-black mb-1 break-words leading-tight" style={{ color: '#ffffff' }}>
-                        {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)} sachet
-                        {Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration) !== 1 ? 's' : ''}
+                        {plan.duringActivity.totalElectrolytes} sachet
+                        {plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''}
                       </p>
                       {(() => {
-                        const totalSachets = Math.round(plan.duringActivity.electrolytesPerHour * profile.sessionDuration);
+                        const totalSachets = plan.duringActivity.totalElectrolytes;
                         const totalMinutes = profile.sessionDuration * 60;
                         const minutesPerSachet = totalSachets > 0 ? Math.round(totalMinutes / totalSachets) : 0;
                         const sodiumPerHour = Math.round(plan.duringActivity.electrolytesPerHour * 500);
@@ -1058,7 +1058,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             <AlertTitle className="text-lg font-black uppercase">Pro Tips</AlertTitle>
             <AlertDescription className="text-sm space-y-1 mt-2">
               <p>✓ Practice protocol in training</p>
-              <p>✓ Pack {Math.ceil(plan.duringActivity.electrolytesPerHour * profile.sessionDuration)}x Supplme sachets</p>
+              <p>✓ Pack {plan.duringActivity.totalElectrolytes}x Supplme sachets</p>
               <p>✓ Check weather 48hrs before • Adjust if needed</p>
             </AlertDescription>
           </Alert>
@@ -1460,7 +1460,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
                       <li>• Drink {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 2)}ml water every 15 minutes</li>
                     )}
-                    <li>• For marathons: Aim for {Math.round(safeNumber(plan.duringActivity.electrolytesPerHour) * (profile.sessionDuration || 3.5))} sachets total during race</li>
+                    <li>• For marathons: Aim for {plan.duringActivity.totalElectrolytes} sachets total during race</li>
                     <li>• For ultras: {safeNumber(plan.duringActivity.electrolytesPerHour)} sachet(s) per hour minimum</li>
                   </ul>
                 ) : profile.disciplines?.[0] === 'Bike' ? (
