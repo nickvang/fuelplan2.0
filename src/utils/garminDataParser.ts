@@ -534,7 +534,6 @@ function mapAppleWatchDataToProfile(parsedData: ParsedAppleWatchData): Partial<H
         'FunctionalStrengthTraining': 'Strength Training',
         'Swimming': 'Swim',
         'Cycling': 'Bike',
-        'Hiking': 'Hike',
         'TrailRunning': 'Trail Run'
       };
       

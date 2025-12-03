@@ -90,8 +90,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     'Swimming': -0.15,
     'Gym': -0.20,
     'CrossFit': -0.10,
-    'Walking': -0.20,
-    'Hiking': -0.05
+    'Walking': -0.20
   };
   
   const sportAdj = sportAdjustments[primaryDiscipline] || 0;
@@ -278,17 +277,6 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   if (primaryDiscipline === 'Swimming') {
     replacementRate = 0.30;
     calculationSteps.push('Swimming: 30% replacement (limited intake opportunity)');
-  } else if (primaryDiscipline === 'Hiking') {
-    if (profile.sessionDuration > 2.5) {
-      replacementRate = 0.40;
-      calculationSteps.push('Long hike: 40% replacement (backpack hydration system)');
-    } else if (profile.sessionDuration > 1.5) {
-      replacementRate = 0.35;
-      calculationSteps.push('Medium hike: 35% replacement (water bottle/bladder capacity)');
-    } else {
-      replacementRate = 0.30;
-      calculationSteps.push('Short hike: 30% replacement (standard water bottle)');
-    }
   } else if (primaryDiscipline === 'Cycling') {
     replacementRate = 0.40;
     calculationSteps.push('Cycling: 40% replacement (multiple bottle capacity)');
@@ -306,15 +294,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   let duringWaterPerHour = Math.round((sweatRatePerHour * replacementRate) / 10) * 10;
   
   // Practical minimums and maximums based on carrying capacity
-  if (primaryDiscipline === 'Hiking') {
-    if (profile.sessionDuration < 1) {
-      duringWaterPerHour = Math.min(500, Math.max(300, duringWaterPerHour));
-    } else if (profile.sessionDuration < 2) {
-      duringWaterPerHour = Math.min(600, Math.max(400, duringWaterPerHour));
-    } else {
-      duringWaterPerHour = Math.min(700, Math.max(500, duringWaterPerHour));
-    }
-  } else if (primaryDiscipline === 'Cycling') {
+  if (primaryDiscipline === 'Cycling') {
     duringWaterPerHour = Math.min(700, Math.max(400, duringWaterPerHour));
   } else if (profile.sessionDuration < 1) {
     duringWaterPerHour = Math.max(200, Math.min(300, duringWaterPerHour));
@@ -347,9 +327,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   // Frequency guidance
   let frequency = 'Every 15-20 minutes';
-  if (primaryDiscipline === 'Hiking') {
-    frequency = profile.sessionDuration >= 2 ? 'Every 20-30 minutes' : 'Every 25-30 minutes';
-  } else if (primaryDiscipline === 'Cycling') {
+  if (primaryDiscipline === 'Cycling') {
     frequency = profile.sessionDuration >= 2 ? 'Every 15-20 minutes' : 'Every 20-25 minutes';
   } else if (profile.sessionDuration >= 2) {
     frequency = 'Every 12-15 minutes';
@@ -382,18 +360,10 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   let postElectrolytes = Math.round(Math.max(0, remainingSodiumDeficit / SACHET_SODIUM));
   
   // More balanced post-activity sodium recommendations
-  if (primaryDiscipline === 'Hiking') {
-    postElectrolytes = Math.min(1, postElectrolytes);
-  } else {
-    postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
-  }
+  postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
   
   // Minimum 1 post-sachet for longer sessions
-  if (primaryDiscipline === 'Hiking') {
-    if (profile.sessionDuration >= 4 && postElectrolytes === 0) {
-      postElectrolytes = 1;
-    }
-  } else if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
+  if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
   
@@ -415,9 +385,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   recommendations.push(`Start hydrating 2-4 hours before. Never begin dehydrated.`);
   
   // Discipline-specific drinking guidance
-  if (primaryDiscipline === 'Hiking') {
-    recommendations.push(`Drink ${Math.round(duringWaterPerHour / 3)}ml every ${frequency.toLowerCase()}. Sip regularly during breaks.`);
-  } else if (primaryDiscipline === 'Cycling') {
+  if (primaryDiscipline === 'Cycling') {
     recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}. Easy access from bottles.`);
   } else {
     recommendations.push(`Drink ${Math.round(duringWaterPerHour / 4)}ml every ${frequency.toLowerCase()}. Don't wait until thirsty.`);
@@ -428,11 +396,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   if (profile.sessionDuration >= 3) {
-    if (primaryDiscipline === 'Hiking') {
-      recommendations.push(`For 3+ hour hikes, pack trail snacks (nuts, dried fruit) alongside hydration.`);
-    } else {
-      recommendations.push(`For 3+ hour sessions, add carbs (30-60g/hr) alongside hydration.`);
-    }
+    recommendations.push(`For 3+ hour sessions, add carbs (30-60g/hr) alongside hydration.`);
   }
   
   if (profile.crampTiming && profile.crampTiming !== 'none') {
