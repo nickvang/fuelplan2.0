@@ -197,12 +197,18 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (whole number)`);
   
   // Calculate total during-activity sachets
-  // Calculate total during-sachets, excluding the last ~30 min 
-  // (no point taking a sachet right at the end when post-activity sachets will follow)
-  const effectiveDurationForSachets = Math.max(0, profile.sessionDuration - 0.5);
-  let totalDuringSachets = Math.round(sachetsPerHour * effectiveDurationForSachets);
+  // For activities under 2 hours: no during-sachets needed (pre + post covers it)
+  // For longer activities: exclude the last ~30 min (post-activity sachets will follow)
+  let totalDuringSachets = 0;
   
-  calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (for ${effectiveDurationForSachets.toFixed(1)}h effective duration)`);
+  if (profile.sessionDuration < 2) {
+    totalDuringSachets = 0;
+    calculationSteps.push(`Total during-sachets: 0 (activities under 2h don't need during-sachets)`);
+  } else {
+    const effectiveDurationForSachets = Math.max(0, profile.sessionDuration - 0.5);
+    totalDuringSachets = Math.round(sachetsPerHour * effectiveDurationForSachets);
+    calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (for ${effectiveDurationForSachets.toFixed(1)}h effective duration)`);
+  }
   
   const totalSachetsNeeded = totalDuringSachets;
 
