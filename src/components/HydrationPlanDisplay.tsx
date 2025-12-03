@@ -2,17 +2,12 @@ import { useState, useEffect } from 'react';
 import { HydrationPlan, HydrationProfile, AIEnhancedInsights } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Label } from '@/components/ui/label';
-import { Droplets, Clock, TrendingUp, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, Download, RefreshCw, Share2, X, Loader2, Activity, Flag, Target, Zap } from 'lucide-react';
+import { Droplets, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, RefreshCw, Share2, Loader2, Zap, Clock, TrendingUp, Flag, Activity, Target } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import supplmeLogo from '@/assets/supplme-logo.png';
-import { jsPDF } from 'jspdf';
 import domtoimage from 'dom-to-image-more';
 
 interface HydrationPlanDisplayProps {
@@ -46,26 +41,26 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
   
-  // Extract initial distance from raceDistance string (e.g., "5 km" -> 5)
-  const getInitialDistance = () => {
+  const [isSharing, setIsSharing] = useState(false);
+  const [plan] = useState(initialPlan);
+  const [profile] = useState(initialProfile);
+  const { toast } = useToast();
+  
+  // Extract distance from raceDistance string
+  const distance = (() => {
     if (initialProfile.raceDistance) {
       const raceText = initialProfile.raceDistance.toLowerCase();
       
-      // Check for common race names first (ORDER MATTERS - check longer strings first!)
+      // Check for common race names first
       const raceDistances: { [key: string]: number } = {
-        // Triathlon distances - check "half ironman" BEFORE "ironman"
-        'half ironman': 113, // 1.9km swim + 90km bike + 21.1km run
+        'half ironman': 113,
         'ironman 70.3': 113,
         '70.3': 113,
-        'ironman': 226, // 3.8km swim + 180km bike + 42.2km run
+        'ironman': 226,
         'full ironman': 226,
         '140.6': 226,
-        'olympic': 51.5, // 1.5km swim + 40km bike + 10km run
-        'olympic tri': 51.5,
-        'sprint': 25.75, // 750m swim + 20km bike + 5km run
-        'sprint tri': 25.75,
-        
-        // Running distances - ORDER MATTERS: check 'half marathon' BEFORE 'marathon'!
+        'olympic': 51.5,
+        'sprint': 25.75,
         'half marathon': 21.1,
         'marathon': 42.2,
         'ultra': 50,
@@ -74,137 +69,21 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         '100 mile': 160,
         '10k': 10,
         '5k': 5,
-        
-        // Cycling
         'century': 160,
         '100 miles': 160,
       };
       
-      // Check if any race name matches
-      for (const [raceName, distance] of Object.entries(raceDistances)) {
+      for (const [raceName, dist] of Object.entries(raceDistances)) {
         if (raceText.includes(raceName)) {
-          console.log('Matched race name:', raceName, 'to distance:', distance);
-          return distance;
+          return dist;
         }
       }
       
-      // If no race name match, try to extract a number
       const match = initialProfile.raceDistance.match(/(\d+\.?\d*)/);
-      const distance = match ? parseFloat(match[1]) : 5;
-      console.log('Initial distance extracted:', distance, 'from', initialProfile.raceDistance);
-      return distance;
+      return match ? parseFloat(match[1]) : 5;
     }
-    console.log('No raceDistance found, defaulting to 5');
     return 5;
-  };
-  
-  const [adjustedDistance, setAdjustedDistance] = useState(getInitialDistance());
-  const [distanceInput, setDistanceInput] = useState(String(getInitialDistance()));
-  const [isRegenerating, setIsRegenerating] = useState(false);
-  const [plan, setPlan] = useState(initialPlan);
-  const [profile, setProfile] = useState(initialProfile);
-  const [isSharing, setIsSharing] = useState(false);
-  const { toast } = useToast();
-
-  const handleDistanceChange = async (newDistance: number) => {
-    console.log('handleDistanceChange called with:', newDistance);
-    
-    if (newDistance <= 0 || newDistance > 500) {
-      console.log('Distance out of range, ignoring');
-      return;
-    }
-    
-    setIsRegenerating(true);
-    setAdjustedDistance(newDistance);
-    
-    // Calculate new duration based on discipline and pace
-    const getPaceInMinPerKm = () => {
-      const discipline = profile.disciplines?.[0];
-      
-      // For cycling, use bike power or avgPace, default to 30 km/h
-      if (discipline === 'Cycling' || discipline === 'Triathlon') {
-        const paceStr = profile.bikePower || profile.avgPace;
-        console.log('Cycling pace string found:', paceStr);
-        if (paceStr) {
-          // Check if it's speed (km/h)
-          if (paceStr.includes('km/h')) {
-            const match = paceStr.match(/(\d+\.?\d*)/);
-            const speedKmH = match ? parseFloat(match[1]) : 30;
-            const paceMinPerKm = 60 / speedKmH; // Convert speed to pace
-            console.log('Parsed cycling speed:', speedKmH, 'km/h -> pace:', paceMinPerKm, 'min/km');
-            return paceMinPerKm;
-          }
-          // If it's wattage, estimate 25 km/h average
-          return 60 / 25; // ~2.4 min/km
-        }
-        console.log('No cycling pace found, using default 30 km/h (2 min/km)');
-        return 60 / 30; // 2 min/km
-      }
-      
-      // For running and other disciplines
-      const paceStr = profile.runPace || profile.avgPace;
-      console.log('Pace string found:', paceStr);
-      if (paceStr) {
-        const match = paceStr.match(/(\d+\.?\d*)/);
-        const pace = match ? parseFloat(match[1]) : 6;
-        console.log('Parsed pace:', pace);
-        return pace;
-      }
-      console.log('No pace found, using default 6 min/km');
-      return 6;
-    };
-    
-    const paceMinPerKm = getPaceInMinPerKm();
-    let newDuration = (newDistance * paceMinPerKm) / 60;
-    
-    // Ensure minimum duration is 0.5 hours to pass validation
-    if (newDuration < 0.5) {
-      console.log('Duration too short:', newDuration, 'setting to minimum 0.5 hours');
-      newDuration = 0.5;
-    }
-    
-    console.log('Calculated new duration:', newDuration, 'hours for', newDistance, 'km at', paceMinPerKm, 'min/km');
-    
-    const updatedProfile = { 
-      ...profile, 
-      sessionDuration: newDuration,
-      raceDistance: `${newDistance} km`
-    };
-    setProfile(updatedProfile);
-    
-    // Recalculate plan with new duration
-    const newPlan = calculateHydrationPlan(updatedProfile, rawSmartWatchData);
-    console.log('New plan calculated:', newPlan);
-    setPlan(newPlan);
-    
-    // Fetch AI insights for the new plan
-    try {
-      const { data, error } = await supabase.functions.invoke('enhance-hydration-plan', {
-        body: { 
-          plan: newPlan,
-          profile: updatedProfile
-        }
-      });
-
-      if (error) throw error;
-      if (data?.insights) {
-        setAiInsights(data.insights);
-      }
-      
-      toast({
-        title: "Plan Updated",
-        description: `Recalculated for ${newDistance} km (${formatHoursAsTime(newDuration)} at ${paceMinPerKm} min/km pace)`,
-      });
-    } catch (error) {
-      console.error('Error fetching AI insights:', error);
-      toast({
-        title: "Plan Updated",
-        description: `Recalculated for ${newDistance} km (${formatHoursAsTime(newDuration)})`,
-      });
-    } finally {
-      setIsRegenerating(false);
-    }
-  };
+  })();
 
   useEffect(() => {
     const fetchAIInsights = async () => {
@@ -331,7 +210,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `performance-protocol-${adjustedDistance}km.png`;
+      link.download = `performance-protocol-${distance}km.png`;
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
@@ -457,7 +336,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           {profile.raceDistance && (
             <div className="inline-block px-6 md:px-10 py-3 md:py-5 rounded-2xl bg-foreground">
               <p className="text-3xl md:text-5xl lg:text-6xl font-black text-background">
-                {adjustedDistance} KM
+                {distance} KM
               </p>
             </div>
           )}
@@ -609,7 +488,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               fontWeight: '900',
               margin: '0'
             }}>
-              {adjustedDistance} KM
+              {distance} KM
             </p>
           </div>
           <div>
@@ -1456,185 +1335,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       )}
 
-      {/* Distance Adjustment Tool */}
-      <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <RefreshCw className="w-5 h-5 text-primary" />
-            <h3 className="text-lg font-semibold">Adjust Distance</h3>
-          </div>
-          <p className="text-sm text-muted-foreground">
-            {profile.disciplines?.[0] === 'Triathlon' 
-              ? 'Enter total race distance to recalculate (swim + bike + run combined)'
-              : profile.disciplines?.[0] === 'Cycling'
-              ? 'Enter cycling distance to recalculate (duration based on your cycling speed)'
-              : 'Enter a new distance to recalculate your hydration plan (duration calculated from your pace)'}
-          </p>
-          <div className="space-y-3">
-            <div className="space-y-2">
-              <Label htmlFor="distance-adjust" className="text-sm font-medium">
-                {profile.disciplines?.[0] === 'Triathlon' 
-                  ? 'Total Race Distance (km)'
-                  : profile.disciplines?.[0] === 'Cycling'
-                  ? 'Cycling Distance (km)'
-                  : 'Distance (km)'}
-              </Label>
-              <div className="flex gap-2 items-center">
-                <Input
-                  id="distance-adjust"
-                  type="number"
-                  min="1"
-                  max="500"
-                  step="1"
-                  value={distanceInput}
-                  onChange={(e) => setDistanceInput(e.target.value)}
-                  placeholder="Enter distance"
-                  className="text-2xl font-bold text-center w-32 [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                  disabled={isRegenerating}
-                />
-                <div className="flex flex-col gap-1">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      const current = parseFloat(distanceInput) || 0;
-                      setDistanceInput(String(Math.min(500, current + 1)));
-                    }}
-                    disabled={isRegenerating}
-                  >
-                    ▲
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    className="h-8 w-8 p-0"
-                    onClick={() => {
-                      const current = parseFloat(distanceInput) || 0;
-                      setDistanceInput(String(Math.max(1, current - 1)));
-                    }}
-                    disabled={isRegenerating}
-                  >
-                    ▼
-                  </Button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="lg"
-                  className="gap-2 shrink-0"
-                  onClick={() => setDistanceInput('')}
-                  disabled={isRegenerating || !distanceInput}
-                >
-                  <X className="h-4 w-4" />
-                  Clear
-                </Button>
-              </div>
-            </div>
-            
-            {/* Quick Distance Presets */}
-            <div className="space-y-2">
-              <Label className="text-xs font-medium text-muted-foreground">Quick Presets:</Label>
-              <div className="flex flex-wrap gap-2">
-                {profile.disciplines?.[0] === 'Triathlon' ? (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('25.75'); handleDistanceChange(25.75); }} disabled={isRegenerating}>
-                      Sprint (25.75km)
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('51.5'); handleDistanceChange(51.5); }} disabled={isRegenerating}>
-                      Olympic (51.5km)
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('113'); handleDistanceChange(113); }} disabled={isRegenerating}>
-                      Half Ironman (113km)
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('226'); handleDistanceChange(226); }} disabled={isRegenerating}>
-                      Ironman (226km)
-                    </Button>
-                  </>
-                ) : profile.disciplines?.[0] === 'Cycling' ? (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('40'); handleDistanceChange(40); }} disabled={isRegenerating}>
-                      40km
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('80'); handleDistanceChange(80); }} disabled={isRegenerating}>
-                      80km
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('100'); handleDistanceChange(100); }} disabled={isRegenerating}>
-                      100km
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('160'); handleDistanceChange(160); }} disabled={isRegenerating}>
-                      Century (160km)
-                    </Button>
-                  </>
-                ) : profile.disciplines?.[0] === 'Running' ? (
-                  <>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('5'); handleDistanceChange(5); }} disabled={isRegenerating}>
-                      5K
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('10'); handleDistanceChange(10); }} disabled={isRegenerating}>
-                      10K
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('21.1'); handleDistanceChange(21.1); }} disabled={isRegenerating}>
-                      Half Marathon
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('42.2'); handleDistanceChange(42.2); }} disabled={isRegenerating}>
-                      Marathon
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setDistanceInput('50'); handleDistanceChange(50); }} disabled={isRegenerating}>
-                      50K Ultra
-                    </Button>
-                  </>
-                ) : null}
-              </div>
-            </div>
-            
-            <div className="flex gap-2">
-              <Button
-                variant="default"
-                size="lg"
-                className="flex-1 gap-2"
-                onClick={() => {
-                  if (distanceInput && parseFloat(distanceInput) > 0 && parseFloat(distanceInput) <= 500) {
-                    handleDistanceChange(parseFloat(distanceInput));
-                  } else {
-                    toast({
-                      title: "Invalid distance",
-                      description: "Please enter a distance between 1 and 500 km",
-                      variant: "destructive"
-                    });
-                  }
-                }}
-                disabled={!distanceInput || parseFloat(distanceInput) <= 0 || isRegenerating}
-              >
-                {isRegenerating ? (
-                  <>
-                    <Loader2 className="w-4 h-4 animate-spin" />
-                    Generating...
-                  </>
-                ) : (
-                  <>
-                    <Calculator className="w-4 h-4" />
-                    Re-calculate
-                  </>
-                )}
-              </Button>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  const initial = getInitialDistance();
-                  setDistanceInput(String(initial));
-                  handleDistanceChange(initial);
-                }}
-                disabled={isRegenerating}
-                className="gap-2"
-              >
-                <RefreshCw className="w-4 h-4" />
-                Reset
-              </Button>
-            </div>
-          </div>
-        </div>
-      </Card>
 
       {/* Action Buttons - Right under the adjustment tool */}
       <div className="flex flex-col sm:flex-row gap-4 justify-center">
