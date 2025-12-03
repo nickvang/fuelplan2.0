@@ -774,35 +774,189 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       </div>
 
-      {/* Why So Many Sachets? Explainer */}
-      <Alert className="border-l-4 border-l-primary bg-primary/5">
-        <Sparkles className="h-5 w-5 text-primary" />
-        <AlertTitle className="text-lg font-bold mb-2">Why this many sachets?</AlertTitle>
-        <AlertDescription className="text-muted-foreground space-y-2">
-          <p className="leading-relaxed">
-            Your body loses <strong>{safeNumber(plan.totalFluidLoss) ? Math.round(safeNumber(plan.totalFluidLoss)) : 'approximately 1000'}ml of fluid</strong> during this session through sweat.
-            {profile.avgPace && profile.raceDistance && (
-              <> This is calculated from your <strong>{formatHoursAsTime(profile.sessionDuration)} session</strong> duration (based on your {profile.avgPace} pace over {profile.raceDistance}).</>
-            )}
-            {!profile.avgPace && profile.sessionDuration && (
-              <> This is based on your <strong>{formatHoursAsTime(profile.sessionDuration)} session</strong> duration.</>
-            )}
-            {' '}Each Supplme sachet contains the precise sodium, potassium, and magnesium ratios clinically proven to maximize fluid absorption up to 3x more effective than water alone.
-          </p>
-          <p className="leading-relaxed">
-            The algorithm accounts for your sweat rate, temperature, intensity, and duration to calculate the exact electrolyte replacement needed to maintain performance and prevent cramping.
-            This isn't guesswork—it's science-backed hydration optimized for your specific conditions.
-          </p>
-          <p className="leading-relaxed font-semibold">
-            This formula has been tested and validated with numerous athletes to ensure optimal performance and safety.
-          </p>
-          {version === 'simple' && (
-            <p className="leading-relaxed text-primary font-semibold pt-2 border-t border-primary/20 mt-3">
-              💡 Want even more precision? Take our <strong>Pro/Advanced version</strong> for detailed environmental and physiological customization, or <strong>upload data from your smartwatch/device</strong> for AI-powered insights based on your actual recovery and performance metrics.
-            </p>
-          )}
-        </AlertDescription>
-      </Alert>
+      {/* Why So Many Sachets? Scientific Explainer */}
+      {(() => {
+        // Calculate sodium loss per hour based on sweat saltiness
+        const sodiumLossPerHour = {
+          'low': 400,    // 300-500 mg/hour range
+          'medium': 650, // 500-800 mg/hour range
+          'high': 1100,  // 800-1400 mg/hour range
+        }[profile.sweatSaltiness] || 650;
+        
+        const totalSodiumLoss = sodiumLossPerHour * profile.sessionDuration;
+        const sachetsPerHour = plan.duringActivity.electrolytesPerHour || 1;
+        const totalSachets = Math.round(sachetsPerHour * profile.sessionDuration) + plan.preActivity.electrolytes + plan.postActivity.electrolytes;
+        
+        return (
+          <Card className="p-6 md:p-8 bg-gradient-to-br from-primary/5 to-background border-primary/30">
+            <div className="flex items-start gap-3 mb-4">
+              <BookOpen className="h-6 w-6 text-primary flex-shrink-0 mt-1" />
+              <h3 className="text-xl md:text-2xl font-black text-foreground">The Science Behind Your Sachet Dosing</h3>
+            </div>
+            
+            <div className="space-y-6 text-muted-foreground">
+              {/* Sodium Loss Section */}
+              <div className="p-4 rounded-lg bg-secondary/50 border border-border">
+                <h4 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                  <Droplets className="w-4 h-4 text-primary" />
+                  Your Sodium Loss Rate
+                </h4>
+                <p className="leading-relaxed">
+                  Based on your <strong className="text-foreground">{profile.sweatSaltiness} sweat saltiness</strong> profile, 
+                  you lose approximately <strong className="text-foreground text-lg">{sodiumLossPerHour} mg of sodium per hour</strong> during exercise.
+                  Over your <strong className="text-foreground">{formatHoursAsTime(profile.sessionDuration)} session</strong>, 
+                  that equals <strong className="text-foreground">{Math.round(totalSodiumLoss)} mg total sodium loss</strong>.
+                </p>
+                <p className="text-sm mt-2 italic">
+                  Research shows sweat sodium concentrations range from 300-1400 mg/hour depending on individual physiology, 
+                  genetics, heat acclimatization, and training status (Baker et al., 2016).
+                </p>
+              </div>
+
+              {/* Why Sodium Matters */}
+              <div>
+                <h4 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                  <Zap className="w-4 h-4 text-primary" />
+                  Why Sodium is the Primary Driver
+                </h4>
+                <p className="leading-relaxed">
+                  Sodium is the most abundant electrolyte lost in sweat and the <strong className="text-foreground">primary determinant of fluid retention</strong>. 
+                  When sodium levels drop (hyponatremia), your body cannot hold onto water effectively—drinking more plain water 
+                  actually <em>dilutes</em> blood sodium further, worsening the problem. This is why elite athletes and 
+                  sports physiologists prioritize sodium replacement above all other electrolytes.
+                </p>
+              </div>
+
+              {/* SUPPLME Profile */}
+              <div className="p-4 rounded-lg bg-gradient-to-r from-primary/10 to-transparent border-l-4 border-primary">
+                <h4 className="font-bold text-foreground mb-3">Each SUPPLME Sachet Delivers:</h4>
+                <div className="grid grid-cols-2 md:grid-cols-3 gap-3 text-sm">
+                  <div className="p-2 rounded bg-background/50">
+                    <p className="font-bold text-foreground">500 mg Sodium (Na⁺)</p>
+                    <p className="text-xs">Fluid balance & cramp prevention</p>
+                  </div>
+                  <div className="p-2 rounded bg-background/50">
+                    <p className="font-bold text-foreground">250 mg Potassium (K⁺)</p>
+                    <p className="text-xs">Muscle contraction & nerve signaling</p>
+                  </div>
+                  <div className="p-2 rounded bg-background/50">
+                    <p className="font-bold text-foreground">100 mg Magnesium (Mg²⁺)</p>
+                    <p className="text-xs">Prevents neuromuscular fatigue</p>
+                  </div>
+                  <div className="p-2 rounded bg-background/50">
+                    <p className="font-bold text-foreground">230 mg Chloride (Cl⁻)</p>
+                    <p className="text-xs">Fluid balance & pH regulation</p>
+                  </div>
+                  <div className="p-2 rounded bg-background/50 md:col-span-2">
+                    <p className="font-bold text-foreground">1380 mg Citrate</p>
+                    <p className="text-xs">Buffers lactic acid buildup, supports endurance performance</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Why This Dose */}
+              <div>
+                <h4 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                  <Calculator className="w-4 h-4 text-primary" />
+                  Your Personalized Calculation
+                </h4>
+                <p className="leading-relaxed mb-3">
+                  With <strong className="text-foreground">{sodiumLossPerHour} mg sodium loss/hour</strong> and each sachet providing 
+                  <strong className="text-foreground"> 500 mg sodium</strong>, you need approximately 
+                  <strong className="text-foreground"> {(sodiumLossPerHour / 500).toFixed(1)} sachets/hour</strong> for full replacement.
+                  After applying adjustments for your weight ({profile.weight}kg), environment ({(profile.trainingTempRange.min + profile.trainingTempRange.max) / 2}°C), 
+                  and sweat rate ({profile.sweatRate}), your recommended dosing is <strong className="text-foreground">{sachetsPerHour} sachet{sachetsPerHour !== 1 ? 's' : ''}/hour</strong>.
+                </p>
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
+                  <div className="p-2 rounded bg-secondary/50">
+                    <p className="font-semibold text-foreground">Weight Factor</p>
+                    <p className="text-xs">{profile.weight < 65 ? 'Lighter athletes: reduced need' : profile.weight > 95 ? 'Heavier athletes: increased need' : 'Standard adjustment applied'}</p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/50">
+                    <p className="font-semibold text-foreground">Temperature Factor</p>
+                    <p className="text-xs">{(profile.trainingTempRange.min + profile.trainingTempRange.max) / 2 > 25 ? 'Hot conditions: +25-40% sodium loss' : (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2 < 15 ? 'Cool conditions: -10-15% sodium loss' : 'Moderate temp: standard rate'}</p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/50">
+                    <p className="font-semibold text-foreground">Duration Factor</p>
+                    <p className="text-xs">{profile.sessionDuration >= 4 ? 'Ultra-endurance: cumulative losses compound' : profile.sessionDuration >= 2 ? 'Extended effort: consistent replacement critical' : 'Standard session duration'}</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* Consequences of Under-dosing */}
+              <div className="p-4 rounded-lg bg-destructive/10 border border-destructive/20">
+                <h4 className="font-bold text-foreground mb-2 flex items-center gap-2">
+                  <AlertCircle className="w-4 h-4 text-destructive" />
+                  Why Lower Dosing Causes Problems
+                </h4>
+                <p className="leading-relaxed mb-2">
+                  Insufficient sodium replacement during prolonged exercise leads to:
+                </p>
+                <ul className="list-disc list-inside space-y-1 text-sm">
+                  <li><strong>Progressive dehydration</strong> – body cannot retain fluids without adequate sodium</li>
+                  <li><strong>Muscle cramps</strong> – sodium is essential for proper muscle contraction</li>
+                  <li><strong>Declining pace</strong> – reduced plasma volume impairs oxygen delivery</li>
+                  <li><strong>Elevated heart rate</strong> – heart works harder to pump thickened blood</li>
+                  <li><strong>Cognitive impairment</strong> – even 2% dehydration affects decision-making</li>
+                </ul>
+              </div>
+
+              {/* Ultra Note */}
+              {profile.sessionDuration >= 4 && (
+                <div className="p-4 rounded-lg bg-primary/10 border border-primary/30">
+                  <p className="font-bold text-foreground mb-1">⚡ Critical Note for Ultra-Endurance (4h+)</p>
+                  <p className="text-sm">
+                    Long ultras require <strong>300-800 mg sodium/hour</strong> depending on sweat saltiness. 
+                    SUPPLME sachets deliver 500 mg sodium each, so athletes with high sweat saltiness may need 
+                    multiple sachets per hour to match physiological losses. Under-fueling is the #1 cause of 
+                    DNF in ultra events.
+                  </p>
+                </div>
+              )}
+
+              {/* Scientific References */}
+              <div className="pt-4 border-t border-border">
+                <h4 className="font-bold text-foreground mb-3 flex items-center gap-2">
+                  <ExternalLink className="w-4 h-4 text-primary" />
+                  Scientific References
+                </h4>
+                <div className="space-y-2 text-xs">
+                  <div className="p-2 rounded bg-secondary/30">
+                    <p className="font-semibold">American College of Sports Medicine (2007)</p>
+                    <p className="italic">"Exercise and Fluid Replacement" – Position Stand</p>
+                    <p className="text-muted-foreground">Med Sci Sports Exerc. 39(2):377-90 | <a href="https://pubmed.ncbi.nlm.nih.gov/17277604/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PMID: 17277604</a></p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/30">
+                    <p className="font-semibold">Baker et al. (2016)</p>
+                    <p className="italic">"Normative data for regional sweat sodium concentration"</p>
+                    <p className="text-muted-foreground">J Sports Sci. 34(4):358-68 | <a href="https://pubmed.ncbi.nlm.nih.gov/26070030/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PMID: 26070030</a></p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/30">
+                    <p className="font-semibold">Goulet (2012)</p>
+                    <p className="italic">"Effect of exercise-induced dehydration on endurance performance"</p>
+                    <p className="text-muted-foreground">Br J Sports Med. 46(4):259-65 | <a href="https://pubmed.ncbi.nlm.nih.gov/21659364/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PMID: 21659364</a></p>
+                  </div>
+                  <div className="p-2 rounded bg-secondary/30">
+                    <p className="font-semibold">Sawka et al. (2015)</p>
+                    <p className="italic">"Hypohydration and human performance: Impact of environment and physiological mechanisms"</p>
+                    <p className="text-muted-foreground">Sports Med. 45 Suppl 1:S51-60 | <a href="https://pubmed.ncbi.nlm.nih.gov/26553489/" target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">PMID: 26553489</a></p>
+                  </div>
+                </div>
+              </div>
+
+              {version === 'simple' && (
+                <div className="pt-4 border-t border-primary/20">
+                  <p className="leading-relaxed text-primary font-semibold">
+                    💡 Want even more precision? Take our <strong>Pro/Advanced version</strong> for detailed environmental 
+                    and physiological customization, or <strong>upload data from your smartwatch/device</strong> for 
+                    AI-powered insights based on your actual recovery and performance metrics.
+                  </p>
+                </div>
+              )}
+            </div>
+          </Card>
+        );
+      })()}
 
       {/* Race Day Protocol - Only shows if user is training for a race */}
       {profile.hasUpcomingRace && (
