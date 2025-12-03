@@ -420,6 +420,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     duringActivity: {
       waterPerHour: duringWaterPerHour,
       electrolytesPerHour: sachetsPerHour || 0,
+      totalElectrolytes: totalDuringSachets,
       frequency: frequency,
     },
     postActivity: {

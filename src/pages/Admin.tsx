@@ -156,8 +156,8 @@ export default function Admin() {
         const disciplines = p.profile_data?.disciplines || [];
         const plan = p.plan_data;
         
-        if (plan?.duringActivity?.electrolytesPerHour && p.profile_data?.sessionDuration) {
-          const sachetsUsed = plan.duringActivity.electrolytesPerHour * p.profile_data.sessionDuration;
+        if (plan?.duringActivity?.totalElectrolytes && p.profile_data?.sessionDuration) {
+          const sachetsUsed = plan.duringActivity.totalElectrolytes;
           
           disciplines.forEach((activity: string) => {
             const current = activitySachetsMap.get(activity) || { total: 0, count: 0 };
