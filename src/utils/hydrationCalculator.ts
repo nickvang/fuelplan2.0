@@ -186,10 +186,10 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   let sachetsPerHour = baseSachetsPerHour * weightMultiplier * envMultiplier * sweatRateMultiplier;
   calculationSteps.push(`Calculated sachets/hour: ${baseSachetsPerHour.toFixed(2)} × ${weightMultiplier} × ${envMultiplier} × ${sweatRateMultiplier} = ${sachetsPerHour.toFixed(2)}`);
   
-  // CRITICAL MINIMUM: Never below 0.7 sachets/hour for efforts > 2 hours
-  if (profile.sessionDuration > 2 && sachetsPerHour < 0.7) {
-    sachetsPerHour = 0.7;
-    calculationSteps.push(`⚠️ Applied minimum: 0.7 sachets/hour for 2h+ efforts`);
+  // CRITICAL MINIMUM: Never below 1 sachet/hour for efforts > 2 hours
+  if (profile.sessionDuration > 2 && sachetsPerHour < 1) {
+    sachetsPerHour = 1;
+    calculationSteps.push(`⚠️ Applied minimum: 1 sachet/hour for 2h+ efforts`);
   }
   
   // Swimming override: No sachets during swims when racing (can't drink while swimming)
@@ -198,11 +198,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     calculationSteps.push(`Swimming race: 0 sachets/hour (impractical to consume during swim)`);
   }
   
-  // Round to 1 decimal place for display, then round up for practical use
-  const displaySachetsPerHour = Math.round(sachetsPerHour * 10) / 10;
-  sachetsPerHour = Math.ceil(sachetsPerHour * 10) / 10; // Round up to nearest 0.1
+  // Round to whole numbers only - no decimals
+  sachetsPerHour = Math.round(sachetsPerHour);
+  if (sachetsPerHour < 1 && profile.sessionDuration >= 1) {
+    sachetsPerHour = 1; // Minimum 1 sachet/hour for 1h+ efforts
+  }
   
-  calculationSteps.push(`Sachets per hour: ${displaySachetsPerHour} (rounded for practical use)`);
+  calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (whole number)`);
   
   // Calculate total during-activity sachets
   let totalDuringSachets = Math.round(sachetsPerHour * profile.sessionDuration);
@@ -354,9 +356,9 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     }
   }
   
-  const duringElectrolytesPerHour = displaySachetsPerHour;
+  const duringElectrolytesPerHour = sachetsPerHour;
   
-  calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h, ${displaySachetsPerHour} sachets/h, ${totalDuringSachets} total sachets`);
+  calculationSteps.push(`During-activity: ${duringWaterPerHour}ml/h, ${sachetsPerHour} sachets/h, ${totalDuringSachets} total sachets`);
   
   // Frequency guidance
   let frequency = 'Every 15-20 minutes';
@@ -465,7 +467,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     },
     duringActivity: {
       waterPerHour: duringWaterPerHour,
-      electrolytesPerHour: displaySachetsPerHour || 0,
+      electrolytesPerHour: sachetsPerHour || 0,
       frequency: frequency,
     },
     postActivity: {
