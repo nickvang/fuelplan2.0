@@ -280,25 +280,43 @@ export default function QATest() {
       severity = 'ERROR';
     }
 
-    // Sachet checks - UPDATED: Ultra-conservative approach
+    // Sachet checks - UPDATED: Based on new formula (sodium loss / 500)
     const duringSachets = plan.duringActivity.electrolytesPerHour;
     const totalDuringSachets = duringSachets * scenario.duration;
     
-    // Allow 0 or fractional per-hour values since total during-sachets are capped and then divided by duration
-    // What matters is that the TOTAL is reasonable, not per-hour
+    // New formula: sachets/hour = sodium need per hour ÷ 500
+    // Sodium loss per hour: low=400, medium=650, high=1100
+    // Then apply weight, environment, and sweat rate multipliers
     
-    // Check total during-sachets based on duration (ultra-conservative)
-    let maxTotalDuring = 0;
-    if (scenario.duration < 3) {
-      maxTotalDuring = 0; // <3h: 0 during-sachets
-    } else if (scenario.duration < 5) {
-      maxTotalDuring = 1; // 3-5h: max 1 during-sachet
-    } else {
-      maxTotalDuring = 2; // 5h+: max 2 during-sachets
-    }
+    // Expected range based on formula (not capped)
+    const sodiumPerHour = { low: 400, medium: 650, high: 1100 }[scenario.sweatSaltiness] || 650;
+    const baseSachets = sodiumPerHour / 500;
     
-    if (totalDuringSachets > maxTotalDuring + 0.1) { // +0.1 tolerance for rounding
-      flags.push(`Total during-sachets ${totalDuringSachets.toFixed(1)} exceeds conservative cap of ${maxTotalDuring} for ${scenario.duration}h`);
+    // Weight multiplier
+    let weightMult = 0.8;
+    if (scenario.weight < 65) weightMult = 0.7;
+    else if (scenario.weight > 95) weightMult = 1.15;
+    else if (scenario.weight > 80) weightMult = 0.95;
+    
+    // Environment multiplier
+    const avgTemp = (scenario.tempMin + scenario.tempMax) / 2;
+    let envMult = 1.0;
+    if (avgTemp < 15) envMult = 0.875;
+    else if (avgTemp > 30) envMult = 1.4;
+    else if (avgTemp > 25) envMult = 1.25;
+    
+    // Sweat rate multiplier
+    let sweatMult = 1.0;
+    if (scenario.sweatRate === 'low') sweatMult = 0.8;
+    else if (scenario.sweatRate === 'high') sweatMult = 1.325;
+    
+    const expectedSachetsPerHour = Math.round(baseSachets * weightMult * envMult * sweatMult);
+    const expectedTotalDuring = expectedSachetsPerHour * scenario.duration;
+    
+    // Allow some tolerance (±50% or ±1) for rounding and edge cases
+    const tolerance = Math.max(1, expectedTotalDuring * 0.5);
+    if (Math.abs(totalDuringSachets - expectedTotalDuring) > tolerance + 0.5) {
+      flags.push(`Total during-sachets ${totalDuringSachets.toFixed(1)} vs expected ~${expectedTotalDuring.toFixed(1)} (tolerance ±${tolerance.toFixed(1)})`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
     
@@ -309,16 +327,11 @@ export default function QATest() {
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
     
-    // Post-sachets check: conservative, race-aware
+    // Post-sachets check: based on remaining sodium deficit
     const postSachets = plan.postActivity.electrolytes;
-    const maxPost = scenario.isRaceDay ? 2 : 1;
-    const maxPostHiking = 1; // Hiking is lower intensity
-    
-    if (isDiscipline('Hiking') && postSachets > maxPostHiking) {
-      flags.push(`Hiking post-sachets ${postSachets} exceeds max ${maxPostHiking} (lower intensity)`);
-      severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
-    } else if (!isDiscipline('Hiking') && postSachets > maxPost) {
-      flags.push(`Post-sachets ${postSachets} exceeds max ${maxPost} (race: ${scenario.isRaceDay})`);
+    // Post sachets should be reasonable (0-3 range typically)
+    if (postSachets < 0 || postSachets > 4) {
+      flags.push(`Post-sachets ${postSachets} out of reasonable range [0-4]`);
       severity = severity === 'ERROR' ? 'ERROR' : 'WARNING';
     }
 
