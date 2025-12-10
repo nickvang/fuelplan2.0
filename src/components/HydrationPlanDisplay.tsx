@@ -878,9 +878,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     </div>
                     <div className="p-3 sm:p-3.5 md:p-4 rounded-lg bg-gradient-to-br from-background to-muted border border-border">
                       <Zap className="w-6 h-6 sm:w-7 sm:h-7 md:w-8 md:h-8 mb-1 sm:mb-1.5 md:mb-2 text-foreground" />
-                      <p className="text-[10px] sm:text-xs md:text-xs font-bold text-primary uppercase">Evening</p>
+                      <p className="text-[10px] sm:text-xs md:text-xs font-bold text-primary uppercase">With Dinner</p>
                       <p className="text-base sm:text-lg md:text-2xl font-black break-words">500ml + 2x Supplme</p>
-                      <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground">Pre-load electrolytes</p>
+                      <p className="text-[10px] sm:text-xs md:text-xs text-muted-foreground">5-7pm for sleep quality</p>
                     </div>
                   </div>
                   
