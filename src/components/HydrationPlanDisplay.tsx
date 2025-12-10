@@ -302,28 +302,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       </Card>
 
-      {/* Share Button */}
-      <div className="text-center pt-2 pb-4">
-        <Button 
-          onClick={handleShare} 
-          disabled={isSharing}
-          variant="outline"
-          size="lg"
-          className="gap-2 font-bold"
-        >
-          {isSharing ? (
-            <>
-              <Loader2 className="w-5 h-5 animate-spin" />
-              Preparing...
-            </>
-          ) : (
-            <>
-              <Share2 className="w-5 h-5" />
-              Share Protocol
-            </>
-          )}
-        </Button>
-      </div>
+      {/* Share Button - Hidden */}
 
       {/* Responsive Display Version - Visible on all devices */}
       <div className="space-y-6 md:space-y-8">
@@ -1636,26 +1615,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         <Button onClick={onFullReset || onReset} variant="outline" size="lg" className="gap-2 w-full sm:w-auto">
           <RefreshCw className="w-4 h-4" />
           Start New Plan
-        </Button>
-        <Button 
-          onClick={() => {
-            if (navigator.share) {
-              navigator.share({
-                title: 'Supplme Hydration Guide',
-                text: 'Check out my personalized hydration plan from Supplme',
-                url: window.location.href
-              }).catch(() => {});
-            } else {
-              navigator.clipboard.writeText(window.location.href);
-              toast({ title: "Link Copied", description: "Share link copied to clipboard" });
-            }
-          }}
-          variant="outline" 
-          size="lg" 
-          className="gap-2 w-full sm:w-auto"
-        >
-          <Share2 className="w-4 h-4" />
-          Share
         </Button>
       </div>
 
