@@ -746,6 +746,23 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   After applying adjustments for your weight ({profile.weight}kg), environment ({(profile.trainingTempRange.min + profile.trainingTempRange.max) / 2}°C), 
                   and sweat rate ({profile.sweatRate}), your recommended dosing is <strong className="text-foreground">{sachetsPerHour} sachet{sachetsPerHour !== 1 ? 's' : ''}/hour</strong>.
                 </p>
+                
+                {/* Clarifying how theoretical rate applies to their actual plan */}
+                <div className="p-3 mb-3 rounded-lg bg-primary/20 border border-primary/40 text-sm">
+                  <p className="font-semibold text-foreground mb-1">↳ How this applies to your {formatHoursAsTime(profile.sessionDuration)} session:</p>
+                  {profile.sessionDuration < 2 ? (
+                    <p>
+                      For sessions under 2 hours, we distribute your sodium needs across <strong>Pre + Post</strong> only (not during). 
+                      Your total need of ~{Math.round(sodiumLossPerHour * profile.sessionDuration)}mg is covered by <strong>{plan.preActivity.electrolytes} pre</strong> + <strong>{plan.postActivity.electrolytes} post</strong> = {(plan.preActivity.electrolytes + plan.postActivity.electrolytes) * 500}mg sodium.
+                    </p>
+                  ) : (
+                    <p>
+                      For your {formatHoursAsTime(profile.sessionDuration)} session, the {sachetsPerHour} sachet/hour rate applies to the "during" phase. 
+                      Combined with pre/post sachets, your total intake of {(plan.preActivity.electrolytes + plan.duringActivity.totalElectrolytes + plan.postActivity.electrolytes) * 500}mg covers your ~{Math.round(totalSodiumLoss)}mg sodium loss.
+                    </p>
+                  )}
+                </div>
+
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm">
                   <div className="p-2 rounded bg-secondary/50">
                     <p className="font-semibold text-foreground">Weight Factor</p>
@@ -757,7 +774,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                   <div className="p-2 rounded bg-secondary/50">
                     <p className="font-semibold text-foreground">Duration Factor</p>
-                    <p className="text-xs">{profile.sessionDuration >= 4 ? 'Ultra-endurance: cumulative losses compound' : profile.sessionDuration >= 2 ? 'Extended effort: consistent replacement critical' : 'Standard session duration'}</p>
+                    <p className="text-xs">{profile.sessionDuration >= 4 ? 'Ultra-endurance: cumulative losses compound' : profile.sessionDuration >= 2 ? 'Extended effort: consistent replacement critical' : 'Short session: pre/post distribution'}</p>
                   </div>
                 </div>
               </div>
