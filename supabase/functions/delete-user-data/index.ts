@@ -1,11 +1,15 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getClientIP, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limit: 3 deletion attempts per minute per IP (strict to prevent token brute-forcing)
+const RATE_LIMIT_CONFIG = { windowMs: 60 * 1000, maxRequests: 3 };
 
 // Validation schema
 const requestSchema = z.object({
@@ -21,6 +25,14 @@ serve(async (req) => {
   // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check (strict for deletion endpoint)
+  const clientIP = getClientIP(req);
+  const rateLimit = checkRateLimit(clientIP, RATE_LIMIT_CONFIG);
+  if (!rateLimit.allowed) {
+    console.warn(`[RateLimit] IP ${clientIP} exceeded rate limit for deletion`);
+    return rateLimitResponse(rateLimit.resetIn, corsHeaders);
   }
 
   try {

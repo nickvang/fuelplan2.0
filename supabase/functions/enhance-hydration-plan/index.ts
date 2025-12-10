@@ -1,10 +1,14 @@
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getClientIP, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
 
 const corsHeaders = {
   'Access-Control-Allow-Origin': '*',
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
+
+// Rate limit: 10 AI enhancement requests per minute per IP
+const RATE_LIMIT_CONFIG = { windowMs: 60 * 1000, maxRequests: 10 };
 
 // Validation schemas
 const profileSchema = z.object({
@@ -41,6 +45,14 @@ const requestSchema = z.object({
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIP = getClientIP(req);
+  const rateLimit = checkRateLimit(clientIP, RATE_LIMIT_CONFIG);
+  if (!rateLimit.allowed) {
+    console.warn(`[RateLimit] IP ${clientIP} exceeded rate limit`);
+    return rateLimitResponse(rateLimit.resetIn, corsHeaders);
   }
 
   try {
