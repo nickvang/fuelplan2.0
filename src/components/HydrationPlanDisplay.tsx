@@ -771,22 +771,39 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 <div className="space-y-3 text-sm">
                   <div className="p-3 rounded bg-background/50">
                     <p className="font-bold text-foreground mb-1">🟢 PRE ({plan.preActivity.electrolytes} sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''})</p>
-                    <p>Taken 60-90 minutes before exercise to <strong>pre-load sodium</strong> and expand plasma volume. This creates a "sodium buffer" so you start in an optimal hydration state. Pre-loading is especially important for races and hot conditions.</p>
+                    <p>
+                      Taken 60-90 minutes before your <strong className="text-foreground">{formatHoursAsTime(profile.sessionDuration)} {profile.disciplines.join(' + ')}</strong> to pre-load <strong className="text-foreground">{plan.preActivity.electrolytes * 500}mg sodium</strong> and expand plasma volume. 
+                      {(profile.trainingTempRange.min + profile.trainingTempRange.max) / 2 > 20 
+                        ? ` Especially important given your ${Math.round((profile.trainingTempRange.min + profile.trainingTempRange.max) / 2)}°C conditions.`
+                        : ' This creates a sodium buffer so you start optimally hydrated.'}
+                    </p>
                   </div>
                   <div className="p-3 rounded bg-background/50">
                     <p className="font-bold text-foreground mb-1">🟡 DURING ({plan.duringActivity.totalElectrolytes} sachet{plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''})</p>
                     {profile.sessionDuration < 2 ? (
-                      <p><strong>0 sachets for activities under 2 hours:</strong> Your body has sufficient glycogen and sodium stores for shorter efforts. The pre-activity sachet provides enough sodium for the entire session. Taking electrolytes during short activities offers minimal benefit and can cause GI discomfort.</p>
+                      <p>
+                        <strong>0 sachets for your {formatHoursAsTime(profile.sessionDuration)} session:</strong> At under 2 hours, your body's sodium stores (plus your pre-activity sachet) cover your estimated <strong className="text-foreground">{Math.round(sodiumLossPerHour * profile.sessionDuration)}mg total sodium loss</strong>. Taking sachets during short activities offers minimal benefit and may cause GI discomfort.
+                      </p>
                     ) : (
-                      <p>For activities over 2 hours, sachets are distributed throughout—<strong>excluding the final 30 minutes</strong>. This is because any sachet taken in the last 30 minutes won't absorb before you finish, and your post-activity sachet covers immediate recovery needs.</p>
+                      <p>
+                        For your <strong className="text-foreground">{formatHoursAsTime(profile.sessionDuration)}</strong> session, {plan.duringActivity.totalElectrolytes} sachet{plan.duringActivity.totalElectrolytes !== 1 ? 's are' : ' is'} distributed throughout—<strong>excluding the final 30 minutes</strong>. 
+                        At {sachetsPerHour} sachet{sachetsPerHour !== 1 ? 's' : ''}/hour, this replaces your <strong className="text-foreground">{sodiumLossPerHour}mg/hour sodium loss</strong>. The final 30 min is excluded because sachets won't absorb before you finish.
+                      </p>
                     )}
                   </div>
                   <div className="p-3 rounded bg-background/50">
                     <p className="font-bold text-foreground mb-1">🔵 POST ({plan.postActivity.electrolytes} sachet{plan.postActivity.electrolytes !== 1 ? 's' : ''})</p>
                     {plan.postActivity.electrolytes === 0 ? (
-                      <p><strong>0 sachets post-activity:</strong> Your during-activity intake sufficiently replaced sodium losses. Additional post-exercise sachets aren't needed when you've maintained electrolyte balance throughout. Focus on rehydrating with 150% of fluid lost.</p>
+                      <p>
+                        <strong>0 sachets post-activity:</strong> Your during-activity intake of {plan.duringActivity.totalElectrolytes} sachet{plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''} ({plan.duringActivity.totalElectrolytes * 500}mg sodium) sufficiently replaced your losses. Focus on rehydrating with <strong className="text-foreground">{plan.postActivity.water}ml water</strong> (150% of fluid lost).
+                      </p>
                     ) : (
-                      <p>Taken within 30 minutes post-exercise to <strong>replace remaining sodium deficit</strong> and aid fluid retention. The body absorbs sodium most efficiently immediately after exercise. {profile.sessionDuration < 2 ? "Since you took 0 sachets during your short session, post-activity replenishment is essential." : "This completes your recovery alongside rehydration fluids."}</p>
+                      <p>
+                        Taken within 30 minutes post-exercise to replace your remaining sodium deficit. 
+                        {profile.sessionDuration < 2 
+                          ? ` Since you took 0 sachets during your short ${formatHoursAsTime(profile.sessionDuration)} session, this ${plan.postActivity.electrolytes} sachet${plan.postActivity.electrolytes !== 1 ? 's' : ''} (${plan.postActivity.electrolytes * 500}mg sodium) is essential for recovery.`
+                          : ` This ${plan.postActivity.electrolytes} sachet${plan.postActivity.electrolytes !== 1 ? 's' : ''} completes your sodium replenishment alongside ${plan.postActivity.water}ml rehydration fluids.`}
+                      </p>
                     )}
                   </div>
                 </div>
