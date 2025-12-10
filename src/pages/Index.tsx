@@ -888,20 +888,28 @@ const Index = () => {
               )}
 
               {/* Race Option - Enhanced with Card Style */}
-              <div className="p-4 border-2 border-primary/30 rounded-xl bg-gradient-to-r from-primary/5 to-primary/10 hover:border-primary/50 transition-all duration-300 animate-fade-in">
-                <div className="flex items-start gap-3">
+              <div className={`relative p-5 border-2 rounded-xl transition-all duration-300 animate-fade-in ${
+                profile.hasUpcomingRace 
+                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20' 
+                  : 'border-primary/50 bg-gradient-to-r from-primary/10 to-primary/20 hover:border-primary hover:shadow-lg hover:shadow-primary/10'
+              }`}>
+                {/* Recommended Badge */}
+                <div className="absolute -top-3 left-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
+                  RECOMMENDED
+                </div>
+                <div className="flex items-start gap-3 pt-1">
                   <Checkbox
                     id="hasUpcomingRace"
                     checked={profile.hasUpcomingRace || false}
                     onCheckedChange={(checked) => updateProfile({ hasUpcomingRace: checked === true })}
-                    className="mt-1"
+                    className="mt-1 h-5 w-5 border-2 border-primary"
                   />
                   <div className="flex-1">
-                    <Label htmlFor="hasUpcomingRace" className="cursor-pointer text-base font-semibold flex items-center gap-2">
+                    <Label htmlFor="hasUpcomingRace" className="cursor-pointer text-lg font-bold flex items-center gap-2 text-foreground">
                       🏁 Are you training for a race or specific event?
                     </Label>
                     <p className="text-sm text-muted-foreground mt-1">
-                      Get race-specific hydration guidance with finish time predictions
+                      Get race-specific hydration guidance with a 48-hour race protocol
                     </p>
                   </div>
                 </div>
