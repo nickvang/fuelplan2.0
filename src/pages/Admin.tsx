@@ -1174,32 +1174,136 @@ export default function Admin() {
                               </div>
                             </div>
                             
-                            {/* Hydration Plan Results */}
-                            <div className="space-y-2 bg-primary/5 p-3 rounded-lg border border-primary/20">
-                              <h4 className="font-semibold text-sm text-primary">Hydration Plan Results</h4>
-                              <div className="space-y-2 text-sm">
-                                <div className="space-y-1">
-                                  <p className="font-medium">PRE-Activity:</p>
-                                  <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.preActivity?.water || 0}ml</p>
-                                  <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.preActivity?.electrolytes || 0}</p>
-                                  {plan.preActivity?.timing && <p className="pl-2"><span className="text-muted-foreground">Timing:</span> {plan.preActivity.timing}</p>}
+                            {/* Hydration Plan Results - Enhanced */}
+                            <div className="space-y-4 bg-primary/5 p-4 rounded-lg border border-primary/20 col-span-full">
+                              <h4 className="font-bold text-base text-primary flex items-center gap-2">
+                                <Zap className="w-4 h-4" /> Hydration Plan Results
+                              </h4>
+                              
+                              {/* Total Fluid Loss Banner */}
+                              {plan.totalFluidLoss && (
+                                <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/30">
+                                  <p className="text-xs font-bold uppercase text-muted-foreground">Total Fluid Loss</p>
+                                  <p className="text-3xl font-black text-primary">{(plan.totalFluidLoss / 1000).toFixed(1)}L</p>
+                                  <p className="text-xs text-muted-foreground">During {pd.sessionDuration}hr session</p>
                                 </div>
-                                <div className="space-y-1">
-                                  <p className="font-medium">DURING Activity:</p>
-                                  <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.duringActivity?.waterPerHour || 0}ml/hr</p>
-                                  <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.duringActivity?.electrolytesPerHour ?? 0}/hr</p>
-                                  {plan.duringActivity?.frequency && <p className="pl-2"><span className="text-muted-foreground">Frequency:</span> {plan.duringActivity.frequency}</p>}
+                              )}
+                              
+                              {/* PRE / DURING / POST Grid */}
+                              <div className="grid grid-cols-3 gap-3">
+                                {/* PRE */}
+                                <div className="p-3 rounded-lg bg-background border border-border">
+                                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1">{plan.preActivity?.timing || '2-4h before'}</p>
+                                  <p className="text-lg font-black text-foreground">PRE</p>
+                                  <div className="mt-2 space-y-1 text-sm">
+                                    <p><span className="text-muted-foreground">Water:</span> <strong>{plan.preActivity?.water || 0}ml</strong></p>
+                                    <p><span className="text-muted-foreground">Sachets:</span> <strong>{plan.preActivity?.electrolytes || 0}x</strong></p>
+                                  </div>
                                 </div>
-                                <div className="space-y-1">
-                                  <p className="font-medium">POST-Activity:</p>
-                                  <p className="pl-2"><span className="text-muted-foreground">Water:</span> {plan.postActivity?.water || 0}ml</p>
-                                  <p className="pl-2"><span className="text-muted-foreground">Supplme Sachets:</span> {plan.postActivity?.electrolytes || 0}</p>
-                                  {plan.postActivity?.timing && <p className="pl-2"><span className="text-muted-foreground">Timing:</span> {plan.postActivity.timing}</p>}
+                                
+                                {/* DURING */}
+                                <div className="p-3 rounded-lg bg-foreground text-background border border-foreground">
+                                  <p className="text-xs font-bold opacity-70 uppercase mb-1">{plan.duringActivity?.frequency || 'Every 15min'}</p>
+                                  <p className="text-lg font-black">DURING</p>
+                                  <div className="mt-2 space-y-1 text-sm">
+                                    <p><span className="opacity-70">Water:</span> <strong>{plan.duringActivity?.waterPerHour || 0}ml/hr</strong></p>
+                                    <p><span className="opacity-70">Total:</span> <strong>{Math.round((plan.duringActivity?.waterPerHour || 0) * (pd.sessionDuration || 1))}ml</strong></p>
+                                    <p><span className="opacity-70">Sachets:</span> <strong>{plan.duringActivity?.totalElectrolytes ?? 0}</strong></p>
+                                  </div>
                                 </div>
-                                {plan.totalFluidLoss && (
-                                  <p className="pt-2 border-t"><span className="text-muted-foreground font-medium">Total Fluid Loss:</span> {(plan.totalFluidLoss / 1000).toFixed(1)}L</p>
-                                )}
+                                
+                                {/* POST */}
+                                <div className="p-3 rounded-lg bg-background border border-border">
+                                  <p className="text-xs font-bold text-muted-foreground uppercase mb-1">{plan.postActivity?.timing || 'Within 30min'}</p>
+                                  <p className="text-lg font-black text-foreground">POST</p>
+                                  <div className="mt-2 space-y-1 text-sm">
+                                    <p><span className="text-muted-foreground">Water:</span> <strong>{plan.postActivity?.water || 0}ml</strong></p>
+                                    <p><span className="text-muted-foreground">Sachets:</span> <strong>{plan.postActivity?.electrolytes || 0}x</strong></p>
+                                  </div>
+                                </div>
                               </div>
+
+                              {/* Scientific Explanation */}
+                              {(() => {
+                                const sodiumLossPerHour = {
+                                  'low': 400,
+                                  'medium': 650,
+                                  'high': 1100,
+                                }[pd.sweatSaltiness] || 650;
+                                const totalSodiumLoss = sodiumLossPerHour * (pd.sessionDuration || 1);
+                                const sachetsPerHour = plan.duringActivity?.electrolytesPerHour || 1;
+                                
+                                return (
+                                  <div className="p-3 rounded-lg bg-secondary/50 border border-border space-y-2">
+                                    <h5 className="font-bold text-sm flex items-center gap-1">
+                                      <Activity className="w-3 h-3" /> Why This Dosing?
+                                    </h5>
+                                    <div className="text-xs space-y-1">
+                                      <p>
+                                        <strong>Sodium Loss:</strong> ~{sodiumLossPerHour}mg/hr ({pd.sweatSaltiness || 'medium'} sweat saltiness) = <strong>{Math.round(totalSodiumLoss)}mg total</strong>
+                                      </p>
+                                      <p>
+                                        <strong>Calculation:</strong> {sodiumLossPerHour}mg ÷ 500mg/sachet = {(sodiumLossPerHour / 500).toFixed(1)} sachets/hr needed
+                                      </p>
+                                      <p>
+                                        <strong>Adjustments:</strong> Weight ({pd.weight}kg), Temp ({pd.trainingTempRange?.min}-{pd.trainingTempRange?.max}°C), Sweat Rate ({pd.sweatRate})
+                                      </p>
+                                      <p>
+                                        <strong>Result:</strong> {sachetsPerHour} sachet{sachetsPerHour !== 1 ? 's' : ''}/hr recommended
+                                      </p>
+                                      {(pd.sessionDuration || 0) < 2 && (
+                                        <p className="text-primary font-semibold">
+                                          ⚡ Under 2hrs: Sachets distributed to Pre + Post only (not during)
+                                        </p>
+                                      )}
+                                    </div>
+                                  </div>
+                                );
+                              })()}
+
+                              {/* Race Day Strategy */}
+                              {pd.hasUpcomingRace && (
+                                <div className="p-3 rounded-lg bg-gradient-to-r from-primary/20 to-primary/5 border border-primary/30 space-y-2">
+                                  <h5 className="font-bold text-sm text-primary flex items-center gap-1">
+                                    🏁 Race Day Strategy (48hr Protocol)
+                                  </h5>
+                                  <div className="grid grid-cols-2 gap-2 text-xs">
+                                    <div className="p-2 rounded bg-background border border-border">
+                                      <p className="font-bold text-primary">Day Before (T-24h)</p>
+                                      <p>• Hydrate: 2-3L throughout day</p>
+                                      <p>• With dinner (5-7pm): 500ml + 2x Supplme</p>
+                                      <p>• Avoid: Alcohol, new foods, late caffeine</p>
+                                    </div>
+                                    <div className="p-2 rounded bg-background border border-border">
+                                      <p className="font-bold text-primary">Race Morning (T-3h)</p>
+                                      <p>• -3h: {plan.preActivity?.water || 500}ml + Breakfast</p>
+                                      <p>• -2h: {plan.preActivity?.electrolytes || 1}x Supplme + 300ml</p>
+                                      <p>• -30m: Small sips only (100-150ml)</p>
+                                    </div>
+                                    <div className="p-2 rounded bg-foreground text-background border border-foreground col-span-2">
+                                      <p className="font-bold">During Race</p>
+                                      <p>Water: {plan.duringActivity?.waterPerHour || 0}ml/hr • Sachets: {plan.duringActivity?.electrolytesPerHour || 0}/hr (total: {plan.duringActivity?.totalElectrolytes || 0})</p>
+                                    </div>
+                                    <div className="p-2 rounded bg-background border border-border col-span-2">
+                                      <p className="font-bold text-primary">Post Race</p>
+                                      <p>• Within 30min: {plan.postActivity?.water || 0}ml + {plan.postActivity?.electrolytes || 0}x Supplme</p>
+                                      <p>• Continue: 150% of fluid loss over 2-4 hours</p>
+                                    </div>
+                                  </div>
+                                </div>
+                              )}
+
+                              {/* Recommendations */}
+                              {plan.recommendations && plan.recommendations.length > 0 && (
+                                <div className="p-3 rounded-lg bg-secondary/30 border border-border">
+                                  <h5 className="font-bold text-sm mb-2">Recommendations</h5>
+                                  <ul className="text-xs space-y-1 list-disc list-inside">
+                                    {plan.recommendations.map((rec: string, idx: number) => (
+                                      <li key={idx}>{rec}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
                             </div>
                             
                             {/* Sport-Specific Data (Football) */}
