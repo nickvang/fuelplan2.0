@@ -1253,28 +1253,43 @@ export default function Admin() {
                                   <p className="text-xs font-bold text-muted-foreground uppercase mb-1">{plan.preActivity?.timing || '2-4h before'}</p>
                                   <p className="text-lg font-black text-foreground">PRE</p>
                                   <div className="mt-2 space-y-1 text-sm">
-                                    <p><span className="text-muted-foreground">Water:</span> <strong>{plan.preActivity?.water || 0}ml</strong></p>
+                                    <p><span className="text-muted-foreground">Water:</span> <strong>{Math.round(plan.preActivity?.water || 0)}ml</strong></p>
                                     <p><span className="text-muted-foreground">Sachets:</span> <strong>{plan.preActivity?.electrolytes || 0}x</strong></p>
                                   </div>
                                 </div>
                                 
-                                {/* DURING */}
-                                <div className="p-3 rounded-lg bg-foreground text-background border border-foreground">
-                                  <p className="text-xs font-bold opacity-70 uppercase mb-1">{plan.duringActivity?.frequency || 'Every 15min'}</p>
-                                  <p className="text-lg font-black">DURING</p>
-                                  <div className="mt-2 space-y-1 text-sm">
-                                    <p><span className="opacity-70">Water:</span> <strong>{plan.duringActivity?.waterPerHour || 0}ml/hr</strong></p>
-                                    <p><span className="opacity-70">Total:</span> <strong>{Math.round((plan.duringActivity?.waterPerHour || 0) * (pd.sessionDuration || 1))}ml</strong></p>
-                                    <p><span className="opacity-70">Sachets:</span> <strong>{plan.duringActivity?.totalElectrolytes ?? 0}</strong></p>
-                                  </div>
-                                </div>
+                                {/* DURING - Calculate total sachets like results page */}
+                                {(() => {
+                                  const sessionDuration = pd.sessionDuration || 0;
+                                  const electrolytesPerHour = plan.duringActivity?.electrolytesPerHour || 0;
+                                  // For 2+ hour sessions, exclude final 30 min (effective duration)
+                                  const effectiveDuration = sessionDuration >= 2 ? Math.max(0, sessionDuration - 0.5) : 0;
+                                  // Total sachets = sachets/hr × effective duration (rounded)
+                                  const totalDuringSachets = sessionDuration >= 2 
+                                    ? Math.round(electrolytesPerHour * effectiveDuration)
+                                    : 0;
+                                  const totalWater = Math.round((plan.duringActivity?.waterPerHour || 0) * sessionDuration);
+                                  
+                                  return (
+                                    <div className="p-3 rounded-lg bg-foreground text-background border border-foreground">
+                                      <p className="text-xs font-bold opacity-70 uppercase mb-1">{plan.duringActivity?.frequency || 'Every 15min'}</p>
+                                      <p className="text-lg font-black">DURING</p>
+                                      <div className="mt-2 space-y-1 text-sm">
+                                        <p><span className="opacity-70">Water:</span> <strong>{Math.round(plan.duringActivity?.waterPerHour || 0)}ml/hr</strong></p>
+                                        <p><span className="opacity-70">Total Water:</span> <strong>{totalWater}ml</strong></p>
+                                        <p><span className="opacity-70">Sachets/hr:</span> <strong>{electrolytesPerHour}</strong></p>
+                                        <p><span className="opacity-70">Total Sachets:</span> <strong>{totalDuringSachets}</strong></p>
+                                      </div>
+                                    </div>
+                                  );
+                                })()}
                                 
                                 {/* POST */}
                                 <div className="p-3 rounded-lg bg-background border border-border">
                                   <p className="text-xs font-bold text-muted-foreground uppercase mb-1">{plan.postActivity?.timing || 'Within 30min'}</p>
                                   <p className="text-lg font-black text-foreground">POST</p>
                                   <div className="mt-2 space-y-1 text-sm">
-                                    <p><span className="text-muted-foreground">Water:</span> <strong>{plan.postActivity?.water || 0}ml</strong></p>
+                                    <p><span className="text-muted-foreground">Water:</span> <strong>{Math.round(plan.postActivity?.water || 0)}ml</strong></p>
                                     <p><span className="text-muted-foreground">Sachets:</span> <strong>{plan.postActivity?.electrolytes || 0}x</strong></p>
                                   </div>
                                 </div>
