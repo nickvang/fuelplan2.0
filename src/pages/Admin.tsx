@@ -1180,6 +1180,27 @@ export default function Admin() {
                                 <Zap className="w-4 h-4" /> Hydration Plan Results
                               </h4>
                               
+                              {/* Activity & Distance Header */}
+                              <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg bg-background border border-border">
+                                <div>
+                                  <p className="text-xs text-muted-foreground">Activity</p>
+                                  <p className="font-bold text-foreground">{(pd.disciplines || []).join(' + ') || 'N/A'}</p>
+                                </div>
+                                {pd.raceDistance && (
+                                  <div className="border-l pl-3">
+                                    <p className="text-xs text-muted-foreground">Distance</p>
+                                    <p className="font-bold text-foreground">{pd.raceDistance}</p>
+                                  </div>
+                                )}
+                                <div className="border-l pl-3">
+                                  <p className="text-xs text-muted-foreground">Duration</p>
+                                  <p className="font-bold text-foreground">{pd.sessionDuration}hrs</p>
+                                </div>
+                                {pd.hasUpcomingRace && (
+                                  <Badge variant="default" className="ml-auto">🏁 Race Day</Badge>
+                                )}
+                              </div>
+                              
                               {/* Total Fluid Loss Banner */}
                               {plan.totalFluidLoss && (
                                 <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/30">
