@@ -16,6 +16,10 @@ export const profileSchema = z.object({
   disciplines: z.array(z.string()).min(1, "At least one discipline is required").optional(),
   sessionDuration: z.number().min(0.25, "Session must be at least 15 minutes").max(168, "Session must be less than 7 days").optional(),
   indoorOutdoor: z.enum(['indoor', 'outdoor', 'both']).optional(),
+  terrain: z.string().max(50).optional(),
+  raceDistance: z.string().max(100, "Distance description too long").optional().or(z.literal('')),
+  avgPace: z.string().max(50, "Pace too long").optional().or(z.literal('')),
+  goalTime: z.string().max(50, "Goal time too long").optional().or(z.literal('')),
   
   // Triathlon-specific pace/speed fields
   swimPace: z.string().max(20, "Swim pace too long").optional().or(z.literal('')),
@@ -29,7 +33,10 @@ export const profileSchema = z.object({
     max: z.number().min(-20).max(50)
   }).optional(),
   trainingHumidity: z.number().min(0).max(100).optional(),
+  humidity: z.number().min(0).max(100).optional(),
   trainingAltitude: z.number().min(0).max(5000).optional(),
+  altitude: z.string().max(50).optional(),
+  altitudeMeters: z.number().min(0).max(9000).optional(),
   sunExposure: z.enum(['shade', 'partial', 'full-sun']).optional(),
   windConditions: z.enum(['calm', 'moderate', 'windy']).optional(),
   clothingType: z.string().optional(),
@@ -89,6 +96,23 @@ export const validateAndSanitizeProfile = (profile: any) => {
   }
   if (profile.clothingType) {
     profile.clothingType = sanitizeString(profile.clothingType);
+  }
+  
+  // Sanitize activity & terrain fields
+  if (profile.raceDistance) {
+    profile.raceDistance = sanitizeString(profile.raceDistance);
+  }
+  if (profile.avgPace) {
+    profile.avgPace = sanitizeString(profile.avgPace);
+  }
+  if (profile.goalTime) {
+    profile.goalTime = sanitizeString(profile.goalTime);
+  }
+  if (profile.terrain) {
+    profile.terrain = sanitizeString(profile.terrain);
+  }
+  if (profile.altitude) {
+    profile.altitude = sanitizeString(profile.altitude);
   }
   
   // Sanitize triathlon pace fields
