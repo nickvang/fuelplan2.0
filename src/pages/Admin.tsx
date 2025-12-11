@@ -1194,7 +1194,26 @@ export default function Admin() {
                                 {pd.raceDistance && (
                                   <div className="border-l pl-3">
                                     <p className="text-xs text-muted-foreground">Distance</p>
-                                    <p className="font-bold text-foreground">{pd.raceDistance}</p>
+                                    <p className="font-bold text-foreground">
+                                      {(() => {
+                                        const raceText = (pd.raceDistance || '').toLowerCase();
+                                        const raceDistances: { [key: string]: number } = {
+                                          'half ironman': 113, 'ironman 70.3': 113, '70.3': 113,
+                                          'ironman': 226, 'full ironman': 226, '140.6': 226,
+                                          'olympic': 51.5, 'sprint': 25.75,
+                                          'half marathon': 21.1, 'marathon': 42.2,
+                                          'ultra': 50, '50k': 50, '100k': 100, '100 mile': 160, '100 miles': 160,
+                                          '10k': 10, '5k': 5, 'century': 160,
+                                        };
+                                        for (const [raceName, dist] of Object.entries(raceDistances)) {
+                                          if (raceText.includes(raceName)) {
+                                            return `${dist} km`;
+                                          }
+                                        }
+                                        const match = pd.raceDistance.match(/(\d+\.?\d*)/);
+                                        return match ? `${match[1]} km` : pd.raceDistance;
+                                      })()}
+                                    </p>
                                   </div>
                                 )}
                                 <div className="border-l pl-3">
