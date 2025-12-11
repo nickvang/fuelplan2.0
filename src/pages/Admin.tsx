@@ -1117,7 +1117,12 @@ export default function Admin() {
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Activity & Terrain</h4>
                               <div className="space-y-1 text-sm">
-                                {pd.sessionDuration && <p><span className="text-muted-foreground">Duration:</span> {pd.sessionDuration}hrs</p>}
+                                {pd.sessionDuration && <p><span className="text-muted-foreground">Duration:</span> {(() => {
+                                  const hours = pd.sessionDuration || 0;
+                                  const h = Math.floor(hours);
+                                  const m = Math.round((hours - h) * 60);
+                                  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+                                })()}</p>}
                                 {pd.indoorOutdoor && <p><span className="text-muted-foreground">Location:</span> {pd.indoorOutdoor}</p>}
                                 {pd.raceDistance && <p><span className="text-muted-foreground">Distance:</span> {pd.raceDistance}</p>}
                                 {pd.avgPace && <p><span className="text-muted-foreground">Avg Pace:</span> {pd.avgPace}</p>}
@@ -1194,7 +1199,14 @@ export default function Admin() {
                                 )}
                                 <div className="border-l pl-3">
                                   <p className="text-xs text-muted-foreground">Duration</p>
-                                  <p className="font-bold text-foreground">{pd.sessionDuration}hrs</p>
+                                  <p className="font-bold text-foreground">
+                                    {(() => {
+                                      const hours = pd.sessionDuration || 0;
+                                      const h = Math.floor(hours);
+                                      const m = Math.round((hours - h) * 60);
+                                      return m > 0 ? `${h}h ${m}m` : `${h}h`;
+                                    })()}
+                                  </p>
                                 </div>
                                 {pd.hasUpcomingRace && (
                                   <Badge variant="default" className="ml-auto">🏁 Race Day</Badge>
@@ -1205,8 +1217,15 @@ export default function Admin() {
                               {plan.totalFluidLoss && (
                                 <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/30">
                                   <p className="text-xs font-bold uppercase text-muted-foreground">Total Fluid Loss</p>
-                                  <p className="text-3xl font-black text-primary">{(plan.totalFluidLoss / 1000).toFixed(1)}L</p>
-                                  <p className="text-xs text-muted-foreground">During {pd.sessionDuration}hr session</p>
+                                  <p className="text-3xl font-black text-primary">{Math.round(plan.totalFluidLoss / 1000 * 10) / 10}L</p>
+                                  <p className="text-xs text-muted-foreground">
+                                    During {(() => {
+                                      const hours = pd.sessionDuration || 0;
+                                      const h = Math.floor(hours);
+                                      const m = Math.round((hours - h) * 60);
+                                      return m > 0 ? `${h}h ${m}m` : `${h}h`;
+                                    })()} session
+                                  </p>
                                 </div>
                               )}
                               
@@ -1264,7 +1283,7 @@ export default function Admin() {
                                         <strong>Sodium Loss:</strong> ~{sodiumLossPerHour}mg/hr ({pd.sweatSaltiness || 'medium'} sweat saltiness) = <strong>{Math.round(totalSodiumLoss)}mg total</strong>
                                       </p>
                                       <p>
-                                        <strong>Calculation:</strong> {sodiumLossPerHour}mg ÷ 500mg/sachet = {(sodiumLossPerHour / 500).toFixed(1)} sachets/hr needed
+                                        <strong>Calculation:</strong> {sodiumLossPerHour}mg ÷ 500mg/sachet = {Math.round(sodiumLossPerHour / 500 * 10) / 10} sachets/hr needed
                                       </p>
                                       <p>
                                         <strong>Adjustments:</strong> Weight ({pd.weight}kg), Temp ({pd.trainingTempRange?.min}-{pd.trainingTempRange?.max}°C), Sweat Rate ({pd.sweatRate})
