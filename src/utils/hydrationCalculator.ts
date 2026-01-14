@@ -219,6 +219,26 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (for ${effectiveDurationForSachets.toFixed(1)}h effective duration)`);
   }
   
+  // ====== SAFETY CAP: Magnesium Tolerance Limit ======
+  // SUPPLME contains 100mg Magnesium per sachet
+  // The tolerable upper limit (UL) for supplemental magnesium is 350mg/day (Institute of Medicine)
+  // However, ultra-athletes have higher tolerance due to losses - research suggests up to 600-800mg is tolerable
+  // during prolonged exercise without significant GI distress (osmotic diarrhea threshold)
+  // Max safe: ~8 sachets/event for magnesium, but we allow up to 12 for ultras with warning
+  // For events >6h, cap at 2 sachets/hour (1200mg Mg total for 6h events)
+  const MAX_SACHETS_PER_HOUR = 2; // 200mg Mg/hour - safe threshold
+  const MAX_TOTAL_SACHETS_DURING = 12; // 1200mg Mg total - upper safe limit with exercise
+  
+  if (sachetsPerHour > MAX_SACHETS_PER_HOUR) {
+    calculationSteps.push(`Safety cap: ${sachetsPerHour} → ${MAX_SACHETS_PER_HOUR} sachets/h (magnesium tolerance limit: 200mg/h)`);
+    sachetsPerHour = MAX_SACHETS_PER_HOUR;
+  }
+  
+  if (totalDuringSachets > MAX_TOTAL_SACHETS_DURING) {
+    calculationSteps.push(`Safety cap: ${totalDuringSachets} → ${MAX_TOTAL_SACHETS_DURING} total sachets (magnesium tolerance: max 1200mg/event)`);
+    totalDuringSachets = MAX_TOTAL_SACHETS_DURING;
+  }
+  
   const totalSachetsNeeded = totalDuringSachets;
 
   // ====== 3. PRE-ACTIVITY HYDRATION ======
@@ -428,6 +448,15 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   // Add critical note for ultras (4h+) as per new formula requirements
+  // Add warning for extreme sweaters who hit the safety cap
+  if (profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' && profile.sessionDuration >= 4) {
+    const theoreticalSodiumNeed = sodiumPerHour * profile.sessionDuration;
+    const actualSodiumFromSachets = (totalDuringSachets + preElectrolytes + postElectrolytes) * SACHET_SODIUM;
+    if (theoreticalSodiumNeed > actualSodiumFromSachets * 1.5) {
+      recommendations.push(`⚠️ HIGH SWEATER ALERT: Your sodium needs (${Math.round(theoreticalSodiumNeed)}mg) exceed sachet recommendations due to magnesium limits. Consider additional sodium-only supplementation (salt tabs) for events 4h+. Consult a sports dietitian.`);
+    }
+  }
+
   if (profile.sessionDuration >= 4) {
     recommendations.push(`⚡ Long ultras (4h+) require 300–800mg sodium/hour depending on sweat saltiness. SUPPLME delivers 500mg sodium per sachet to match physiological losses.`);
   }
