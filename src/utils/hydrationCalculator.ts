@@ -191,6 +191,15 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     calculationSteps.push(`Swimming race: 0 sachets/hour (impractical to consume during swim)`);
   }
   
+  // For endurance activities (≥2h), apply a physiological minimum floor
+  // Research shows even low sweaters need sodium replacement during prolonged exercise
+  // ACSM recommends 300-600mg sodium/hour for events >2h regardless of sweat profile
+  // Minimum 0.5 sachets/hour ensures at least 1 sachet/hour after rounding for long events
+  if (profile.sessionDuration >= 2 && sachetsPerHour < 0.5 && primaryDiscipline !== 'Swimming') {
+    calculationSteps.push(`Endurance floor: ${sachetsPerHour.toFixed(2)} → 0.5 (min for 2h+ activities)`);
+    sachetsPerHour = 0.5;
+  }
+  
   // Round to whole numbers only - no decimals
   sachetsPerHour = Math.round(sachetsPerHour);
   
