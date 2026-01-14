@@ -219,24 +219,63 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (for ${effectiveDurationForSachets.toFixed(1)}h effective duration)`);
   }
   
-  // ====== SAFETY CAP: Magnesium Tolerance Limit ======
+  // ====== SAFETY CAP: Individualized Magnesium Tolerance Limit ======
   // SUPPLME contains 100mg Magnesium per sachet
-  // The tolerable upper limit (UL) for supplemental magnesium is 350mg/day (Institute of Medicine)
-  // However, ultra-athletes have higher tolerance due to losses - research suggests up to 600-800mg is tolerable
-  // during prolonged exercise without significant GI distress (osmotic diarrhea threshold)
-  // Max safe: ~8 sachets/event for magnesium, but we allow up to 12 for ultras with warning
-  // For events >6h, cap at 2 sachets/hour (1200mg Mg total for 6h events)
-  const MAX_SACHETS_PER_HOUR = 2; // 200mg Mg/hour - safe threshold
-  const MAX_TOTAL_SACHETS_DURING = 12; // 1200mg Mg total - upper safe limit with exercise
+  // The UL for supplemental magnesium is 350mg/day (Institute of Medicine)
+  // During exercise, tolerance increases due to sweat losses and different gut transit
+  // Research suggests 160-200mg/hour is tolerable during prolonged exercise
+  // We individualize the cap based on sweat profile and body weight
+  
+  const MAX_SACHETS_PER_HOUR = 2; // 200mg Mg/hour - safe acute threshold
+  
+  // Individualized total cap based on sweat profile
+  // High sweaters lose more electrolytes and can tolerate higher replacement
+  // Low sweaters need less and have lower tolerance threshold
+  let individualMaxSachets: number;
+  
+  if (profile.sweatRate === 'high' && profile.sweatSaltiness === 'high') {
+    individualMaxSachets = 16; // High sweaters - maximum tolerance
+  } else if (profile.sweatRate === 'high' || profile.sweatSaltiness === 'high') {
+    individualMaxSachets = 14; // Elevated sweaters
+  } else if (profile.sweatRate === 'medium' || profile.sweatSaltiness === 'medium') {
+    individualMaxSachets = 12; // Average sweaters
+  } else {
+    individualMaxSachets = 10; // Low sweaters
+  }
+  
+  // Weight adjustment - lighter athletes have lower absolute electrolyte needs/tolerance
+  if (weight < 65) {
+    individualMaxSachets = Math.max(8, Math.round(individualMaxSachets * 0.75));
+    calculationSteps.push(`Weight <65kg: max sachets reduced to ${individualMaxSachets}`);
+  } else if (weight >= 65 && weight <= 80) {
+    individualMaxSachets = Math.round(individualMaxSachets * 0.9);
+    calculationSteps.push(`Weight 65-80kg: max sachets adjusted to ${individualMaxSachets}`);
+  }
+  // Weight >80kg keeps full allowance
+  
+  // For triathlon, account for swim time where no sachets can be consumed
+  let consumableHours = Math.max(0, profile.sessionDuration - 0.5);
+  if (primaryDiscipline === 'Triathlon') {
+    // Estimate swim portion: ~10-15% of total Ironman time
+    const estimatedSwimHours = Math.min(1.5, profile.sessionDuration * 0.12);
+    consumableHours = Math.max(0, consumableHours - estimatedSwimHours);
+    calculationSteps.push(`Triathlon: ~${estimatedSwimHours.toFixed(1)}h swim excluded (${consumableHours.toFixed(1)}h consumable)`);
+  }
+  
+  // Mg-safe max: 2 sachets/hour × consumable hours, capped at individual max
+  const mgSafeMax = Math.round(MAX_SACHETS_PER_HOUR * consumableHours);
+  const finalMaxSachets = Math.min(individualMaxSachets, mgSafeMax);
+  
+  calculationSteps.push(`Individual safety cap: ${finalMaxSachets} sachets (profile: ${individualMaxSachets}, Mg-safe: ${mgSafeMax})`);
   
   if (sachetsPerHour > MAX_SACHETS_PER_HOUR) {
-    calculationSteps.push(`Safety cap: ${sachetsPerHour} → ${MAX_SACHETS_PER_HOUR} sachets/h (magnesium tolerance limit: 200mg/h)`);
+    calculationSteps.push(`Hourly cap: ${sachetsPerHour} → ${MAX_SACHETS_PER_HOUR} sachets/h (Mg tolerance: 200mg/h)`);
     sachetsPerHour = MAX_SACHETS_PER_HOUR;
   }
   
-  if (totalDuringSachets > MAX_TOTAL_SACHETS_DURING) {
-    calculationSteps.push(`Safety cap: ${totalDuringSachets} → ${MAX_TOTAL_SACHETS_DURING} total sachets (magnesium tolerance: max 1200mg/event)`);
-    totalDuringSachets = MAX_TOTAL_SACHETS_DURING;
+  if (totalDuringSachets > finalMaxSachets) {
+    calculationSteps.push(`Total cap: ${totalDuringSachets} → ${finalMaxSachets} sachets (individualized Mg tolerance)`);
+    totalDuringSachets = finalMaxSachets;
   }
   
   const totalSachetsNeeded = totalDuringSachets;
