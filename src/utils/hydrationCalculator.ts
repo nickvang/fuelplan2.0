@@ -448,12 +448,12 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   // Add critical note for ultras (4h+) as per new formula requirements
-  // Add warning for extreme sweaters who hit the safety cap
+  // Add note for extreme sweaters who hit the safety cap
   if (profile.sweatRate === 'high' && profile.sweatSaltiness === 'high' && profile.sessionDuration >= 4) {
     const theoreticalSodiumNeed = sodiumPerHour * profile.sessionDuration;
     const actualSodiumFromSachets = (totalDuringSachets + preElectrolytes + postElectrolytes) * SACHET_SODIUM;
     if (theoreticalSodiumNeed > actualSodiumFromSachets * 1.5) {
-      recommendations.push(`⚠️ HIGH SWEATER ALERT: Your sodium needs (${Math.round(theoreticalSodiumNeed)}mg) exceed sachet recommendations due to magnesium limits. Consider additional sodium-only supplementation (salt tabs) for events 4h+. Consult a sports dietitian.`);
+      recommendations.push(`⚠️ HIGH SWEATER: Your sodium needs are elevated. Spread your SUPPLME sachets evenly throughout the event and ensure consistent intake every 30-45 minutes. For events 6h+, consider consulting a sports dietitian for personalized guidance.`);
     }
   }
 
