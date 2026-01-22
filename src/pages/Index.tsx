@@ -60,20 +60,20 @@ const Index = () => {
   // Analyze uploaded smartwatch files
   const analyzeSmartWatchFiles = async (files: File[]): Promise<Partial<HydrationProfile>> => {
     setIsAnalyzing(true);
-    
+
     try {
       // Parse smartwatch files (Garmin or Whoop)
       const { profile: extractedData, rawData } = await parseSmartWatchFiles(files);
-      
+
       // Store raw data for enhanced calculations
       setRawSmartWatchData(rawData);
-      
+
       setIsAnalyzing(false);
-      
+
       if (Object.keys(extractedData).length > 0) {
         toast.success('Smartwatch data analyzed successfully!');
       }
-      
+
       return extractedData;
     } catch (error) {
       console.error('Error analyzing smartwatch files:', error);
@@ -86,12 +86,12 @@ const Index = () => {
   // Determine which steps to skip based on analyzed data and version
   const shouldSkipStep = (stepNumber: number): boolean => {
     if (!analyzedData) return false;
-    
+
     // Simple mode only has steps 1 (body) and 2 (activity)
     if (version === 'simple') {
       return false; // Never skip in simple mode
     }
-    
+
     // Pro mode step skipping
     switch (stepNumber) {
       case 1: // Activity & Terrain - NEVER SKIP
@@ -113,11 +113,11 @@ const Index = () => {
       // Simple mode: 0 (consent) -> 1 (body) -> 2 (activity) -> complete
       const simpleSteps = [0, 1, 2];
       const currentIndex = simpleSteps.indexOf(currentStep);
-      return currentIndex >= 0 && currentIndex < simpleSteps.length - 1 
-        ? simpleSteps[currentIndex + 1] 
+      return currentIndex >= 0 && currentIndex < simpleSteps.length - 1
+        ? simpleSteps[currentIndex + 1]
         : 999; // Complete
     }
-    
+
     // Pro mode: skip based on smartwatch data
     let nextStep = currentStep + 1;
     while (nextStep <= 5 && shouldSkipStep(nextStep)) {
@@ -134,11 +134,11 @@ const Index = () => {
         case 1:
           // Activity & Terrain validation
           // Training distance is now ALWAYS required (whether racing or training)
-          
+
           // Simple mode: just need basic activity info + terrain + temperature + distance
           if (version === 'simple') {
-            const isValid = !!(profile.disciplines && profile.disciplines.length > 0 && 
-                     profile.terrain && profile.raceDistance && profile.trainingTempRange?.min);
+            const isValid = !!(profile.disciplines && profile.disciplines.length > 0 &&
+              profile.terrain && profile.raceDistance && profile.trainingTempRange?.min);
             console.log('Step 1 (Simple) Validation:', {
               disciplines: profile.disciplines,
               terrain: profile.terrain,
@@ -149,8 +149,8 @@ const Index = () => {
             return isValid;
           }
           // Pro mode: require activity, terrain, and mandatory distance
-          return !!(profile.disciplines && profile.disciplines.length > 0 && 
-                   profile.terrain && profile.raceDistance);
+          return !!(profile.disciplines && profile.disciplines.length > 0 &&
+            profile.terrain && profile.raceDistance);
         case 2:
           // Simple mode: require temperature
           if (version === 'simple') {
@@ -159,8 +159,8 @@ const Index = () => {
           // Pro mode: just basic body info
           return !!(profile.age && profile.sex && profile.height && profile.weight);
         case 3:
-          return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude && 
-                    profile.sunExposure && profile.windConditions && profile.clothingType);
+          return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude &&
+            profile.sunExposure && profile.windConditions && profile.clothingType);
         case 4:
           return !!(profile.sweatRate && profile.sweatSaltiness);
         case 5:
@@ -210,9 +210,9 @@ const Index = () => {
         toast.error('Spam detected. Please try again.');
         return;
       }
-      
+
       setIsGenerating(true);
-      
+
       // Apply defaults for Simple mode before calculations
       const completeProfile = { ...profile };
       if (version === 'simple') {
@@ -221,14 +221,14 @@ const Index = () => {
         if (!completeProfile.indoorOutdoor) completeProfile.indoorOutdoor = 'outdoor';
         // Temperature is now required and should be provided by user
       }
-      
+
       // Apply default for Pro mode as well
       if (!completeProfile.indoorOutdoor) completeProfile.indoorOutdoor = 'outdoor';
-      
+
       try {
         // Validate and sanitize profile data before submission
         const validatedProfile = validateAndSanitizeProfile(completeProfile);
-        
+
         // Save profile data to backend with GDPR compliance
         const { data, error } = await supabase.functions.invoke('save-hydration-profile', {
           body: {
@@ -253,20 +253,20 @@ const Index = () => {
         if (import.meta.env.DEV) {
           console.error('Failed to save profile:', error);
         }
-        
+
         // Show validation error to user
         if (error instanceof Error) {
           toast.error(error.message);
           setIsGenerating(false);
           return; // Don't show plan if validation fails
         }
-        
+
         toast.error('Failed to save profile. Your hydration plan will still be displayed.');
       }
-      
+
       // Update profile with complete values before showing plan
       setProfile(completeProfile);
-      
+
       // Add a minimum delay for smooth transition
       setTimeout(() => {
         setIsGenerating(false);
@@ -326,14 +326,14 @@ const Index = () => {
             backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px)',
           }}></div>
         </div>
-        
+
         <div className="text-center space-y-10 animate-fade-in relative z-10">
           <div className="relative">
             <div className="absolute inset-0 glow-effect blur-3xl opacity-40 animate-pulse"></div>
-            <img 
-              src={supplmeLogo} 
-              alt="Supplme" 
-              className="h-40 md:h-48 mx-auto relative z-10 performance-pulse" 
+            <img
+              src={supplmeLogo}
+              alt="Supplme"
+              className="h-40 md:h-48 mx-auto relative z-10 performance-pulse"
             />
           </div>
           <div className="space-y-4">
@@ -359,9 +359,9 @@ const Index = () => {
     return (
       <div className="min-h-screen bg-background py-12 px-4">
         <div className="max-w-5xl mx-auto">
-          <HydrationPlanDisplay 
-            plan={plan} 
-            profile={profile as HydrationProfile} 
+          <HydrationPlanDisplay
+            plan={plan}
+            profile={profile as HydrationProfile}
             onReset={handleResetWithData}
             onFullReset={handleReset}
             hasSmartWatchData={!!analyzedData && smartwatchData.length > 0}
@@ -381,7 +381,7 @@ const Index = () => {
           backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px)',
         }}></div>
       </div>
-      
+
       <div className="max-w-2xl mx-auto space-y-8 relative z-10">
         {/* Header - Shows on all steps */}
         <div className="text-center">
@@ -402,7 +402,7 @@ const Index = () => {
               </p>
             )}
           </div>
-          
+
         </div>
 
         {/* Honeypot field - hidden from real users, visible to bots */}
@@ -471,11 +471,10 @@ const Index = () => {
                   <button
                     type="button"
                     onClick={() => setVersion('simple')}
-                    className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
-                      version === 'simple'
-                        ? 'border-primary bg-primary/10 shadow-lg scale-[1.02] ring-2 ring-primary/20'
-                        : 'border-border/30 hover:border-primary/50 hover:shadow-md'
-                    }`}
+                    className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${version === 'simple'
+                      ? 'border-primary bg-primary/10 shadow-lg scale-[1.02] ring-2 ring-primary/20'
+                      : 'border-border/30 hover:border-primary/50 hover:shadow-md'
+                      }`}
                   >
                     {/* Selected Indicator */}
                     {version === 'simple' && (
@@ -487,17 +486,15 @@ const Index = () => {
                     )}
                     <div className="absolute top-0 right-0 w-20 h-20 bg-gradient-to-br from-primary/10 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
                     <div className="space-y-3 relative z-10">
-                      <h3 className={`text-xl font-black uppercase tracking-tight transition-colors ${
-                        version === 'simple' ? 'text-primary' : ''
-                      }`}>
+                      <h3 className={`text-xl font-black uppercase tracking-tight transition-colors ${version === 'simple' ? 'text-primary' : ''
+                        }`}>
                         {t('version.simple.title')}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {t('version.simple.description')}
                       </p>
-                      <div className={`text-xs font-bold mt-4 flex items-center gap-2 transition-colors ${
-                        version === 'simple' ? 'text-primary' : 'text-primary/80'
-                      }`}>
+                      <div className={`text-xs font-bold mt-4 flex items-center gap-2 transition-colors ${version === 'simple' ? 'text-primary' : 'text-primary/80'
+                        }`}>
                         <Clock className="w-3 h-3" />
                         {t('version.simple.time')}
                       </div>
@@ -508,18 +505,16 @@ const Index = () => {
                   <button
                     type="button"
                     onClick={() => setVersion('pro')}
-                    className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${
-                      version === 'pro'
-                        ? 'border-primary bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-xl scale-[1.02] ring-2 ring-primary/30'
-                        : 'border-border/30 hover:border-primary/50 hover:shadow-md hover:bg-primary/5'
-                    }`}
+                    className={`athletic-card p-6 rounded-xl border-2 transition-all duration-300 text-left group relative overflow-hidden ${version === 'pro'
+                      ? 'border-primary bg-gradient-to-br from-primary/15 via-primary/10 to-primary/5 shadow-xl scale-[1.02] ring-2 ring-primary/30'
+                      : 'border-border/30 hover:border-primary/50 hover:shadow-md hover:bg-primary/5'
+                      }`}
                   >
                     {/* Premium Smartwatch Badge */}
-                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${
-                      version === 'pro' 
-                        ? 'bg-primary text-primary-foreground shadow-lg animate-scale-in' 
-                        : 'bg-primary/20 text-primary'
-                    }`}>
+                    <div className={`absolute top-4 left-4 px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-1.5 transition-all ${version === 'pro'
+                      ? 'bg-primary text-primary-foreground shadow-lg animate-scale-in'
+                      : 'bg-primary/20 text-primary'
+                      }`}>
                       <svg className="w-3 h-3" fill="currentColor" viewBox="0 0 20 20">
                         <path d="M3 12v3c0 1.657 3.134 3 7 3s7-1.343 7-3v-3c0 1.657-3.134 3-7 3s-7-1.343-7-3z" />
                         <path d="M3 7v3c0 1.657 3.134 3 7 3s7-1.343 7-3V7c0 1.657-3.134 3-7 3S3 8.657 3 7z" />
@@ -527,7 +522,7 @@ const Index = () => {
                       </svg>
                       Smartwatch
                     </div>
-                    
+
                     {/* Selected Indicator */}
                     {version === 'pro' && (
                       <div className="absolute top-4 right-4 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg animate-scale-in">
@@ -536,21 +531,20 @@ const Index = () => {
                         </svg>
                       </div>
                     )}
-                    
+
                     {/* Animated gradient background */}
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-primary/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500" />
                     <div className="absolute top-0 right-0 w-32 h-32 bg-gradient-to-br from-primary/20 to-transparent rounded-bl-full opacity-0 group-hover:opacity-100 transition-opacity" />
-                    
+
                     <div className="space-y-3 relative z-10 mt-6">
-                      <h3 className={`text-xl font-black uppercase tracking-tight transition-colors ${
-                        version === 'pro' ? 'text-primary' : ''
-                      }`}>
+                      <h3 className={`text-xl font-black uppercase tracking-tight transition-colors ${version === 'pro' ? 'text-primary' : ''
+                        }`}>
                         {t('version.pro.title')}
                       </h3>
                       <p className="text-sm text-muted-foreground leading-relaxed">
                         {t('version.pro.description')}
                       </p>
-                      
+
                       {/* Pro Features Highlight */}
                       <div className="flex flex-wrap gap-2 pt-2">
                         <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-primary/90 bg-primary/10 px-2 py-1 rounded-md">
@@ -570,10 +564,9 @@ const Index = () => {
                           Sweat Profile
                         </span>
                       </div>
-                      
-                      <div className={`text-xs font-bold mt-4 flex items-center gap-2 transition-colors ${
-                        version === 'pro' ? 'text-primary' : 'text-primary/80'
-                      }`}>
+
+                      <div className={`text-xs font-bold mt-4 flex items-center gap-2 transition-colors ${version === 'pro' ? 'text-primary' : 'text-primary/80'
+                        }`}>
                         <Clock className="w-3 h-3" />
                         {t('version.pro.time')}
                       </div>
@@ -585,87 +578,87 @@ const Index = () => {
               {/* Optional Smartwatch Upload - Pro version only */}
               {version === 'pro' && (
                 <div className="bg-blue-50 dark:bg-blue-950/30 p-4 sm:p-6 rounded-lg space-y-4">
-                <div>
-                  <h4 className="font-medium text-sm sm:text-base">{t('upload.title')} <span className="text-blue-600">({t('common.optional')})</span></h4>
-                  <p className="text-xs sm:text-sm text-muted-foreground mt-1">
-                    {t('upload.description')}
-                  </p>
-                </div>
-                
-                <div className="space-y-3">
-                  {/* Multiple Files Upload */}
                   <div>
-                    <Label htmlFor="smartwatch-files" className="text-sm font-medium mb-2 block">
-                      {t('smartwatch.multipleFiles')}
-                    </Label>
-                    <Input
-                      id="smartwatch-files"
-                      type="file"
-                      multiple
-                      accept=".fit,.csv,.json,.xml,.txt"
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length > 0) {
-                          setSmartWatchData(prev => [...prev, ...files]);
-                          // In a real implementation, parse the files and pre-fill profile
-                        }
-                      }}
-                      className="cursor-pointer"
-                    />
+                    <h4 className="font-medium text-sm sm:text-base">{t('upload.title')} <span className="text-blue-600">({t('common.optional')})</span></h4>
+                    <p className="text-xs sm:text-sm text-muted-foreground mt-1">
+                      {t('upload.description')}
+                    </p>
                   </div>
 
-                  {/* Folder Upload */}
-                  <div>
-                    <Label htmlFor="smartwatch-folder" className="text-sm font-medium mb-2 block">
-                      {t('smartwatch.uploadFolder')}
-                    </Label>
-                    <Input
-                      id="smartwatch-folder"
-                      type="file"
-                      // @ts-ignore - webkitdirectory is not in TypeScript types but works in browsers
-                      webkitdirectory=""
-                      directory=""
-                      multiple
-                      onChange={(e) => {
-                        const files = Array.from(e.target.files || []);
-                        if (files.length > 0) {
-                          setSmartWatchData(files);
-                          // In a real implementation, parse all files and pre-fill profile
-                        }
-                      }}
-                      className="cursor-pointer"
-                    />
-                  </div>
-
-                  {smartwatchData.length > 0 && (
-                    <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
-                      <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
-                        {t('smartwatch.uploaded').replace('{count}', smartwatchData.length.toString())}
-                      </p>
-                      <div className="max-h-32 overflow-y-auto space-y-1">
-                        {smartwatchData.map((file, index) => (
-                          <div key={index} className="text-xs text-green-600 dark:text-green-400 flex items-center justify-between">
-                            <span className="truncate">{file.name}</span>
-                            <button
-                              type="button"
-                              onClick={() => setSmartWatchData(prev => prev.filter((_, i) => i !== index))}
-                              className="ml-2 text-red-500 hover:text-red-700"
-                              aria-label={t('smartwatch.remove')}
-                            >
-                              ✕
-                            </button>
-                          </div>
-                        ))}
-                      </div>
+                  <div className="space-y-3">
+                    {/* Multiple Files Upload */}
+                    <div>
+                      <Label htmlFor="smartwatch-files" className="text-sm font-medium mb-2 block">
+                        {t('smartwatch.multipleFiles')}
+                      </Label>
+                      <Input
+                        id="smartwatch-files"
+                        type="file"
+                        multiple
+                        accept=".fit,.csv,.json,.xml,.txt"
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 0) {
+                            setSmartWatchData(prev => [...prev, ...files]);
+                            // In a real implementation, parse the files and pre-fill profile
+                          }
+                        }}
+                        className="cursor-pointer"
+                      />
                     </div>
-                  )}
+
+                    {/* Folder Upload */}
+                    <div>
+                      <Label htmlFor="smartwatch-folder" className="text-sm font-medium mb-2 block">
+                        {t('smartwatch.uploadFolder')}
+                      </Label>
+                      <Input
+                        id="smartwatch-folder"
+                        type="file"
+                        // @ts-ignore - webkitdirectory is not in TypeScript types but works in browsers
+                        webkitdirectory=""
+                        directory=""
+                        multiple
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files || []);
+                          if (files.length > 0) {
+                            setSmartWatchData(files);
+                            // In a real implementation, parse all files and pre-fill profile
+                          }
+                        }}
+                        className="cursor-pointer"
+                      />
+                    </div>
+
+                    {smartwatchData.length > 0 && (
+                      <div className="mt-3 p-3 bg-green-50 dark:bg-green-950/30 rounded-lg">
+                        <p className="text-sm text-green-700 dark:text-green-400 font-medium mb-2">
+                          {t('smartwatch.uploaded').replace('{count}', smartwatchData.length.toString())}
+                        </p>
+                        <div className="max-h-32 overflow-y-auto space-y-1">
+                          {smartwatchData.map((file, index) => (
+                            <div key={index} className="text-xs text-green-600 dark:text-green-400 flex items-center justify-between">
+                              <span className="truncate">{file.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => setSmartWatchData(prev => prev.filter((_, i) => i !== index))}
+                                className="ml-2 text-red-500 hover:text-red-700"
+                                aria-label={t('smartwatch.remove')}
+                              >
+                                ✕
+                              </button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
                 </div>
-              </div>
               )}
-              
+
               <div className="bg-muted/50 p-4 sm:p-6 rounded-lg space-y-4">
                 <h3 className="font-medium text-base sm:text-lg">{t('gdpr.title')}</h3>
-                
+
                 <div className="space-y-3 text-xs sm:text-sm text-muted-foreground leading-relaxed">
                   <Accordion type="single" collapsible className="w-full">
                     <AccordionItem value="gdpr-details" className="border-none">
@@ -677,7 +670,7 @@ const Index = () => {
                           <p className="font-semibold text-foreground mb-1">{t('gdpr.ai.title')}</p>
                           <p>{t('gdpr.ai.description')}</p>
                         </div>
-                        
+
                         <p>{t('gdpr.compliance.intro')}</p>
                         <ul className="list-disc pl-5 space-y-1">
                           <li><strong>{t('gdpr.dataCollection')}:</strong> {t('gdpr.dataCollection.text')}</li>
@@ -700,10 +693,10 @@ const Index = () => {
                     </AccordionItem>
                   </Accordion>
                 </div>
-                
+
                 <div className="flex items-start space-x-3 pt-4 border-t group">
-                  <Checkbox 
-                    id="consent" 
+                  <Checkbox
+                    id="consent"
                     checked={consentGiven}
                     onCheckedChange={(checked) => setConsentGiven(checked === true)}
                     className="mt-1"
@@ -716,7 +709,7 @@ const Index = () => {
                   </label>
                 </div>
               </div>
-              
+
               <p className="text-center text-sm text-muted-foreground pt-2">
                 For those who train hard, race harder, and expect more from their hydration
               </p>
@@ -759,9 +752,8 @@ const Index = () => {
                       `}
                     >
                       <span className="text-5xl mb-3 transition-transform group-hover:scale-110">{activity.icon}</span>
-                      <span className={`text-sm font-bold uppercase tracking-wide transition-colors ${
-                        profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
-                      }`}>
+                      <span className={`text-sm font-bold uppercase tracking-wide transition-colors ${profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
+                        }`}>
                         {activity.label}
                       </span>
                       {profile.disciplines?.[0] === activity.value && (
@@ -781,10 +773,10 @@ const Index = () => {
                 <div>
                   <Label>
                     {profile.disciplines?.[0] === 'Running' ? 'Running Terrain *' :
-                     profile.disciplines?.[0] === 'Swimming' ? 'Swimming Environment *' :
-                     profile.disciplines?.[0] === 'Cycling' ? 'Cycling Type *' :
-                     profile.disciplines?.[0] === 'Triathlon' ? 'Primary Terrain *' :
-                     'Terrain *'}
+                      profile.disciplines?.[0] === 'Swimming' ? 'Swimming Environment *' :
+                        profile.disciplines?.[0] === 'Cycling' ? 'Cycling Type *' :
+                          profile.disciplines?.[0] === 'Triathlon' ? 'Primary Terrain *' :
+                            'Terrain *'}
                   </Label>
                   <RadioGroup
                     value={profile.terrain || ''}
@@ -888,11 +880,10 @@ const Index = () => {
               )}
 
               {/* Race Option - Enhanced with Card Style */}
-              <div className={`relative p-5 border-2 rounded-xl transition-all duration-300 animate-fade-in ${
-                profile.hasUpcomingRace 
-                  ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20' 
-                  : 'border-primary/50 bg-gradient-to-r from-primary/10 to-primary/20 hover:border-primary hover:shadow-lg hover:shadow-primary/10'
-              }`}>
+              <div className={`relative p-5 border-2 rounded-xl transition-all duration-300 animate-fade-in ${profile.hasUpcomingRace
+                ? 'border-primary bg-primary/10 shadow-lg shadow-primary/20'
+                : 'border-primary/50 bg-gradient-to-r from-primary/10 to-primary/20 hover:border-primary hover:shadow-lg hover:shadow-primary/10'
+                }`}>
                 {/* Recommended Badge */}
                 <div className="absolute -top-3 left-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
                   RECOMMENDED
@@ -925,10 +916,10 @@ const Index = () => {
                       onChange={(e) => updateProfile({ raceDistance: e.target.value })}
                       placeholder={
                         profile.disciplines?.[0] === 'Running' ? 'e.g., 5K, 10K, Half Marathon, Marathon, 50K' :
-                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
-                        profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
-                        profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
-                        'e.g., Half Marathon, Marathon, 50K'
+                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 80km, 160km (Century)' :
+                            profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1.5km, 5km, 10km' :
+                              profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman (70.3), Ironman' :
+                                'e.g., Half Marathon, Marathon, 50K'
                       }
                     />
                   </div>
@@ -942,9 +933,9 @@ const Index = () => {
                         onChange={(e) => updateProfile({ goalTime: e.target.value })}
                         placeholder={
                           profile.disciplines?.[0] === 'Running' ? 'e.g., 0:25:00 for 5km, 1:30:00 for Half Marathon' :
-                          profile.disciplines?.[0] === 'Cycling' ? 'e.g., 1:30:00 for 40km, 3:00:00 for 100km' :
-                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 0:20:00 for 1km, 1:00:00 for 5km' :
-                          'e.g., 1:30:00 for 1 hour 30 minutes'
+                            profile.disciplines?.[0] === 'Cycling' ? 'e.g., 1:30:00 for 40km, 3:00:00 for 100km' :
+                              profile.disciplines?.[0] === 'Swimming' ? 'e.g., 0:20:00 for 1km, 1:00:00 for 5km' :
+                                'e.g., 1:30:00 for 1 hour 30 minutes'
                         }
                       />
                       <p className="text-xs text-muted-foreground">
@@ -958,7 +949,7 @@ const Index = () => {
               {!profile.hasUpcomingRace && (
                 <div className="space-y-2">
                   <Label htmlFor="trainingDistance">
-                    {profile.disciplines?.[0] === 'Triathlon' 
+                    {profile.disciplines?.[0] === 'Triathlon'
                       ? 'Race Type (e.g., Ironman, Olympic) or Distance (km) *'
                       : 'Training Distance (km) *'
                     }
@@ -969,10 +960,10 @@ const Index = () => {
                     onChange={(e) => updateProfile({ raceDistance: e.target.value })}
                     placeholder={
                       profile.disciplines?.[0] === 'Running' ? 'e.g., 5km, 10km, Half Marathon, Marathon' :
-                      profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
-                      profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
-                      profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman, Ironman' :
-                      'e.g., 10km, Half Marathon'
+                        profile.disciplines?.[0] === 'Cycling' ? 'e.g., 40km, 60km, 100km, Century (160km)' :
+                          profile.disciplines?.[0] === 'Swimming' ? 'e.g., 1km, 2km, 5km, 10km' :
+                            profile.disciplines?.[0] === 'Triathlon' ? 'e.g., Sprint, Olympic, Half Ironman, Ironman' :
+                              'e.g., 10km, Half Marathon'
                     }
                     className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
                     required
@@ -988,7 +979,7 @@ const Index = () => {
                       {profile.disciplines?.[0] === 'Swimming' ? 'Water Temperature (°C) *' : 'Expected Temperature (°C) *'}
                     </Label>
                     <InfoTooltip content={
-                      profile.disciplines?.[0] === 'Swimming' 
+                      profile.disciplines?.[0] === 'Swimming'
                         ? "What water temperature do you expect? This helps us calculate your fluid needs during swimming."
                         : "What temperature do you expect during your activity? This helps us calculate your sweat rate and fluid needs."
                     } />
@@ -1019,7 +1010,7 @@ const Index = () => {
                         onChange={(e) => {
                           const newProfile = { ...profile, swimPace: e.target.value };
                           const duration = calculateTriathlonDuration(newProfile);
-                          updateProfile({ 
+                          updateProfile({
                             swimPace: e.target.value,
                             ...(duration && { sessionDuration: duration })
                           });
@@ -1028,7 +1019,7 @@ const Index = () => {
                       />
                       <p className="text-xs text-muted-foreground">Min:sec per 100m</p>
                     </div>
-                    
+
                     {/* Bike Speed */}
                     <div className="space-y-2">
                       <Label htmlFor="bikeSpeed">Bike Speed</Label>
@@ -1038,7 +1029,7 @@ const Index = () => {
                         onChange={(e) => {
                           const newProfile = { ...profile, bikeSpeed: e.target.value };
                           const duration = calculateTriathlonDuration(newProfile);
-                          updateProfile({ 
+                          updateProfile({
                             bikeSpeed: e.target.value,
                             ...(duration && { sessionDuration: duration })
                           });
@@ -1047,7 +1038,7 @@ const Index = () => {
                       />
                       <p className="text-xs text-muted-foreground">Average speed in km/h</p>
                     </div>
-                    
+
                     {/* Run Pace */}
                     <div className="space-y-2">
                       <Label htmlFor="runPace">Run Pace</Label>
@@ -1057,7 +1048,7 @@ const Index = () => {
                         onChange={(e) => {
                           const newProfile = { ...profile, runPace: e.target.value };
                           const duration = calculateTriathlonDuration(newProfile);
-                          updateProfile({ 
+                          updateProfile({
                             runPace: e.target.value,
                             ...(duration && { sessionDuration: duration })
                           });
@@ -1067,17 +1058,17 @@ const Index = () => {
                       <p className="text-xs text-muted-foreground">Min:sec per km</p>
                     </div>
                   </div>
-                  
+
                   {/* Show calculated total time in h:m format */}
                   {(() => {
                     const breakdown = getTriathlonBreakdown(profile);
-                    
+
                     if (breakdown) {
                       const hours = Math.floor(breakdown.total);
                       const remainingMinutes = (breakdown.total % 1) * 60;
                       const minutes = Math.floor(remainingMinutes);
                       const seconds = Math.round((remainingMinutes % 1) * 60);
-                      
+
                       return (
                         <div className="text-center py-4">
                           <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
@@ -1087,7 +1078,7 @@ const Index = () => {
                         </div>
                       );
                     }
-                    
+
                     return null;
                   })()}
                 </div>
@@ -1305,8 +1296,8 @@ const Index = () => {
             <div className="space-y-4">
               <div>
                 <Label>
-                  {profile.disciplines?.[0] === 'Swimming' 
-                    ? 'Water Temperature Range (°C) *' 
+                  {profile.disciplines?.[0] === 'Swimming'
+                    ? 'Water Temperature Range (°C) *'
                     : 'Training Temperature Range (°C) *'}
                 </Label>
                 {profile.disciplines?.[0] === 'Swimming' && (
@@ -1318,22 +1309,22 @@ const Index = () => {
                   <Input
                     type="number"
                     value={profile.trainingTempRange?.min || ''}
-                    onChange={(e) => updateProfile({ 
-                      trainingTempRange: { 
-                        min: parseInt(e.target.value), 
-                        max: profile.trainingTempRange?.max || 25 
-                      } 
+                    onChange={(e) => updateProfile({
+                      trainingTempRange: {
+                        min: parseInt(e.target.value),
+                        max: profile.trainingTempRange?.max || 25
+                      }
                     })}
                     placeholder={t('env.tempMin')}
                   />
                   <Input
                     type="number"
                     value={profile.trainingTempRange?.max || ''}
-                    onChange={(e) => updateProfile({ 
-                      trainingTempRange: { 
-                        min: profile.trainingTempRange?.min || 15, 
-                        max: parseInt(e.target.value) 
-                      } 
+                    onChange={(e) => updateProfile({
+                      trainingTempRange: {
+                        min: profile.trainingTempRange?.min || 15,
+                        max: parseInt(e.target.value)
+                      }
                     })}
                     placeholder={t('env.tempMax')}
                   />
@@ -1342,30 +1333,30 @@ const Index = () => {
 
               <div>
                 <Label>
-                  {profile.disciplines?.[0] === 'Swimming' 
-                    ? 'Race Water Temperature Range (°C)' 
+                  {profile.disciplines?.[0] === 'Swimming'
+                    ? 'Race Water Temperature Range (°C)'
                     : 'Race Temperature Range (°C)'}
                 </Label>
                 <div className="grid grid-cols-2 gap-4 mt-2">
                   <Input
                     type="number"
                     value={profile.raceTempRange?.min || ''}
-                    onChange={(e) => updateProfile({ 
-                      raceTempRange: { 
-                        min: parseInt(e.target.value), 
-                        max: profile.raceTempRange?.max || 25 
-                      } 
+                    onChange={(e) => updateProfile({
+                      raceTempRange: {
+                        min: parseInt(e.target.value),
+                        max: profile.raceTempRange?.max || 25
+                      }
                     })}
                     placeholder="Min"
                   />
                   <Input
                     type="number"
                     value={profile.raceTempRange?.max || ''}
-                    onChange={(e) => updateProfile({ 
-                      raceTempRange: { 
-                        min: profile.raceTempRange?.min || 15, 
-                        max: parseInt(e.target.value) 
-                      } 
+                    onChange={(e) => updateProfile({
+                      raceTempRange: {
+                        min: profile.raceTempRange?.min || 15,
+                        max: parseInt(e.target.value)
+                      }
                     })}
                     placeholder="Max"
                   />
@@ -1408,7 +1399,7 @@ const Index = () => {
                     <Label htmlFor="high" className="font-normal">{t('env.highAltitude')}</Label>
                   </div>
                 </RadioGroup>
-                
+
                 {/* Exact altitude in meters - Pro version only */}
                 {version === 'pro' && (
                   <div className="mt-3">
