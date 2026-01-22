@@ -58,25 +58,37 @@ export default function Admin() {
   const checkAdminAndLoadData = async () => {
     try {
       // Check if user is logged in
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+
+      if (sessionError || !session) {
+        if (sessionError) console.error("Session fetch error:", sessionError);
         navigate('/auth');
         return;
       }
 
-      // Check if user is admin
-      const { data: roles, error: roleError } = await supabase
+      // Robust check for admin role
+      const { data: roleData, error: roleError } = await supabase
         .from('user_roles')
         .select('role')
         .eq('user_id', session.user.id)
         .eq('role', 'admin')
-        .single();
+        .maybeSingle();
 
-      if (roleError || !roles) {
+      if (roleError) {
+        console.error("Critical role fetch error:", roleError);
+        toast({
+          title: "System Error",
+          description: "Could not verify permissions. Please try logging in again.",
+          variant: "destructive",
+        });
+        navigate('/auth');
+        return;
+      }
+
+      if (!roleData) {
         toast({
           title: "Access Denied",
-          description: "You do not have admin privileges.",
+          description: "Restricted area. Admin privileges required.",
           variant: "destructive",
         });
         navigate('/');
@@ -85,8 +97,13 @@ export default function Admin() {
 
       setIsAdmin(true);
       await loadProfiles();
-    } catch (error) {
-      console.error('Error checking admin status:', error);
+    } catch (error: any) {
+      console.error('Unexpected error in admin check:', error);
+      toast({
+        title: "Error",
+        description: error.message || "An unexpected error occurred",
+        variant: "destructive",
+      });
       navigate('/auth');
     }
   };
@@ -99,15 +116,15 @@ export default function Admin() {
       if (error) throw error;
 
       setProfiles(data || []);
-      
+
       // Calculate enhanced stats
       const total = data?.length || 0;
       const withSmartwatch = data?.filter((p: any) => p.has_smartwatch_data).length || 0;
-      
+
       // Average age
       const ages = data?.map((p: any) => p.profile_data?.age).filter((age: any) => age) || [];
       const averageAge = ages.length > 0 ? parseFloat((ages.reduce((a: number, b: number) => a + b, 0) / ages.length).toFixed(1)) : 0;
-      
+
       // Gender distribution
       const genderCounts = { male: 0, female: 0, other: 0 };
       data?.forEach((p: any) => {
@@ -116,7 +133,7 @@ export default function Admin() {
         else if (sex === 'female') genderCounts.female++;
         else if (sex === 'other') genderCounts.other++;
       });
-      
+
       // Activity popularity with detailed insights
       const activityMap = new Map<string, { count: number; distances: string[]; raceDayCount: number; trainingCount: number }>();
       data?.forEach((p: any) => {
@@ -124,7 +141,7 @@ export default function Admin() {
         // Try multiple possible distance field names
         const distance = p.profile_data?.raceDistance || p.profile_data?.trainingDistance || '';
         const hasRace = p.profile_data?.hasUpcomingRace;
-        
+
         // Debug logging
         if (disciplines.length > 0) {
           console.log('Profile distance data:', {
@@ -135,7 +152,7 @@ export default function Admin() {
             allProfileData: Object.keys(p.profile_data || {})
           });
         }
-        
+
         disciplines.forEach((activity: string) => {
           const current = activityMap.get(activity) || { count: 0, distances: [], raceDayCount: 0, trainingCount: 0 };
           current.count++;
@@ -145,20 +162,20 @@ export default function Admin() {
           activityMap.set(activity, current);
         });
       });
-      
+
       const activityStats = Array.from(activityMap.entries())
         .map(([activity, data]) => ({ activity, ...data }))
         .sort((a, b) => b.count - a.count);
-      
+
       // Average sachets per activity
       const activitySachetsMap = new Map<string, { total: number; count: number }>();
       data?.forEach((p: any) => {
         const disciplines = p.profile_data?.disciplines || [];
         const plan = p.plan_data;
-        
+
         if (plan?.duringActivity?.totalElectrolytes && p.profile_data?.sessionDuration) {
           const sachetsUsed = plan.duringActivity.totalElectrolytes;
-          
+
           disciplines.forEach((activity: string) => {
             const current = activitySachetsMap.get(activity) || { total: 0, count: 0 };
             activitySachetsMap.set(activity, {
@@ -168,14 +185,14 @@ export default function Admin() {
           });
         }
       });
-      
+
       const sachetsPerActivity = Array.from(activitySachetsMap.entries())
         .map(([activity, { total, count }]) => ({
           activity,
           avgSachets: parseFloat((total / count).toFixed(2))
         }))
         .sort((a, b) => b.avgSachets - a.avgSachets);
-      
+
       setStats({
         total,
         withSmartwatch,
@@ -213,7 +230,7 @@ export default function Admin() {
         // Body & Physiology
         'Age', 'Sex', 'Weight (kg)', 'Height (cm)', 'Body Fat %', 'Resting HR', 'HRV', 'Health Conditions', 'Sweat Sodium Test',
         // Activity & Terrain
-        'Disciplines', 'Race Distance', 'Session Duration (hr)', 'Avg Pace', 'Swim Pace', 'Bike Power', 'Run Pace', 
+        'Disciplines', 'Race Distance', 'Session Duration (hr)', 'Avg Pace', 'Swim Pace', 'Bike Power', 'Run Pace',
         'Elevation Gain', 'Longest Session', 'Training Frequency', 'Indoor/Outdoor',
         // Football-specific
         'Position', 'Matches/Week', 'Playing Level', 'Playing Surface', 'Avg Distance Covered',
@@ -232,7 +249,7 @@ export default function Admin() {
         // Optional
         'Weekly Volume', 'Sleep Quality', 'Sleep Hours', 'Other Notes',
         // Plan Data
-        'Pre-Water (ml)', 'Pre-Electrolytes', 'During-Water/Hr (ml)', 'During-Electrolytes/Hr', 
+        'Pre-Water (ml)', 'Pre-Electrolytes', 'During-Water/Hr (ml)', 'During-Electrolytes/Hr',
         'Post-Water (ml)', 'Post-Electrolytes', 'Total Fluid Loss (ml)'
       ],
     ];
@@ -240,7 +257,7 @@ export default function Admin() {
     profiles.forEach(profile => {
       const pd = profile.profile_data || {};
       const plan = profile.plan_data || {};
-      
+
       csvRows.push([
         // Basic Info
         profile.id,
@@ -341,7 +358,7 @@ export default function Admin() {
     const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     const url = URL.createObjectURL(blob);
-    
+
     link.setAttribute('href', url);
     link.setAttribute('download', `supplme-all-data-${new Date().getTime()}.csv`);
     link.style.visibility = 'hidden';
@@ -359,7 +376,7 @@ export default function Admin() {
     const pd = profile.profile_data || {};
     const plan = profile.plan_data || {};
     const aiInsights = plan.aiInsights;
-    
+
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
     const pageHeight = doc.internal.pageSize.height;
@@ -399,7 +416,7 @@ export default function Admin() {
     doc.setFontSize(14);
     doc.setFont('helvetica', 'normal');
     doc.text('Your Elite Hydration Strategy', pageWidth / 2, 35, { align: 'center' });
-    
+
     y = 55;
     doc.setTextColor(0, 0, 0);
 
@@ -408,32 +425,32 @@ export default function Admin() {
     doc.rect(margin, y, pageWidth - 2 * margin, 32, 'F');
     doc.setDrawColor(200, 200, 200);
     doc.rect(margin, y, pageWidth - 2 * margin, 32);
-    
+
     y += 8;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.text(`Name: `, margin + 5, y);
     doc.setFont('helvetica', 'normal');
     doc.text(pd.fullName || 'N/A', margin + 25, y);
-    
+
     y += 7;
     doc.setFont('helvetica', 'bold');
     doc.text(`Email: `, margin + 5, y);
     doc.setFont('helvetica', 'normal');
     doc.text(profile.user_email || 'Anonymous', margin + 25, y);
-    
+
     y += 7;
     doc.setFont('helvetica', 'bold');
     doc.text(`Generated: `, margin + 5, y);
     doc.setFont('helvetica', 'normal');
     doc.text(new Date(profile.created_at).toLocaleString(), margin + 35, y);
-    
+
     y += 7;
     doc.setFont('helvetica', 'bold');
     doc.text(`Discipline: `, margin + 5, y);
     doc.setFont('helvetica', 'normal');
     doc.text((pd.disciplines || []).join(', ') || 'N/A', margin + 35, y);
-    
+
     y += 12;
 
     // ====== FLUID LOSS SUMMARY ======
@@ -443,23 +460,23 @@ export default function Admin() {
     doc.setDrawColor(0, 0, 0);
     doc.setLineWidth(1.5);
     doc.rect(margin, y, pageWidth - 2 * margin, 45);
-    
+
     y += 12;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'bold');
     doc.setTextColor(100, 100, 100);
     doc.text('TOTAL FLUID LOSS', pageWidth / 2, y, { align: 'center' });
-    
+
     y += 13;
     doc.setFontSize(32);
     doc.setTextColor(0, 0, 0);
     doc.text(`${((plan.totalFluidLoss || 0) / 1000).toFixed(1)} L`, pageWidth / 2, y, { align: 'center' });
-    
+
     y += 10;
     doc.setFontSize(10);
     doc.setFont('helvetica', 'normal');
     doc.text(`during your ${pd.sessionDuration || '0'} hour ${(pd.disciplines || [])[0] || 'activity'}`, pageWidth / 2, y, { align: 'center' });
-    
+
     y += 18;
 
     // ====== YOUR PERFORMANCE PROTOCOL ======
@@ -474,53 +491,53 @@ export default function Admin() {
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(200, 200, 200);
     doc.rect(margin, y, pageWidth - 2 * margin, 45, 'FD');
-    
+
     y += 8;
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
     doc.setFont('helvetica', 'normal');
     doc.text(plan.preActivity?.timing || '2-4 hours before', margin + 5, y);
-    
+
     y += 8;
     doc.setFontSize(22);
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.text('PRE', margin + 5, y);
-    
+
     y += 10;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(`Water: ${plan.preActivity?.water || 0} ml`, margin + 5, y);
-    
+
     y += 8;
     doc.text(`Supplme Sachets: ${plan.preActivity?.electrolytes || 0}x`, margin + 5, y);
-    
+
     y += 15;
 
     // === DURING ===
     checkPageBreak(48);
     doc.setFillColor(10, 10, 10);
     doc.rect(margin, y, pageWidth - 2 * margin, 45, 'F');
-    
+
     y += 8;
     doc.setFontSize(9);
     doc.setTextColor(200, 200, 200);
     doc.text(plan.duringActivity?.frequency || 'Every 15-20 minutes', margin + 5, y);
-    
+
     y += 8;
     doc.setFontSize(22);
     doc.setTextColor(255, 255, 255);
     doc.setFont('helvetica', 'bold');
     doc.text('DURING', margin + 5, y);
-    
+
     y += 10;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(`Water per hour: ${plan.duringActivity?.waterPerHour || 0} ml`, margin + 5, y);
-    
+
     y += 8;
     doc.text(`Supplme Sachets: ${plan.duringActivity?.electrolytesPerHour || 0} sachet${(plan.duringActivity?.electrolytesPerHour || 0) !== 1 ? 's' : ''}`, margin + 5, y);
-    
+
     y += 15;
     doc.setTextColor(0, 0, 0);
 
@@ -529,46 +546,46 @@ export default function Admin() {
     doc.setFillColor(255, 255, 255);
     doc.setDrawColor(200, 200, 200);
     doc.rect(margin, y, pageWidth - 2 * margin, 45, 'FD');
-    
+
     y += 8;
     doc.setFontSize(9);
     doc.setTextColor(120, 120, 120);
     doc.setFont('helvetica', 'normal');
     doc.text(plan.postActivity?.timing || 'Within 30 minutes', margin + 5, y);
-    
+
     y += 8;
     doc.setFontSize(22);
     doc.setTextColor(0, 0, 0);
     doc.setFont('helvetica', 'bold');
     doc.text('POST', margin + 5, y);
-    
+
     y += 10;
     doc.setFontSize(11);
     doc.setFont('helvetica', 'normal');
     doc.text(`Water: ${plan.postActivity?.water || 0} ml`, margin + 5, y);
-    
+
     y += 8;
     doc.text(`Supplme Sachets: ${plan.postActivity?.electrolytes || 0}x`, margin + 5, y);
-    
+
     y += 18;
 
     // ====== AI-ENHANCED ANALYSIS ======
     if (aiInsights) {
       checkPageBreak(60);
-      
+
       doc.setFillColor(240, 245, 255);
       const aiBoxHeight = 80;
       doc.rect(margin, y, pageWidth - 2 * margin, aiBoxHeight, 'F');
       doc.setDrawColor(100, 150, 255);
       doc.setLineWidth(0.5);
       doc.rect(margin, y, pageWidth - 2 * margin, aiBoxHeight);
-      
+
       y += 8;
       doc.setFontSize(13);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text('AI-ENHANCED ANALYSIS', margin + 5, y);
-      
+
       if (aiInsights.confidence_level) {
         doc.setFontSize(8);
         doc.setFont('helvetica', 'bold');
@@ -577,9 +594,9 @@ export default function Admin() {
         const badgeX = pageWidth - margin - confidenceWidth - 10;
         doc.text(confidenceText, badgeX, y);
       }
-      
+
       y += 10;
-      
+
       if (aiInsights.personalized_insight) {
         doc.setFontSize(9);
         doc.setFont('helvetica', 'bold');
@@ -590,7 +607,7 @@ export default function Admin() {
         doc.setTextColor(50, 50, 50);
         addWrappedText(aiInsights.personalized_insight, margin + 5, pageWidth - 2 * margin - 10, 9);
       }
-      
+
       if (aiInsights.risk_factors) {
         y += 4;
         doc.setFontSize(9);
@@ -602,14 +619,14 @@ export default function Admin() {
         doc.setTextColor(100, 0, 0);
         addWrappedText(aiInsights.risk_factors, margin + 5, pageWidth - 2 * margin - 10, 9);
       }
-      
+
       y += 8;
     }
 
     // ====== RACE DAY STRATEGY ======
     if (pd.upcomingEvents) {
       checkPageBreak(100);
-      
+
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
@@ -619,7 +636,7 @@ export default function Admin() {
       doc.setFont('helvetica', 'normal');
       doc.text(`For your upcoming: ${pd.upcomingEvents}`, pageWidth / 2, y, { align: 'center' });
       y += 12;
-      
+
       // Pre-Race
       checkPageBreak(35);
       doc.setFillColor(250, 250, 250);
@@ -639,7 +656,7 @@ export default function Admin() {
       y += 6;
       doc.text(`• 30 min before start: 200-300ml water (sips only)`, margin + 5, y);
       y += 12;
-      
+
       // During Race
       checkPageBreak(35);
       doc.setFillColor(250, 250, 250);
@@ -660,7 +677,7 @@ export default function Admin() {
         y += 6;
       }
       y += 10;
-      
+
       // Post-Race
       checkPageBreak(28);
       doc.setFillColor(250, 250, 250);
@@ -681,18 +698,18 @@ export default function Admin() {
     }
 
     // ====== PROFILE DATA SECTIONS ======
-    const addDataSection = (title: string, data: Array<{label: string, value: any}>) => {
+    const addDataSection = (title: string, data: Array<{ label: string, value: any }>) => {
       const filteredData = data.filter(item => item.value);
       if (filteredData.length === 0) return;
-      
+
       checkPageBreak(30 + filteredData.length * 7);
-      
+
       doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
       doc.text(title, margin, y);
       y += 8;
-      
+
       doc.setFontSize(9);
       doc.setFont('helvetica', 'normal');
       filteredData.forEach(item => {
@@ -821,7 +838,7 @@ export default function Admin() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-6 bg-gradient-to-br from-blue-500/10 to-blue-500/5 border-blue-500/20">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-blue-500/20 rounded-full">
@@ -833,7 +850,7 @@ export default function Admin() {
               </div>
             </div>
           </Card>
-          
+
           <Card className="p-6 bg-gradient-to-br from-green-500/10 to-green-500/5 border-green-500/20">
             <div className="flex items-center gap-4">
               <div className="p-3 bg-green-500/20 rounded-full">
@@ -912,23 +929,23 @@ export default function Admin() {
             <ResponsiveContainer width="100%" height={250}>
               <BarChart data={stats.activityStats.slice(0, 6)}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
-                <XAxis 
-                  dataKey="activity" 
+                <XAxis
+                  dataKey="activity"
                   tick={{ fill: 'hsl(var(--muted-foreground))' }}
                   angle={-45}
                   textAnchor="end"
                   height={80}
                 />
                 <YAxis tick={{ fill: 'hsl(var(--muted-foreground))' }} />
-                <Tooltip 
-                  contentStyle={{ 
-                    backgroundColor: 'hsl(var(--background))', 
-                    border: '1px solid hsl(var(--border))' 
+                <Tooltip
+                  contentStyle={{
+                    backgroundColor: 'hsl(var(--background))',
+                    border: '1px solid hsl(var(--border))'
                   }}
                 />
-                <Bar 
-                  dataKey="count" 
-                  fill="hsl(var(--primary))" 
+                <Bar
+                  dataKey="count"
+                  fill="hsl(var(--primary))"
                   radius={[8, 8, 0, 0]}
                   onClick={(data) => setSelectedActivity(data.activity)}
                   className="cursor-pointer hover:opacity-80"
@@ -946,11 +963,11 @@ export default function Admin() {
                   Close
                 </Button>
               </div>
-              
+
               {(() => {
                 const activity = stats.activityStats.find(a => a.activity === selectedActivity);
                 if (!activity) return null;
-                
+
                 // Count unique distances
                 const distanceCounts = new Map<string, number>();
                 activity.distances.forEach(d => {
@@ -958,7 +975,7 @@ export default function Admin() {
                 });
                 const sortedDistances = Array.from(distanceCounts.entries())
                   .sort((a, b) => b[1] - a[1]);
-                
+
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
                     {/* Mode Usage */}
@@ -975,7 +992,7 @@ export default function Admin() {
                         </div>
                       </div>
                     </div>
-                    
+
                     {/* Most Common Distances */}
                     <div className="md:col-span-2 space-y-3">
                       <h4 className="font-semibold text-sm text-muted-foreground">Most Common Distances</h4>
@@ -1013,7 +1030,7 @@ export default function Admin() {
         <Card className="p-6">
           <div className="space-y-4">
             <h2 className="text-xl font-semibold">User Submissions</h2>
-            
+
             {loading ? (
               <p className="text-center text-muted-foreground py-8">Loading data...</p>
             ) : profiles.length === 0 ? (
@@ -1024,7 +1041,7 @@ export default function Admin() {
                   const pd = profile.profile_data || {};
                   const plan = profile.plan_data || {};
                   const isExpanded = expandedRows.has(profile.id);
-                  
+
                   return (
                     <Card key={profile.id} className="p-4">
                       <Collapsible open={isExpanded} onOpenChange={() => toggleRow(profile.id)}>
@@ -1035,7 +1052,7 @@ export default function Admin() {
                                 {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                               </Button>
                             </CollapsibleTrigger>
-                            
+
                             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 flex-1">
                               <div>
                                 <p className="text-xs text-muted-foreground">Date</p>
@@ -1074,7 +1091,7 @@ export default function Admin() {
                                 )}
                               </div>
                             </div>
-                            
+
                             <div className="flex items-center gap-2">
                               <Button
                                 onClick={() => downloadUserGuide(profile)}
@@ -1096,7 +1113,7 @@ export default function Admin() {
                             </div>
                           </div>
                         </div>
-                        
+
                         <CollapsibleContent className="mt-4 pt-4 border-t">
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {/* Body & Physiology */}
@@ -1112,7 +1129,7 @@ export default function Admin() {
                                 {pd.sweatSodiumTest && <p><span className="text-muted-foreground">Sweat Sodium:</span> {pd.sweatSodiumTest}</p>}
                               </div>
                             </div>
-                            
+
                             {/* Activity & Terrain */}
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Activity & Terrain</h4>
@@ -1133,7 +1150,7 @@ export default function Admin() {
                                 {pd.trainingFrequency && <p><span className="text-muted-foreground">Frequency:</span> {pd.trainingFrequency}/week</p>}
                               </div>
                             </div>
-                            
+
                             {/* Environment */}
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Environment</h4>
@@ -1148,7 +1165,7 @@ export default function Admin() {
                                 {pd.climate && <p><span className="text-muted-foreground">Climate:</span> {pd.climate}</p>}
                               </div>
                             </div>
-                            
+
                             {/* Hydration & Sweat */}
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Hydration & Sweat</h4>
@@ -1164,7 +1181,7 @@ export default function Admin() {
                                 {pd.hydrationStrategy && <p><span className="text-muted-foreground">Strategy:</span> {pd.hydrationStrategy}</p>}
                               </div>
                             </div>
-                            
+
                             {/* Nutrition */}
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Nutrition</h4>
@@ -1178,13 +1195,13 @@ export default function Admin() {
                                 {pd.otherSupplements && <p><span className="text-muted-foreground">Supplements:</span> {pd.otherSupplements}</p>}
                               </div>
                             </div>
-                            
+
                             {/* Hydration Plan Results - Enhanced */}
                             <div className="space-y-4 bg-primary/5 p-4 rounded-lg border border-primary/20 col-span-full">
                               <h4 className="font-bold text-base text-primary flex items-center gap-2">
                                 <Zap className="w-4 h-4" /> Hydration Plan Results
                               </h4>
-                              
+
                               {/* Activity & Distance Header */}
                               <div className="flex flex-wrap items-center gap-3 p-3 rounded-lg bg-background border border-border">
                                 <div>
@@ -1229,7 +1246,7 @@ export default function Admin() {
                                   <Badge variant="default" className="ml-auto">🏁 Race Day</Badge>
                                 )}
                               </div>
-                              
+
                               {/* Total Fluid Loss Banner */}
                               {plan.totalFluidLoss && (
                                 <div className="text-center p-4 rounded-lg bg-primary/10 border border-primary/30">
@@ -1245,7 +1262,7 @@ export default function Admin() {
                                   </p>
                                 </div>
                               )}
-                              
+
                               {/* PRE / DURING / POST Grid */}
                               <div className="grid grid-cols-3 gap-3">
                                 {/* PRE */}
@@ -1257,7 +1274,7 @@ export default function Admin() {
                                     <p><span className="text-muted-foreground">Sachets:</span> <strong>{plan.preActivity?.electrolytes || 0}x</strong></p>
                                   </div>
                                 </div>
-                                
+
                                 {/* DURING - Calculate total sachets like results page */}
                                 {(() => {
                                   const sessionDuration = pd.sessionDuration || 0;
@@ -1265,11 +1282,11 @@ export default function Admin() {
                                   // For 2+ hour sessions, exclude final 30 min (effective duration)
                                   const effectiveDuration = sessionDuration >= 2 ? Math.max(0, sessionDuration - 0.5) : 0;
                                   // Total sachets = sachets/hr × effective duration (rounded)
-                                  const totalDuringSachets = sessionDuration >= 2 
+                                  const totalDuringSachets = sessionDuration >= 2
                                     ? Math.round(electrolytesPerHour * effectiveDuration)
                                     : 0;
                                   const totalWater = Math.round((plan.duringActivity?.waterPerHour || 0) * sessionDuration);
-                                  
+
                                   return (
                                     <div className="p-3 rounded-lg bg-foreground text-background border border-foreground">
                                       <p className="text-xs font-bold opacity-70 uppercase mb-1">{plan.duringActivity?.frequency || 'Every 15min'}</p>
@@ -1283,7 +1300,7 @@ export default function Admin() {
                                     </div>
                                   );
                                 })()}
-                                
+
                                 {/* POST */}
                                 <div className="p-3 rounded-lg bg-background border border-border">
                                   <p className="text-xs font-bold text-muted-foreground uppercase mb-1">{plan.postActivity?.timing || 'Within 30min'}</p>
@@ -1304,7 +1321,7 @@ export default function Admin() {
                                 }[pd.sweatSaltiness] || 650;
                                 const totalSodiumLoss = sodiumLossPerHour * (pd.sessionDuration || 1);
                                 const sachetsPerHour = plan.duringActivity?.electrolytesPerHour || 1;
-                                
+
                                 return (
                                   <div className="p-3 rounded-lg bg-secondary/50 border border-border space-y-2">
                                     <h5 className="font-bold text-sm flex items-center gap-1">
@@ -1377,7 +1394,7 @@ export default function Admin() {
                                 </div>
                               )}
                             </div>
-                            
+
                             {/* Sport-Specific Data (Football) */}
                             {(pd.position || pd.matchesPerWeek || pd.playingLevel) && (
                               <div className="space-y-2">
@@ -1391,7 +1408,7 @@ export default function Admin() {
                                 </div>
                               </div>
                             )}
-                            
+
                             {/* Sport-Specific Data (Padel) */}
                             {(pd.padelPlayingLevel || pd.padelCourtType || pd.padelMatchesPerWeek) && (
                               <div className="space-y-2">
@@ -1405,7 +1422,7 @@ export default function Admin() {
                                 </div>
                               </div>
                             )}
-                            
+
                             {/* Goals & Notes */}
                             <div className="space-y-2">
                               <h4 className="font-semibold text-sm">Goals & Notes</h4>
@@ -1418,7 +1435,7 @@ export default function Admin() {
                                 {pd.otherNotes && <p><span className="text-muted-foreground">Notes:</span> {pd.otherNotes}</p>}
                               </div>
                             </div>
-                            
+
                             {/* Sleep & Recovery */}
                             {(pd.sleepHours || pd.sleepQuality || pd.weeklyVolume) && (
                               <div className="space-y-2">

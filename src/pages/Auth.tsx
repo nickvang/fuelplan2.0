@@ -40,23 +40,50 @@ export default function Auth() {
 
     try {
       if (isLogin) {
-        const { error } = await supabase.auth.signInWithPassword({
+        const { data, error } = await supabase.auth.signInWithPassword({
           email,
           password,
         });
 
         if (error) throw error;
 
+        // Verify if user has admin role immediately after login
+        const { data: roleData, error: roleError } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', data.user.id)
+          .eq('role', 'admin')
+          .maybeSingle();
+
+        if (roleError) {
+          console.error("Role check error:", roleError);
+        }
+
+        if (!roleData) {
+          toast({
+            title: "Access Restricted",
+            description: "You are logged in but don't have admin permissions. Please contact an administrator.",
+            variant: "destructive",
+          });
+          // Not throwing error here, user is authenticated, just not authorized for admin
+          navigate('/');
+          return;
+        }
+
         toast({
           title: "Login Successful",
-          description: "Redirecting to admin dashboard...",
+          description: "Welcome back to the Admin Dashboard.",
         });
+        navigate('/admin');
       } else {
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
-            emailRedirectTo: `${window.location.origin}/admin`,
+            emailRedirectTo: `${window.location.origin}/auth`,
+            data: {
+              full_name: email.split('@')[0], // Default name from email
+            }
           },
         });
 
@@ -64,13 +91,15 @@ export default function Auth() {
 
         toast({
           title: "Account Created",
-          description: "Please check your email to verify your account.",
+          description: "Please check your email to verify your account before logging in.",
         });
+        setIsLogin(true);
       }
     } catch (error: any) {
+      console.error("Auth error:", error);
       toast({
         title: "Authentication Error",
-        description: error.message,
+        description: error.message || "An unexpected error occurred",
         variant: "destructive",
       });
     } finally {
