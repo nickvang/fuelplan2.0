@@ -106,9 +106,27 @@ serve(async (req) => {
       }
     }
 
-    const LOVABLE_API_KEY = Deno.env.get('LOVABLE_API_KEY');
-    if (!LOVABLE_API_KEY) {
-      console.error('[Internal] LOVABLE_API_KEY not configured');
+    // Support multiple AI providers: Google Gemini (preferred) or OpenAI
+    const GEMINI_API_KEY = Deno.env.get('GEMINI_API_KEY');
+    const OPENAI_API_KEY = Deno.env.get('OPENAI_API_KEY');
+    const AI_PROVIDER = Deno.env.get('AI_PROVIDER') || 'gemini'; // 'gemini' or 'openai'
+    
+    if (AI_PROVIDER === 'gemini' && !GEMINI_API_KEY) {
+      console.error('[Internal] GEMINI_API_KEY not configured');
+      return new Response(
+        JSON.stringify({ 
+          error: 'AI service temporarily unavailable',
+          code: 'SERVICE_UNAVAILABLE'
+        }),
+        { 
+          status: 503, 
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+        }
+      );
+    }
+    
+    if (AI_PROVIDER === 'openai' && !OPENAI_API_KEY) {
+      console.error('[Internal] OPENAI_API_KEY not configured');
       return new Response(
         JSON.stringify({ 
           error: 'AI service temporarily unavailable',
@@ -198,69 +216,53 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
 
     for (let attempt = 1; attempt <= maxRetries; attempt++) {
       try {
-        console.log(`[Info] AI Gateway request attempt ${attempt}/${maxRetries}`);
+        console.log(`[Info] AI API request attempt ${attempt}/${maxRetries} (provider: ${AI_PROVIDER})`);
         
-        response = await fetch('https://ai.gateway.lovable.dev/v1/chat/completions', {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${LOVABLE_API_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            model: 'google/gemini-2.5-flash',
-            messages: [
-              { role: 'system', content: systemPrompt },
-              { role: 'user', content: userPrompt }
-            ],
-            tools: [
-              {
-                type: "function",
-                function: {
-                  name: "provide_hydration_insights",
-                  description: "Provide personalized hydration insights for an athlete",
-                  parameters: {
-                    type: "object",
-                    properties: {
-                      personalized_insight: {
-                        type: "string",
-                        description: "Why these numbers make sense for this athlete (2-3 sentences)"
-                      },
-                      risk_factors: {
-                        type: "string",
-                        description: "Concerning factors that increase dehydration risk (1-2 sentences)"
-                      },
-                      confidence_level: {
-                        type: "string",
-                        enum: ["high", "medium", "low"],
-                        description: "Confidence level based on data completeness"
-                      },
-                      professional_recommendation: {
-                        type: "string",
-                        description: "When to seek professional testing (1 sentence)"
-                      },
-                      performance_comparison: {
-                        type: "string",
-                        description: "Compare to typical athletes in their discipline (2 sentences)"
-                      },
-                      optimization_tips: {
-                        type: "array",
-                        items: { type: "string" },
-                        description: "3-4 specific actionable tips (each 1 sentence)"
-                      }
-                    },
-                    required: ["personalized_insight", "risk_factors", "confidence_level", "professional_recommendation", "performance_comparison", "optimization_tips"],
-                    additionalProperties: false
-                  }
-                }
+        if (AI_PROVIDER === 'gemini') {
+          // Use Google Gemini API directly
+          response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp:generateContent?key=${GEMINI_API_KEY}`, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              contents: [{
+                parts: [{
+                  text: `${systemPrompt}\n\n${userPrompt}\n\nIMPORTANT: You must respond with valid JSON in this exact format:\n{"personalized_insight": "...", "risk_factors": "...", "confidence_level": "high|medium|low", "professional_recommendation": "...", "performance_comparison": "...", "optimization_tips": ["tip1", "tip2", "tip3", "tip4"]}`
+                }]
+              }],
+              generationConfig: {
+                temperature: 0.7,
+                topK: 40,
+                topP: 0.95,
+                maxOutputTokens: 2048,
+                responseMimeType: "application/json"
               }
-            ],
-            tool_choice: { type: "function", function: { name: "provide_hydration_insights" } }
-          }),
-        });
+            }),
+          });
+        } else {
+          // Use OpenAI API
+          response = await fetch('https://api.openai.com/v1/chat/completions', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${OPENAI_API_KEY}`,
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              model: 'gpt-4o-mini',
+              messages: [
+                { role: 'system', content: systemPrompt },
+                { role: 'user', content: userPrompt + '\n\nIMPORTANT: Respond with valid JSON in this exact format:\n{"personalized_insight": "...", "risk_factors": "...", "confidence_level": "high|medium|low", "professional_recommendation": "...", "performance_comparison": "...", "optimization_tips": ["tip1", "tip2", "tip3", "tip4"]}' }
+              ],
+              response_format: { type: "json_object" },
+              temperature: 0.7
+            }),
+          });
+        }
 
         // If response is ok, break out of retry loop
         if (response.ok) {
-          console.log(`[Success] AI Gateway responded successfully on attempt ${attempt}`);
+          console.log(`[Success] AI API responded successfully on attempt ${attempt}`);
           break;
         }
 
@@ -271,7 +273,7 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
 
         // For other errors, save and continue to retry
         lastError = { status: response.status, statusText: response.statusText };
-        console.warn(`[Warn] AI Gateway error on attempt ${attempt}: ${response.status} ${response.statusText}`);
+        console.warn(`[Warn] AI API error on attempt ${attempt}: ${response.status} ${response.statusText}`);
 
         // Wait before retrying (exponential backoff: 1s, 2s, 4s)
         if (attempt < maxRetries) {
@@ -328,7 +330,7 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
         );
       }
       const errorText = await response.text();
-      console.error('[Internal] AI Gateway error:', response.status, errorText);
+      console.error('[Internal] AI API error:', response.status, errorText);
       return new Response(
         JSON.stringify({ 
           error: 'AI service error. Please try again later.',
@@ -344,29 +346,62 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
     const data = await response.json();
     console.log('[Success] AI response received');
 
-    // Extract structured output from tool call
-    const toolCalls = data.choices[0].message.tool_calls;
-    if (!toolCalls || toolCalls.length === 0) {
-      console.error('[Internal] No tool calls in AI response');
-      return new Response(
-        JSON.stringify({ 
-          error: 'Invalid AI response format. Please try again.',
-          code: 'PARSE_ERROR'
-        }),
-        { 
-          status: 500, 
-          headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
-        }
-      );
-    }
-
     let enhancedData;
     try {
-      const functionArgs = toolCalls[0].function.arguments;
-      // Parse the function arguments (they come as a JSON string)
-      enhancedData = typeof functionArgs === 'string' ? JSON.parse(functionArgs) : functionArgs;
+      if (AI_PROVIDER === 'gemini') {
+        // Gemini returns JSON in candidates[0].content.parts[0].text
+        if (!data.candidates || !data.candidates[0] || !data.candidates[0].content || !data.candidates[0].content.parts || !data.candidates[0].content.parts[0]) {
+          console.error('[Internal] Invalid Gemini response structure:', data);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Invalid AI response format. Please try again.',
+              code: 'PARSE_ERROR'
+            }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        
+        const jsonText = data.candidates[0].content.parts[0].text;
+        enhancedData = typeof jsonText === 'string' ? JSON.parse(jsonText) : jsonText;
+      } else {
+        // OpenAI returns JSON in choices[0].message.content
+        if (!data.choices || !data.choices[0] || !data.choices[0].message) {
+          console.error('[Internal] Invalid OpenAI response structure:', data);
+          return new Response(
+            JSON.stringify({ 
+              error: 'Invalid AI response format. Please try again.',
+              code: 'PARSE_ERROR'
+            }),
+            { 
+              status: 500, 
+              headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+            }
+          );
+        }
+        
+        const jsonText = data.choices[0].message.content;
+        enhancedData = typeof jsonText === 'string' ? JSON.parse(jsonText) : jsonText;
+      }
+
+      // Validate that we have the required fields
+      if (!enhancedData.personalized_insight || !enhancedData.risk_factors || !enhancedData.confidence_level) {
+        console.error('[Internal] Missing required fields in AI response:', enhancedData);
+        return new Response(
+          JSON.stringify({ 
+            error: 'AI response missing required fields. Please try again.',
+            code: 'PARSE_ERROR'
+          }),
+          { 
+            status: 500, 
+            headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
+          }
+        );
+      }
     } catch (e) {
-      console.error('[Internal] Failed to parse tool call arguments:', e);
+      console.error('[Internal] Failed to parse AI response:', e);
       return new Response(
         JSON.stringify({ 
           error: 'Failed to parse AI response. Please try again.',
