@@ -1,0 +1,26 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(curl -s https://developers.strava.com/swagger/swagger.json)",
+      "Bash(curl -s https://developers.strava.com/swagger/athlete.json)",
+      "Bash(python3 -m json.tool)",
+      "Bash(curl -s https://developers.strava.com/swagger/activity.json)",
+      "Bash(npm run:*)",
+      "Bash(supabase --version)",
+      "Bash(supabase secrets:*)",
+      "Bash(grep -r VITE_STRAVA /Users/nicklasvang/Documents/fuelplan2.0-main --include=*.tsx --include=*.ts --include=*.env*)",
+      "Bash(ls -la /Users/nicklasvang/Documents/fuelplan2.0-main/.env*)",
+      "Bash(grep -r \"strava_snapshot\\\\|strava\" /Users/nicklasvang/Documents/fuelplan2.0-main/supabase/migrations/ --include=*.sql)",
+      "Bash(cat /Users/nicklasvang/Documents/fuelplan2.0-main/supabase/migrations/*.sql)",
+      "Bash(brew install:*)",
+      "Bash(pdftotext \"/Users/nicklasvang/Desktop/Garmin Connect API/OAuth2PKCE_2.pdf\" /tmp/garmin_oauth2pkce.txt)",
+      "Read(//tmp/**)",
+      "Bash(pdftotext \"/Users/nicklasvang/Desktop/Garmin Connect API/OAuth2 Migration Guide.pdf\" /tmp/garmin_oauth2_migration.txt)",
+      "Bash(grep -r supplme.app /Users/nicklasvang/Documents/fuelplan2.0-main --include=*.ts --include=*.tsx --include=*.md --include=*.json)",
+      "Bash(supabase projects:*)",
+      "Bash(supabase db:*)",
+      "Bash(supabase functions:*)",
+      "Bash(vercel link:*)"
+    ]
+  }
+}

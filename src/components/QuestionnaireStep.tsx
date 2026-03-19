@@ -1,0 +1,77 @@
+import { ReactNode } from 'react';
+import { Button } from '@/components/ui/button';
+import { Card } from '@/components/ui/card';
+import { useLanguage } from '@/contexts/LanguageContext';
+import { ArrowRight, ArrowLeft } from 'lucide-react';
+
+interface QuestionnaireStepProps {
+  title: string;
+  description?: string;
+  children: ReactNode;
+  onNext: () => void;
+  onBack?: () => void;
+  isValid: boolean;
+  nextButtonText?: string;
+}
+
+export function QuestionnaireStep({
+  title,
+  description,
+  children,
+  onNext,
+  onBack,
+  isValid,
+  nextButtonText,
+}: QuestionnaireStepProps) {
+  const { t } = useLanguage();
+  
+  return (
+    <Card id="questionnaire-step" className="athletic-card p-4 sm:p-6 md:p-10 space-y-6 sm:space-y-8 border-border/50 backdrop-blur-sm animate-fade-in relative overflow-hidden group min-w-0">
+      {/* Subtle gradient overlay */}
+      <div className="absolute inset-0 bg-gradient-to-br from-accent/5 via-transparent to-primary/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+      
+      <div className="space-y-4 relative z-10">
+        <div className="flex items-center gap-3">
+          <div className="h-1 w-12 bg-gradient-to-r from-primary to-chrome rounded-full shimmer" />
+        </div>
+        <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight chrome-shine uppercase break-words">
+          {title}
+        </h2>
+        {description && (
+          <p className="text-muted-foreground text-sm sm:text-base md:text-lg leading-relaxed max-w-2xl">
+            {description}
+          </p>
+        )}
+      </div>
+
+      <div className="space-y-6 py-4 relative z-10 animate-scale-in">
+        {children}
+      </div>
+
+      <div className="flex flex-col-reverse sm:flex-row gap-3 sm:gap-4 pt-6 sm:pt-8 border-t border-border/30 relative z-10">
+        {onBack && (
+          <Button
+            onClick={onBack}
+            variant="outline"
+            size="lg"
+            className="group/btn flex items-center justify-center gap-2 flex-1 min-h-[48px] sm:h-14 text-base font-semibold border-2 border-border/50 hover:border-primary/50 hover:bg-muted/50 transition-all duration-300 active:scale-[0.99] touch-manipulation"
+          >
+            <ArrowLeft className="w-4 h-4 transition-transform group-hover/btn:-translate-x-1" />
+            {t('common.back')}
+          </Button>
+        )}
+        <Button
+          onClick={onNext}
+          disabled={!isValid}
+          size="lg"
+          className="group/btn flex items-center justify-center gap-2 flex-1 min-h-[48px] sm:h-14 text-base font-bold bg-gradient-to-r from-primary via-primary-glow to-primary hover:shadow-2xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:shadow-none relative overflow-hidden active:scale-[0.99] touch-manipulation"
+        >
+          <span className="relative z-10">{nextButtonText || t('common.next')}</span>
+          <ArrowRight className="w-5 h-5 relative z-10 transition-transform group-hover/btn:translate-x-1" />
+          {/* Animated shimmer effect on hover */}
+          <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent translate-x-[-200%] group-hover/btn:translate-x-[200%] transition-transform duration-1000" />
+        </Button>
+      </div>
+    </Card>
+  );
+}

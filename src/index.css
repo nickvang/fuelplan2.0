@@ -1,0 +1,272 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* Definition of the design system. All colors, gradients, fonts, etc should be defined here. 
+All colors MUST be HSL.
+*/
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+  :root {
+    /* Athletic Black & White Base */
+    --background: 0 0% 98%;
+    --foreground: 0 0% 5%;
+
+    /* Silver Chrome Accents */
+    --chrome: 0 0% 75%;
+    --chrome-light: 0 0% 85%;
+    --chrome-dark: 0 0% 60%;
+    
+    /* Card with subtle chrome shine */
+    --card: 0 0% 100%;
+    --card-foreground: 0 0% 5%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 0 0% 5%;
+
+    /* Bold Black Primary */
+    --primary: 0 0% 5%;
+    --primary-foreground: 0 0% 98%;
+    --primary-glow: 0 0% 20%;
+
+    /* Chrome Secondary */
+    --secondary: 0 0% 92%;
+    --secondary-foreground: 0 0% 10%;
+
+    --muted: 0 0% 94%;
+    --muted-foreground: 0 0% 40%;
+
+    /* Energetic Accent - Silver Chrome */
+    --accent: 0 0% 75%;
+    --accent-foreground: 0 0% 5%;
+    --accent-glow: 0 0% 85%;
+
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 88%;
+    --input: 0 0% 92%;
+    --ring: 0 0% 5%;
+
+    --radius: 0.75rem;
+
+    /* Athletic Gradients */
+    --gradient-chrome: linear-gradient(135deg, hsl(0 0% 85%), hsl(0 0% 70%), hsl(0 0% 85%));
+    --gradient-athletic: linear-gradient(135deg, hsl(0 0% 5%), hsl(0 0% 15%));
+    --gradient-glow: linear-gradient(180deg, hsl(0 0% 98%), hsl(0 0% 92%));
+    
+    /* Shadows & Effects */
+    --shadow-chrome: 0 8px 32px -4px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.5) inset;
+    --shadow-bold: 0 12px 48px -8px rgba(0, 0, 0, 0.2);
+    --glow-silver: 0 0 32px rgba(192, 192, 192, 0.4);
+
+    --sidebar-background: 0 0% 98%;
+    --sidebar-foreground: 0 0% 10%;
+    --sidebar-primary: 0 0% 5%;
+    --sidebar-primary-foreground: 0 0% 98%;
+    --sidebar-accent: 0 0% 92%;
+    --sidebar-accent-foreground: 0 0% 5%;
+    --sidebar-border: 0 0% 88%;
+    --sidebar-ring: 0 0% 75%;
+    
+    /* Elite accent (metric highlight) */
+    --elite-accent: 160 84% 39%;
+
+    /* Brand red & green (front page accents) */
+    --brand-red: 0 72% 51%;
+    --brand-green: 142 71% 45%;
+
+    /* Warm product accent (Supplme / clementine) */
+    --product-warm: 24 95% 53%;
+    --product-warm-muted: 24 60% 96%;
+    --product-cool: 199 89% 48%;
+
+    /* Chart Colors */
+    --chart-1: 210 80% 50%;
+    --chart-2: 340 75% 55%;
+    --chart-3: 45 90% 55%;
+    --chart-4: 160 70% 45%;
+    --chart-5: 280 70% 60%;
+  }
+
+  .dark {
+    /* Dark Athletic Mode */
+    --background: 0 0% 8%;
+    --foreground: 0 0% 98%;
+
+    /* Chrome pops more in dark */
+    --chrome: 0 0% 70%;
+    --chrome-light: 0 0% 80%;
+    --chrome-dark: 0 0% 55%;
+
+    --card: 0 0% 12%;
+    --card-foreground: 0 0% 98%;
+
+    --popover: 0 0% 10%;
+    --popover-foreground: 0 0% 98%;
+
+    /* White Primary in Dark */
+    --primary: 0 0% 98%;
+    --primary-foreground: 0 0% 5%;
+    --primary-glow: 0 0% 85%;
+
+    --secondary: 0 0% 18%;
+    --secondary-foreground: 0 0% 98%;
+
+    --muted: 0 0% 16%;
+    --muted-foreground: 0 0% 65%;
+
+    /* Chrome Accent glows in dark */
+    --accent: 0 0% 75%;
+    --accent-foreground: 0 0% 5%;
+    --accent-glow: 0 0% 90%;
+
+    --destructive: 0 62% 50%;
+    --destructive-foreground: 0 0% 98%;
+
+    --border: 0 0% 22%;
+    --input: 0 0% 18%;
+    --ring: 0 0% 75%;
+
+    /* Dark Mode Gradients */
+    --gradient-chrome: linear-gradient(135deg, hsl(0 0% 75%), hsl(0 0% 60%), hsl(0 0% 75%));
+    --gradient-athletic: linear-gradient(135deg, hsl(0 0% 98%), hsl(0 0% 85%));
+    --gradient-glow: linear-gradient(180deg, hsl(0 0% 12%), hsl(0 0% 8%));
+    
+    /* Dark Shadows & Glows */
+    --shadow-chrome: 0 8px 32px -4px rgba(255, 255, 255, 0.08), 0 0 0 1px rgba(255, 255, 255, 0.1) inset;
+    --shadow-bold: 0 12px 48px -8px rgba(0, 0, 0, 0.5);
+    --glow-silver: 0 0 48px rgba(192, 192, 192, 0.3);
+
+    --sidebar-background: 0 0% 10%;
+    --sidebar-foreground: 0 0% 95%;
+    --sidebar-primary: 0 0% 98%;
+    --sidebar-primary-foreground: 0 0% 5%;
+    --sidebar-accent: 0 0% 18%;
+    --sidebar-accent-foreground: 0 0% 95%;
+    --sidebar-border: 0 0% 22%;
+    --sidebar-ring: 0 0% 75%;
+    
+    /* Elite accent - Dark Mode */
+    --elite-accent: 160 70% 50%;
+
+    --brand-red: 0 70% 55%;
+    --brand-green: 142 65% 50%;
+
+    --product-warm: 24 90% 58%;
+    --product-warm-muted: 24 30% 18%;
+    --product-cool: 199 85% 55%;
+
+    /* Chart Colors - Dark Mode */
+    --chart-1: 210 80% 60%;
+    --chart-2: 340 75% 65%;
+    --chart-3: 45 90% 65%;
+    --chart-4: 160 70% 55%;
+    --chart-5: 280 70% 70%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  html {
+    overflow-x: hidden;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    overflow-x: hidden;
+    font-feature-settings: "cv11", "ss01";
+    font-variant-numeric: tabular-nums;
+    /* Safe area for notched devices */
+    padding-top: env(safe-area-inset-top);
+    padding-left: env(safe-area-inset-left);
+    padding-right: env(safe-area-inset-right);
+    padding-bottom: env(safe-area-inset-bottom);
+  }
+
+  /* Larger touch targets and no delay on tap (mobile) */
+  button, a, [role="button"], input[type="file"], [type="submit"] {
+    touch-action: manipulation;
+  }
+}
+
+@layer utilities {
+  /* Athletic Chrome Effects */
+  .chrome-shine {
+    background: var(--gradient-chrome);
+    background-clip: text;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+  }
+  
+  .athletic-card {
+    background: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-chrome);
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .athletic-card:hover {
+    transform: translateY(-2px);
+    box-shadow: var(--shadow-bold);
+  }
+  
+  .glow-effect {
+    box-shadow: var(--glow-silver);
+  }
+  
+  .gradient-athletic {
+    background: var(--gradient-athletic);
+  }
+  
+  /* Performance Pulse Animation */
+  @keyframes performance-pulse {
+    0%, 100% {
+      opacity: 1;
+      transform: scale(1);
+    }
+    50% {
+      opacity: 0.9;
+      transform: scale(1.02);
+    }
+  }
+  
+  .performance-pulse {
+    animation: performance-pulse 2s ease-in-out infinite;
+  }
+
+  /* Elite metric numbers - big, tabular, scannable */
+  .metric-number {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+    letter-spacing: -0.02em;
+  }
+  
+  /* Shimmer Effect for Chrome */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% center;
+    }
+    100% {
+      background-position: 200% center;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      hsl(var(--chrome-dark)) 0%,
+      hsl(var(--chrome-light)) 50%,
+      hsl(var(--chrome-dark)) 100%
+    );
+    background-size: 200% auto;
+    animation: shimmer 3s linear infinite;
+  }
+}

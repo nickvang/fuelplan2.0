@@ -1,0 +1,198 @@
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.7.1';
+import { z } from "https://deno.land/x/zod@v3.22.4/mod.ts";
+import { getClientIP, checkRateLimit, rateLimitResponse } from "../_shared/rateLimiter.ts";
+import { getCorsHeaders } from "../_shared/cors.ts";
+
+// Rate limit: 5 profile saves per minute per IP
+const RATE_LIMIT_CONFIG = { windowMs: 60 * 1000, maxRequests: 5 };
+
+// Max body size: 512KB
+const MAX_CONTENT_LENGTH = 512 * 1024;
+
+// Validation schemas
+const profileSchema = z.object({
+  age: z.number().min(13).max(120),
+  weight: z.number().min(30).max(300),
+  height: z.number().min(100).max(250).optional(),
+  sex: z.enum(['male', 'female', 'other']),
+  disciplines: z.array(z.string().max(100)).max(10).optional(),
+  sessionDuration: z.number().min(0.5).max(24).optional(),
+  trainingTempRange: z.object({
+    min: z.number().min(-20).max(50),
+    max: z.number().min(-20).max(50)
+  }).optional(),
+  humidity: z.number().min(0).max(100).optional(),
+  altitude: z.string().max(50).optional(),
+  sweatRate: z.string().max(50).optional(),
+  sweatSaltiness: z.string().max(50).optional(),
+  dailySaltIntake: z.string().max(50).optional(),
+  crampTiming: z.string().max(100).optional(),
+  elevationGain: z.number().min(0).max(10000).optional(),
+  sleepHours: z.number().min(0).max(24).optional(),
+  sleepQuality: z.number().min(0).max(10).optional(),
+  restingHeartRate: z.number().min(30).max(200).optional(),
+  primaryGoal: z.string().max(200).optional(),
+}).strip();
+
+const planSchema = z.object({
+  preActivity: z.object({
+    water: z.number().min(0).max(5000),
+    electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)])
+  }),
+  duringActivity: z.object({
+    waterPerHour: z.number().min(0).max(5000),
+    electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)]).nullable()
+  }),
+  postActivity: z.object({
+    water: z.number().min(0).max(5000).nullable(),
+    electrolytes: z.union([z.number().min(0).max(100), z.string().max(100)]).nullable()
+  }),
+  totalFluidLoss: z.number().min(0).max(20000).nullable(),
+  recommendations: z.array(z.string().max(500)).max(20).optional(),
+  scientificReferences: z.array(z.any()).optional()
+}).strip();
+
+const requestSchema = z.object({
+  profile: profileSchema,
+  plan: planSchema,
+  hasSmartWatchData: z.boolean().optional(),
+  consentGiven: z.boolean(),
+  userEmail: z.string().email().max(255).optional().nullable()
+});
+
+serve(async (req) => {
+  const corsHeaders = getCorsHeaders(req);
+
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response(null, { headers: corsHeaders });
+  }
+
+  // Rate limiting check
+  const clientIP = getClientIP(req);
+  const rateLimit = checkRateLimit(clientIP, RATE_LIMIT_CONFIG);
+  if (!rateLimit.allowed) {
+    console.warn(`[RateLimit] IP ${clientIP} exceeded rate limit`);
+    return rateLimitResponse(rateLimit.resetIn, corsHeaders);
+  }
+
+  try {
+    // Content-Length check before parsing
+    const contentLength = req.headers.get('content-length');
+    if (contentLength && parseInt(contentLength, 10) > MAX_CONTENT_LENGTH) {
+      return new Response(
+        JSON.stringify({
+          error: 'Request body too large',
+          code: 'PAYLOAD_TOO_LARGE'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 413,
+        }
+      );
+    }
+
+    const body = await req.json();
+
+    // Validate input
+    const validationResult = requestSchema.safeParse(body);
+    if (!validationResult.success) {
+      console.error('[Validation] Invalid request data:', validationResult.error);
+      return new Response(
+        JSON.stringify({
+          error: 'Invalid request data',
+          code: 'VALIDATION_ERROR'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
+
+    const { profile, plan, hasSmartWatchData, consentGiven, userEmail } = validationResult.data;
+
+    if (!consentGiven) {
+      return new Response(
+        JSON.stringify({
+          error: 'User consent is required to save data',
+          code: 'CONSENT_REQUIRED'
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 400,
+        }
+      );
+    }
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')!;
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
+    const supabase = createClient(supabaseUrl, supabaseKey);
+
+    // Get user agent and IP using shared utility
+    const userAgent = req.headers.get('user-agent') || '';
+    const ipAddress = clientIP;
+
+    // Save profile to database with GDPR compliance
+    const { data, error } = await supabase
+      .from('hydration_profiles')
+      .insert({
+        profile_data: profile,
+        plan_data: plan,
+        consent_given: consentGiven,
+        consent_timestamp: new Date().toISOString(),
+        has_smartwatch_data: hasSmartWatchData || false,
+        user_email: userEmail || null,
+        ip_address: ipAddress !== 'unknown' ? ipAddress : null,
+        user_agent: userAgent,
+      })
+      .select()
+      .single();
+
+    if (error) {
+      console.error('[Internal] Database error saving profile:', error);
+      return new Response(
+        JSON.stringify({
+          error: 'Unable to save profile. Please try again later.',
+          code: 'SAVE_FAILED',
+          success: false
+        }),
+        {
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+          status: 500,
+        }
+      );
+    }
+
+    console.log('[Success] Profile saved:', data.id);
+
+    return new Response(
+      JSON.stringify({
+        success: true,
+        profileId: data.id,
+        deletionToken: data.deletion_token,
+        message: 'Profile saved with GDPR compliance'
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
+  } catch (error) {
+    console.error('[Internal] Error in save-hydration-profile function:', error);
+
+    return new Response(
+      JSON.stringify({
+        error: 'An unexpected error occurred. Please try again later.',
+        code: 'INTERNAL_ERROR',
+        success: false
+      }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 500,
+      }
+    );
+  }
+});
