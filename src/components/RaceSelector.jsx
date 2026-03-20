@@ -45,15 +45,21 @@ const tempChipClasses = (maxTemp) => {
 export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
   const [query, setQuery] = useState('');
 
+  const isSearching = query.trim().length > 0;
+
   const filteredRaces = useMemo(() => {
     const q = query.trim().toLowerCase();
-    return races
-      .filter((race) => race.sport === sport)
-      .filter((race) => {
-        if (!q) return true;
-        const haystack = `${race.name} ${race.location} ${race.series}`.toLowerCase();
-        return haystack.includes(q);
-      });
+    const sportRaces = races.filter((race) => race.sport === sport);
+
+    if (!q) {
+      // No search: show only the 3 most popular / first races as suggestions
+      return sportRaces.slice(0, 3);
+    }
+
+    return sportRaces.filter((race) => {
+      const haystack = `${race.name} ${race.location} ${race.series}`.toLowerCase();
+      return haystack.includes(q);
+    });
   }, [sport, query]);
 
   const handleSelectRace = (race) => {
@@ -203,9 +209,15 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
           );
         })}
 
-        {filteredRaces.length === 0 && (
+        {filteredRaces.length === 0 && isSearching && (
           <p className="text-xs text-muted-foreground px-1 py-2">
-            No certified races match this search. Use Custom Event above for any other race.
+            No races match "{query.trim()}". Use Custom Event above for any other race.
+          </p>
+        )}
+
+        {!isSearching && (
+          <p className="text-xs text-muted-foreground px-1 pt-1 text-center">
+            Search above to find more races
           </p>
         )}
       </div>

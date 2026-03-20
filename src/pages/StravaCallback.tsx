@@ -177,4 +177,4 @@ export default function StravaCallback() {
   );
 }
 
-export { STRAVA_STATE_KEY, STRAVA_PREFILL_KEY };
+export { STRAVA_STATE_KEY, STRAVA_PREFILL_KEY, STRAVA_ERROR_KEY };

@@ -1,4 +1,8 @@
-import { HydrationProfile } from '@/types/hydration';
+import { HydrationProfile, TriathlonSegmentPlan } from '@/types/hydration';
+
+// Transition time defaults (in hours)
+export const T1_DURATION = 0.083; // 5 minutes swim→bike
+export const T2_DURATION = 0.05;  // 3 minutes bike→run
 
 // Standard triathlon distances (swim in m, bike in km, run in km)
 export const TRIATHLON_DISTANCES = {
@@ -131,8 +135,8 @@ export function calculateTriathlonDuration(profile: Partial<HydrationProfile>): 
   // Run: distance * pace per km / 60
   const runDuration = (distances.run * runPace) / 60;
   
-  // Total duration (not including transitions for now)
-  const totalDuration = swimDuration + bikeDuration + runDuration;
+  // Total duration including transitions
+  const totalDuration = swimDuration + T1_DURATION + bikeDuration + T2_DURATION + runDuration;
 
   if (import.meta.env.DEV) {
     console.log('🏊‍♂️🚴‍♂️🏃‍♂️ Triathlon Duration Calculation:', {
@@ -142,7 +146,9 @@ export function calculateTriathlonDuration(profile: Partial<HydrationProfile>): 
       bikeSpeed: `${bikeSpeed.toFixed(1)} km/h`,
       runPace: `${runPace.toFixed(2)} min/km`,
       swimDuration: `${(swimDuration * 60).toFixed(1)} min`,
+      t1: `${(T1_DURATION * 60).toFixed(0)} min`,
       bikeDuration: `${(bikeDuration * 60).toFixed(1)} min`,
+      t2: `${(T2_DURATION * 60).toFixed(0)} min`,
       runDuration: `${(runDuration * 60).toFixed(1)} min`,
       totalDuration: `${totalDuration.toFixed(2)} hours`
     });
@@ -177,16 +183,95 @@ export function getTriathlonBreakdown(profile: Partial<HydrationProfile>) {
       pace: swimPace,
       duration: swimDuration
     },
+    t1: {
+      duration: T1_DURATION
+    },
     bike: {
       distance: distances.bike,
       speed: bikeSpeed,
       duration: bikeDuration
+    },
+    t2: {
+      duration: T2_DURATION
     },
     run: {
       distance: distances.run,
       pace: runPace,
       duration: runDuration
     },
-    total: swimDuration + bikeDuration + runDuration
+    total: swimDuration + T1_DURATION + bikeDuration + T2_DURATION + runDuration
+  };
+}
+
+/**
+ * Get segment-aware hydration plan for triathlon
+ * @param profile - Hydration profile
+ * @param sachetsPerHour - Base sachets per hour from hydration calculator
+ * @param waterPerHourBike - Water per hour for cycling (full rate)
+ * @param waterPerHourRun - Water per hour for running (reduced rate)
+ */
+export function getTriathlonSegmentPlan(
+  profile: Partial<HydrationProfile>,
+  sachetsPerHour: number,
+  waterPerHourBike: number,
+  waterPerHourRun: number
+): TriathlonSegmentPlan | null {
+  const breakdown = getTriathlonBreakdown(profile);
+  if (!breakdown) return null;
+
+  // Swim: no hydration possible
+  const swim = {
+    duration: breakdown.swim.duration,
+    distance: breakdown.swim.distance,
+    sachets: 0,
+    fluid: 0,
+  };
+
+  // T1: critical intake window — 1 sachet + 200ml
+  const t1 = {
+    duration: T1_DURATION,
+    sachets: 1,
+    fluid: 200,
+  };
+
+  // Bike: full hydration rate (best intake opportunity)
+  const bikeSachets = Math.round(sachetsPerHour * breakdown.bike.duration);
+  const bikeFluid = Math.round(waterPerHourBike * breakdown.bike.duration);
+  const bike = {
+    duration: breakdown.bike.duration,
+    distance: breakdown.bike.distance,
+    sachets: bikeSachets,
+    fluid: bikeFluid,
+  };
+
+  // T2: no sachet, but 100ml fluid
+  const t2 = {
+    duration: T2_DURATION,
+    sachets: 0,
+    fluid: 100,
+  };
+
+  // Run: reduced hydration rate
+  const runSachets = Math.max(0, Math.round(sachetsPerHour * breakdown.run.duration) - 0); // keep same rate, rely on caps
+  const runFluid = Math.round(waterPerHourRun * breakdown.run.duration);
+  const run = {
+    duration: breakdown.run.duration,
+    distance: breakdown.run.distance,
+    sachets: runSachets,
+    fluid: runFluid,
+  };
+
+  const totalSachets = swim.sachets + t1.sachets + bike.sachets + t2.sachets + run.sachets;
+  const totalFluid = swim.fluid + t1.fluid + bike.fluid + t2.fluid + run.fluid;
+
+  return {
+    swim,
+    t1,
+    bike,
+    t2,
+    run,
+    totalDuration: breakdown.total,
+    totalSachets,
+    totalFluid,
   };
 }

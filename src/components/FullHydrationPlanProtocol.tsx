@@ -60,8 +60,8 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
   const labelClass = isAdmin ? 'text-[10px] font-bold uppercase tracking-wider text-zinc-500' : 'text-xs font-bold uppercase tracking-wider text-muted-foreground';
   const valueClass = isAdmin ? 'font-bold text-zinc-200' : 'font-bold text-foreground';
   const cardClass = isAdmin ? 'rounded-lg border border-zinc-700 bg-zinc-900' : 'rounded-xl border border-primary/15 bg-primary/5';
-  const preCardClass = isAdmin ? 'rounded-lg border border-zinc-700 bg-zinc-900' : 'rounded-xl border border-brand-green/20 bg-brand-green/5';
-  const postCardClass = isAdmin ? 'rounded-lg border border-zinc-700 bg-zinc-900' : 'rounded-xl border border-brand-red/20 bg-brand-red/5';
+  const preCardClass = isAdmin ? 'rounded-lg border border-zinc-700 bg-zinc-900' : 'rounded-xl border border-primary/20 bg-primary/5';
+  const postCardClass = isAdmin ? 'rounded-lg border border-zinc-700 bg-zinc-900' : 'rounded-xl border border-primary/20 bg-muted/30';
   const duringCardClass = isAdmin ? 'rounded-lg border border-zinc-600 bg-zinc-700 text-zinc-100' : 'rounded-xl border-2 border-primary bg-primary text-primary-foreground shadow-md';
   const headingClass = isAdmin ? 'text-xs font-semibold uppercase tracking-wider text-zinc-400 flex items-center gap-2' : 'text-xs font-bold uppercase tracking-widest text-muted-foreground flex items-center gap-2';
   const sectionTitleClass = isAdmin ? 'text-[10px] font-bold uppercase tracking-wider text-zinc-500 mb-1' : 'text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1';
@@ -118,7 +118,7 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
 
       {/* PRE (green) / DURING / POST (red) – stack on mobile for readability */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 sm:gap-4">
-        <div className={`rounded-lg border-l-4 pl-3 pr-3 py-3.5 ${isAdmin ? 'border-l-brand-green/70 bg-zinc-900 border border-zinc-700' : 'border-l-brand-green border border-border bg-brand-green/[0.06]'}`}>
+        <div className={`rounded-lg border-l-4 pl-3 pr-3 py-3.5 ${isAdmin ? 'border-l-brand-green/70 bg-zinc-900 border border-zinc-700' : 'border-l-primary border border-border bg-primary/[0.06]'}`}>
           <p className={`text-[11px] uppercase tracking-wider ${isAdmin ? 'text-zinc-500' : 'text-muted-foreground'} mb-1`}>
             {pre?.timing ?? '2–4h before'}
           </p>
@@ -148,7 +148,7 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
           </div>
         )}
 
-        <div className={`rounded-lg border-l-4 pl-3 pr-3 py-3.5 ${isAdmin ? 'border-l-brand-red/70 bg-zinc-900 border border-zinc-700' : 'border-l-brand-red border border-border bg-brand-red/[0.06]'}`}>
+        <div className={`rounded-lg border-l-4 pl-3 pr-3 py-3.5 ${isAdmin ? 'border-l-brand-red/70 bg-zinc-900 border border-zinc-700' : 'border-l-muted-foreground border border-border bg-muted/20'}`}>
           <p className={`text-[11px] uppercase tracking-wider mb-1 ${isAdmin ? 'text-zinc-500' : 'text-muted-foreground'}`}>
             {post?.timing ?? 'Within 30 min'}
           </p>

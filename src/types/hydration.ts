@@ -133,12 +133,24 @@ export interface HydrationPlan {
   totalFluidLoss: number;
   recommendations: string[];
   calculationSteps: string[];
+  triathlonSegments?: TriathlonSegmentPlan;
   scientificReferences: Array<{
     pmid: string;
     title: string;
     citation: string;
     url: string;
   }>;
+}
+
+export interface TriathlonSegmentPlan {
+  swim: { duration: number; distance: number; sachets: number; fluid: number };
+  t1: { duration: number; sachets: number; fluid: number };
+  bike: { duration: number; distance: number; sachets: number; fluid: number };
+  t2: { duration: number; sachets: number; fluid: number };
+  run: { duration: number; distance: number; sachets: number; fluid: number };
+  totalDuration: number;
+  totalSachets: number;
+  totalFluid: number;
 }
 
 export interface AIEnhancedInsights {

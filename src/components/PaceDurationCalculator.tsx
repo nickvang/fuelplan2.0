@@ -10,6 +10,7 @@ interface PaceDurationCalculatorProps {
   currentPace?: string;
   onPaceChange: (pace: string) => void;
   onDurationChange: (duration: number) => void;
+  onGoalTimeChange?: (goalTime: string) => void;
 }
 
 /** Format duration in decimal hours as HH:MM:SS */
@@ -69,6 +70,7 @@ export function PaceDurationCalculator({
   currentPace,
   onPaceChange,
   onDurationChange,
+  onGoalTimeChange,
 }: PaceDurationCalculatorProps) {
   const [inputValue, setInputValue] = useState('');
   const [calculatedValue, setCalculatedValue] = useState('');
@@ -278,11 +280,31 @@ export function PaceDurationCalculator({
 
   return (
     <div className="space-y-4">
+      {/* Goal finish time */}
+      {onGoalTimeChange && (
+        <div className="space-y-2">
+          <Label htmlFor="goal-time" className="text-foreground">Goal finish time</Label>
+          <Input
+            id="goal-time"
+            type="text"
+            value={goalTime || ''}
+            onChange={(e) => onGoalTimeChange(e.target.value)}
+            placeholder="e.g., 3:30:00"
+            className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
+          />
+          {raceDistance && (
+            <p className="text-xs text-muted-foreground">
+              Pace auto-calculated from time and distance
+            </p>
+          )}
+        </div>
+      )}
+
       {/* Pace Input */}
       <div className="space-y-2">
         <div className="flex items-center gap-2">
           <Label htmlFor="pace" className="text-foreground">
-            {getPaceLabel()} *
+            {getPaceLabel()} {!goalTime && '*'}
           </Label>
           <InfoTooltip content={getPaceTooltip()} />
         </div>

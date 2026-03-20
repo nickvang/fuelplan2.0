@@ -2,16 +2,19 @@ import { useState, useEffect, useRef } from 'react';
 import { HydrationPlan, HydrationProfile, AIEnhancedInsights, SUPPLME_ELECTROLYTE_SPEC } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Droplets, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, RefreshCw, Share2, Loader2, Zap, Clock, TrendingUp, Flag, Activity, Target } from 'lucide-react';
+import { Droplets, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, RefreshCw, Loader2, Zap, Clock, TrendingUp, Flag, Activity, Target, Download } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { FullHydrationPlanProtocol } from '@/components/FullHydrationPlanProtocol';
-import supplmeLogo from '@/assets/SUPPLME(r)hvid.svg';
-import domtoimage from 'dom-to-image-more';
+import supplmeLogo from '@/assets/supplme-logo-sort.svg';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRace } from '@/contexts/RaceContext';
+import { TriathlonSegmentDisplay } from '@/components/TriathlonSegmentDisplay';
+import { MetricCard } from '@/components/MetricCard';
+import { RaceTimeline } from '@/components/RaceTimeline';
+import { generateFuelPlanImage } from '@/components/ShareCard';
 
 interface HydrationPlanDisplayProps {
   plan: HydrationPlan;
@@ -192,61 +195,29 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     }
   };
 
-  const downloadPDF = () => {
-    try {
-      // Use browser print dialog so users can "Save as PDF" with full on-screen layout
-      window.print();
-    } catch (error) {
-      console.error('Print Error:', error);
-      toast({
-        title: "Print Failed",
-        description: "Your browser could not open the print dialog.",
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleShare = async () => {
     setIsSharing(true);
     try {
-      const element = document.getElementById('share-protocol-section');
-      if (!element) {
-        throw new Error('Protocol section not found');
-      }
-
       toast({
         title: t('result.generatingImageTitle'),
         description: t('result.generatingImageDescription'),
       });
 
-      const blob = await domtoimage.toBlob(element, {
-        width: 1200,
-        height: 1400,
-        bgcolor: '#ffffff',
-        quality: 1,
-        scale: 2,
-        style: {
-          transform: 'scale(1)',
-          transformOrigin: 'top left',
-          width: '1200px',
-          height: '1400px'
-        }
-      });
+      const blob = await generateFuelPlanImage(plan, profile, distance, selectedRace);
 
-      // Create download link
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
-      link.download = `performance-protocol-${distance}km.png`;
+      link.download = `supplme-plan-${distance}km.png`;
       link.href = url;
       link.click();
       URL.revokeObjectURL(url);
 
       toast({
         title: "Image Saved!",
-        description: "Your protocol image is ready to share on Instagram, WhatsApp, or SMS!",
+        description: "Your fuel plan has been saved to your device.",
       });
-    } catch (error) {
-      console.error('Share error:', error);
+    } catch (error: any) {
+      console.error('Save error:', error);
       toast({
         title: t('result.shareFailedTitle'),
         description: t('result.shareFailedDescription'),
@@ -279,11 +250,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     <div className="space-y-6 md:space-y-10 animate-in fade-in duration-700 px-3 sm:px-4 md:px-0 min-w-0">
       {/* Epic Header - Achievement Unlocked Style */}
       <div className="relative overflow-hidden">
-        {/* Background Glow Effect - subtle brand tint */}
-        <div className="absolute inset-0 bg-gradient-to-br from-brand-red/5 via-transparent to-brand-green/5 blur-3xl" />
+        {/* Background Glow Effect */}
         <div className="absolute inset-0 bg-gradient-to-br from-chrome-light/20 via-transparent to-chrome-light/20 blur-3xl" />
         {/* Accent line */}
-        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-brand-red/80 via-primary to-brand-green/80" aria-hidden />
+        <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-primary/60 via-primary to-primary/60" aria-hidden />
         
         <div className="relative text-center space-y-4 pt-4 pb-2">
           {/* Logo with Glow */}
@@ -323,6 +293,64 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
         </div>
       </div>
+
+      {/* Quick Metrics Row — 4 key numbers */}
+      {(() => {
+        const totalSachets = plan.preActivity.electrolytes + plan.duringActivity.totalElectrolytes + plan.postActivity.electrolytes;
+        const totalFluidMl = plan.preActivity.water + Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration) + plan.postActivity.water;
+        return (
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+            <MetricCard
+              icon={<Droplets className="w-5 h-5 text-blue-500" />}
+              label="Total Fluid"
+              value={(totalFluidMl / 1000).toFixed(1)}
+              unit="L"
+              sublabel="Pre + During + Post"
+            />
+            <MetricCard
+              icon={<Zap className="w-5 h-5 text-primary" />}
+              label="Sachets"
+              value={totalSachets}
+              sublabel={`${plan.preActivity.electrolytes} pre · ${plan.duringActivity.totalElectrolytes} during · ${plan.postActivity.electrolytes} post`}
+              variant="highlight"
+            />
+            <MetricCard
+              icon={<TrendingUp className="w-5 h-5 text-amber-500" />}
+              label="ml / hour"
+              value={safeNumber(plan.duringActivity.waterPerHour)}
+              unit="ml"
+              sublabel="During activity"
+            />
+            <MetricCard
+              icon={<Clock className="w-5 h-5 text-green-500" />}
+              label="Duration"
+              value={formatHoursAsTime(profile.sessionDuration)}
+              sublabel={profile.disciplines?.[0] || 'Activity'}
+            />
+          </div>
+        );
+      })()}
+
+      {/* Safety Indicators */}
+      {(() => {
+        const warnings: { color: string; text: string }[] = [];
+        const tempMax = profile.raceTempRange?.max ?? 20;
+        if (tempMax >= 30) warnings.push({ color: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20', text: `🌡️ Extreme heat (${tempMax}°C) — increase fluid intake and monitor for heat illness` });
+        else if (tempMax >= 25) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: `🌡️ Warm conditions (${tempMax}°C) — stay ahead of fluid losses` });
+        if (profile.sessionDuration >= 4) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: '⏱️ Long-duration event — sodium losses accumulate; stick to sachet schedule' });
+        if (profile.altitudeMeters > 1500) warnings.push({ color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20', text: `🏔️ Altitude (${profile.altitudeMeters}m) — increased respiratory water loss factored in` });
+        if (plan.safetyFlags?.maxAmountApplied) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: '⚠️ Maximum safe intake limits applied — do not exceed recommended amounts' });
+        if (warnings.length === 0) warnings.push({ color: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20', text: '✅ Conditions within normal range — standard protocol applies' });
+        return (
+          <div className="space-y-2">
+            {warnings.map((w, i) => (
+              <div key={i} className={`flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-medium ${w.color}`}>
+                {w.text}
+              </div>
+            ))}
+          </div>
+        );
+      })()}
 
       {/* Race Conditions Header + Map (only when a certified race is selected) */}
       {selectedRace && (
@@ -377,25 +405,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             </div>
           </Card>
 
-          <Card className="overflow-hidden rounded-2xl border border-border/60 bg-card">
-            <div className="p-3 md:p-4 border-b border-border/60">
-              <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                Race Location
-              </p>
-              <p className="text-sm font-medium text-foreground">
-                {selectedRace.location}
-              </p>
-            </div>
-            <div className="h-[260px] sm:h-[300px]">
-              <iframe
-                title={`Race location map for ${selectedRace.name}`}
-                src={`https://maps.google.com/maps?q=${selectedRace.lat},${selectedRace.lng}&z=11&output=embed`}
-                className="w-full h-full border-0"
-                loading="lazy"
-                referrerPolicy="no-referrer-when-downgrade"
-              />
-            </div>
-          </Card>
         </div>
       )}
 
@@ -413,210 +422,29 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       {/* Full hydration plan – compact Race Day hidden here (expanded section below) */}
       <FullHydrationPlanProtocol plan={plan} profile={profile} variant="user" hideCompactRaceDay />
 
-      {/* Hidden Export Version - Fixed size for image generation */}
-      <div 
-        id="share-protocol-section" 
-        style={{ 
-          position: 'fixed',
-          left: '-9999px',
-          top: '0',
-          width: '1200px',
-          height: '1400px',
-          background: '#ffffff',
-          padding: '60px',
-          boxSizing: 'border-box',
-          fontFamily: 'system-ui, -apple-system, sans-serif'
-        }}
-      >
-        {/* Header - ultra clean, no boxes */}
-        <div style={{ 
-          padding: '20px 0 40px 0',
-          marginBottom: '20px',
-          textAlign: 'center'
-        }}>
-          <div style={{ marginBottom: '24px' }}>
-            <h1 style={{ 
-              color: '#000000',
-              fontSize: '52px',
-              fontWeight: '900',
-              margin: '0',
-              letterSpacing: '3px',
-              textTransform: 'uppercase',
-              lineHeight: '1.1'
-            }}>
-              YOUR PERFORMANCE PROTOCOL
-            </h1>
-          </div>
-          <div style={{ marginBottom: '16px' }}>
-            <p style={{
-              color: '#000000',
-              fontSize: '64px',
-              fontWeight: '900',
-              margin: '0'
-            }}>
-              {distance} KM
-            </p>
-          </div>
-          <div>
-            <p style={{
-              color: '#000000',
-              fontSize: '24px',
-              fontWeight: '700',
-              margin: '0',
-              textTransform: 'uppercase',
-              letterSpacing: '2px',
-              opacity: '0.9'
-            }}>
-              {formatHoursAsTime(profile.sessionDuration)} {profile.disciplines?.[0] || 'Activity'} Session
-            </p>
-          </div>
-        </div>
+      {/* Triathlon Segment Breakdown */}
+      {plan.triathlonSegments && (
+        <TriathlonSegmentDisplay segments={plan.triathlonSegments} />
+      )}
 
-        {/* Three Columns - clean cards, no inner boxes */}
-        <div style={{ display: 'flex', gap: '30px' }}>
-          {/* PRE */}
-          <div style={{ flex: '1', background: '#ffffff', padding: '20px 0' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ 
-                fontSize: '13px', 
-                fontWeight: '700', 
-                color: '#888888', 
-                margin: '0 0 6px 0',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                2-4 HOURS BEFORE
-              </p>
-              <h2 style={{ 
-                fontSize: '40px', 
-                fontWeight: '900', 
-                color: '#000000', 
-                margin: '0',
-                lineHeight: '1.1'
-              }}>
-                PRE
-              </h2>
-            </div>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>WATER</p>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>{plan.preActivity.water} ml</p>
-            <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 16px 0' }}>Drink 2 hours before</p>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>SUPPLME SACHET (30ML)</p>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 12px 0' }}>{plan.preActivity.electrolytes}x</p>
-            <p style={{ 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              color: '#666666', 
-              margin: '16px 0 0 0',
-              lineHeight: '1.4'
-            }}>
-              ⚡ Prime your body with optimal fluid balance before you start
-            </p>
-          </div>
+      {/* Race Timeline */}
+      <RaceTimeline plan={plan} profile={profile} />
 
-          {/* DURING */}
-          {!(profile.disciplines?.includes('Swimming') && profile.hasUpcomingRace) && (
-          <div style={{ flex: '1', background: '#ffffff', padding: '20px 0' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ 
-                fontSize: '13px', 
-                fontWeight: '700', 
-                color: '#888888', 
-                margin: '0 0 6px 0',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                EVERY 12-15 MINUTES
-              </p>
-              <h2 style={{ 
-                fontSize: '40px', 
-                fontWeight: '900', 
-                color: '#000000', 
-                margin: '0',
-                lineHeight: '1.1'
-              }}>
-                DURING
-              </h2>
-            </div>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>TOTAL WATER</p>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>
-              {safeNumber(plan.duringActivity.waterPerHour) > 0 
-                ? `${Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration)} ml` 
-                : 'As needed'}
-            </p>
-            {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
-              <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 12px 0' }}>
-                {safeNumber(plan.duringActivity.waterPerHour)} ml per hour • Sip every 12-15 minutes
-              </p>
-            )}
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>TOTAL SUPPLME SACHETS</p>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 12px 0' }}>
-              {plan.duringActivity.totalElectrolytes > 0 
-                ? plan.duringActivity.totalElectrolytes
-                : 'Not required'}
-            </p>
-            <p style={{ 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              color: '#666666', 
-              margin: '16px 0 0 0',
-              lineHeight: '1.4'
-            }}>
-              ⚡ {profile.disciplines?.includes('Running') ? 'Practical approach: Most runners carry minimal water' : 'Maintain performance throughout'}
-            </p>
-            {profile.disciplines?.includes('Running') && (
-              <p style={{ 
-                fontSize: '11px', 
-                fontWeight: '500', 
-                color: '#777777', 
-                margin: '10px 0 0 0',
-                lineHeight: '1.4'
-              }}>
-                Sachets are easy to carry • Water recommendations match typical carrying capacity
-              </p>
-            )}
-          </div>
+      {/* Save to Device + Share */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Button
+          onClick={handleShare}
+          disabled={isSharing}
+          size="lg"
+          className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
+        >
+          {isSharing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
           )}
-
-          {/* POST */}
-          <div style={{ flex: '1', background: '#ffffff', padding: '20px 0' }}>
-            <div style={{ marginBottom: '16px' }}>
-              <p style={{ 
-                fontSize: '13px', 
-                fontWeight: '700', 
-                color: '#888888', 
-                margin: '0 0 6px 0',
-                textTransform: 'uppercase',
-                letterSpacing: '1px'
-              }}>
-                400ML WITHIN 30 MINUTES, REMAINDER OVER 2-4 HOURS
-              </p>
-              <h2 style={{ 
-                fontSize: '40px', 
-                fontWeight: '900', 
-                color: '#000000', 
-                margin: '0',
-                lineHeight: '1.1'
-              }}>
-                POST
-              </h2>
-            </div>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>WATER (150% OF LOSS)</p>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>{safeNumber(plan.postActivity.water)} ml</p>
-            <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 12px 0' }}>Over 4-6 hours</p>
-            <p style={{ fontSize: '13px', fontWeight: '700', color: '#888888', margin: '0 0 4px 0', textTransform: 'uppercase' }}>SUPPLME SACHET</p>
-            <p style={{ fontSize: '32px', fontWeight: '900', color: '#000000', margin: '0 0 4px 0' }}>{safeNumber(plan.postActivity.electrolytes)}x</p>
-            <p style={{ fontSize: '13px', fontWeight: '500', color: '#666666', margin: '0 0 12px 0' }}>With water intake</p>
-            <p style={{ 
-              fontSize: '13px', 
-              fontWeight: '600', 
-              color: '#666666', 
-              margin: '16px 0 0 0',
-              lineHeight: '1.4'
-            }}>
-              ⚡ Accelerate recovery and restore your body to peak condition
-            </p>
-          </div>
-        </div>
+          {isSharing ? 'Generating...' : 'Save to Device'}
+        </Button>
       </div>
 
       {/* 3. The Science Behind Your Sachet Dosing (collapsible) */}
@@ -808,8 +636,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               )}
               {aiInsights && !loadingInsights && (
                 <Card className="mt-3 border-0 shadow-2xl bg-gradient-to-br from-card via-card to-primary/5 overflow-hidden">
-                  <div className="absolute top-0 right-0 w-96 h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-                  <div className="relative p-8 md:p-10 space-y-6">
+                  <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
+                  <div className="relative p-4 sm:p-8 md:p-10 space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
@@ -850,7 +678,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         <div className="w-10 h-10 rounded-xl bg-primary/20 flex items-center justify-center">
                           <Activity className="w-5 h-5 text-primary" />
                         </div>
-                        <h3 className="text-xl font-bold">Your Profile vs. Average Athlete</h3>
+                        <h3 className="text-lg sm:text-xl font-bold">Your Profile vs. Average Athlete</h3>
                       </div>
                       <div className="space-y-5">
                         <div className="space-y-2">

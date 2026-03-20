@@ -7,7 +7,7 @@ import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Loader2 } from 'lucide-react';
-import supplmeLogo from '@/assets/SUPPLME(r)hvid.svg';
+import supplmeLogo from '@/assets/supplme-logo-sort.svg';
 
 export default function Auth() {
   const [email, setEmail] = useState('');

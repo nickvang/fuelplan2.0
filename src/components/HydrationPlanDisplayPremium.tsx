@@ -2,7 +2,7 @@ import { HydrationPlan, HydrationProfile } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Droplets, TrendingUp, Activity, Zap, Award, Shield } from 'lucide-react';
-import supplmeLogo from '@/assets/SUPPLME(r)hvid.svg';
+import supplmeLogo from '@/assets/supplme-logo-sort.svg';
 
 interface Props {
   plan: HydrationPlan;

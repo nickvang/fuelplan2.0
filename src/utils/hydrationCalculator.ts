@@ -1,4 +1,5 @@
 import { HydrationProfile, HydrationPlan, SUPPLME_ELECTROLYTE_SPEC } from '@/types/hydration';
+import { getTriathlonSegmentPlan } from '@/utils/triathlonCalculator';
 
 export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
   if (import.meta.env.DEV) {
@@ -548,6 +549,19 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     recommendations.push(`🏊 Triathlon: You cannot take electrolyte sachets while swimming. Your ${totalDuringSachets} during-activity sachets are for bike and run only (calculated excluding swim time). Pre-load with 1 sachet before the start; take the rest in T1, on the bike, in T2, and on the run.`);
   }
 
+  // ====== 7. TRIATHLON SEGMENT PLAN ======
+  let triathlonSegments = undefined;
+  if (primaryDiscipline === 'Triathlon') {
+    // Bike gets full cycling rate; run gets the running rate from duringWaterPerHour
+    const bikeWaterPerHour = Math.min(700, Math.max(400, Math.round((sweatRatePerHour * 0.40) / 10) * 10));
+    const runWaterPerHour = duringWaterPerHour; // already computed for running context
+    const segmentPlan = getTriathlonSegmentPlan(profile, sachetsPerHour, bikeWaterPerHour, runWaterPerHour);
+    if (segmentPlan) {
+      triathlonSegments = segmentPlan;
+      calculationSteps.push(`Triathlon segments: Swim ${Math.round(segmentPlan.swim.duration * 60)}min, T1 ${Math.round(segmentPlan.t1.duration * 60)}min, Bike ${Math.round(segmentPlan.bike.duration * 60)}min (${segmentPlan.bike.sachets} sachets, ${segmentPlan.bike.fluid}ml), T2 ${Math.round(segmentPlan.t2.duration * 60)}min, Run ${Math.round(segmentPlan.run.duration * 60)}min (${segmentPlan.run.sachets} sachets, ${segmentPlan.run.fluid}ml)`);
+    }
+  }
+
   return {
     preActivity: {
       timing: '2-4 hours before',
@@ -566,6 +580,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
       timing: `${postImmediate}ml within 30 minutes, remainder over 2-4 hours`,
     },
     totalFluidLoss: totalFluidLoss || 0,
+    triathlonSegments,
     recommendations,
     calculationSteps,
     scientificReferences: [

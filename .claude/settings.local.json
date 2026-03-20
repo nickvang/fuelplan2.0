@@ -20,7 +20,13 @@
       "Bash(supabase projects:*)",
       "Bash(supabase db:*)",
       "Bash(supabase functions:*)",
-      "Bash(vercel link:*)"
+      "Bash(vercel link:*)",
+      "WebSearch",
+      "Bash(grep -c '\"\"id\"\":' /Users/nicklasvang/Documents/fuelplan2.0-main/src/data/racesDatabase.js)",
+      "Bash(npx tsc:*)",
+      "Bash(curl -s http://localhost:8082/src/components/ActivityRaceSelector.tsx)",
+      "Bash(curl -s \"http://localhost:8080/src/index.css\")",
+      "Bash(curl -s \"http://localhost:8080/auth\")"
     ]
   }
 }

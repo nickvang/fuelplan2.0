@@ -3,7 +3,7 @@ import { HydrationProfile } from '@/types/hydration';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import { validateAndSanitizeProfile } from '@/utils/profileValidation';
 import { parseSmartWatchFiles } from '@/utils/garminDataParser';
-import { calculateTriathlonDuration, getTriathlonBreakdown, TRIATHLON_DISTANCES } from '@/utils/triathlonCalculator';
+import { calculateTriathlonDuration, getTriathlonBreakdown, TRIATHLON_DISTANCES, T1_DURATION, T2_DURATION } from '@/utils/triathlonCalculator';
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
@@ -11,6 +11,8 @@ import { InfoTooltip } from '@/components/InfoTooltip';
 import { ValidationWarning, getValidationWarnings } from '@/components/ValidationWarning';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
 import { PaceDurationCalculator } from '@/components/PaceDurationCalculator';
+import { DataSourceSelector, DataSource } from '@/components/DataSourceSelector';
+import { ActivityRaceSelector } from '@/components/ActivityRaceSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRace, Race } from '@/contexts/RaceContext';
 import { RaceSelector } from '@/components/RaceSelector';
@@ -24,9 +26,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ListOrdered } from 'lucide-react';
-import supplmeLogo from '@/assets/SUPPLME(r)hvid.svg';
-import { STRAVA_PREFILL_KEY, STRAVA_STATE_KEY } from './StravaCallback';
-import { GARMIN_STATE_KEY, GARMIN_PREFILL_KEY, GARMIN_CODE_VERIFIER_KEY } from './GarminCallback';
+import supplmeLogo from '@/assets/supplme-logo-sort.svg';
+import { STRAVA_PREFILL_KEY, STRAVA_STATE_KEY, STRAVA_ERROR_KEY } from './StravaCallback';
+import { GARMIN_STATE_KEY, GARMIN_PREFILL_KEY, GARMIN_CODE_VERIFIER_KEY, GARMIN_ERROR_KEY } from './GarminCallback';
 
 const generateStravaState = () => {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
@@ -47,9 +49,11 @@ async function generatePKCE() {
 }
 
 const Index = () => {
+  console.log('[Index] component rendering');
   const { t } = useLanguage();
   const { selectedRace, setSelectedRace } = useRace();
   const [version, setVersion] = useState<'pro' | null>('pro'); // Single flow (no Quick/Pro choice)
+  const [dataSource, setDataSource] = useState<DataSource | null>(null);
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
@@ -86,9 +90,9 @@ const Index = () => {
     };
   }, []);
 
-  // Simplified UI step indicator (3-step UX on top of existing logic)
-  const uiStep = step === 0 ? 1 : step >= 1 && step <= 3 ? 2 : 3;
-  const uiTotalSteps = 3;
+  // 4-page UX: Source+Body → Activity+Race → Sweat → Diet
+  const uiStep = step + 1; // step 0→1, 1→2, 2→3, 3→4
+  const uiTotalSteps = 4;
 
   // Scroll so the step card / main content is at top of viewport on every view change.
   useEffect(() => {
@@ -106,6 +110,8 @@ const Index = () => {
         document.getElementById('results-page')?.scrollIntoView({ block: 'start', behavior: 'instant' });
       } else if (step === 0) {
         document.getElementById('step-0-content')?.scrollIntoView({ block: 'start', behavior: 'instant' });
+      } else if (step === 1) {
+        document.getElementById('step-1-content')?.scrollIntoView({ block: 'start', behavior: 'instant' });
       } else {
         document.getElementById('questionnaire-step')?.scrollIntoView({ block: 'start', behavior: 'instant' });
       }
@@ -131,10 +137,13 @@ const Index = () => {
       sessionStorage.removeItem(STRAVA_PREFILL_KEY);
       localStorage.removeItem(STRAVA_PREFILL_KEY);
       if (prefill && typeof prefill === 'object') {
-        const accuracyKeys = ['fullName', 'age', 'sex', 'height', 'weight', 'restingHeartRate'] as const;
+        const prefillKeys = ['fullName', 'age', 'sex', 'height', 'weight', 'restingHeartRate', 'sessionDuration', 'indoorOutdoor'] as const;
         const filtered: Partial<HydrationProfile> = {};
-        for (const k of accuracyKeys) {
+        for (const k of prefillKeys) {
           if (prefill[k] !== undefined && prefill[k] !== null) filtered[k] = prefill[k] as never;
+        }
+        if (Array.isArray(prefill.disciplines) && prefill.disciplines.length > 0) {
+          filtered.disciplines = prefill.disciplines;
         }
         if (Object.keys(filtered).length > 0) {
           setProfile((prev) => ({ ...prev, ...filtered }));
@@ -142,7 +151,10 @@ const Index = () => {
         if (prefill.hrProfile && typeof prefill.hrProfile === 'object') {
           setProfile((prev) => ({ ...prev, hrProfile: prefill.hrProfile as any }));
         }
-        if (strava_snapshot) setStravaSnapshot(strava_snapshot);
+        if (strava_snapshot) {
+          setStravaSnapshot(strava_snapshot);
+          setDataSource('strava');
+        }
         toast.success(t('strava.connected'));
       }
     } catch {
@@ -158,9 +170,9 @@ const Index = () => {
       params.delete('strava');
       const newSearch = params.toString();
       window.history.replaceState({}, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
-      const detail = sessionStorage.getItem('strava_error_message') || localStorage.getItem('strava_error_message');
-      sessionStorage.removeItem('strava_error_message');
-      localStorage.removeItem('strava_error_message');
+      const detail = sessionStorage.getItem(STRAVA_ERROR_KEY) || localStorage.getItem(STRAVA_ERROR_KEY);
+      sessionStorage.removeItem(STRAVA_ERROR_KEY);
+      localStorage.removeItem(STRAVA_ERROR_KEY);
       toast.error(detail || t('strava.error'));
       return;
     }
@@ -177,6 +189,7 @@ const Index = () => {
       localStorage.removeItem(GARMIN_PREFILL_KEY);
       if (garmin_snapshot) {
         setGarminSnapshot(garmin_snapshot);
+        setDataSource('garmin');
         toast.success(t('garmin.connected'));
       }
       if (connectionId) {
@@ -216,9 +229,9 @@ const Index = () => {
       params.delete('garmin');
       const newSearch = params.toString();
       window.history.replaceState({}, '', window.location.pathname + (newSearch ? `?${newSearch}` : ''));
-      const detail = sessionStorage.getItem('garmin_error_message') || localStorage.getItem('garmin_error_message');
-      sessionStorage.removeItem('garmin_error_message');
-      localStorage.removeItem('garmin_error_message');
+      const detail = sessionStorage.getItem(GARMIN_ERROR_KEY) || localStorage.getItem(GARMIN_ERROR_KEY);
+      sessionStorage.removeItem(GARMIN_ERROR_KEY);
+      localStorage.removeItem(GARMIN_ERROR_KEY);
       toast.error(detail || t('garmin.error'));
       return;
     }
@@ -262,6 +275,11 @@ const Index = () => {
             if (prefill.bodyFat != null) updates.bodyFat = prefill.bodyFat;
             if (prefill.restingHeartRate != null) updates.restingHeartRate = prefill.restingHeartRate;
             if (prefill.sleepHours != null) updates.sleepHours = prefill.sleepHours;
+            if (prefill.sessionDuration != null) updates.sessionDuration = prefill.sessionDuration;
+            if (prefill.indoorOutdoor) updates.indoorOutdoor = prefill.indoorOutdoor;
+            if (Array.isArray(prefill.disciplines) && prefill.disciplines.length > 0) {
+              updates.disciplines = prefill.disciplines;
+            }
             if (Object.keys(updates).length > 0) {
               setProfile((prev) => ({ ...prev, ...updates }));
             }
@@ -302,10 +320,11 @@ const Index = () => {
   });
 
   const updateProfile = (updates: Partial<HydrationProfile>) => {
-    const newProfile = { ...profile, ...updates };
-    setProfile(newProfile);
-    // Update validation warnings on profile change
-    setValidationWarnings(getValidationWarnings(newProfile));
+    setProfile((prev) => {
+      const newProfile = { ...prev, ...updates };
+      setValidationWarnings(getValidationWarnings(newProfile));
+      return newProfile;
+    });
   };
 
   // Persist key body data in localStorage so returning users are pre-filled
@@ -374,11 +393,41 @@ const Index = () => {
         ? `${race.distance_km.toFixed(0)} km`
         : `${race.distance_km.toFixed(1)} km`;
 
+    // Map race surface to terrain value
+    const surfaceToTerrain: Record<string, string> = {
+      road: race.sport === 'cycling' ? 'road-bike' : 'road',
+      trail: race.sport === 'cycling' ? 'mountain-bike' : 'trail',
+      gravel: race.sport === 'cycling' ? 'gravel-bike' : 'gravel',
+      mixed: race.sport === 'cycling' ? 'mixed-cycling' : 'mixed',
+      track: 'track',
+    };
+    const terrain = race.sport === 'triathlon'
+      ? 'road-triathlon'
+      : surfaceToTerrain[race.surface] || (race.sport === 'cycling' ? 'road-bike' : 'road');
+
+    // Estimate session duration from distance if not already set
+    let estimatedDuration: Partial<HydrationProfile> = {};
+    if (!profile.sessionDuration && race.distance_km) {
+      let estimatedHours: number | undefined;
+      const primaryDiscipline = profile.disciplines?.[0] || '';
+      if (primaryDiscipline === 'Running') {
+        const paceMinPerKm = 5.5; // default moderate race pace
+        estimatedHours = (race.distance_km * paceMinPerKm) / 60;
+      } else if (primaryDiscipline === 'Cycling') {
+        const speedKmh = 28; // moderate gran fondo speed
+        estimatedHours = race.distance_km / speedKmh;
+      }
+      if (estimatedHours && isFinite(estimatedHours)) {
+        estimatedDuration = { sessionDuration: estimatedHours };
+      }
+    }
+
     updateProfile({
       hasUpcomingRace: true,
       upcomingEvents: race.name,
       raceDistance: distanceLabel,
       elevationGain: race.elevation_gain_m,
+      terrain,
       trainingTempRange: {
         min: race.typical_temp_c.min,
         max: race.typical_temp_c.max,
@@ -391,24 +440,11 @@ const Index = () => {
       altitude,
       altitudeMeters: finishAlt,
       indoorOutdoor: 'outdoor',
+      sunExposure: 'partial',
+      windConditions: 'moderate',
+      clothingType: 'light',
+      ...estimatedDuration,
     } as Partial<HydrationProfile>);
-
-    // If session duration is not set, roughly estimate from distance for running / cycling
-    if (!profile.sessionDuration && race.distance_km) {
-      let estimatedHours: number | undefined;
-      const primaryDiscipline = profile.disciplines?.[0] || '';
-      if (primaryDiscipline === 'Running') {
-        // Rough marathon / ultra pacing
-        const paceMinPerKm = 5.5; // default moderate race pace
-        estimatedHours = (race.distance_km * paceMinPerKm) / 60;
-      } else if (primaryDiscipline === 'Cycling') {
-        const speedKmh = 28; // moderate gran fondo speed
-        estimatedHours = race.distance_km / speedKmh;
-      }
-      if (estimatedHours && isFinite(estimatedHours)) {
-        updateProfile({ sessionDuration: estimatedHours } as Partial<HydrationProfile>);
-      }
-    }
 
     // If no race temp range previously set, also mirror into training temp range
     if (!profile.trainingTempRange) {
@@ -464,47 +500,42 @@ const Index = () => {
     }
   };
 
-  // Strava-connected users get a short flow: only Sweat + Nutrition (2 steps after step 0)
-  const stravaShortFlow = !!version && !!stravaSnapshot;
+  // Strava/Garmin-connected users: body data comes from the platform
+  const stravaShortFlow = !!version && (!!stravaSnapshot || !!garminSnapshot);
 
-  // Get next step. Full flow: 0→1→2→3→4→done. Short flow: 0→1→2→done.
+  // 4-page flow: 0(source+body) → 1(activity+race+env) → 2(sweat) → 3(diet) → done
   const getNextStep = (currentStep: number): number => {
-    if (stravaShortFlow) {
-      if (currentStep === 0) return 1;
-      if (currentStep === 1) return 2;
-      if (currentStep === 2) return 999;
-      return 999;
-    }
-    let nextStep = currentStep + 1;
-    while (nextStep <= 4 && shouldSkipStep(nextStep)) nextStep++;
-    return nextStep > 4 ? 999 : nextStep;
+    if (currentStep === 0) return 1;
+    if (currentStep === 1) return 2;
+    if (currentStep === 2) return 3;
+    if (currentStep === 3) return 999;
+    return 999;
   };
 
   const isStepValid = (): boolean => {
-    const result = (() => {
-      if (stravaShortFlow) {
-        if (step === 0) return version !== null && consentGiven && !!(profile.disciplines?.length && profile.terrain && profile.raceDistance);
-        if (step === 1) return !!(profile.sweatRate && profile.sweatSaltiness);
-        if (step === 2) return !!(profile.dailySaltIntake);
+    switch (step) {
+      case 0: { // Data source + consent + body (manual needs body fields)
+        if (!consentGiven) return false;
+        if (dataSource === 'strava') return !!stravaSnapshot;
+        if (dataSource === 'garmin') return !!garminSnapshot;
+        if (dataSource === 'manual') return !!(profile.age && profile.sex && profile.height && profile.weight);
         return false;
       }
-      switch (step) {
-        case 0:
-          return version !== null && consentGiven && !!(profile.disciplines?.length && profile.terrain && profile.raceDistance);
-        case 1:
-          return !!(profile.age && profile.sex && profile.height && profile.weight);
-        case 2:
-          return !!(profile.trainingTempRange && profile.humidity !== undefined && profile.altitude &&
-            profile.sunExposure && profile.windConditions && profile.clothingType);
-        case 3:
-          return !!(profile.sweatRate && profile.sweatSaltiness);
-        case 4:
-          return !!(profile.dailySaltIntake);
-        default:
-          return false;
-      }
-    })();
-    return result;
+      case 1: // Activity & Race + environment
+        if (!profile.disciplines?.length || !profile.raceDistance) return false;
+        // Race selected: conditions auto-filled from race data, no manual fields needed
+        if (selectedRace) return true;
+        // Custom: require terrain + all condition fields
+        return !!(profile.terrain &&
+          profile.humidity !== undefined && profile.altitude &&
+          profile.sunExposure && profile.windConditions && profile.clothingType);
+      case 2: // Sweat Profile
+        return !!(profile.sweatRate && profile.sweatSaltiness);
+      case 3: // Dietary Habits
+        return !!(profile.dailySaltIntake);
+      default:
+        return false;
+    }
   };
 
   const handleNextStep = async () => {
@@ -611,6 +642,7 @@ const Index = () => {
 
   const handleReset = () => {
     setVersion('pro');
+    setDataSource(null);
     setStep(0);
     setShowPlan(false);
     setIsGenerating(false);
@@ -678,6 +710,8 @@ const Index = () => {
     }
   };
 
+  console.log('[Index] render path: isGenerating=', isGenerating, 'showPlan=', showPlan, 'step=', step);
+
   // Show generating animation
   if (isGenerating) {
     return (
@@ -707,9 +741,9 @@ const Index = () => {
             </p>
           </div>
           <div className="flex items-center justify-center gap-4">
-            <div className="w-4 h-4 bg-brand-red rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-4 h-4 bg-primary rounded-full animate-bounce shadow-lg" style={{ animationDelay: '0ms' }}></div>
             <div className="w-4 h-4 bg-chrome rounded-full animate-bounce shimmer shadow-lg" style={{ animationDelay: '150ms' }}></div>
-            <div className="w-4 h-4 bg-brand-green rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
+            <div className="w-4 h-4 bg-primary rounded-full animate-bounce shadow-lg" style={{ animationDelay: '300ms' }}></div>
           </div>
         </div>
       </div>
@@ -744,7 +778,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen min-w-0 bg-gradient-to-br from-brand-red/[0.04] via-background to-brand-green/[0.06] relative overflow-x-hidden pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-12 px-3 sm:px-4">
+    <div className="min-h-screen min-w-0 bg-background relative overflow-x-hidden pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-12 px-3 sm:px-4">
       {/* Athletic background pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -769,20 +803,15 @@ const Index = () => {
             )}
             <LanguageSwitcher />
           </div>
-          <div className="relative inline-block group">
-            <div className="absolute inset-0 glow-effect blur-3xl opacity-20 group-hover:opacity-30 transition-opacity duration-500"></div>
-            <img src={supplmeLogo} alt="Supplme" className="h-28 sm:h-36 md:h-48 mx-auto relative z-10 transition-transform duration-300 group-hover:scale-105 max-w-full" />
-          </div>
-          <div className="space-y-2 -mt-2 px-1">
-            <h1 className="text-2xl sm:text-4xl md:text-6xl font-black tracking-tighter chrome-shine uppercase break-words">
+          <img src={supplmeLogo} alt="Supplme" className="h-24 sm:h-32 mx-auto max-w-full" />
+          <div className="space-y-1 mt-3 px-1">
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               {t('app.title')}
             </h1>
             {step === 0 && (
-              <>
-                <p className="text-sm sm:text-lg md:text-xl font-semibold text-muted-foreground max-w-lg mx-auto leading-relaxed px-1">
-                  {t('app.subtitle')}
-                </p>
-              </>
+              <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
+                {t('app.subtitle')}
+              </p>
             )}
           </div>
 
@@ -836,11 +865,36 @@ const Index = () => {
           </div>
         )}
 
-        {/* STEP 0: Strava card, Smartwatch card, then activity card, consent, start */}
+        {/* STEP 0: Data Source Selection */}
         {step === 0 && !isAnalyzing && (
           <div id="step-0-content" key="step-0" className="animate-in fade-in duration-300 space-y-4">
             <div className="py-2 sm:py-4 space-y-4">
-              {/* Card 1: Connect with Strava */}
+              <DataSourceSelector
+                selectedSource={dataSource}
+                onSelectSource={(source) => {
+                  setDataSource(source);
+                  if (source === 'strava' && !stravaSnapshot) {
+                    document.getElementById('strava-connect-trigger')?.click();
+                  } else if (source === 'garmin' && !garminSnapshot) {
+                    document.getElementById('garmin-connect-trigger')?.click();
+                  }
+                }}
+                consentGiven={consentGiven}
+                onConsentChange={(consent) => setConsentGiven(consent)}
+                stravaConnected={!!stravaSnapshot}
+                garminConnected={!!garminSnapshot}
+                onStravaConnect={() => document.getElementById('strava-connect-trigger')?.click()}
+                onGarminConnect={() => document.getElementById('garmin-connect-trigger')?.click()}
+                hasStravaConfig={!!import.meta.env.VITE_STRAVA_CLIENT_ID}
+                hasGarminConfig={!!import.meta.env.VITE_GARMIN_CLIENT_ID}
+                smartwatchFiles={smartwatchData}
+                onSmartWatchFilesChange={setSmartWatchData}
+                profile={profile}
+                onUpdateProfile={updateProfile}
+              />
+
+              {/* Hidden OAuth triggers - preserves existing Strava/Garmin OAuth popup logic */}
+              <div className="hidden">
               <div className="bg-muted/40 p-3 sm:p-4 rounded-xl">
                 <div className="flex items-center gap-2 mb-1">
                   <span className="flex-shrink-0 w-7 h-7 rounded-md bg-[#FC4C02] flex items-center justify-center" aria-hidden>
@@ -865,17 +919,17 @@ const Index = () => {
 
                   return hasStravaConfig ? (
                     <Button
+                      id="strava-connect-trigger"
                       type="button"
                       variant="outline"
                       className="w-full sm:w-auto border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/70"
                       onClick={() => {
                         const state = generateStravaState();
 
-                        // Store state in both sessionStorage and localStorage for mobile reliability
+                        // Store state in both sessionStorage and localStorage
+                        // sessionStorage is per-window, so popups can't read it — localStorage is needed for desktop popup flow too
                         sessionStorage.setItem(STRAVA_STATE_KEY, state);
-                        if (isMobile) {
-                          localStorage.setItem(STRAVA_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
-                        }
+                        localStorage.setItem(STRAVA_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
 
                         const params = new URLSearchParams({
                           client_id: String(clientId),
@@ -925,9 +979,9 @@ const Index = () => {
                               applyStravaPrefill();
                             } else {
                               // Check for error stored by StravaCallback
-                              const errMsg = sessionStorage.getItem('strava_error_message') || localStorage.getItem('strava_error_message');
-                              sessionStorage.removeItem('strava_error_message');
-                              localStorage.removeItem('strava_error_message');
+                              const errMsg = sessionStorage.getItem(STRAVA_ERROR_KEY) || localStorage.getItem(STRAVA_ERROR_KEY);
+                              sessionStorage.removeItem(STRAVA_ERROR_KEY);
+                              localStorage.removeItem(STRAVA_ERROR_KEY);
                               if (errMsg) {
                                 toast.error(errMsg);
                               }
@@ -978,6 +1032,7 @@ const Index = () => {
 
                   return hasGarminConfig ? (
                     <Button
+                      id="garmin-connect-trigger"
                       type="button"
                       variant="outline"
                       className="w-full sm:w-auto border-blue-500/50 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/70"
@@ -986,9 +1041,7 @@ const Index = () => {
                         const { verifier, challenge } = await generatePKCE();
 
                         sessionStorage.setItem(GARMIN_STATE_KEY, state);
-                        if (isMobile) {
-                          localStorage.setItem(GARMIN_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
-                        }
+                        localStorage.setItem(GARMIN_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
                         // Store code_verifier in localStorage (survives popup boundary)
                         localStorage.setItem(GARMIN_CODE_VERIFIER_KEY, verifier);
 
@@ -999,6 +1052,7 @@ const Index = () => {
                           code_challenge_method: 'S256',
                           redirect_uri: garminRedirectUri,
                           state,
+                          scope: 'GHS_DAILIES GHS_ACTIVITIES GHS_BODY_COMPOSITIONS GHS_USER_PROFILE',
                         });
 
                         const authUrl = `https://connect.garmin.com/oauth2Confirm?${params.toString()}`;
@@ -1037,9 +1091,9 @@ const Index = () => {
                             if (sessionStorage.getItem(GARMIN_PREFILL_KEY)) {
                               applyGarminPrefill();
                             } else {
-                              const errMsg = sessionStorage.getItem('garmin_error_message') || localStorage.getItem('garmin_error_message');
-                              sessionStorage.removeItem('garmin_error_message');
-                              localStorage.removeItem('garmin_error_message');
+                              const errMsg = sessionStorage.getItem(GARMIN_ERROR_KEY) || localStorage.getItem(GARMIN_ERROR_KEY);
+                              sessionStorage.removeItem(GARMIN_ERROR_KEY);
+                              localStorage.removeItem(GARMIN_ERROR_KEY);
                               if (errMsg) {
                                 toast.error(errMsg);
                               }
@@ -1486,14 +1540,26 @@ const Index = () => {
                     {(() => {
                       const breakdown = getTriathlonBreakdown(profile);
                       if (breakdown) {
-                        const hours = Math.floor(breakdown.total);
-                        const remainingMinutes = (breakdown.total % 1) * 60;
-                        const minutes = Math.floor(remainingMinutes);
-                        const seconds = Math.round((remainingMinutes % 1) * 60);
+                        const fmtDuration = (h: number) => {
+                          const hrs = Math.floor(h);
+                          const rm = (h - hrs) * 60;
+                          const mins = Math.floor(rm);
+                          const secs = Math.round((rm - mins) * 60);
+                          return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+                        };
                         return (
-                          <div className="text-center py-4">
-                            <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
-                            <p className="text-4xl font-black text-primary">{String(hours).padStart(2, '0')}:{String(minutes).padStart(2, '0')}:{String(seconds).padStart(2, '0')}</p>
+                          <div className="space-y-3 py-4">
+                            <div className="text-center">
+                              <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
+                              <p className="text-4xl font-black text-primary">{fmtDuration(breakdown.total)}</p>
+                            </div>
+                            <div className="flex flex-wrap justify-center gap-2 text-xs">
+                              <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300">🏊 Swim {Math.round(breakdown.swim.duration * 60)}min</span>
+                              <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground">T1 {Math.round(breakdown.t1.duration * 60)}min</span>
+                              <span className="px-2 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300">🚴 Bike {Math.round(breakdown.bike.duration * 60)}min</span>
+                              <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground">T2 {Math.round(breakdown.t2.duration * 60)}min</span>
+                              <span className="px-2 py-1 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-300">🏃 Run {Math.round(breakdown.run.duration * 60)}min</span>
+                            </div>
                           </div>
                         );
                       }
@@ -1545,10 +1611,11 @@ const Index = () => {
                 </div>
               </div>
             </div>
+            </div>{/* end hidden OAuth triggers */}
 
-            {/* Hype line + Start button */}
-            <div className="pt-6 sm:pt-8 space-y-4 border-t border-border/50">
-              <p className="text-center text-sm sm:text-base font-bold text-foreground/95 uppercase tracking-wide px-2 leading-snug pt-2 break-words">
+            {/* Next button for step 0 */}
+            <div className="pt-4 space-y-4">
+              <p className="text-center text-sm sm:text-base font-bold text-foreground/95 uppercase tracking-wide px-2 leading-snug break-words">
                 {t('home.hype')}
               </p>
               <Button
@@ -1557,429 +1624,40 @@ const Index = () => {
                 size="lg"
                 className="w-full min-h-[52px] sm:h-14 text-base sm:text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] gap-2 touch-manipulation rounded-xl"
               >
-                {t('common.start')}
+                {t('common.next')}
                 <ArrowRight className="w-5 h-5" />
               </Button>
             </div>
           </div>
         )}
 
-        {/* STEP 1: Body & Physiology (full flow only) */}
-        {step === 1 && !stravaShortFlow && !isAnalyzing && (
-          <div key="step-1" className="animate-in fade-in duration-300">
-          <QuestionnaireStep
-            title={t('step2.title')}
-            description={analyzedData ? t('step2.descriptionAnalyzed') : t('step2.description')}
-            onNext={handleNextStep}
-            onBack={() => handleBackStep(0)}
-            isValid={isStepValid()}
-          >
-            <div className="space-y-4">
-              <div>
-                <Label htmlFor="fullName">{t('body.fullNameOptional')}</Label>
-                <Input
-                  id="fullName"
-                  type="text"
-                  value={profile.fullName || ''}
-                  onChange={(e) => updateProfile({ fullName: e.target.value })}
-                  placeholder={t('body.fullNamePlaceholder')}
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="space-y-2">
-                  <Label htmlFor="age">{t('body.age')} *</Label>
-                  <Input
-                    id="age"
-                    type="number"
-                    value={profile.age || ''}
-                    onChange={(e) => updateProfile({ age: parseInt(e.target.value) })}
-                    placeholder={t('body.age')}
-                  />
-                </div>
-                <div className="space-y-2">
-                  <div className="flex items-center gap-1">
-                    <Label htmlFor="weight">{t('body.weight')} *</Label>
-                    <InfoTooltip content={t('body.tooltip.weight')} />
-                  </div>
-                  <Input
-                    id="weight"
-                    type="number"
-                    value={profile.weight || ''}
-                    onChange={(e) => updateProfile({ weight: parseInt(e.target.value) })}
-                    placeholder={t('body.weight')}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <Label htmlFor="height">{t('body.height')} *</Label>
-                <Input
-                  id="height"
-                  type="number"
-                  value={profile.height || ''}
-                  onChange={(e) => updateProfile({ height: parseInt(e.target.value) })}
-                  placeholder={t('body.height')}
-                />
-              </div>
-
-              <div className="space-y-2">
-                <Label>{t('body.sex')} *</Label>
-                <RadioGroup
-                  value={profile.sex || ''}
-                  onValueChange={(value) => updateProfile({ sex: value as 'male' | 'female' | 'other' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="male" id="male" />
-                    <Label htmlFor="male" className="font-normal">{t('body.male')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="female" id="female" />
-                    <Label htmlFor="female" className="font-normal">{t('body.female')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="other" id="other" />
-                    <Label htmlFor="other" className="font-normal">{t('body.other')}</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              {/* Advanced metrics - Pro mode only */}
-              {version === 'pro' && (
-                <Accordion type="single" collapsible className="mt-2">
-                  <AccordionItem value="body-advanced" className="border-none">
-                    <AccordionTrigger className="text-xs sm:text-sm font-semibold py-3 min-h-[44px] hover:no-underline text-left">
-                      Advanced body metrics (optional)
-                    </AccordionTrigger>
-                    <AccordionContent className="pt-2 space-y-4">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1">
-                            <Label htmlFor="bodyFat">{t('body.bodyFat')}</Label>
-                            <InfoTooltip content="Body fat percentage affects hydration needs - lower body fat means more body water. Can be measured with smart scales, DEXA scans, or found in Garmin Index, Apple Watch (requires third-party apps), or fitness assessments. Typical athletic range: 6-24% (men), 14-31% (women)." />
-                          </div>
-                          <Input
-                            id="bodyFat"
-                            type="number"
-                            value={profile.bodyFat || ''}
-                            onChange={(e) => updateProfile({ bodyFat: parseFloat(e.target.value) })}
-                            placeholder={t('common.optional')}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1">
-                            <Label htmlFor="restingHeartRate">{t('body.restingHR')}</Label>
-                            <InfoTooltip content="Resting heart rate (RHR) indicates fitness level and recovery. Lower RHR typically means better cardiovascular fitness. Find it on: Garmin (morning report), Apple Watch (Health app), Coros (training status), Whoop (daily metrics), Oura Ring. Typical athletic range: 40-60 bpm." />
-                          </div>
-                          <Input
-                            id="restingHeartRate"
-                            type="number"
-                            value={profile.restingHeartRate || ''}
-                            onChange={(e) => updateProfile({ restingHeartRate: parseInt(e.target.value) })}
-                            placeholder={t('common.bpm')}
-                          />
-                        </div>
-                      </div>
-
-                      <div className="space-y-2">
-                        <div className="flex items-center gap-1">
-                          <Label htmlFor="hrv">{t('body.hrv')}</Label>
-                          <InfoTooltip content="Heart Rate Variability measures recovery status. Found in fitness watches (Garmin, Apple Watch, Whoop). Low HRV = poor recovery, may need extra hydration. Normal range varies by individual - check your baseline." />
-                        </div>
-                        <Input
-                          id="hrv"
-                          value={profile.hrv || ''}
-                          onChange={(e) => updateProfile({ hrv: e.target.value })}
-                          placeholder={t('common.garminWhoop')}
-                        />
-                      </div>
-
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1">
-                            <Label htmlFor="sleepHours">{t('body.avgSleep')}</Label>
-                            <InfoTooltip content="Sleep duration affects recovery and hydration needs. Track via Garmin, Apple Watch, Whoop, Oura Ring, or Coros. Aim for 7-9 hours for optimal athletic performance." />
-                          </div>
-                          <Input
-                            id="sleepHours"
-                            type="number"
-                            step="0.5"
-                            value={profile.sleepHours || ''}
-                            onChange={(e) => updateProfile({ sleepHours: parseFloat(e.target.value) })}
-                            placeholder={t('common.hoursPerNight')}
-                          />
-                        </div>
-                        <div className="space-y-2">
-                          <div className="flex items-center gap-1">
-                            <Label htmlFor="sleepQuality">{t('body.sleepQuality')}</Label>
-                            <InfoTooltip content="Rate your sleep quality from 1 (poor) to 10 (excellent). Many wearables provide a sleep score. Poor sleep impacts recovery and may increase hydration needs." />
-                          </div>
-                          <Input
-                            id="sleepQuality"
-                            type="number"
-                            min="1"
-                            max="10"
-                            value={profile.sleepQuality || ''}
-                            onChange={(e) => updateProfile({ sleepQuality: parseInt(e.target.value) })}
-                            placeholder={t('common.oneToTen')}
-                          />
-                        </div>
-                      </div>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-              )}
-
-              <div className="space-y-2">
-                <Label htmlFor="healthConditions">{t('body.healthConditions')}</Label>
-                <Input
-                  id="healthConditions"
-                  value={profile.healthConditions || ''}
-                  onChange={(e) => updateProfile({ healthConditions: e.target.value })}
-                  placeholder={t('common.healthExample')}
-                />
-              </div>
-
-              {/* Sweat Sodium Test - Pro Mode Only */}
-              {version === 'pro' && (
-                <div>
-                  <div className="flex items-center">
-                    <Label htmlFor="sweatSodiumTest">{t('body.sweatSodiumTest')}</Label>
-                    <InfoTooltip content="A sweat sodium test measures the concentration of sodium in your sweat. Normal range is 20-80 mmol/L. High sodium loss (>60 mmol/L) means you need more electrolytes. Can be done at sports labs or with at-home test kits." />
-                  </div>
-                  <Input
-                    id="sweatSodiumTest"
-                    type="number"
-                    value={profile.sweatSodiumTest || ''}
-                    onChange={(e) => updateProfile({ sweatSodiumTest: parseFloat(e.target.value) })}
-                    placeholder={t('common.known')}
-                  />
-                </div>
-              )}
-            </div>
-          </QuestionnaireStep>
+        {/* STEP 1: Activity & Race + Environment */}
+        {step === 1 && !isAnalyzing && (
+          <div id="step-1-content" key="step-1-activity" className="animate-in fade-in duration-300">
+            <QuestionnaireStep
+              title="Activity & Race"
+              description="Select your sport, find your race, and set conditions"
+              onNext={handleNextStep}
+              onBack={() => handleBackStep(0)}
+              isValid={isStepValid()}
+            >
+              <ActivityRaceSelector
+                profile={profile}
+                onUpdateProfile={updateProfile}
+                onApplyRace={applyRaceToProfile}
+              />
+            </QuestionnaireStep>
           </div>
         )}
 
-        {/* STEP 2: Environment (full flow only) */}
-        {step === 2 && !stravaShortFlow && !isAnalyzing && (
-          <div key="step-2" className="animate-in fade-in duration-300">
+        {/* STEP 2: Sweat Profile */}
+        {step === 2 && !isAnalyzing && (
+          <div key="step-2-sweat" className="animate-in fade-in duration-300">
           <QuestionnaireStep
-            title={t('step.3.title')}
-            description={t('step3.description')}
+            title="Sweat Profile"
+            description={analyzedData ? t('step4.descriptionAnalyzed') : t('step4.description')}
             onNext={handleNextStep}
             onBack={() => handleBackStep(1)}
-            isValid={isStepValid()}
-          >
-            <div className="space-y-4">
-              <div>
-                <Label>
-                  {profile.disciplines?.[0] === 'Swimming'
-                    ? t('env.waterTempRange')
-                    : t('env.trainingTempRange')}
-                </Label>
-                {profile.disciplines?.[0] === 'Swimming' && (
-                  <p className="text-sm text-muted-foreground mt-1">
-                    {t('env.swimTempHint')}
-                  </p>
-                )}
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <Input
-                    type="number"
-                    value={profile.trainingTempRange?.min || ''}
-                    onChange={(e) => updateProfile({
-                      trainingTempRange: {
-                        min: parseInt(e.target.value),
-                        max: profile.trainingTempRange?.max || 25
-                      }
-                    })}
-                    placeholder={t('env.tempMin')}
-                  />
-                  <Input
-                    type="number"
-                    value={profile.trainingTempRange?.max || ''}
-                    onChange={(e) => updateProfile({
-                      trainingTempRange: {
-                        min: profile.trainingTempRange?.min || 15,
-                        max: parseInt(e.target.value)
-                      }
-                    })}
-                    placeholder={t('env.tempMax')}
-                  />
-                </div>
-              </div>
-
-              <div>
-                <Label>
-                  {profile.disciplines?.[0] === 'Swimming'
-                    ? t('env.raceWaterTempRange')
-                    : t('env.raceTempRange')}
-                </Label>
-                <div className="grid grid-cols-2 gap-4 mt-2">
-                  <Input
-                    type="number"
-                    value={profile.raceTempRange?.min || ''}
-                    onChange={(e) => updateProfile({
-                      raceTempRange: {
-                        min: parseInt(e.target.value),
-                        max: profile.raceTempRange?.max || 25
-                      }
-                    })}
-                    placeholder={t('env.minPlaceholder')}
-                  />
-                  <Input
-                    type="number"
-                    value={profile.raceTempRange?.max || ''}
-                    onChange={(e) => updateProfile({
-                      raceTempRange: {
-                        min: profile.raceTempRange?.min || 15,
-                        max: parseInt(e.target.value)
-                      }
-                    })}
-                    placeholder={t('env.maxPlaceholder')}
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-2">
-                <div className="flex items-center gap-1">
-                  <Label htmlFor="humidity">{t('env.humidity')} *</Label>
-                  <InfoTooltip content={t('env.humidityTooltip')} />
-                </div>
-                <Input
-                  id="humidity"
-                  type="number"
-                  value={profile.humidity || ''}
-                  onChange={(e) => updateProfile({ humidity: parseInt(e.target.value) })}
-                  placeholder={t('env.humidityPlaceholder')}
-                />
-              </div>
-
-              <div>
-                <div className="flex items-center mb-2">
-                  <Label>{t('env.altitude')} *</Label>
-                  <InfoTooltip content={t('env.altitudeTooltipPro')} />
-                </div>
-                <RadioGroup
-                  value={profile.altitude || ''}
-                  onValueChange={(value) => updateProfile({ altitude: value as 'sea-level' | 'moderate' | 'high' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="sea-level" id="sea-level" />
-                    <Label htmlFor="sea-level" className="font-normal">{t('env.seaLevel')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="moderate" id="moderate" />
-                    <Label htmlFor="moderate" className="font-normal">{t('env.moderateAltitude')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="high" id="high" />
-                    <Label htmlFor="high" className="font-normal">{t('env.highAltitude')}</Label>
-                  </div>
-                </RadioGroup>
-
-                {/* Exact altitude in meters - Pro version only */}
-                {version === 'pro' && (
-                  <div className="mt-3">
-                    <Label htmlFor="altitudeMeters" className="text-sm text-muted-foreground">
-                      {t('env.exactAltitudeOptional')}
-                    </Label>
-                    <Input
-                      id="altitudeMeters"
-                      type="number"
-                      min="0"
-                      max="5000"
-                      value={profile.altitudeMeters || ''}
-                      onChange={(e) => updateProfile({ altitudeMeters: e.target.value ? parseInt(e.target.value) : undefined })}
-                      placeholder={t('common.altitudeExample')}
-                      className="mt-1"
-                    />
-                  </div>
-                )}
-              </div>
-
-              <div>
-                <div className="flex items-center mb-2">
-                  <Label>{t('env.sunExposure')} *</Label>
-                  <InfoTooltip content="Direct sun exposure increases body temperature and sweat rate significantly compared to shade." />
-                </div>
-                <RadioGroup
-                  value={profile.sunExposure || ''}
-                  onValueChange={(value) => updateProfile({ sunExposure: value as 'shade' | 'partial' | 'full-sun' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="shade" id="shade" />
-                    <Label htmlFor="shade" className="font-normal">{t('env.shade')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="partial" id="partial" />
-                    <Label htmlFor="partial" className="font-normal">{t('env.partial')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="full-sun" id="full-sun" />
-                    <Label htmlFor="full-sun" className="font-normal">{t('env.fullSun')}</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label>{t('env.wind')} *</Label>
-                <RadioGroup
-                  value={profile.windConditions || ''}
-                  onValueChange={(value) => updateProfile({ windConditions: value as 'calm' | 'moderate' | 'windy' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="calm" id="calm" />
-                    <Label htmlFor="calm" className="font-normal">{t('env.calm')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="moderate" id="moderate-wind" />
-                    <Label htmlFor="moderate-wind" className="font-normal">{t('env.moderateWind')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="windy" id="windy" />
-                    <Label htmlFor="windy" className="font-normal">{t('env.windy')}</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-
-              <div>
-                <Label>{t('env.clothing')} *</Label>
-                <RadioGroup
-                  value={profile.clothingType || ''}
-                  onValueChange={(value) => updateProfile({ clothingType: value as 'minimal' | 'light' | 'moderate' | 'heavy' })}
-                >
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="minimal" id="minimal" />
-                    <Label htmlFor="minimal" className="font-normal">{t('env.minimal')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="light" id="light" />
-                    <Label htmlFor="light" className="font-normal">{t('env.light')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="moderate" id="moderate-cloth" />
-                    <Label htmlFor="moderate-cloth" className="font-normal">{t('env.moderateClothing')}</Label>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <RadioGroupItem value="heavy" id="heavy" />
-                    <Label htmlFor="heavy" className="font-normal">{t('env.heavy')}</Label>
-                  </div>
-                </RadioGroup>
-              </div>
-            </div>
-          </QuestionnaireStep>
-          </div>
-        )}
-
-        {/* STEP 3: Sweat (full flow) or step 1 (Strava short flow) */}
-        {(step === 3 || (stravaShortFlow && step === 1)) && !isAnalyzing && (
-          <div key="step-3" className="animate-in fade-in duration-300">
-          <QuestionnaireStep
-            title={t('step.4.title')}
-            description={stravaShortFlow ? t('strava.shortFlowSweat') : (analyzedData ? t('step4.descriptionAnalyzed') : t('step4.description'))}
-            onNext={handleNextStep}
-            onBack={() => handleBackStep(stravaShortFlow ? 0 : 2)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -2123,14 +1801,14 @@ const Index = () => {
           </div>
         )}
 
-        {/* STEP 4: Nutrition (full flow) or step 2 (Strava short flow) */}
-        {(step === 4 || (stravaShortFlow && step === 2)) && !isAnalyzing && (
-          <div key="step-4" className="animate-in fade-in duration-300">
+        {/* STEP 3: Dietary Habits */}
+        {step === 3 && !isAnalyzing && (
+          <div key="step-3-diet" className="animate-in fade-in duration-300">
           <QuestionnaireStep
-            title={t('step.5.title')}
-            description={t('step5.description')}
+            title="Dietary Habits"
+            description="Your daily nutrition affects electrolyte needs"
             onNext={handleComplete}
-            onBack={() => handleBackStep(stravaShortFlow ? 1 : 3)}
+            onBack={() => handleBackStep(2)}
             isValid={isStepValid()}
           >
             <div className="space-y-4">
@@ -2173,7 +1851,7 @@ const Index = () => {
               <div>
                 <div className="flex items-center">
                   <Label htmlFor="caffeineIntake">{t('nutrition.caffeine')}</Label>
-                  <InfoTooltip content="Caffeine can have a mild diuretic effect at high doses (>300mg/day), potentially increasing fluid needs. However, regular caffeine users develop tolerance. 1 cup coffee ≈ 95mg, 1 espresso ≈ 64mg, 1 energy drink ≈ 80mg." />
+                  <InfoTooltip content="Caffeine can have a mild diuretic effect at high doses (>300mg/day). 1 cup coffee ≈ 95mg, 1 espresso ≈ 64mg, 1 energy drink ≈ 80mg." />
                 </div>
                 <Input
                   id="caffeineIntake"
