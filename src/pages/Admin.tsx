@@ -5,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
 import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight, FileDown, Zap, RefreshCw } from 'lucide-react';
-import { FullHydrationPlanProtocol } from '@/components/FullHydrationPlanProtocol';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -1383,9 +1382,7 @@ export default function Admin() {
                               </div>
                             </div>
 
-                            <div className="col-span-full order-first">
-                              <FullHydrationPlanProtocol plan={plan} profile={pd} variant="user" />
-                            </div>
+                            {/* Full Hydration Plan removed — Race Day Protocol is shown on the user result page */}
 
                             {/* Sport-Specific Data (Football) */}
                             {(pd.position || pd.matchesPerWeek || pd.playingLevel) && (

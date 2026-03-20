@@ -26,7 +26,21 @@
       "Bash(npx tsc:*)",
       "Bash(curl -s http://localhost:8082/src/components/ActivityRaceSelector.tsx)",
       "Bash(curl -s \"http://localhost:8080/src/index.css\")",
-      "Bash(curl -s \"http://localhost:8080/auth\")"
+      "Bash(curl -s \"http://localhost:8080/auth\")",
+      "Bash(git push:*)",
+      "Bash(vercel ls:*)",
+      "Bash(vercel:*)",
+      "Bash(grep -E \"\\\\.tsx?$\")",
+      "Bash(grep -l \"race\\\\|Race\" /Users/nicklasvang/Documents/fuelplan2.0-main/src/pages/*.tsx)",
+      "Bash(grep -l \"race\\\\|Race\" /Users/nicklasvang/Documents/fuelplan2.0-main/src/components/*.tsx)",
+      "Bash(grep:*)",
+      "WebFetch(domain:utmb.world)",
+      "WebFetch(domain:theultrarunner.com)",
+      "WebFetch(domain:electriccablecar.com)",
+      "WebFetch(domain:www.suunto.com)",
+      "WebFetch(domain:www.finishers.com)",
+      "Bash(git commit:*)",
+      "Bash(npx vercel:*)"
     ]
   }
 }
