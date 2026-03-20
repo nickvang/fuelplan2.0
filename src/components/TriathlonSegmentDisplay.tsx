@@ -97,7 +97,7 @@ export function TriathlonSegmentDisplay({ segments }: TriathlonSegmentDisplayPro
       </div>
 
       {/* Segment cards */}
-      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-2">
         {segmentData.map((seg) => (
           <Card
             key={seg.key}
@@ -126,9 +126,9 @@ export function TriathlonSegmentDisplay({ segments }: TriathlonSegmentDisplayPro
       </div>
 
       {/* Totals row */}
-      <div className="flex items-center justify-between px-3 py-2 rounded-lg bg-muted/40 border border-border/60 text-xs">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 px-3 py-2 rounded-lg bg-muted/40 border border-border/60 text-xs">
         <span className="font-semibold text-muted-foreground uppercase tracking-wide">Totals</span>
-        <div className="flex gap-4">
+        <div className="flex flex-wrap gap-2 sm:gap-4">
           <span className="font-bold text-foreground">{formatMinutes(segments.totalDuration)}</span>
           <span className="font-bold text-foreground">{segments.totalSachets} sachets</span>
           <span className="font-bold text-foreground">{segments.totalFluid}ml</span>

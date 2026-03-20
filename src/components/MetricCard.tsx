@@ -8,7 +8,7 @@ interface MetricCardProps {
 }
 
 export function MetricCard({ icon, label, value, unit, sublabel, variant = 'default' }: MetricCardProps) {
-  const base = 'flex flex-col items-center p-4 sm:p-5 rounded-2xl border text-center transition-all duration-300';
+  const base = 'flex flex-col items-center p-3 sm:p-4 md:p-5 rounded-2xl border text-center transition-all duration-300';
   const variants = {
     default: 'border-border/60 bg-card hover:border-primary/30',
     highlight: 'border-primary/40 bg-primary/5 shadow-lg shadow-primary/10',
@@ -21,7 +21,7 @@ export function MetricCard({ icon, label, value, unit, sublabel, variant = 'defa
       <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground mb-1">
         {label}
       </p>
-      <p className="text-2xl sm:text-3xl font-black metric-number leading-none">
+      <p className="text-lg sm:text-2xl md:text-3xl font-black metric-number leading-none">
         {value}
         {unit && <span className="text-sm sm:text-base font-bold ml-0.5">{unit}</span>}
       </p>

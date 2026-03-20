@@ -55,8 +55,8 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
   const sachetsPerHour = during?.electrolytesPerHour ?? 1;
 
   const wrapperClass = isAdmin
-    ? 'space-y-4 rounded-lg border border-zinc-700 bg-zinc-800/80 p-4'
-    : 'space-y-4 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 p-4 md:p-6 shadow-sm';
+    ? 'space-y-4 rounded-lg border border-zinc-700 bg-zinc-800/80 p-3 sm:p-4'
+    : 'space-y-4 rounded-xl border-2 border-primary/20 bg-gradient-to-br from-card via-card to-primary/5 p-3 sm:p-4 md:p-6 shadow-sm';
   const labelClass = isAdmin ? 'text-[10px] font-bold uppercase tracking-wider text-zinc-500' : 'text-xs font-bold uppercase tracking-wider text-muted-foreground';
   const valueClass = isAdmin ? 'font-bold text-zinc-200' : 'font-bold text-foreground';
   const cardClass = isAdmin ? 'rounded-lg border border-zinc-700 bg-zinc-900' : 'rounded-xl border border-primary/15 bg-primary/5';

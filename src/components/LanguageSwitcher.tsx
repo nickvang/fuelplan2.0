@@ -12,7 +12,7 @@ export function LanguageSwitcher() {
         variant={language === 'en' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => setLanguage('en')}
-        className="min-h-[44px] h-9 sm:h-8 px-3 text-xs touch-manipulation"
+        className="min-h-[44px] px-3 text-xs touch-manipulation"
       >
         English
       </Button>
@@ -20,7 +20,7 @@ export function LanguageSwitcher() {
         variant={language === 'da' ? 'default' : 'ghost'}
         size="sm"
         onClick={() => setLanguage('da')}
-        className="min-h-[44px] h-9 sm:h-8 px-3 text-xs touch-manipulation"
+        className="min-h-[44px] px-3 text-xs touch-manipulation"
       >
         Dansk
       </Button>

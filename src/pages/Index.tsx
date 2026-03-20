@@ -788,7 +788,7 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen min-w-0 bg-background relative overflow-x-hidden pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-12 px-3 sm:px-4">
+    <div className="min-h-screen min-w-0 bg-background relative overflow-x-hidden pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-12 px-3 sm:px-4 md:px-6">
       {/* Athletic background pattern */}
       <div className="absolute inset-0 opacity-[0.02]">
         <div className="absolute inset-0" style={{
@@ -813,7 +813,7 @@ const Index = () => {
             )}
             <LanguageSwitcher />
           </div>
-          <img src={supplmeLogo} alt="Supplme" className="h-24 sm:h-32 mx-auto max-w-full" />
+          <img src={supplmeLogo} alt="Supplme" className="h-20 sm:h-24 md:h-32 mx-auto max-w-full w-auto" />
           <div className="space-y-1 mt-3 px-1">
             <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
               {t('app.title')}

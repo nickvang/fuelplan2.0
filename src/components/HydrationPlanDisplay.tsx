@@ -7,7 +7,6 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
-import { FullHydrationPlanProtocol } from '@/components/FullHydrationPlanProtocol';
 import supplmeLogo from '@/assets/supplme-logo-sort.svg';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRace } from '@/contexts/RaceContext';
@@ -49,6 +48,15 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     return `${h}:${String(m).padStart(2, '0')}:${String(s).padStart(2, '0')}`;
   };
   
+  // Helper to format decimal hours to readable duration
+  const formatSegmentDuration = (hours: number): string => {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    if (h === 0) return `${m}min`;
+    if (m === 0) return `${h}h`;
+    return `${h}h ${m}min`;
+  };
+
   const [isSharing, setIsSharing] = useState(false);
   const [plan] = useState(initialPlan);
   const [profile] = useState(initialProfile);
@@ -257,12 +265,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           {/* Logo with Glow */}
           <div className="relative inline-block">
             <div className="absolute inset-0 glow-effect blur-3xl opacity-40"></div>
-            <img src={supplmeLogo} alt="Supplme" className="h-32 md:h-48 lg:h-56 mx-auto relative z-10 performance-pulse" />
+            <img src={supplmeLogo} alt="Supplme" className="h-28 sm:h-36 md:h-48 lg:h-56 mx-auto relative z-10 performance-pulse" />
           </div>
           
           {/* Main Title - Athletic Energy */}
           <div className="space-y-2 md:space-y-3">
-            <h1 className="text-3xl md:text-5xl lg:text-7xl font-black tracking-tight uppercase text-foreground">
+            <h1 className="text-2xl sm:text-4xl md:text-5xl lg:text-7xl font-black tracking-tight uppercase text-foreground">
               YOUR ELITE PLAN
             </h1>
             <p className="text-base md:text-xl font-semibold text-muted-foreground max-w-2xl mx-auto px-4">
@@ -297,7 +305,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         const totalSachets = plan.preActivity.electrolytes + plan.duringActivity.totalElectrolytes + plan.postActivity.electrolytes;
         const totalFluidMl = plan.preActivity.water + Math.round(safeNumber(plan.duringActivity.waterPerHour) * profile.sessionDuration) + plan.postActivity.water;
         return (
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-3">
             <MetricCard
               icon={<Droplets className="w-5 h-5 text-blue-500" />}
               label="Total Fluid"
@@ -409,7 +417,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </span>
                 )}
               </div>
-              <div className="flex flex-wrap items-center gap-2 mt-2 text-xs">
+              <div className="flex flex-wrap items-center gap-1.5 sm:gap-2 mt-2 text-xs">
                 <span className="inline-flex items-center gap-1 px-2 py-1 rounded-full bg-muted text-muted-foreground">
                   <span aria-hidden>📍</span>
                   <span className="font-medium text-foreground">
@@ -456,25 +464,535 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </Alert>
       )}
 
-      {/* Full hydration plan – compact Race Day hidden here (expanded section below) */}
-      <FullHydrationPlanProtocol plan={plan} profile={profile} variant="user" hideCompactRaceDay />
 
-      {/* Save to Device + Share */}
-      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
-        <Button
-          onClick={handleShare}
-          disabled={isSharing}
-          size="lg"
-          className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
-        >
-          {isSharing ? (
-            <Loader2 className="w-4 h-4 animate-spin" />
-          ) : (
-            <Download className="w-4 h-4" />
-          )}
-          {isSharing ? 'Generating...' : 'Save to Device'}
-        </Button>
-      </div>
+      {/* Race Day Protocol - Only shows if user is training for a race */}
+      {profile.hasUpcomingRace && (
+        <div className="space-y-6 scroll-mt-6" id="race-day-protocol">
+          {/* Header + quick-jump nav */}
+          <div className="text-center py-6 md:py-8 space-y-4">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl font-black tracking-tight uppercase text-foreground">
+              Race Day Protocol
+            </h2>
+            <p className="text-base md:text-lg font-semibold text-muted-foreground">Your 48-hour performance strategy</p>
+            <nav className="flex overflow-x-auto overflow-y-hidden flex-nowrap gap-1.5 sm:gap-2 pt-2 pb-1 -mx-2 px-2 justify-start sm:justify-center [scrollbar-width:thin]" aria-label="Jump to section">
+              <a href="#race-day-before" className="text-xs font-bold uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">Day Before</a>
+              <a href="#race-day-morning" className="text-xs font-bold uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">Race Morning</a>
+              {!(profile.disciplines?.includes('Swimming')) && (
+                <a href="#race-day-during" className="text-xs font-bold uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">During</a>
+              )}
+              <a href="#race-day-recovery" className="text-xs font-bold uppercase tracking-wider px-3 sm:px-4 py-2 sm:py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">Recovery</a>
+            </nav>
+          </div>
+
+          {/* Single-column scroll-friendly timeline */}
+          <div className="space-y-6 max-w-2xl mx-auto">
+            {/* 1. Day Before */}
+            <section id="race-day-before" className="scroll-mt-24 rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">1</span>
+                <span className="text-2xl" aria-hidden>🗓️</span>
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Day Before</h3>
+                  <p className="text-xs font-semibold text-muted-foreground">T-24 hours</p>
+                </div>
+              </div>
+              <div className="p-3 sm:p-4 md:p-5 space-y-4">
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="p-3 sm:p-4 rounded-xl bg-muted/50 border border-border">
+                    <Droplets className="w-6 sm:w-7 h-6 sm:h-7 mb-2 text-foreground" />
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">Hydrate</p>
+                    <p className="text-lg sm:text-xl font-black metric-number">2–3L</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">Throughout day</p>
+                  </div>
+                  <div className="p-3 sm:p-4 rounded-xl bg-muted/50 border border-border">
+                    <Zap className="w-6 sm:w-7 h-6 sm:h-7 mb-2 text-foreground" />
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-muted-foreground">With dinner</p>
+                    <p className="text-base sm:text-lg font-black metric-number">500ml + 2× Supplme</p>
+                    <p className="text-[10px] sm:text-xs text-muted-foreground">5–7pm for sleep</p>
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-border space-y-1">
+                  <p className="text-xs font-medium text-foreground">When: Throughout the day; 5–7pm with dinner</p>
+                  <p className="text-xs text-muted-foreground italic">Tip: Spread 2–3L across the day. Have 500ml + 2× Supplme with dinner (5–7pm) to support sleep. Avoid alcohol, new foods, and late caffeine.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* 2. Race Morning */}
+            <section id="race-day-morning" className="scroll-mt-24 rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">2</span>
+                <span className="text-2xl" aria-hidden>🌅</span>
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Race Morning</h3>
+                  <p className="text-xs font-semibold text-muted-foreground">T-3 hours</p>
+                </div>
+              </div>
+              <div className="p-4 md:p-5 space-y-3">
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border-l-4 border-primary">
+                  <span className="text-lg font-black text-primary metric-number shrink-0">-3h</span>
+                  <div>
+                    <p className="text-sm font-bold">{plan.preActivity.water}ml + breakfast</p>
+                    <p className="text-xs text-muted-foreground">Wake up hydration</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border-l-4 border-primary">
+                  <span className="text-lg font-black text-primary metric-number shrink-0">-2h</span>
+                  <div>
+                    <p className="text-sm font-bold">{plan.preActivity.electrolytes}× Supplme + 300ml</p>
+                    <p className="text-xs text-muted-foreground">Last substantial intake</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border-l-4 border-primary">
+                  <span className="text-lg font-black text-primary metric-number shrink-0">-30m</span>
+                  <div>
+                    <p className="text-sm font-bold">Small sips only (100–150ml)</p>
+                    <p className="text-xs text-muted-foreground">Final bathroom break</p>
+                  </div>
+                </div>
+                <div className="pt-3 border-t border-border space-y-1">
+                  <p className="text-xs font-medium text-foreground">When: -3h {plan.preActivity.water}ml + breakfast; -2h {plan.preActivity.electrolytes}× Supplme + 300ml; -30m small sips only</p>
+                  <p className="text-xs text-muted-foreground italic">Tip: Drink the water with breakfast, then take your sachet(s) + 300ml at -2h. From -30m only small sips so you can empty your bladder before the start.</p>
+                </div>
+              </div>
+            </section>
+
+            {/* 3. During Race (hidden for swimming and standalone running which has its own section below) - dark card so all text stays readable */}
+            {!(profile.disciplines?.includes('Swimming')) && !(profile.disciplines?.[0] === 'Running' && !plan.triathlonSegments) && (
+            <section id="race-day-during" className="scroll-mt-24 rounded-2xl border-2 border-elite/50 bg-zinc-900 text-white overflow-hidden shadow-xl">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-700 bg-zinc-800/80">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-elite text-sm font-black text-white">3</span>
+                <Flag className="w-6 h-6 text-elite shrink-0" />
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-white">During Race</h3>
+                  <p className="text-xs font-semibold text-zinc-400">Execute the plan</p>
+                </div>
+              </div>
+              <div className="p-4 md:p-5 space-y-4">
+                {plan.triathlonSegments ? (() => {
+                  const seg = plan.triathlonSegments;
+                  return (
+                    <>
+                      {/* Summary row */}
+                      <div className="grid grid-cols-3 gap-3">
+                        <div className="p-3 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                          <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Total fluid</p>
+                          <p className="text-xl font-black metric-number text-white">{safeNumber(seg.totalFluid)}ml</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                          <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Total sachets</p>
+                          <p className="text-xl font-black metric-number text-white">{safeNumber(seg.totalSachets)}</p>
+                        </div>
+                        <div className="p-3 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                          <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Race time</p>
+                          <p className="text-xl font-black metric-number text-white">{formatSegmentDuration(seg.totalDuration)}</p>
+                        </div>
+                      </div>
+
+                      {/* Vertical timeline */}
+                      <div className="space-y-0">
+                        {/* SWIM */}
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center shrink-0">
+                            <div className="h-8 w-auto px-2 rounded-full bg-zinc-600 flex items-center justify-center text-xs font-black text-white">SWIM</div>
+                            <div className="w-px h-full bg-zinc-600/30" />
+                          </div>
+                          <div className="pb-4">
+                            <p className="text-sm font-bold text-white">Swim — {seg.swim.distance}m</p>
+                            <p className="text-xs text-zinc-400">No hydration possible</p>
+                            <p className="text-xs text-zinc-500">{formatSegmentDuration(seg.swim.duration)}</p>
+                          </div>
+                        </div>
+
+                        {/* T1 */}
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center shrink-0">
+                            <div className="h-8 w-auto px-2 rounded-full bg-elite flex items-center justify-center text-xs font-black text-white">T1</div>
+                            <div className="w-px h-full bg-elite/30" />
+                          </div>
+                          <div className="pb-4">
+                            <p className="text-sm font-bold text-white">Transition 1</p>
+                            <p className="text-xs text-zinc-300">{seg.t1.sachets > 0 ? `${seg.t1.sachets} sachet${seg.t1.sachets !== 1 ? 's' : ''}` : 'No sachets'} + {safeNumber(seg.t1.fluid)}ml</p>
+                            <p className="text-xs font-semibold text-elite">Critical — drink immediately</p>
+                          </div>
+                        </div>
+
+                        {/* BIKE */}
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center shrink-0">
+                            <div className="h-8 w-auto px-2 rounded-full bg-elite flex items-center justify-center text-xs font-black text-white">BIKE</div>
+                            <div className="w-px h-full bg-elite/30" />
+                          </div>
+                          <div className="pb-4">
+                            <p className="text-sm font-bold text-white">Bike — {seg.bike.distance}km</p>
+                            <p className="text-xs text-zinc-300">{seg.bike.sachets > 0 ? `${seg.bike.sachets} sachet${seg.bike.sachets !== 1 ? 's' : ''}` : 'No sachets'} + {safeNumber(seg.bike.fluid)}ml</p>
+                            {seg.bike.sachets > 0 && (
+                              <p className="text-xs text-zinc-400">1 every {Math.round((seg.bike.duration * 60) / seg.bike.sachets)} min</p>
+                            )}
+                          </div>
+                        </div>
+
+                        {/* T2 */}
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center shrink-0">
+                            <div className="h-8 w-auto px-2 rounded-full bg-elite/70 flex items-center justify-center text-xs font-black text-white">T2</div>
+                            <div className="w-px h-full bg-elite/30" />
+                          </div>
+                          <div className="pb-4">
+                            <p className="text-sm font-bold text-white">Transition 2</p>
+                            <p className="text-xs text-zinc-300">{safeNumber(seg.t2.fluid)}ml</p>
+                            <p className="text-xs text-zinc-400">Quick sip before the run</p>
+                          </div>
+                        </div>
+
+                        {/* RUN */}
+                        <div className="flex gap-3">
+                          <div className="flex flex-col items-center shrink-0">
+                            <div className="h-8 w-auto px-2 rounded-full bg-elite flex items-center justify-center text-xs font-black text-white">RUN</div>
+                          </div>
+                          <div>
+                            <p className="text-sm font-bold text-white">Run — {seg.run.distance}km</p>
+                            <p className="text-xs text-zinc-300">{seg.run.sachets > 0 ? `${seg.run.sachets} sachet${seg.run.sachets !== 1 ? 's' : ''}` : 'No sachets'} + {safeNumber(seg.run.fluid)}ml</p>
+                            {seg.run.sachets > 0 && (
+                              <p className="text-xs text-zinc-400">1 every {Math.round((seg.run.duration * 60) / seg.run.sachets)} min</p>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Tip */}
+                      <div className="pt-3 border-t border-zinc-700">
+                        <p className="text-xs text-zinc-400 italic">Tip: Pre-load with 1 sachet before the start. You can't hydrate during the swim, so T1 is your first chance — drink immediately.</p>
+                      </div>
+                    </>
+                  );
+                })() : (
+                  <>
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="p-3 sm:p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Water per hour</p>
+                        <p className="text-lg sm:text-2xl md:text-3xl font-black metric-number text-white">{safeNumber(plan.duringActivity.waterPerHour)}ml</p>
+                        <p className="text-[10px] sm:text-xs text-zinc-300">Sip {plan.duringActivity.frequency.toLowerCase()}</p>
+                      </div>
+                      <div className="p-3 sm:p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                        <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Supplme total</p>
+                        <p className="text-lg sm:text-2xl md:text-3xl font-black metric-number text-white">{plan.duringActivity.totalElectrolytes} sachet{plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''}</p>
+                        {plan.duringActivity.totalElectrolytes > 0 && (() => {
+                          const totalMinutes = profile.sessionDuration * 60;
+                          const minutesPerSachet = Math.round(totalMinutes / plan.duringActivity.totalElectrolytes);
+                          const sodiumPerHour = Math.round(plan.duringActivity.electrolytesPerHour * SUPPLME_ELECTROLYTE_SPEC.sodium);
+                          return (
+                            <>
+                              <p className="text-xs text-zinc-300">1 every {minutesPerSachet >= 60 ? formatHoursAsTime(minutesPerSachet / 60) : `${minutesPerSachet} min`}</p>
+                              <p className="text-xs font-bold text-zinc-400 pt-1 border-t border-zinc-600">{sodiumPerHour}mg/h</p>
+                            </>
+                          );
+                        })()}
+                      </div>
+                    </div>
+                    <div className="pt-3 border-t border-zinc-700 space-y-1">
+                      <p className="text-xs font-medium text-zinc-300">When: Water — sip every 12–15 min. Sachets: {plan.duringActivity.totalElectrolytes > 0 && plan.duringActivity.electrolytesPerHour > 0
+                        ? `1 every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
+                        : plan.duringActivity.totalElectrolytes > 0 ? 'Spread evenly across the race' : 'Not required'}.</p>
+                      <p className="text-xs text-zinc-400 italic">Tip: Sip water steadily; take sachets at the suggested interval. Listen to your body and adjust if needed.</p>
+                    </div>
+                  </>
+                )}
+              </div>
+            </section>
+            )}
+
+            {/* 3b. During Race — Running-specific sachet timeline (non-triathlon running only) */}
+            {profile.disciplines?.[0] === 'Running' && !plan.triathlonSegments && !(profile.disciplines?.includes('Swimming')) && (
+            <section id="race-day-during" className="scroll-mt-24 rounded-2xl border-2 border-elite/50 bg-zinc-900 text-white overflow-hidden shadow-xl">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-700 bg-zinc-800/80">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-elite text-sm font-black text-white">3</span>
+                <Flag className="w-6 h-6 text-elite shrink-0" />
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight text-white">During Race</h3>
+                  <p className="text-xs font-semibold text-zinc-400">Your sachet schedule</p>
+                </div>
+              </div>
+              <div className="p-3 sm:p-4 md:p-5 space-y-4">
+                {/* Key numbers */}
+                <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                  <div className="p-3 sm:p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Water per hour</p>
+                    <p className="text-lg sm:text-2xl md:text-3xl font-black metric-number text-white">{safeNumber(plan.duringActivity.waterPerHour)}ml</p>
+                    <p className="text-[10px] sm:text-xs text-zinc-300">Sip every 10–15 min</p>
+                  </div>
+                  <div className="p-3 sm:p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
+                    <p className="text-[10px] sm:text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Sachets during race</p>
+                    <p className="text-lg sm:text-2xl md:text-3xl font-black metric-number text-white">{plan.duringActivity.totalElectrolytes}</p>
+                    <p className="text-[10px] sm:text-xs text-zinc-300">{plan.duringActivity.electrolytesPerHour}/hr</p>
+                  </div>
+                </div>
+
+                {/* Sachet-by-sachet timeline */}
+                {plan.duringActivity.totalElectrolytes > 0 && (() => {
+                  const total = plan.duringActivity.totalElectrolytes;
+                  const totalMin = Math.round(profile.sessionDuration * 60);
+                  const interval = total > 1 ? Math.round(totalMin / total) : totalMin;
+                  const pacePerKm = distance > 0 ? totalMin / distance : 0;
+                  const sachets = Array.from({ length: total }, (_, i) => {
+                    const minuteMark = Math.round(interval * (i + 1));
+                    const km = pacePerKm > 0 ? Math.round((minuteMark / pacePerKm) * 10) / 10 : 0;
+                    return { number: i + 1, minute: Math.min(minuteMark, totalMin), km };
+                  });
+                  return (
+                    <div className="space-y-1">
+                      <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-2">When to take each sachet</p>
+                      <div className="space-y-0">
+                        {sachets.map((s, i) => (
+                          <div key={i} className="flex items-center gap-3 py-2 border-b border-zinc-700/50 last:border-0">
+                            <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-elite text-xs font-black text-white">{s.number}</span>
+                            <div className="flex-1 min-w-0">
+                              <p className="text-sm font-bold text-white">
+                                Sachet #{s.number}
+                              </p>
+                              <p className="text-xs text-zinc-300">
+                                At <strong className="text-white">{Math.floor(s.minute / 60) > 0 ? `${Math.floor(s.minute / 60)}h ${s.minute % 60}min` : `${s.minute} min`}</strong>
+                                {s.km > 0 && <> — approx. <strong className="text-white">km {s.km}</strong></>}
+                              </p>
+                            </div>
+                            <span className="text-xs text-zinc-500 shrink-0">+ water</span>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })()}
+
+                {/* Water reminder */}
+                <div className="p-3 rounded-xl bg-zinc-800/60 border border-zinc-700/50">
+                  <p className="text-xs font-bold text-zinc-300 mb-1">Water between sachets</p>
+                  <p className="text-xs text-zinc-400">
+                    Sip {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 4)}ml every ~15 min at aid stations. Don't gulp — small, consistent sips keep your stomach settled.
+                  </p>
+                </div>
+
+                <div className="pt-3 border-t border-zinc-700 space-y-1">
+                  <p className="text-xs text-zinc-400 italic">Tip: Set a repeating timer on your watch. Carry sachets in your race belt or shorts pocket for easy access between aid stations.</p>
+                </div>
+              </div>
+            </section>
+            )}
+
+            {/* 4. Recovery */}
+            <section id="race-day-recovery" className="scroll-mt-24 rounded-2xl border border-border bg-card overflow-hidden">
+              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
+                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">4</span>
+                <Target className="w-6 h-6 text-primary shrink-0" />
+                <div>
+                  <h3 className="text-lg font-black uppercase tracking-tight">Recovery</h3>
+                  <p className="text-xs font-semibold text-muted-foreground">4–6 hour window</p>
+                </div>
+              </div>
+              <div className="p-4 md:p-5">
+                <div className="space-y-4">
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-black text-primary-foreground">0h</div>
+                      <div className="w-px h-8 bg-primary/30" />
+                    </div>
+                    <div className="pb-2">
+                      <p className="text-sm font-bold">Immediate</p>
+                      <p className="text-xs text-muted-foreground">500ml + {safeNumber(plan.postActivity.electrolytes)}× Supplme</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="flex flex-col items-center shrink-0">
+                      <div className="h-8 w-8 rounded-full bg-primary/70 flex items-center justify-center text-xs font-black text-primary-foreground">2h</div>
+                      <div className="w-px h-8 bg-primary/30" />
+                    </div>
+                    <div className="pb-2">
+                      <p className="text-sm font-bold">First phase</p>
+                      <p className="text-xs text-muted-foreground">{safeNumber(Math.round(plan.postActivity.water * 0.5))}ml + protein meal</p>
+                    </div>
+                  </div>
+                  <div className="flex gap-3">
+                    <div className="h-8 w-8 rounded-full bg-primary/40 flex items-center justify-center text-xs font-black text-primary-foreground shrink-0">6h</div>
+                    <div>
+                      <p className="text-sm font-bold">Complete</p>
+                      <p className="text-xs text-muted-foreground">{safeNumber(plan.postActivity.water)}ml total (150% loss)</p>
+                    </div>
+                  </div>
+                </div>
+                <div className="pt-3 mt-3 border-t border-border space-y-1">
+                  <p className="text-xs font-medium text-foreground">When: {plan.postActivity.timing}</p>
+                  <p className="text-xs text-muted-foreground italic">Tip: Have your sachet{safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''} with the recovery water over 4–6 hours. Aim for pale yellow urine by evening.</p>
+                </div>
+              </div>
+            </section>
+          </div>
+        </div>
+      )}
+
+      {/* Race Day Hydration Guide (legacy – hidden when main Race Day Protocol is shown) */}
+      {profile.upcomingEvents && !profile.hasUpcomingRace && (
+        <div className="space-y-6">
+          <div className="text-center py-4">
+            <h2 className="text-2xl font-bold">Race Day Hydration Plan</h2>
+            <p className="text-muted-foreground mt-2">
+              For your upcoming: <strong>{profile.upcomingEvents}</strong>
+            </p>
+          </div>
+
+          <Card className="p-6 bg-primary/5 border-primary/20">
+            <h3 className="text-xl font-semibold mb-4">Race Day Strategy</h3>
+            
+            <Alert className="mb-4">
+              <AlertCircle className="h-4 w-4" />
+              <AlertTitle>Race Adjustments</AlertTitle>
+              <AlertDescription>
+                Race intensity is typically 10-15% higher than training, increasing fluid needs. 
+                Nervousness and adrenaline also increase fluid loss. Practice this strategy during training!
+              </AlertDescription>
+            </Alert>
+
+            <div className="space-y-4">
+              <div className="bg-background p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">Pre-Race Strategy</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• <strong>{plan.preActivity.timing}:</strong> {plan.preActivity.water}ml water + <strong>{plan.preActivity.electrolytes}x Supplme sachet</strong></li>
+                  <li className="text-muted-foreground italic">Race-day bonus: Day before race, add {plan.preActivity.water}ml extra throughout the day to ensure full hydration stores</li>
+                  <li className="text-muted-foreground italic">Optional: 30 min before start, take 200-300ml water in sips if comfortable (not included in main totals)</li>
+                </ul>
+              </div>
+
+              <div className="bg-background p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">During Race - Supplme Sachet Schedule</h4>
+                {profile.disciplines?.[0] === 'Triathlon' ? (
+                  <div className="space-y-4">
+                    <p className="text-sm font-bold text-primary">For Triathlon:</p>
+                    <p className="text-xs text-muted-foreground p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
+                      <strong>You cannot take electrolyte sachets while swimming.</strong> Your {plan.duringActivity.totalElectrolytes} during-activity sachets are for <strong>bike and run only</strong> — the plan is calculated excluding swim time.
+                    </p>
+                    <div className="space-y-3">
+                      <div className="border-l-4 border-blue-500 pl-3">
+                        <p className="text-sm font-semibold">🏊 <strong>Swim Segment</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">No sachets during the swim — not possible to consume in the water. Pre-load with 1 sachet 2 hours before the start to cover the swim.</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Take all {plan.duringActivity.totalElectrolytes} during-activity sachets on the bike and run only.</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <p className="text-sm font-semibold">🏃 <strong>T1 Transition (Swim → Bike)</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">Take 1 Supplme sachet immediately in transition area</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Mix with water or take straight - have it ready in transition bag</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-purple-500 pl-3">
+                        <p className="text-sm font-semibold">🚴 <strong>Bike Segment</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 45-60 minutes{safeNumber(plan.duringActivity.waterPerHour) > 0 ? ` + ${Math.round(safeNumber(plan.duringActivity.waterPerHour) * 0.85)}ml water/hour` : ''}</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Tip: Set timer on watch, keep sachets in jersey pocket or bento box</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Sip water consistently throughout - don't gulp</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-green-500 pl-3">
+                        <p className="text-sm font-semibold">🏃 <strong>T2 Transition (Bike → Run)</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">Take 1 Supplme sachet as you enter T2 or immediately after mounting</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Critical timing: Stomach needs to settle before run - take early in transition</p>
+                      </div>
+                      
+                      <div className="border-l-4 border-orange-500 pl-3">
+                        <p className="text-sm font-semibold">🏃 <strong>Run Segment</strong></p>
+                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 30-45 minutes at aid stations + water as tolerated</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Aim for sachets at every 2nd-3rd aid station depending on spacing</p>
+                        <p className="text-xs text-muted-foreground italic mt-1">Carry 1-2 backup sachets in race belt/pocket if aid stations are far apart</p>
+                      </div>
+                    </div>
+                    
+                    <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
+                      <p className="text-sm font-semibold text-primary mb-2">💡 Pro Tip for Transitions:</p>
+                      <ul className="text-xs text-muted-foreground space-y-1">
+                        <li>• Pre-open sachet caps slightly for quick access in T1/T2</li>
+                        <li>• Place sachets in dedicated pockets of transition bags</li>
+                        <li>• Practice your nutrition timing during training</li>
+                        <li>• If feeling nauseated, prioritize the transition sachets</li>
+                      </ul>
+                    </div>
+                  </div>
+                ) : profile.disciplines?.[0] === 'Running' ? (
+                  <div className="space-y-3">
+                    <div className="grid grid-cols-2 gap-2 sm:gap-3">
+                      <div className="p-2.5 sm:p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                        <p className="text-[10px] sm:text-xs font-bold uppercase text-muted-foreground">Water / hour</p>
+                        <p className="text-lg sm:text-xl font-black">{safeNumber(plan.duringActivity.waterPerHour)}ml</p>
+                        <p className="text-xs text-muted-foreground">~{Math.round(safeNumber(plan.duringActivity.waterPerHour) / 4)}ml every 15 min</p>
+                      </div>
+                      <div className="p-3 rounded-lg bg-primary/10 border border-primary/20 text-center">
+                        <p className="text-xs font-bold uppercase text-muted-foreground">Sachets total</p>
+                        <p className="text-xl font-black">{plan.duringActivity.totalElectrolytes}</p>
+                        <p className="text-xs text-muted-foreground">{plan.duringActivity.electrolytesPerHour}/hr</p>
+                      </div>
+                    </div>
+                    {plan.duringActivity.totalElectrolytes > 0 && (() => {
+                      const total = plan.duringActivity.totalElectrolytes;
+                      const totalMin = Math.round(profile.sessionDuration * 60);
+                      const interval = total > 1 ? Math.round(totalMin / total) : totalMin;
+                      const pacePerKm = distance > 0 ? totalMin / distance : 0;
+                      const sachets = Array.from({ length: total }, (_, i) => {
+                        const minuteMark = Math.round(interval * (i + 1));
+                        const km = pacePerKm > 0 ? Math.round((minuteMark / pacePerKm) * 10) / 10 : 0;
+                        return { number: i + 1, minute: Math.min(minuteMark, totalMin), km };
+                      });
+                      return (
+                        <div className="space-y-2">
+                          <p className="text-sm font-semibold">When to take each sachet:</p>
+                          {sachets.map((s, i) => (
+                            <div key={i} className="flex items-center gap-2 text-sm">
+                              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-primary text-[10px] font-black text-primary-foreground">{s.number}</span>
+                              <span>
+                                <strong>Sachet #{s.number}</strong> at {Math.floor(s.minute / 60) > 0 ? `${Math.floor(s.minute / 60)}h ${s.minute % 60}min` : `${s.minute} min`}
+                                {s.km > 0 && <span className="text-muted-foreground"> — ~km {s.km}</span>}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      );
+                    })()}
+                    <p className="text-xs text-muted-foreground italic">Tip: Set a repeating timer on your watch. Take sachets at aid stations with water.</p>
+                  </div>
+                ) : profile.disciplines?.[0] === 'Bike' ? (
+                  <ul className="space-y-2 text-sm">
+                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
+                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
+                      <li>• Drink {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour in small sips</li>
+                    )}
+                    <li>• Keep sachets in jersey pocket or bike bag for easy access</li>
+                  </ul>
+                ) : profile.disciplines?.[0] === 'Football' ? (
+                  <div className="space-y-3">
+                    <p className="text-sm font-medium">For Football (Soccer):</p>
+                    <ul className="space-y-2 text-sm">
+                      <li>• <strong>Pre-Match:</strong> {plan.preActivity.water}ml water + {plan.preActivity.electrolytes}x Supplme sachet ({plan.preActivity.timing})</li>
+                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 2)}ml water</li>
+                      <li>• <strong>Post-Match:</strong> {safeNumber(plan.postActivity.water)}ml water + {safeNumber(plan.postActivity.electrolytes)}x Supplme sachet ({plan.postActivity.timing})</li>
+                    </ul>
+                  </div>
+                ) : (
+                  <ul className="space-y-2 text-sm">
+                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
+                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
+                      <li>• Drink {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour</li>
+                    )}
+                    <li>• Adjust based on aid station availability</li>
+                  </ul>
+                )}
+              </div>
+
+              <div className="bg-background p-4 rounded-lg">
+                <h4 className="font-semibold mb-3">Post-Race Recovery</h4>
+                <ul className="space-y-2 text-sm">
+                  <li>• <strong>{plan.postActivity.timing}:</strong> {safeNumber(plan.postActivity.water)}ml water + <strong>{safeNumber(plan.postActivity.electrolytes)}x Supplme sachet(s)</strong></li>
+                  <li>• Continue sipping water over next 2-4 hours until reaching total</li>
+                  <li>• Monitor urine color - aim for pale yellow within 2-3 hours post-race</li>
+                </ul>
+              </div>
+            </div>
+          </Card>
+        </div>
+      )}
 
       {/* 3. The Science Behind Your Sachet Dosing (collapsible) */}
       <Accordion type="single" collapsible className="w-full">
@@ -666,7 +1184,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               {aiInsights && !loadingInsights && (
                 <Card className="mt-3 border-0 shadow-2xl bg-gradient-to-br from-card via-card to-primary/5 overflow-hidden">
                   <div className="absolute top-0 right-0 w-48 sm:w-96 h-48 sm:h-96 bg-primary/10 rounded-full blur-[120px] pointer-events-none" />
-                  <div className="relative p-4 sm:p-8 md:p-10 space-y-6">
+                  <div className="relative p-3 sm:p-6 md:p-8 lg:p-10 space-y-4 sm:space-y-6">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-lg">
@@ -826,336 +1344,23 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       )}
 
-      {/* Race Day Protocol - Only shows if user is training for a race */}
-      {profile.hasUpcomingRace && (
-        <div className="space-y-6 scroll-mt-6" id="race-day-protocol">
-          {/* Header + quick-jump nav */}
-          <div className="text-center py-6 md:py-8 space-y-4">
-            <h2 className="text-3xl md:text-4xl font-black tracking-tight uppercase text-foreground">
-              Race Day Protocol
-            </h2>
-            <p className="text-base md:text-lg font-semibold text-muted-foreground">Your 48-hour performance strategy</p>
-            <nav className="flex overflow-x-auto overflow-y-hidden flex-nowrap gap-2 pt-2 pb-1 -mx-2 px-2 justify-start sm:justify-center [scrollbar-width:thin]" aria-label="Jump to section">
-              <a href="#race-day-before" className="text-xs font-bold uppercase tracking-wider px-4 py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">Day Before</a>
-              <a href="#race-day-morning" className="text-xs font-bold uppercase tracking-wider px-4 py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">Race Morning</a>
-              {!(profile.disciplines?.includes('Swimming')) && (
-                <a href="#race-day-during" className="text-xs font-bold uppercase tracking-wider px-4 py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">During</a>
-              )}
-              <a href="#race-day-recovery" className="text-xs font-bold uppercase tracking-wider px-4 py-3 min-h-[44px] inline-flex items-center rounded-full bg-muted hover:bg-muted/80 text-foreground transition-colors whitespace-nowrap shrink-0 touch-manipulation">Recovery</a>
-            </nav>
-          </div>
+      {/* Save to Device + Share */}
+      <div className="flex flex-col sm:flex-row items-center justify-center gap-3">
+        <Button
+          onClick={handleShare}
+          disabled={isSharing}
+          size="lg"
+          className="gap-2 min-h-[48px] w-full sm:w-auto touch-manipulation"
+        >
+          {isSharing ? (
+            <Loader2 className="w-4 h-4 animate-spin" />
+          ) : (
+            <Download className="w-4 h-4" />
+          )}
+          {isSharing ? 'Generating...' : 'Save to Device'}
+        </Button>
+      </div>
 
-          {/* Single-column scroll-friendly timeline */}
-          <div className="space-y-6 max-w-2xl mx-auto">
-            {/* 1. Day Before */}
-            <section id="race-day-before" className="scroll-mt-24 rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">1</span>
-                <span className="text-2xl" aria-hidden>🗓️</span>
-                <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight">Day Before</h3>
-                  <p className="text-xs font-semibold text-muted-foreground">T-24 hours</p>
-                </div>
-              </div>
-              <div className="p-4 md:p-5 space-y-4">
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <Droplets className="w-7 h-7 mb-2 text-foreground" />
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">Hydrate</p>
-                    <p className="text-xl font-black metric-number">2–3L</p>
-                    <p className="text-xs text-muted-foreground">Throughout day</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-muted/50 border border-border">
-                    <Zap className="w-7 h-7 mb-2 text-foreground" />
-                    <p className="text-xs font-bold uppercase tracking-wider text-muted-foreground">With dinner</p>
-                    <p className="text-lg font-black metric-number">500ml + 2× Supplme</p>
-                    <p className="text-xs text-muted-foreground">5–7pm for sleep</p>
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-border space-y-1">
-                  <p className="text-xs font-medium text-foreground">When: Throughout the day; 5–7pm with dinner</p>
-                  <p className="text-xs text-muted-foreground italic">Tip: Spread 2–3L across the day. Have 500ml + 2× Supplme with dinner (5–7pm) to support sleep. Avoid alcohol, new foods, and late caffeine.</p>
-                </div>
-              </div>
-            </section>
-
-            {/* 2. Race Morning */}
-            <section id="race-day-morning" className="scroll-mt-24 rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">2</span>
-                <span className="text-2xl" aria-hidden>🌅</span>
-                <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight">Race Morning</h3>
-                  <p className="text-xs font-semibold text-muted-foreground">T-3 hours</p>
-                </div>
-              </div>
-              <div className="p-4 md:p-5 space-y-3">
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border-l-4 border-primary">
-                  <span className="text-lg font-black text-primary metric-number shrink-0">-3h</span>
-                  <div>
-                    <p className="text-sm font-bold">{plan.preActivity.water}ml + breakfast</p>
-                    <p className="text-xs text-muted-foreground">Wake up hydration</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border-l-4 border-primary">
-                  <span className="text-lg font-black text-primary metric-number shrink-0">-2h</span>
-                  <div>
-                    <p className="text-sm font-bold">{plan.preActivity.electrolytes}× Supplme + 300ml</p>
-                    <p className="text-xs text-muted-foreground">Last substantial intake</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-3 p-3 rounded-xl bg-primary/10 border-l-4 border-primary">
-                  <span className="text-lg font-black text-primary metric-number shrink-0">-30m</span>
-                  <div>
-                    <p className="text-sm font-bold">Small sips only (100–150ml)</p>
-                    <p className="text-xs text-muted-foreground">Final bathroom break</p>
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-border space-y-1">
-                  <p className="text-xs font-medium text-foreground">When: -3h {plan.preActivity.water}ml + breakfast; -2h {plan.preActivity.electrolytes}× Supplme + 300ml; -30m small sips only</p>
-                  <p className="text-xs text-muted-foreground italic">Tip: Drink the water with breakfast, then take your sachet(s) + 300ml at -2h. From -30m only small sips so you can empty your bladder before the start.</p>
-                </div>
-              </div>
-            </section>
-
-            {/* 3. During Race (hidden for swimming) - dark card so all text stays readable */}
-            {!(profile.disciplines?.includes('Swimming')) && (
-            <section id="race-day-during" className="scroll-mt-24 rounded-2xl border-2 border-elite/50 bg-zinc-900 text-white overflow-hidden shadow-xl">
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-zinc-700 bg-zinc-800/80">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-elite text-sm font-black text-white">3</span>
-                <Flag className="w-6 h-6 text-elite shrink-0" />
-                <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight text-white">During Race</h3>
-                  <p className="text-xs font-semibold text-zinc-400">Execute the plan</p>
-                </div>
-              </div>
-              <div className="p-4 md:p-5 space-y-4">
-                {profile.disciplines?.[0] === 'Triathlon' && (
-                  <div className="rounded-xl bg-elite/20 border border-elite/50 px-4 py-3">
-                    <p className="text-sm font-semibold text-elite">Triathlon: no sachets during the swim</p>
-                    <p className="text-xs text-zinc-300 mt-1">You cannot take electrolyte sachets while swimming. The {plan.duringActivity.totalElectrolytes} sachets below are for <strong>bike and run only</strong>. Pre-load with 1 sachet before the start; take the rest in T1, on the bike, in T2, and on the run.</p>
-                  </div>
-                )}
-                <div className="grid grid-cols-2 gap-3">
-                  <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Water per hour</p>
-                    <p className="text-2xl md:text-3xl font-black metric-number text-white">{safeNumber(plan.duringActivity.waterPerHour)}ml</p>
-                    <p className="text-xs text-zinc-300">Sip {plan.duringActivity.frequency.toLowerCase()}</p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-zinc-800 border border-zinc-700 text-center">
-                    <p className="text-xs font-bold uppercase tracking-wider text-zinc-400 mb-1">Supplme total</p>
-                    <p className="text-2xl md:text-3xl font-black metric-number text-white">{plan.duringActivity.totalElectrolytes} sachet{plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''}</p>
-                    {profile.disciplines?.[0] === 'Triathlon' && plan.duringActivity.totalElectrolytes > 0 && <p className="text-xs text-zinc-400">bike + run only</p>}
-                    {plan.duringActivity.totalElectrolytes > 0 && (() => {
-                      const totalMinutes = profile.sessionDuration * 60;
-                      const minutesPerSachet = Math.round(totalMinutes / plan.duringActivity.totalElectrolytes);
-                      const sodiumPerHour = Math.round(plan.duringActivity.electrolytesPerHour * SUPPLME_ELECTROLYTE_SPEC.sodium);
-                      return (
-                        <>
-                          <p className="text-xs text-zinc-300">1 every {minutesPerSachet >= 60 ? formatHoursAsTime(minutesPerSachet / 60) : `${minutesPerSachet} min`}</p>
-                          <p className="text-xs font-bold text-zinc-400 pt-1 border-t border-zinc-600">{sodiumPerHour}mg/h</p>
-                        </>
-                      );
-                    })()}
-                  </div>
-                </div>
-                <div className="pt-3 border-t border-zinc-700 space-y-1">
-                  <p className="text-xs font-medium text-zinc-300">When: Water — sip every 12–15 min. Sachets: {plan.duringActivity.totalElectrolytes > 0 && plan.duringActivity.electrolytesPerHour > 0
-                    ? `1 every ${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
-                    : plan.duringActivity.totalElectrolytes > 0 ? 'Spread evenly across the race' : 'Not required'}.</p>
-                  {profile.disciplines?.[0] === 'Triathlon' ? (
-                    <p className="text-xs text-zinc-400 italic">Tip: Take sachets in T1, on the bike, in T2, and on the run — never during the swim. Pre-load with 1 sachet before the start.</p>
-                  ) : (
-                    <p className="text-xs text-zinc-400 italic">Tip: Sip water steadily; take sachets at the suggested interval. Listen to your body and adjust if needed.</p>
-                  )}
-                </div>
-              </div>
-            </section>
-            )}
-
-            {/* 4. Recovery */}
-            <section id="race-day-recovery" className="scroll-mt-24 rounded-2xl border border-border bg-card overflow-hidden">
-              <div className="flex items-center gap-3 px-4 py-3 border-b border-border bg-muted/30">
-                <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary text-sm font-black text-primary-foreground">4</span>
-                <Target className="w-6 h-6 text-primary shrink-0" />
-                <div>
-                  <h3 className="text-lg font-black uppercase tracking-tight">Recovery</h3>
-                  <p className="text-xs font-semibold text-muted-foreground">4–6 hour window</p>
-                </div>
-              </div>
-              <div className="p-4 md:p-5">
-                <div className="space-y-4">
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-primary flex items-center justify-center text-xs font-black text-primary-foreground">0h</div>
-                      <div className="w-px h-8 bg-primary/30" />
-                    </div>
-                    <div className="pb-2">
-                      <p className="text-sm font-bold">Immediate</p>
-                      <p className="text-xs text-muted-foreground">500ml + {safeNumber(plan.postActivity.electrolytes)}× Supplme</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="flex flex-col items-center shrink-0">
-                      <div className="h-8 w-8 rounded-full bg-primary/70 flex items-center justify-center text-xs font-black text-primary-foreground">2h</div>
-                      <div className="w-px h-8 bg-primary/30" />
-                    </div>
-                    <div className="pb-2">
-                      <p className="text-sm font-bold">First phase</p>
-                      <p className="text-xs text-muted-foreground">{safeNumber(Math.round(plan.postActivity.water * 0.5))}ml + protein meal</p>
-                    </div>
-                  </div>
-                  <div className="flex gap-3">
-                    <div className="h-8 w-8 rounded-full bg-primary/40 flex items-center justify-center text-xs font-black text-primary-foreground shrink-0">6h</div>
-                    <div>
-                      <p className="text-sm font-bold">Complete</p>
-                      <p className="text-xs text-muted-foreground">{safeNumber(plan.postActivity.water)}ml total (150% loss)</p>
-                    </div>
-                  </div>
-                </div>
-                <div className="pt-3 mt-3 border-t border-border space-y-1">
-                  <p className="text-xs font-medium text-foreground">When: {plan.postActivity.timing}</p>
-                  <p className="text-xs text-muted-foreground italic">Tip: Have your sachet{safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''} with the recovery water over 4–6 hours. Aim for pale yellow urine by evening.</p>
-                </div>
-              </div>
-            </section>
-          </div>
-        </div>
-      )}
-
-      {/* Race Day Hydration Guide (legacy – hidden when main Race Day Protocol is shown) */}
-      {profile.upcomingEvents && !profile.hasUpcomingRace && (
-        <div className="space-y-6">
-          <div className="text-center py-4">
-            <h2 className="text-2xl font-bold">Race Day Hydration Plan</h2>
-            <p className="text-muted-foreground mt-2">
-              For your upcoming: <strong>{profile.upcomingEvents}</strong>
-            </p>
-          </div>
-
-          <Card className="p-6 bg-primary/5 border-primary/20">
-            <h3 className="text-xl font-semibold mb-4">Race Day Strategy</h3>
-            
-            <Alert className="mb-4">
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>Race Adjustments</AlertTitle>
-              <AlertDescription>
-                Race intensity is typically 10-15% higher than training, increasing fluid needs. 
-                Nervousness and adrenaline also increase fluid loss. Practice this strategy during training!
-              </AlertDescription>
-            </Alert>
-
-            <div className="space-y-4">
-              <div className="bg-background p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">Pre-Race Strategy</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>• <strong>{plan.preActivity.timing}:</strong> {plan.preActivity.water}ml water + <strong>{plan.preActivity.electrolytes}x Supplme sachet</strong></li>
-                  <li className="text-muted-foreground italic">Race-day bonus: Day before race, add {plan.preActivity.water}ml extra throughout the day to ensure full hydration stores</li>
-                  <li className="text-muted-foreground italic">Optional: 30 min before start, take 200-300ml water in sips if comfortable (not included in main totals)</li>
-                </ul>
-              </div>
-
-              <div className="bg-background p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">During Race - Supplme Sachet Schedule</h4>
-                {profile.disciplines?.[0] === 'Triathlon' ? (
-                  <div className="space-y-4">
-                    <p className="text-sm font-bold text-primary">For Triathlon:</p>
-                    <p className="text-xs text-muted-foreground p-2 rounded-lg bg-amber-500/10 border border-amber-500/30">
-                      <strong>You cannot take electrolyte sachets while swimming.</strong> Your {plan.duringActivity.totalElectrolytes} during-activity sachets are for <strong>bike and run only</strong> — the plan is calculated excluding swim time.
-                    </p>
-                    <div className="space-y-3">
-                      <div className="border-l-4 border-blue-500 pl-3">
-                        <p className="text-sm font-semibold">🏊 <strong>Swim Segment</strong></p>
-                        <p className="text-sm text-muted-foreground mt-1">No sachets during the swim — not possible to consume in the water. Pre-load with 1 sachet 2 hours before the start to cover the swim.</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Take all {plan.duringActivity.totalElectrolytes} during-activity sachets on the bike and run only.</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-green-500 pl-3">
-                        <p className="text-sm font-semibold">🏃 <strong>T1 Transition (Swim → Bike)</strong></p>
-                        <p className="text-sm text-muted-foreground mt-1">Take 1 Supplme sachet immediately in transition area</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Mix with water or take straight - have it ready in transition bag</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-purple-500 pl-3">
-                        <p className="text-sm font-semibold">🚴 <strong>Bike Segment</strong></p>
-                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 45-60 minutes{safeNumber(plan.duringActivity.waterPerHour) > 0 ? ` + ${Math.round(safeNumber(plan.duringActivity.waterPerHour) * 0.85)}ml water/hour` : ''}</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Tip: Set timer on watch, keep sachets in jersey pocket or bento box</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Sip water consistently throughout - don't gulp</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-green-500 pl-3">
-                        <p className="text-sm font-semibold">🏃 <strong>T2 Transition (Bike → Run)</strong></p>
-                        <p className="text-sm text-muted-foreground mt-1">Take 1 Supplme sachet as you enter T2 or immediately after mounting</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Critical timing: Stomach needs to settle before run - take early in transition</p>
-                      </div>
-                      
-                      <div className="border-l-4 border-orange-500 pl-3">
-                        <p className="text-sm font-semibold">🏃 <strong>Run Segment</strong></p>
-                        <p className="text-sm text-muted-foreground mt-1">1 sachet every 30-45 minutes at aid stations + water as tolerated</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Aim for sachets at every 2nd-3rd aid station depending on spacing</p>
-                        <p className="text-xs text-muted-foreground italic mt-1">Carry 1-2 backup sachets in race belt/pocket if aid stations are far apart</p>
-                      </div>
-                    </div>
-                    
-                    <div className="mt-4 p-3 bg-primary/10 rounded-lg border border-primary/20">
-                      <p className="text-sm font-semibold text-primary mb-2">💡 Pro Tip for Transitions:</p>
-                      <ul className="text-xs text-muted-foreground space-y-1">
-                        <li>• Pre-open sachet caps slightly for quick access in T1/T2</li>
-                        <li>• Place sachets in dedicated pockets of transition bags</li>
-                        <li>• Practice your nutrition timing during training</li>
-                        <li>• If feeling nauseated, prioritize the transition sachets</li>
-                      </ul>
-                    </div>
-                  </div>
-                ) : profile.disciplines?.[0] === 'Running' ? (
-                  <ul className="space-y-2 text-sm">
-                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet at aid station</li>
-                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
-                      <li>• Drink {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 2)}ml water every 15 minutes</li>
-                    )}
-                    <li>• For marathons: Aim for {plan.duringActivity.totalElectrolytes} sachets total during race</li>
-                    <li>• For ultras: {safeNumber(plan.duringActivity.electrolytesPerHour)} sachet(s) per hour minimum</li>
-                  </ul>
-                ) : profile.disciplines?.[0] === 'Bike' ? (
-                  <ul className="space-y-2 text-sm">
-                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
-                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
-                      <li>• Drink {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour in small sips</li>
-                    )}
-                    <li>• Keep sachets in jersey pocket or bike bag for easy access</li>
-                  </ul>
-                ) : profile.disciplines?.[0] === 'Football' ? (
-                  <div className="space-y-3">
-                    <p className="text-sm font-medium">For Football (Soccer):</p>
-                    <ul className="space-y-2 text-sm">
-                      <li>• <strong>Pre-Match:</strong> {plan.preActivity.water}ml water + {plan.preActivity.electrolytes}x Supplme sachet ({plan.preActivity.timing})</li>
-                      <li>• <strong>Half-Time:</strong> 1 Supplme sachet + {Math.round(safeNumber(plan.duringActivity.waterPerHour) / 2)}ml water</li>
-                      <li>• <strong>Post-Match:</strong> {safeNumber(plan.postActivity.water)}ml water + {safeNumber(plan.postActivity.electrolytes)}x Supplme sachet ({plan.postActivity.timing})</li>
-                    </ul>
-                  </div>
-                ) : (
-                  <ul className="space-y-2 text-sm">
-                    <li>• <strong>{plan.duringActivity.frequency}:</strong> Supplme sachet</li>
-                    {safeNumber(plan.duringActivity.waterPerHour) > 0 && (
-                      <li>• Drink {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour</li>
-                    )}
-                    <li>• Adjust based on aid station availability</li>
-                  </ul>
-                )}
-              </div>
-
-              <div className="bg-background p-4 rounded-lg">
-                <h4 className="font-semibold mb-3">Post-Race Recovery</h4>
-                <ul className="space-y-2 text-sm">
-                  <li>• <strong>{plan.postActivity.timing}:</strong> {safeNumber(plan.postActivity.water)}ml water + <strong>{safeNumber(plan.postActivity.electrolytes)}x Supplme sachet(s)</strong></li>
-                  <li>• Continue sipping water over next 2-4 hours until reaching total</li>
-                  <li>• Monitor urine color - aim for pale yellow within 2-3 hours post-race</li>
-                </ul>
-              </div>
-            </div>
-          </Card>
-        </div>
-      )}
 
 
       {/* Calculation Transparency (hidden for cleaner UI) */}

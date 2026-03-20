@@ -34,7 +34,7 @@ export function QuestionnaireStep({
         <div className="flex items-center gap-3">
           <div className="h-1 w-12 bg-gradient-to-r from-primary to-chrome rounded-full shimmer" />
         </div>
-        <h2 className="text-xl sm:text-3xl md:text-4xl font-black tracking-tight chrome-shine uppercase break-words">
+        <h2 className="text-lg sm:text-2xl md:text-3xl lg:text-4xl font-black tracking-tight chrome-shine uppercase break-words">
           {title}
         </h2>
         {description && (

@@ -65,7 +65,7 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
         <p className="text-base sm:text-lg font-bold text-foreground mb-1">
           What are you training for?
         </p>
-        <div className="grid grid-cols-3 gap-3 mt-3">
+        <div className="grid grid-cols-3 gap-2 sm:gap-3 mt-3">
           {sports.map((sport) => (
             <button
               key={sport.value}
@@ -119,7 +119,7 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
           </div>
 
           <p className="text-sm font-semibold text-foreground">Pace per discipline</p>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div className="space-y-2">
               <Label htmlFor="ar-swimPace">Swim Pace</Label>
               <Input
@@ -179,7 +179,7 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
               <div className="space-y-3 py-4">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
-                  <p className="text-4xl font-black text-primary">{fmtDuration(breakdown.total)}</p>
+                  <p className="text-2xl sm:text-3xl md:text-4xl font-black text-primary">{fmtDuration(breakdown.total)}</p>
                 </div>
                 <div className="flex flex-wrap justify-center gap-2 text-xs">
                   <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-700">Swim {Math.round(breakdown.swim.duration * 60)}min</span>

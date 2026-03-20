@@ -81,7 +81,7 @@ export function DataSourceSelector({
             onSelectSource('strava');
           }}
           className={`
-            relative flex flex-col items-center gap-3 p-6 sm:p-8 rounded-xl border-2 transition-all duration-200
+            relative flex flex-col items-center gap-3 p-4 sm:p-6 md:p-8 rounded-xl border-2 transition-all duration-200
             ${selectedSource === 'strava'
               ? 'border-[#FC4C02] bg-[#FC4C02]/5 shadow-md shadow-[#FC4C02]/10'
               : selectedSource === 'garmin'
@@ -91,8 +91,8 @@ export function DataSourceSelector({
             ${!hasStravaConfig ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
           `}
         >
-          <div className="w-12 h-12 rounded-xl bg-[#FC4C02] flex items-center justify-center text-white shadow-sm">
-            <StravaLogo className="w-6 h-6" />
+          <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-[#FC4C02] flex items-center justify-center text-white shadow-sm">
+            <StravaLogo className="w-5 sm:w-6 h-5 sm:h-6" />
           </div>
           <span className={`text-sm sm:text-base font-bold tracking-wide ${selectedSource === 'strava' ? 'text-[#FC4C02]' : 'text-foreground'}`}>
             Strava
@@ -115,7 +115,7 @@ export function DataSourceSelector({
             onSelectSource('garmin');
           }}
           className={`
-            relative flex flex-col items-center gap-3 p-6 sm:p-8 rounded-xl border-2 transition-all duration-200
+            relative flex flex-col items-center gap-3 p-4 sm:p-6 md:p-8 rounded-xl border-2 transition-all duration-200
             ${selectedSource === 'garmin'
               ? 'border-[#007CC3] bg-[#007CC3]/5 shadow-md shadow-[#007CC3]/10'
               : selectedSource === 'strava'
@@ -125,8 +125,8 @@ export function DataSourceSelector({
             ${!hasGarminConfig ? 'opacity-40 cursor-not-allowed' : 'cursor-pointer'}
           `}
         >
-          <div className="w-12 h-12 rounded-xl bg-[#007CC3] flex items-center justify-center text-white shadow-sm">
-            <GarminLogo className="w-6 h-6" />
+          <div className="w-10 sm:w-12 h-10 sm:h-12 rounded-xl bg-[#007CC3] flex items-center justify-center text-white shadow-sm">
+            <GarminLogo className="w-5 sm:w-6 h-5 sm:h-6" />
           </div>
           <span className={`text-sm sm:text-base font-bold tracking-wide ${selectedSource === 'garmin' ? 'text-[#007CC3]' : 'text-foreground'}`}>
             Garmin
@@ -177,7 +177,7 @@ export function DataSourceSelector({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
             <div className="space-y-1">
               <Label htmlFor="ds-age">{t('body.age')} *</Label>
               <Input
@@ -243,7 +243,7 @@ export function DataSourceSelector({
                 Advanced body metrics (optional)
               </AccordionTrigger>
               <AccordionContent className="pt-2 space-y-4">
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1">
                     <div className="flex items-center gap-1">
                       <Label htmlFor="ds-bodyFat">{t('body.bodyFat')}</Label>
@@ -283,7 +283,7 @@ export function DataSourceSelector({
                     placeholder={t('common.garminWhoop')}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
                   <div className="space-y-1">
                     <Label htmlFor="ds-sleep">{t('body.avgSleep')}</Label>
                     <Input
