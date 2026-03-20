@@ -153,6 +153,12 @@ export interface TriathlonSegmentPlan {
   totalFluid: number;
 }
 
+export interface AIValidation {
+  status: 'approved' | 'adjusted';
+  warnings: string[];
+  adjustments?: string[];
+}
+
 export interface AIEnhancedInsights {
   personalized_insight: string;
   risk_factors: string;
@@ -160,4 +166,5 @@ export interface AIEnhancedInsights {
   professional_recommendation: string;
   performance_comparison: string;
   optimization_tips: string[];
+  plan_validation?: AIValidation;
 }

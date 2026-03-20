@@ -60,6 +60,16 @@ const SPORT_TO_DISCIPLINE: Record<string, string> = {
   Workout: "Workout",
   Yoga: "Yoga",
   Triathlon: "Triathlon",
+  HighIntensityIntervalTraining: "HIIT",
+  MountainBikeRide: "Cycling",
+  GravelRide: "Cycling",
+  TrailRun: "Running",
+  Tennis: "Tennis",
+  Pickleball: "Pickleball",
+  Badminton: "Badminton",
+  TableTennis: "Table tennis",
+  Squash: "Squash",
+  Padel: "Padel",
 };
 
 // Strip activity to only safe, needed fields
@@ -114,7 +124,7 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
 
   for (const a of strippedActivities) {
     const sport = (a.sport_type || a.type || "") as string;
-    const mapped = SPORT_TO_DISCIPLINE[sport] || sport;
+    const mapped = SPORT_TO_DISCIPLINE[sport];
     if (mapped) disciplinesSet.add(mapped);
 
     const moving = a.moving_time as number;
@@ -222,22 +232,8 @@ serve(async (req) => {
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
       console.error("[Strava] Token exchange failed:", tokenRes.status, errText);
-      let userMessage = "Strava authorization failed. Please try connecting again.";
-      try {
-        const errJson = JSON.parse(errText);
-        const msg = errJson?.message ?? errJson?.error;
-        const errors = errJson?.errors;
-        if (Array.isArray(errors) && errors.length > 0) {
-          const parts = errors.map((e: any) => e?.field && e?.code ? `${e.field}: ${e.code}` : null).filter(Boolean);
-          if (parts.length) userMessage = `Strava: ${parts.join("; ")}`;
-        } else if (msg) {
-          userMessage = `Strava: ${msg}`;
-        }
-      } catch {
-        // use default userMessage
-      }
       return new Response(
-        JSON.stringify({ error: userMessage }),
+        JSON.stringify({ error: "Strava authorization failed. Please try connecting again." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }

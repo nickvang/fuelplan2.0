@@ -209,15 +209,21 @@ export function getTriathlonBreakdown(profile: Partial<HydrationProfile>) {
  * @param sachetsPerHour - Base sachets per hour from hydration calculator
  * @param waterPerHourBike - Water per hour for cycling (full rate)
  * @param waterPerHourRun - Water per hour for running (reduced rate)
+ * @param totalSachetBudget - Capped total during-sachets from the main calculator (ensures segment display matches main plan)
  */
 export function getTriathlonSegmentPlan(
   profile: Partial<HydrationProfile>,
   sachetsPerHour: number,
   waterPerHourBike: number,
-  waterPerHourRun: number
+  waterPerHourRun: number,
+  totalSachetBudget?: number
 ): TriathlonSegmentPlan | null {
   const breakdown = getTriathlonBreakdown(profile);
   if (!breakdown) return null;
+
+  // Cap run fluid rate at 400ml/h for triathlon events
+  // GI absorption declines during prolonged exercise; running creates more GI stress than cycling
+  const cappedRunFluidRate = Math.min(400, waterPerHourRun);
 
   // Swim: no hydration possible
   const swim = {
@@ -234,8 +240,39 @@ export function getTriathlonSegmentPlan(
     fluid: 200,
   };
 
-  // Bike: full hydration rate (best intake opportunity)
-  const bikeSachets = Math.round(sachetsPerHour * breakdown.bike.duration);
+  // T2: no sachet, but 100ml fluid
+  const t2 = {
+    duration: T2_DURATION,
+    sachets: 0,
+    fluid: 100,
+  };
+
+  // Distribute the capped sachet budget proportionally across bike and run.
+  // T1 gets 1 sachet from the budget; remaining is split by duration.
+  const budgetAfterT1 = totalSachetBudget != null
+    ? Math.max(0, totalSachetBudget - t1.sachets)
+    : undefined;
+
+  let bikeSachets: number;
+  let runSachets: number;
+
+  if (budgetAfterT1 != null) {
+    // Proportional split by duration
+    const consumableDuration = breakdown.bike.duration + breakdown.run.duration;
+    if (consumableDuration > 0) {
+      const bikeShare = breakdown.bike.duration / consumableDuration;
+      bikeSachets = Math.round(budgetAfterT1 * bikeShare);
+      runSachets = budgetAfterT1 - bikeSachets; // remainder to run so total is exact
+    } else {
+      bikeSachets = 0;
+      runSachets = 0;
+    }
+  } else {
+    // Fallback: independent calculation (legacy behavior)
+    bikeSachets = Math.round(sachetsPerHour * breakdown.bike.duration);
+    runSachets = Math.max(0, Math.round(sachetsPerHour * breakdown.run.duration));
+  }
+
   const bikeFluid = Math.round(waterPerHourBike * breakdown.bike.duration);
   const bike = {
     duration: breakdown.bike.duration,
@@ -244,16 +281,7 @@ export function getTriathlonSegmentPlan(
     fluid: bikeFluid,
   };
 
-  // T2: no sachet, but 100ml fluid
-  const t2 = {
-    duration: T2_DURATION,
-    sachets: 0,
-    fluid: 100,
-  };
-
-  // Run: reduced hydration rate
-  const runSachets = Math.max(0, Math.round(sachetsPerHour * breakdown.run.duration) - 0); // keep same rate, rely on caps
-  const runFluid = Math.round(waterPerHourRun * breakdown.run.duration);
+  const runFluid = Math.round(cappedRunFluidRate * breakdown.run.duration);
   const run = {
     duration: breakdown.run.duration,
     distance: breakdown.run.distance,

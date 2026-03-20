@@ -11,6 +11,8 @@ import QAAnalysis from "./pages/QAAnalysis";
 import LogicVerification from "./pages/LogicVerification";
 import StravaCallback from "./pages/StravaCallback";
 import GarminCallback from "./pages/GarminCallback";
+import PrivacyPolicy from "./pages/PrivacyPolicy";
+import TermsOfService from "./pages/TermsOfService";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,6 +32,8 @@ const App = () => (
           <Route path="/logic-check" element={<LogicVerification />} />
           <Route path="/strava-callback" element={<StravaCallback />} />
           <Route path="/garmin-callback" element={<GarminCallback />} />
+          <Route path="/privacy" element={<PrivacyPolicy />} />
+          <Route path="/terms" element={<TermsOfService />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>

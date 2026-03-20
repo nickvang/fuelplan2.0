@@ -297,16 +297,8 @@ serve(async (req) => {
     if (!tokenRes.ok) {
       const errText = await tokenRes.text();
       console.error("[Garmin] Token exchange failed:", tokenRes.status, errText);
-      let userMessage = "Garmin authorization failed. Please try connecting again.";
-      try {
-        const errJson = JSON.parse(errText);
-        const msg = errJson?.error_description ?? errJson?.error;
-        if (msg) userMessage = `Garmin: ${msg}`;
-      } catch {
-        // use default
-      }
       return new Response(
-        JSON.stringify({ error: userMessage }),
+        JSON.stringify({ error: "Garmin authorization failed. Please try connecting again." }),
         { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 400 }
       );
     }

@@ -367,6 +367,14 @@ const Index = () => {
     }
   }, [profile.fullName, profile.age, profile.sex, profile.height, profile.weight, profile.bodyFat, profile.restingHeartRate, profile.hrv, profile.sleepHours, profile.sleepQuality]);
 
+  function mapTriathlonDistanceKey(distanceKm: number): string {
+    if (distanceKm >= 220 && distanceKm <= 230) return 'Ironman';
+    if (distanceKm >= 110 && distanceKm <= 116) return 'Half Ironman';
+    if (distanceKm >= 50 && distanceKm <= 53) return 'Olympic';
+    if (distanceKm >= 24 && distanceKm <= 27) return 'Sprint';
+    return `${distanceKm} km`;
+  }
+
   const applyRaceToProfile = (race: Race | null) => {
     setSelectedRace(race);
     if (!race) {
@@ -425,7 +433,9 @@ const Index = () => {
     updateProfile({
       hasUpcomingRace: true,
       upcomingEvents: race.name,
-      raceDistance: distanceLabel,
+      raceDistance: race.sport === 'triathlon'
+        ? mapTriathlonDistanceKey(race.distance_km)
+        : distanceLabel,
       elevationGain: race.elevation_gain_m,
       terrain,
       trainingTempRange: {

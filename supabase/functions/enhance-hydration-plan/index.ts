@@ -247,8 +247,12 @@ Provide:
 4. professional_recommendation: When to seek sweat testing or sports nutritionist (1 sentence)
 5. performance_comparison: Compare this athlete's hydration needs to typical ${sanitizeForPrompt(profile.disciplines?.[0] || 'endurance')} athletes${hasSmartWatchData ? ', considering their recovery and strain data' : ''} (2 sentences)
 6. optimization_tips: Array of 3-4 specific, actionable tips to optimize hydration based on their ${hasSmartWatchData ? 'actual physiological metrics' : 'profile'} (each tip 1 sentence)
+7. plan_validation: Review the calculated plan (total sachets, per-hour rates, fluid volumes) against sports science literature. Return an object with:
+   - "status": "approved" if the plan looks safe and reasonable, or "adjusted" if you have concerns
+   - "warnings": array of strings — any concerns about the plan (e.g., fluid rate too high for running, total sachets excessive, etc.). Empty array if none.
+   - "adjustments": optional array of suggested changes (e.g., "Consider reducing run fluid to 350ml/h"). Omit or use empty array if no adjustments needed.
 
-Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_level": "", "professional_recommendation": "", "performance_comparison": "", "optimization_tips": []}`;
+Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_level": "", "professional_recommendation": "", "performance_comparison": "", "optimization_tips": [], "plan_validation": {"status": "approved", "warnings": [], "adjustments": []}}`;
 
     // Retry logic with provider fallback: try Gemini first, then OpenAI. On 401/403 (bad key)
     // we skip retries and try the next provider. On 200 with invalid/empty body we also try next.
@@ -280,7 +284,7 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
                 body: JSON.stringify({
                   contents: [{
                     parts: [{
-                      text: `${systemPrompt}\n\n${userPrompt}\n\nIMPORTANT: You must respond with valid JSON in this exact format:\n{"personalized_insight": "...", "risk_factors": "...", "confidence_level": "high|medium|low", "professional_recommendation": "...", "performance_comparison": "...", "optimization_tips": ["tip1", "tip2", "tip3", "tip4"]}`
+                      text: `${systemPrompt}\n\n${userPrompt}\n\nIMPORTANT: You must respond with valid JSON in this exact format:\n{"personalized_insight": "...", "risk_factors": "...", "confidence_level": "high|medium|low", "professional_recommendation": "...", "performance_comparison": "...", "optimization_tips": ["tip1", "tip2", "tip3", "tip4"], "plan_validation": {"status": "approved|adjusted", "warnings": [], "adjustments": []}}`
                     }]
                   }],
                   generationConfig: {
@@ -304,7 +308,7 @@ Return as JSON: {"personalized_insight": "", "risk_factors": "", "confidence_lev
                   model: 'gpt-4o-mini',
                   messages: [
                     { role: 'system', content: systemPrompt },
-                    { role: 'user', content: userPrompt + '\n\nIMPORTANT: Respond with valid JSON in this exact format:\n{"personalized_insight": "...", "risk_factors": "...", "confidence_level": "high|medium|low", "professional_recommendation": "...", "performance_comparison": "...", "optimization_tips": ["tip1", "tip2", "tip3", "tip4"]}' }
+                    { role: 'user', content: userPrompt + '\n\nIMPORTANT: Respond with valid JSON in this exact format:\n{"personalized_insight": "...", "risk_factors": "...", "confidence_level": "high|medium|low", "professional_recommendation": "...", "performance_comparison": "...", "optimization_tips": ["tip1", "tip2", "tip3", "tip4"], "plan_validation": {"status": "approved|adjusted", "warnings": [], "adjustments": []}}' }
                   ],
                   response_format: { type: "json_object" },
                   temperature: 0.7

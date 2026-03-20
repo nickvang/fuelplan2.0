@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { HydrationPlan, HydrationProfile, AIEnhancedInsights, SUPPLME_ELECTROLYTE_SPEC } from '@/types/hydration';
+import { HydrationPlan, HydrationProfile, AIEnhancedInsights, AIValidation, SUPPLME_ELECTROLYTE_SPEC } from '@/types/hydration';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Droplets, AlertCircle, Sparkles, ExternalLink, Calculator, BookOpen, Shield, RefreshCw, Loader2, Zap, Clock, TrendingUp, Flag, Activity, Target, Download } from 'lucide-react';
@@ -11,9 +11,7 @@ import { FullHydrationPlanProtocol } from '@/components/FullHydrationPlanProtoco
 import supplmeLogo from '@/assets/supplme-logo-sort.svg';
 import { useLanguage } from '@/contexts/LanguageContext';
 import { useRace } from '@/contexts/RaceContext';
-import { TriathlonSegmentDisplay } from '@/components/TriathlonSegmentDisplay';
 import { MetricCard } from '@/components/MetricCard';
-import { RaceTimeline } from '@/components/RaceTimeline';
 import { generateFuelPlanImage } from '@/components/ShareCard';
 
 interface HydrationPlanDisplayProps {
@@ -316,7 +314,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             />
             <MetricCard
               icon={<TrendingUp className="w-5 h-5 text-amber-500" />}
-              label="ml / hour"
+              label="Fluid needed / hour"
               value={safeNumber(plan.duringActivity.waterPerHour)}
               unit="ml"
               sublabel="During activity"
@@ -340,7 +338,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         if (profile.sessionDuration >= 4) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: '⏱️ Long-duration event — sodium losses accumulate; stick to sachet schedule' });
         if (profile.altitudeMeters > 1500) warnings.push({ color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20', text: `🏔️ Altitude (${profile.altitudeMeters}m) — increased respiratory water loss factored in` });
         if (plan.safetyFlags?.maxAmountApplied) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: '⚠️ Maximum safe intake limits applied — do not exceed recommended amounts' });
-        if (warnings.length === 0) warnings.push({ color: 'bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20', text: '✅ Conditions within normal range — standard protocol applies' });
+        if (warnings.length === 0) return null;
         return (
           <div className="space-y-2">
             {warnings.map((w, i) => (
@@ -348,6 +346,45 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 {w.text}
               </div>
             ))}
+          </div>
+        );
+      })()}
+
+      {/* AI Validation Badge */}
+      {(() => {
+        const validation = aiInsights?.plan_validation as AIValidation | undefined;
+        if (loadingInsights) return null; // Don't show anything while loading
+        if (!validation) return null;
+        return (
+          <div className="space-y-2">
+            {validation.status === 'approved' && validation.warnings.length === 0 && (
+              <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-green-500/10 text-green-700 dark:text-green-400 border-green-500/20">
+                <Shield className="w-4 h-4 flex-shrink-0" />
+                Verified by AI — plan reviewed against sports science literature
+              </div>
+            )}
+            {validation.warnings.length > 0 && (
+              <>
+                <div className="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-xs sm:text-sm font-medium bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20">
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                  AI review flagged {validation.warnings.length} concern{validation.warnings.length !== 1 ? 's' : ''}
+                </div>
+                {validation.warnings.map((warning, i) => (
+                  <div key={i} className="flex items-start gap-2 px-4 py-2 rounded-lg border text-xs bg-amber-500/5 text-amber-700 dark:text-amber-400 border-amber-500/10">
+                    <span className="mt-0.5 shrink-0">&#8226;</span>
+                    <span>{warning}</span>
+                  </div>
+                ))}
+              </>
+            )}
+            {validation.adjustments && validation.adjustments.length > 0 && (
+              <div className="px-4 py-2.5 rounded-xl border text-xs bg-blue-500/5 text-blue-700 dark:text-blue-400 border-blue-500/10 space-y-1">
+                <p className="font-medium">AI suggestions:</p>
+                {validation.adjustments.map((adj, i) => (
+                  <p key={i} className="pl-3">&#8226; {adj}</p>
+                ))}
+              </div>
+            )}
           </div>
         );
       })()}
@@ -421,14 +458,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
       {/* Full hydration plan – compact Race Day hidden here (expanded section below) */}
       <FullHydrationPlanProtocol plan={plan} profile={profile} variant="user" hideCompactRaceDay />
-
-      {/* Triathlon Segment Breakdown */}
-      {plan.triathlonSegments && (
-        <TriathlonSegmentDisplay segments={plan.triathlonSegments} />
-      )}
-
-      {/* Race Timeline */}
-      <RaceTimeline plan={plan} profile={profile} />
 
       {/* Save to Device + Share */}
       <div className="flex flex-col sm:flex-row items-center justify-center gap-3">

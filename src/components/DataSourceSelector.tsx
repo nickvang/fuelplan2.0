@@ -62,14 +62,17 @@ export function DataSourceSelector({
   return (
     <div className="space-y-6">
       {/* Connect your platform */}
-      <div className="text-center space-y-1">
+      <div className="text-center space-y-2">
         <p className="text-sm text-muted-foreground">
-          Connect your training platform to auto-fill from your data
+          Connect your training platform for a more accurate, personalized plan
+        </p>
+        <p className="text-xs text-muted-foreground/70">
+          Your real training data (heart rate, pace, activity history) helps us tailor hydration to how <em>you</em> actually perform
         </p>
       </div>
 
       {/* Strava + Garmin side by side */}
-      <div className="grid grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {/* Strava */}
         <button
           type="button"
@@ -104,8 +107,8 @@ export function DataSourceSelector({
           ) : null}
         </button>
 
-        {/* Garmin */}
-        <button
+        {/* Garmin — hidden until Garmin approval is obtained */}
+        {false && <button
           type="button"
           disabled={!hasGarminConfig}
           onClick={() => {
@@ -136,7 +139,7 @@ export function DataSourceSelector({
           ) : selectedSource === 'garmin' ? (
             <span className="text-xs font-medium text-[#007CC3] animate-pulse">Connecting...</span>
           ) : null}
-        </button>
+        </button>}
       </div>
 
       {/* Divider + Manual option */}
@@ -146,10 +149,10 @@ export function DataSourceSelector({
           type="button"
           onClick={() => onSelectSource('manual')}
           className={`
-            text-sm font-medium transition-colors duration-200 px-1
+            text-sm font-medium transition-colors duration-200 px-4 py-1.5 rounded-full border
             ${selectedSource === 'manual'
-              ? 'text-foreground underline underline-offset-4'
-              : 'text-muted-foreground hover:text-foreground'
+              ? 'text-foreground bg-accent border-border'
+              : 'text-muted-foreground hover:text-foreground hover:bg-accent/50 border-border/50 hover:border-border'
             }
           `}
         >
@@ -391,9 +394,19 @@ export function DataSourceSelector({
               <p>{t('gdpr.compliance.intro')}</p>
               <ul className="list-disc pl-4 space-y-0.5">
                 <li>{t('gdpr.dataCollection.text')}</li>
+                <li>{t('gdpr.thirdParties.text')}</li>
                 <li>{t('gdpr.storage.text')}</li>
                 <li>{t('gdpr.rights.text')}</li>
               </ul>
+              <p className="pt-1">
+                <a href="/privacy" className="underline text-primary hover:text-primary/80">
+                  {t('gdpr.fullPrivacyPolicy')}
+                </a>
+                {' | '}
+                <a href="/terms" className="underline text-primary hover:text-primary/80">
+                  {t('gdpr.termsOfService')}
+                </a>
+              </p>
               <p className="pt-1">{t('gdpr.contact')}</p>
             </AccordionContent>
           </AccordionItem>

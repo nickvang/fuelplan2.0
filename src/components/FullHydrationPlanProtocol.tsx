@@ -94,7 +94,7 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
       {/* Single-line activity + fluid loss – clear hierarchy */}
       <div className={`flex flex-wrap items-baseline gap-x-2.5 gap-y-1 text-sm leading-relaxed ${isAdmin ? 'text-zinc-400' : 'text-muted-foreground'}`}>
         <span className={isAdmin ? 'text-zinc-100 font-semibold' : 'text-foreground font-semibold'}>
-          {(pd.disciplines ?? []).join(' + ') || '—'}
+          {pd.disciplines?.[0] || '—'}
         </span>
         <span aria-hidden className="opacity-60">·</span>
         <span>{raceDistanceToKm(pd.raceDistance)}</span>
@@ -141,9 +141,15 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
               <span className="opacity-70"> · </span>
               <span className={isAdmin ? 'text-zinc-200 font-semibold tabular-nums' : 'text-foreground font-semibold tabular-nums'}>{totalWaterDuring} ml</span> total
               <br />
-              <span className={isAdmin ? 'text-zinc-200 font-semibold' : 'text-foreground font-semibold'}>{during?.electrolytesPerHour ?? 0} sachet/hr</span>
-              <span className="opacity-70"> · </span>
-              <span className={isAdmin ? 'text-zinc-200 font-semibold' : 'text-foreground font-semibold'}>{totalDuringSachets} total</span>
+              {totalDuringSachets > 0 ? (
+                <>
+                  <span className={isAdmin ? 'text-zinc-200 font-semibold' : 'text-foreground font-semibold'}>{during?.electrolytesPerHour ?? 0} sachet/hr</span>
+                  <span className="opacity-70"> · </span>
+                  <span className={isAdmin ? 'text-zinc-200 font-semibold' : 'text-foreground font-semibold'}>{totalDuringSachets} total</span>
+                </>
+              ) : (
+                <span className={isAdmin ? 'text-zinc-400 text-xs' : 'text-muted-foreground text-xs'}>Under 2h — sachets in pre + post only</span>
+              )}
             </p>
           </div>
         )}
