@@ -1,10 +1,36 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { races } from '@/data/racesDatabase';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, PencilLine } from 'lucide-react';
+import { Search, PencilLine, MapPin } from 'lucide-react';
+
+function useUserLocation() {
+  const [location, setLocation] = useState(null);
+
+  useEffect(() => {
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      (pos) => setLocation({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+      () => {},
+      { timeout: 5000, maximumAge: 600000 }
+    );
+  }, []);
+
+  return location;
+}
+
+function haversineDistance(lat1, lng1, lat2, lng2) {
+  const toRad = (deg) => (deg * Math.PI) / 180;
+  const R = 6371;
+  const dLat = toRad(lat2 - lat1);
+  const dLng = toRad(lng2 - lng1);
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos(toRad(lat1)) * Math.cos(toRad(lat2)) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
 
 // Convert ISO 3166-1 alpha-2 code to emoji flag
 const countryCodeToFlag = (code) => {
@@ -44,6 +70,7 @@ const tempChipClasses = (maxTemp) => {
 
 export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
   const [query, setQuery] = useState('');
+  const userLocation = useUserLocation();
 
   const isSearching = query.trim().length > 0;
 
@@ -51,16 +78,28 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
     const q = query.trim().toLowerCase();
     const sportRaces = races.filter((race) => race.sport === sport);
 
+    const withDistance = (list) => {
+      if (!userLocation) return list.map((r) => ({ ...r, _dist: null }));
+      return [...list]
+        .map((r) => ({
+          ...r,
+          _dist: (r.lat != null && r.lng != null)
+            ? haversineDistance(userLocation.lat, userLocation.lng, r.lat, r.lng)
+            : null,
+        }))
+        .sort((a, b) => (a._dist ?? Infinity) - (b._dist ?? Infinity));
+    };
+
     if (!q) {
-      // No search: show only the 3 most popular / first races as suggestions
-      return sportRaces.slice(0, 3);
+      return withDistance(sportRaces).slice(0, 3);
     }
 
-    return sportRaces.filter((race) => {
+    const matched = sportRaces.filter((race) => {
       const haystack = `${race.name} ${race.location} ${race.series}`.toLowerCase();
       return haystack.includes(q);
     });
-  }, [sport, query]);
+    return withDistance(matched);
+  }, [sport, query, userLocation]);
 
   const handleSelectRace = (race) => {
     onSelectRace?.(race);
@@ -187,6 +226,12 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
                     <span className="text-xs font-medium text-foreground">
                       {distanceLabel}
                     </span>
+                    {race._dist != null && (
+                      <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-blue-500/10 text-[11px] font-medium text-blue-700 dark:text-blue-300 border border-blue-500/30">
+                        <MapPin className="w-3 h-3" />
+                        ~{Math.round(race._dist)} km
+                      </span>
+                    )}
                     <span
                       className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full border text-[11px] font-medium ${tempChipClasses(
                         maxTemp
@@ -217,7 +262,7 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
 
         {!isSearching && (
           <p className="text-xs text-muted-foreground px-1 pt-1 text-center">
-            Search above to find more races
+            {userLocation ? 'Nearest to you — search above to find more races' : 'Search above to find more races'}
           </p>
         )}
       </div>
