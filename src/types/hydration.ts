@@ -7,6 +7,62 @@ export const SUPPLME_ELECTROLYTE_SPEC = {
   magnesium: 100,
 } as const;
 
+/**
+ * Medically-grounded sachet safety limits.
+ * - NIH UL for supplemental Mg = 350mg/day. Each sachet = 100mg Mg.
+ * - Absolute event max of 6 keeps total Mg from sachets at 600mg (spread over hours).
+ * - 1/h standard, 2/h extreme (200mg Mg/h acute ceiling).
+ * - 20min minimum gap between sachets for GI absorption.
+ * - 800ml/h water absorption ceiling (ACSM).
+ */
+export const SACHET_SAFETY = {
+  absoluteMaxPerEvent: 6,
+  standardPerHour: 1,
+  extremePerHour: 2,
+  minGapMinutes: 20,
+  waterCeilingMlPerHour: 800,
+  postImmediateWaterCap: 500,
+  /** Duration-based during budgets: [minHours, maxSachets] */
+  duringBudgets: [
+    { minHours: 0, max: 0 },
+    { minHours: 1, max: 1 },
+    { minHours: 2, max: 2 },
+    { minHours: 3, max: 3 },
+    { minHours: 4, max: 4 },
+    { minHours: 6, max: 5 },
+  ] as const,
+} as const;
+
+export interface PlanAlert {
+  level: 'error' | 'warning' | 'info';
+  message: string;
+  source?: string;
+}
+
+export interface StravaIntelligence {
+  hrIntensityPct?: number;
+  vo2maxEstimate?: number;
+  cardiacDriftScore?: number;
+  raceRatio?: number;
+  terrainIntensity?: number;
+  heatActivityRatio?: number;
+  trainingLoadTrend?: 'building' | 'maintaining' | 'recovering';
+  cyclingWPerKg?: number;
+  runFitnessTier?: 'beginner' | 'intermediate' | 'advanced' | 'elite';
+  avgSufferScore?: number;
+  climateZone?: 'cold' | 'temperate' | 'hot' | 'tropical';
+  longestActivityHours?: number;
+}
+
+export interface AthleteCalibration {
+  sweat_coefficient: number;
+  sodium_coefficient: number;
+  water_coefficient: number;
+  pre_water_coefficient: number;
+  total_feedback_count: number;
+  condition_outcomes?: Record<string, { better: number; same: number; worse: number }>;
+}
+
 export interface HydrationProfile {
   // 1. Body & Physiology
   fullName?: string;
@@ -111,6 +167,15 @@ export interface HydrationProfile {
       average: number;
     };
   };
+
+  /** Strava-derived intelligence signals for enhanced calculation. */
+  stravaIntelligence?: StravaIntelligence;
+
+  /** Bottle count available during activity (for carrying capacity estimates). */
+  bottleCount?: number;
+
+  /** Adaptive calibration from prior feedback (requires >= 3 feedback submissions). */
+  calibration?: AthleteCalibration;
 }
 
 export interface HydrationPlan {
@@ -140,6 +205,21 @@ export interface HydrationPlan {
     citation: string;
     url: string;
   }>;
+  /** 1-5 confidence score based on data source quality. */
+  confidenceScore?: number;
+  /** List of data sources that contributed to the plan. */
+  activeDataSources?: string[];
+  /** Pre-flight safety alerts (errors/warnings/info). */
+  preflight?: PlanAlert[];
+  /** Post-calculation validation notes. */
+  validation?: PlanAlert[];
+  /** Safety flags for UI indicators. */
+  safetyFlags?: {
+    maxAmountApplied?: boolean;
+    absoluteCeilingApplied?: boolean;
+    waterCeilingApplied?: boolean;
+    healthConditionCap?: boolean;
+  };
 }
 
 export interface TriathlonSegmentPlan {

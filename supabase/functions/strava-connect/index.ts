@@ -72,21 +72,35 @@ const SPORT_TO_DISCIPLINE: Record<string, string> = {
   Padel: "Padel",
 };
 
-// Strip activity to only safe, needed fields
+// Strip activity to safe, needed fields (expanded for intelligence signals)
 function stripActivity(a: any): Record<string, unknown> {
   return {
     id: a.id,
     sport_type: a.sport_type,
     type: a.type,
     moving_time: a.moving_time,
+    elapsed_time: a.elapsed_time,
     distance: a.distance,
     total_elevation_gain: a.total_elevation_gain,
     average_heartrate: a.average_heartrate,
     max_heartrate: a.max_heartrate,
     average_speed: a.average_speed,
+    max_speed: a.max_speed,
     start_date: a.start_date,
     start_date_local: a.start_date_local,
     name: a.name,
+    average_watts: a.average_watts,
+    weighted_average_watts: a.weighted_average_watts,
+    kilojoules: a.kilojoules,
+    average_cadence: a.average_cadence,
+    suffer_score: a.suffer_score,
+    perceived_exertion: a.perceived_exertion,
+    workout_type: a.workout_type,
+    pr_count: a.pr_count,
+    calories: a.calories,
+    start_latlng: a.start_latlng,
+    average_temp: a.average_temp,
+    has_heartrate: a.has_heartrate,
   };
 }
 
@@ -101,8 +115,183 @@ function stripAthlete(athlete: any): Record<string, unknown> | null {
   };
 }
 
+function median(arr: number[]): number {
+  if (!arr.length) return 0;
+  const sorted = [...arr].sort((a, b) => a - b);
+  return sorted[Math.floor(sorted.length / 2)];
+}
+
+interface StravaIntelligence {
+  hrIntensityPct?: number;
+  vo2maxEstimate?: number;
+  cardiacDriftScore?: number;
+  raceRatio?: number;
+  terrainIntensity?: number;
+  heatActivityRatio?: number;
+  trainingLoadTrend?: "building" | "maintaining" | "recovering";
+  cyclingWPerKg?: number;
+  runFitnessTier?: "beginner" | "intermediate" | "advanced" | "elite";
+  avgSufferScore?: number;
+  climateZone?: "cold" | "temperate" | "hot" | "tropical";
+  longestActivityHours?: number;
+}
+
+function analyseStravaData(
+  athlete: Record<string, unknown> | null,
+  activities: Record<string, unknown>[]
+): StravaIntelligence {
+  const intel: StravaIntelligence = {};
+  if (!activities.length) return intel;
+
+  const weight = typeof athlete?.weight === "number" ? athlete.weight : null;
+
+  // Collect metrics
+  const avgHRs: number[] = [];
+  const maxHRs: number[] = [];
+  const sufferScores: number[] = [];
+  const temps: number[] = [];
+  const elevGains: number[] = [];
+  const distances: number[] = [];
+  const durations: number[] = [];
+  const watts: number[] = [];
+  const runSpeeds: number[] = [];
+  let longestHours = 0;
+
+  for (const a of activities) {
+    const avgHR = a.average_heartrate as number;
+    const maxHR = a.max_heartrate as number;
+    if (typeof avgHR === "number" && avgHR > 60 && avgHR < 220) avgHRs.push(avgHR);
+    if (typeof maxHR === "number" && maxHR > 100 && maxHR < 230) maxHRs.push(maxHR);
+
+    const suffer = a.suffer_score as number;
+    if (typeof suffer === "number" && suffer > 0) sufferScores.push(suffer);
+
+    const temp = a.average_temp as number;
+    if (typeof temp === "number" && temp > -20 && temp < 55) temps.push(temp);
+
+    const elev = a.total_elevation_gain as number;
+    const dist = a.distance as number;
+    if (typeof elev === "number" && elev >= 0) elevGains.push(elev);
+    if (typeof dist === "number" && dist > 0) distances.push(dist);
+
+    const moving = a.moving_time as number;
+    if (typeof moving === "number" && moving > 0) {
+      const hours = moving / 3600;
+      durations.push(hours);
+      if (hours > longestHours) longestHours = hours;
+    }
+
+    const avgW = a.weighted_average_watts || a.average_watts;
+    if (typeof avgW === "number" && avgW > 0) watts.push(avgW as number);
+
+    const sport = (a.sport_type || a.type || "") as string;
+    const mapped = SPORT_TO_DISCIPLINE[sport];
+    if (mapped === "Running" && typeof (a.average_speed as number) === "number") {
+      runSpeeds.push(a.average_speed as number);
+    }
+  }
+
+  // 1. HR intensity as %HRmax
+  if (avgHRs.length && maxHRs.length) {
+    const estHRmax = Math.max(...maxHRs);
+    const medianAvgHR = median(avgHRs);
+    if (estHRmax > 100) {
+      intel.hrIntensityPct = Math.round((medianAvgHR / estHRmax) * 100);
+    }
+  }
+
+  // 2. VO2max estimation (Jack Daniels method for running)
+  if (runSpeeds.length) {
+    // average speed in m/s -> VO2 cost
+    const avgRunSpeed = median(runSpeeds);
+    const metersPerMin = avgRunSpeed * 60;
+    // Simplified ACSM running VO2 equation: VO2 = 0.2 * speed(m/min) + 3.5
+    const vo2 = 0.2 * metersPerMin + 3.5;
+    if (vo2 > 20 && vo2 < 90) {
+      intel.vo2maxEstimate = Math.round(vo2);
+    }
+  }
+
+  // 3. Cardiac drift score (ratio of elapsed to moving time as proxy)
+  const elapsedTimes = activities
+    .map(a => a.elapsed_time as number)
+    .filter(t => typeof t === "number" && t > 0);
+  const movingTimes = activities
+    .map(a => a.moving_time as number)
+    .filter(t => typeof t === "number" && t > 0);
+  if (elapsedTimes.length && movingTimes.length) {
+    const avgElapsed = elapsedTimes.reduce((s, v) => s + v, 0) / elapsedTimes.length;
+    const avgMoving = movingTimes.reduce((s, v) => s + v, 0) / movingTimes.length;
+    if (avgMoving > 0) {
+      intel.cardiacDriftScore = Math.round(((avgElapsed / avgMoving) - 1) * 100);
+    }
+  }
+
+  // 4. Terrain intensity (elevation gain per distance)
+  if (elevGains.length && distances.length) {
+    const totalElev = elevGains.reduce((s, v) => s + v, 0);
+    const totalDist = distances.reduce((s, v) => s + v, 0);
+    if (totalDist > 0) {
+      intel.terrainIntensity = Math.round((totalElev / (totalDist / 1000)) * 10) / 10; // m/km
+    }
+  }
+
+  // 5. Heat activity ratio
+  if (temps.length) {
+    const hotActivities = temps.filter(t => t > 25).length;
+    intel.heatActivityRatio = Math.round((hotActivities / temps.length) * 100) / 100;
+  }
+
+  // 6. Training load trend (compare first half vs second half of activities by duration)
+  if (durations.length >= 4) {
+    const mid = Math.floor(durations.length / 2);
+    const firstHalf = durations.slice(0, mid).reduce((s, v) => s + v, 0) / mid;
+    const secondHalf = durations.slice(mid).reduce((s, v) => s + v, 0) / (durations.length - mid);
+    const ratio = secondHalf / firstHalf;
+    if (ratio > 1.1) intel.trainingLoadTrend = "building";
+    else if (ratio < 0.9) intel.trainingLoadTrend = "recovering";
+    else intel.trainingLoadTrend = "maintaining";
+  }
+
+  // 7. Cycling W/kg
+  if (watts.length && weight && weight > 0) {
+    intel.cyclingWPerKg = Math.round((median(watts) / weight) * 100) / 100;
+  }
+
+  // 8. Run fitness tier
+  if (runSpeeds.length) {
+    const avgPaceMinPerKm = 1000 / (median(runSpeeds) * 60);
+    if (avgPaceMinPerKm < 4) intel.runFitnessTier = "elite";
+    else if (avgPaceMinPerKm < 5) intel.runFitnessTier = "advanced";
+    else if (avgPaceMinPerKm < 6) intel.runFitnessTier = "intermediate";
+    else intel.runFitnessTier = "beginner";
+  }
+
+  // 9. Suffer scores
+  if (sufferScores.length) {
+    intel.avgSufferScore = Math.round(median(sufferScores));
+  }
+
+  // 10. Climate zone inference
+  if (temps.length) {
+    const avgTemp = temps.reduce((s, v) => s + v, 0) / temps.length;
+    if (avgTemp < 10) intel.climateZone = "cold";
+    else if (avgTemp < 22) intel.climateZone = "temperate";
+    else if (avgTemp < 30) intel.climateZone = "hot";
+    else intel.climateZone = "tropical";
+  }
+
+  // 11. Longest activity
+  if (longestHours > 0) {
+    intel.longestActivityHours = Math.round(longestHours * 10) / 10;
+  }
+
+  return intel;
+}
+
 function mapStravaToPrefill(athlete: any, activities: any[]): {
   prefill: Record<string, unknown>;
+  stravaIntelligence: StravaIntelligence;
   strava_snapshot: { athlete: any; activities: any[] };
 } {
   const prefill: Record<string, unknown> = {};
@@ -142,8 +331,8 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
   }
   if (durations.length > 0) {
     durations.sort((a, b) => a - b);
-    const median = durations[Math.floor(durations.length / 2)];
-    prefill.sessionDuration = Math.round(median * 10) / 10;
+    const med = durations[Math.floor(durations.length / 2)];
+    prefill.sessionDuration = Math.round(med * 10) / 10;
   }
   prefill.indoorOutdoor = "outdoor";
 
@@ -152,17 +341,21 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
   for (const [discipline, values] of Object.entries(hrByDiscipline)) {
     if (!values.length) continue;
     values.sort((a, b) => a - b);
-    const median = values[Math.floor(values.length / 2)];
-    if (median && isFinite(median)) {
-      hrProfile[discipline] = { average: Math.round(median) };
+    const med = values[Math.floor(values.length / 2)];
+    if (med && isFinite(med)) {
+      hrProfile[discipline] = { average: Math.round(med) };
     }
   }
   if (Object.keys(hrProfile).length > 0) {
     prefill.hrProfile = hrProfile;
   }
 
+  // Compute Strava intelligence signals
+  const stravaIntelligence = analyseStravaData(strippedAthlete, strippedActivities);
+
   return {
     prefill,
+    stravaIntelligence,
     strava_snapshot: { athlete: strippedAthlete, activities: strippedActivities },
   };
 }
@@ -265,10 +458,10 @@ serve(async (req) => {
     const activitiesRaw = activitiesRes.ok ? await activitiesRes.json() : [];
     const activities = Array.isArray(activitiesRaw) ? activitiesRaw : [];
 
-    const { prefill, strava_snapshot } = mapStravaToPrefill(athlete, activities);
+    const { prefill, stravaIntelligence, strava_snapshot } = mapStravaToPrefill(athlete, activities);
 
     return new Response(
-      JSON.stringify({ prefill, strava_snapshot }),
+      JSON.stringify({ prefill, stravaIntelligence, strava_snapshot }),
       { headers: { ...corsHeaders, "Content-Type": "application/json" }, status: 200 }
     );
   } catch (e) {

@@ -413,9 +413,9 @@ const Index = () => {
       ? 'road-triathlon'
       : surfaceToTerrain[race.surface] || (race.sport === 'cycling' ? 'road-bike' : 'road');
 
-    // Estimate session duration from distance if not already set
+    // Estimate session duration from race distance (always override — race distance is authoritative)
     let estimatedDuration: Partial<HydrationProfile> = {};
-    if (!profile.sessionDuration && race.distance_km) {
+    if (race.distance_km) {
       let estimatedHours: number | undefined;
       const primaryDiscipline = profile.disciplines?.[0] || '';
       if (primaryDiscipline === 'Running') {

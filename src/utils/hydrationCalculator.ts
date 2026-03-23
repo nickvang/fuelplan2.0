@@ -1,5 +1,6 @@
-import { HydrationProfile, HydrationPlan, SUPPLME_ELECTROLYTE_SPEC } from '@/types/hydration';
+import { HydrationProfile, HydrationPlan, SUPPLME_ELECTROLYTE_SPEC, SACHET_SAFETY, PlanAlert } from '@/types/hydration';
 import { getTriathlonSegmentPlan } from '@/utils/triathlonCalculator';
+import { activityCommonSenseGate } from '@/utils/activityGate';
 
 export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
   if (import.meta.env.DEV) {
@@ -27,7 +28,42 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   (profile as any).weight = weight;
   
   const calculationSteps: string[] = [];
+  const preflight: PlanAlert[] = [];
+  const validation: PlanAlert[] = [];
+  const activeDataSources: string[] = ['questionnaire'];
+  let healthSachetCeiling = SACHET_SAFETY.absoluteMaxPerEvent;
   const isRaceDay = profile.raceDistance && profile.raceDistance.length > 0;
+
+  // ====== HEALTH CONDITION GATES (Part F) ======
+  if (profile.healthConditions) {
+    const conditions = profile.healthConditions.toLowerCase();
+    if (conditions.includes('kidney') || conditions.includes('renal')) {
+      healthSachetCeiling = Math.min(healthSachetCeiling, 2);
+      preflight.push({ level: 'error', message: 'Kidney condition detected: sachet limit reduced to 2/event. Consult your nephrologist before using electrolyte supplements.', source: 'health-gate' });
+    }
+    if (conditions.includes('cardiac') || conditions.includes('heart failure')) {
+      healthSachetCeiling = Math.min(healthSachetCeiling, 3);
+      preflight.push({ level: 'error', message: 'Cardiac condition detected: sachet limit reduced to 3/event. Consult your cardiologist.', source: 'health-gate' });
+    }
+    if (conditions.includes('diabetes') || conditions.includes('diabetic')) {
+      preflight.push({ level: 'warning', message: 'Diabetes noted: monitor blood glucose closely during exercise. Electrolyte sachets contain no sugar.', source: 'health-gate' });
+    }
+    if (conditions.includes('cystic fibrosis') || conditions.includes('cf')) {
+      // CF athletes lose significantly more sodium; allow higher sachets but warn
+      preflight.push({ level: 'warning', message: 'Cystic fibrosis: elevated sodium losses expected. Your plan may underestimate needs — work with your CF dietitian.', source: 'health-gate' });
+    }
+    if (conditions.includes('eating disorder') || conditions.includes('anorexia') || conditions.includes('bulimia')) {
+      healthSachetCeiling = Math.min(healthSachetCeiling, 3);
+      preflight.push({ level: 'error', message: 'Eating disorder history: sachet limit reduced. Consult your treatment team before using supplements.', source: 'health-gate' });
+    }
+    if (conditions.includes('pregnan')) {
+      healthSachetCeiling = Math.min(healthSachetCeiling, 3);
+      preflight.push({ level: 'warning', message: 'Pregnancy: sachet limit reduced to 3/event. Consult your OB/GYN for exercise hydration guidance.', source: 'health-gate' });
+    }
+    if (conditions.includes('diuretic')) {
+      preflight.push({ level: 'warning', message: 'Diuretic medication: increased fluid and electrolyte losses. Your plan accounts for baseline losses but monitor closely.', source: 'health-gate' });
+    }
+  }
   
   // ====== 1. SWEAT RATE CALCULATION (Updated Formula) ======
   const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
@@ -122,7 +158,139 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     sweatModifier += sportAdj;
     sweatAdjustments.push(`${primaryDiscipline} ${sportAdj > 0 ? '+' : ''}${(sportAdj * 100).toFixed(0)}%`);
   }
-  
+
+  // C1: Sex-based modifier (females ~15% lower sweat rate on average)
+  if (profile.sex === 'female') {
+    sweatModifier -= 0.15;
+    sweatAdjustments.push('female -15%');
+  }
+
+  // C2: RHR → fitness level (lower RHR = fitter = potentially higher sweat rate)
+  if (profile.restingHeartRate && profile.restingHeartRate > 30 && profile.restingHeartRate < 120) {
+    if (profile.restingHeartRate < 50) {
+      sweatModifier += 0.05;
+      sweatAdjustments.push('elite RHR +5%');
+    } else if (profile.restingHeartRate > 75) {
+      sweatModifier -= 0.05;
+      sweatAdjustments.push('high RHR -5%');
+    }
+  }
+
+  // C3: Body fat → lean mass (higher lean mass = higher metabolic heat)
+  if (profile.bodyFat != null && profile.bodyFat > 0 && profile.bodyFat < 60) {
+    if (profile.bodyFat < 12) {
+      sweatModifier += 0.05;
+      sweatAdjustments.push('low body fat +5%');
+    } else if (profile.bodyFat > 30) {
+      sweatModifier -= 0.05;
+      sweatAdjustments.push('high body fat -5%');
+    }
+  }
+
+  // C4: Clothing type
+  if (profile.clothingType === 'heavy') {
+    sweatModifier += 0.10;
+    sweatAdjustments.push('heavy clothing +10%');
+  } else if (profile.clothingType === 'moderate') {
+    sweatModifier += 0.05;
+    sweatAdjustments.push('moderate clothing +5%');
+  } else if (profile.clothingType === 'minimal') {
+    sweatModifier -= 0.03;
+    sweatAdjustments.push('minimal clothing -3%');
+  }
+
+  // C5: Wind (cycling/tri only — wind reduces perceived effort but not sweat)
+  if ((primaryDiscipline === 'Cycling' || primaryDiscipline === 'Triathlon') && profile.windConditions === 'windy') {
+    sweatModifier -= 0.05;
+    sweatAdjustments.push('windy (cooling effect) -5%');
+  }
+
+  // C6: Humidity continuous (replace existing binary approach)
+  if (profile.humidity != null && profile.humidity > 0) {
+    if (profile.humidity > 80) {
+      sweatModifier += 0.15;
+      sweatAdjustments.push(`very high humidity (${profile.humidity}%) +15%`);
+    } else if (profile.humidity > 60) {
+      sweatModifier += 0.08;
+      sweatAdjustments.push(`high humidity (${profile.humidity}%) +8%`);
+    } else if (profile.humidity < 30) {
+      sweatModifier -= 0.05;
+      sweatAdjustments.push(`low humidity (${profile.humidity}%) -5%`);
+    }
+  }
+
+  // C9: Strava intelligence signals
+  const si = profile.stravaIntelligence;
+  if (si) {
+    activeDataSources.push('strava-intelligence');
+
+    // %HRmax intensity
+    if (si.hrIntensityPct != null) {
+      if (si.hrIntensityPct >= 85) {
+        sweatModifier += 0.08;
+        sweatAdjustments.push(`Strava high HR intensity (${si.hrIntensityPct}%HRmax) +8%`);
+      } else if (si.hrIntensityPct >= 75) {
+        sweatModifier += 0.04;
+        sweatAdjustments.push(`Strava moderate HR (${si.hrIntensityPct}%HRmax) +4%`);
+      } else if (si.hrIntensityPct < 65) {
+        sweatModifier -= 0.04;
+        sweatAdjustments.push(`Strava low HR (${si.hrIntensityPct}%HRmax) -4%`);
+      }
+    }
+
+    // VO2max → fitness (fitter athletes sweat more efficiently)
+    if (si.vo2maxEstimate != null) {
+      if (si.vo2maxEstimate > 55) {
+        sweatModifier += 0.04;
+        sweatAdjustments.push(`Strava high VO2max (${si.vo2maxEstimate}) +4%`);
+      } else if (si.vo2maxEstimate < 35) {
+        sweatModifier -= 0.03;
+        sweatAdjustments.push(`Strava low VO2max (${si.vo2maxEstimate}) -3%`);
+      }
+    }
+
+    // Cardiac drift
+    if (si.cardiacDriftScore != null && si.cardiacDriftScore > 10) {
+      sweatModifier += 0.05;
+      sweatAdjustments.push(`Strava cardiac drift (${si.cardiacDriftScore}%) +5%`);
+    }
+
+    // Terrain intensity
+    if (si.terrainIntensity != null && si.terrainIntensity > 20) {
+      sweatModifier += 0.05;
+      sweatAdjustments.push(`Strava terrain (${si.terrainIntensity}m/km) +5%`);
+    }
+
+    // Heat acclimatisation
+    if (si.heatActivityRatio != null && si.heatActivityRatio > 0.5) {
+      sweatModifier += 0.05;
+      sweatAdjustments.push(`Strava heat-acclimatised (${(si.heatActivityRatio * 100).toFixed(0)}% hot sessions) +5%`);
+    }
+
+    // Training load trend
+    if (si.trainingLoadTrend === 'building') {
+      sweatModifier += 0.03;
+      sweatAdjustments.push('Strava load building +3%');
+    } else if (si.trainingLoadTrend === 'recovering') {
+      sweatModifier -= 0.03;
+      sweatAdjustments.push('Strava load recovering -3%');
+    }
+
+    // Cycling W/kg
+    if (si.cyclingWPerKg != null && primaryDiscipline === 'Cycling') {
+      if (si.cyclingWPerKg > 3.5) {
+        sweatModifier += 0.05;
+        sweatAdjustments.push(`Strava high W/kg (${si.cyclingWPerKg}) +5%`);
+      }
+    }
+
+    // Climate zone
+    if (si.climateZone === 'tropical' || si.climateZone === 'hot') {
+      sweatModifier += 0.03;
+      sweatAdjustments.push(`Strava ${si.climateZone} climate +3%`);
+    }
+  }
+
   // Apply all modifiers
   sweatRatePerHour = Math.round(sweatRatePerHour * sweatModifier);
   if (sweatAdjustments.length > 0) {
@@ -148,12 +316,31 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   };
 
   const knownNa = profile.knownSodiumLossPerHour;
-  const sodiumPerHour = (knownNa != null && Number.isFinite(knownNa) && knownNa >= 200 && knownNa <= 2000)
+  let sodiumPerHour = (knownNa != null && Number.isFinite(knownNa) && knownNa >= 200 && knownNa <= 2000)
     ? Math.round(knownNa)
     : (sodiumLossPerHour[profile.sweatSaltiness] || 650);
   if (knownNa != null && Number.isFinite(knownNa) && knownNa >= 200 && knownNa <= 2000) {
     calculationSteps.push(`Sodium loss: using known value ${sodiumPerHour} mg/h (from sweat test / user input)`);
   }
+
+  // C7: Daily salt diet → sodium adjustment
+  if (profile.dailySaltIntake === 'low') {
+    sodiumPerHour = Math.round(sodiumPerHour * 0.90);
+    calculationSteps.push('Low daily salt diet: sodium need -10%');
+  } else if (profile.dailySaltIntake === 'high') {
+    sodiumPerHour = Math.round(sodiumPerHour * 1.10);
+    calculationSteps.push('High daily salt diet: sodium need +10%');
+  }
+
+  // C8: Cramping history → sodium floor
+  if (profile.crampTiming && profile.crampTiming !== 'none') {
+    const crampFloor = 700; // mg/h minimum for crampers
+    if (sodiumPerHour < crampFloor) {
+      calculationSteps.push(`Cramping history: sodium floor ${sodiumPerHour} → ${crampFloor} mg/h`);
+      sodiumPerHour = crampFloor;
+    }
+  }
+
   const totalSodiumLoss = sodiumPerHour * profile.sessionDuration;
   calculationSteps.push(`Sodium loss: ${sodiumPerHour}mg/h × ${profile.sessionDuration}h = ${Math.round(totalSodiumLoss)}mg total`);
   
@@ -259,65 +446,60 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     calculationSteps.push(`Total during-sachets: ${totalDuringSachets} (for ${effectiveDurationForSachets.toFixed(1)}h effective duration)`);
   }
   
-  // ====== SAFETY CAP: Avoid overdose (Mg, Na, K considered) ======
-  // Supplme Electrolyte: Sodium 500mg, Potassium 250mg, Citrate 1380mg, Chloride 230mg, Magnesium 100mg.
-  //
-  // Science:
-  // - Mg: NIH UL for supplemental Mg = 350mg/day (laxative/GI as limiting effect). No established hourly limit
-  //   during exercise; 200mg/h is a conservative acute rate to minimise GI risk → 2 sachets/h max.
-  // - Total Mg from sachets over long events can exceed 350mg; we cap total sachets per day so Mg from
-  //   product stays ≤ 1000mg (spread over many hours) to balance Na replacement needs with Mg safety.
-  // - Na: Guidelines ~500–700mg/h during endurance; 1 sachet = 500mg → 1–1.4 sachets/h for replacement.
-  //   High sweaters (800–1400mg/h loss) may need up to 2/h; we cap at 2/h for Mg and apply daily cap below.
-  //
-  const MAX_SACHETS_PER_HOUR = 2; // SUPPLME_ELECTROLYTE_SPEC.magnesium * 2 = 200mg Mg/h — conservative acute threshold
-  const MAX_TOTAL_SACHETS_DAY = 10; // 1000mg Mg from product per day; pre+during+post ≤ this
-  
-  // Individualized total cap (Na/K/Mg over event; high sweaters can tolerate more replacement)
-  let individualMaxSachets: number;
-  
-  if (profile.sweatRate === 'high' && profile.sweatSaltiness === 'high') {
-    individualMaxSachets = 16; // High sweaters — max tolerance
-  } else if (profile.sweatRate === 'high' || profile.sweatSaltiness === 'high') {
-    individualMaxSachets = 14;
-  } else if (profile.sweatRate === 'medium' || profile.sweatSaltiness === 'medium') {
-    individualMaxSachets = 12; // Average (e.g. Ironman ~12 during is typical)
-  } else {
-    individualMaxSachets = 10;
+  // ====== SAFETY CAP: Medically-grounded limits (SACHET_SAFETY) ======
+  // Absolute max 6 per event (600mg Mg), 2/h extreme ceiling (200mg Mg/h).
+  const MAX_SACHETS_PER_HOUR = SACHET_SAFETY.extremePerHour;
+
+  // Duration-based during budget from SACHET_SAFETY
+  let durationBudget = 0;
+  for (const tier of SACHET_SAFETY.duringBudgets) {
+    if (profile.sessionDuration >= tier.minHours) durationBudget = tier.max;
   }
-  
-  if (weight < 65) {
-    individualMaxSachets = Math.max(8, Math.round(individualMaxSachets * 0.75));
-    calculationSteps.push(`Weight <65kg: max sachets reduced to ${individualMaxSachets}`);
-  } else if (weight >= 65 && weight <= 80) {
-    individualMaxSachets = Math.round(individualMaxSachets * 0.9);
-    calculationSteps.push(`Weight 65-80kg: max sachets adjusted to ${individualMaxSachets}`);
-  }
-  
-  // Mg-safe max: 2 sachets/hour × consumable hours, capped at individual max
+
+  const preElectrolytes = 1;
+
+  // Mg-safe max: extremePerHour × consumable hours
   const mgSafeMax = Math.round(MAX_SACHETS_PER_HOUR * consumableHours);
-  const finalMaxSachets = Math.min(individualMaxSachets, mgSafeMax);
-  
-  calculationSteps.push(`Safety cap: ${finalMaxSachets} sachets (profile max: ${individualMaxSachets}, Mg-safe: ${mgSafeMax})`);
-  
+  // Final during cap: minimum of duration budget and Mg-safe max
+  const finalMaxDuring = Math.min(durationBudget, mgSafeMax, SACHET_SAFETY.absoluteMaxPerEvent - preElectrolytes);
+
+  calculationSteps.push(`Safety cap: ${finalMaxDuring} during-sachets (budget: ${durationBudget}, Mg-safe: ${mgSafeMax}, absolute max event: ${SACHET_SAFETY.absoluteMaxPerEvent})`);
+
   if (sachetsPerHour > MAX_SACHETS_PER_HOUR) {
     calculationSteps.push(`Hourly cap: ${sachetsPerHour} → ${MAX_SACHETS_PER_HOUR} sachets/h (Mg 200mg/h)`);
     sachetsPerHour = MAX_SACHETS_PER_HOUR;
   }
+
+  if (totalDuringSachets > finalMaxDuring) {
+    calculationSteps.push(`Total cap: ${totalDuringSachets} → ${finalMaxDuring} during-sachets (safety ceiling)`);
+    totalDuringSachets = finalMaxDuring;
+  }
   
-  if (totalDuringSachets > finalMaxSachets) {
-    calculationSteps.push(`Total cap: ${totalDuringSachets} → ${finalMaxSachets} sachets (avoid electrolyte overdose)`);
-    totalDuringSachets = finalMaxSachets;
+  // ====== ACTIVITY GATE (Part E) ======
+  const gate = activityCommonSenseGate(
+    primaryDiscipline,
+    profile.sessionDuration,
+    !!isRaceDay,
+    profile.raceDistance,
+    profile.crampTiming
+  );
+  if (totalDuringSachets > gate.duringMax) {
+    calculationSteps.push(`Activity gate (${primaryDiscipline}): ${totalDuringSachets} → ${gate.duringMax} during-sachets`);
+    totalDuringSachets = gate.duringMax;
+  }
+  gate.notes.forEach(n => calculationSteps.push(`Gate: ${n}`));
+  gate.warnings.forEach(w => validation.push({ level: 'warning', message: w, source: 'activity-gate' }));
+
+  // ====== CALIBRATION (Part G3) ======
+  if (profile.calibration && profile.calibration.total_feedback_count >= 3) {
+    activeDataSources.push('adaptive-calibration');
+    const cal = profile.calibration;
+    const origSweat = sweatRatePerHour;
+    sweatRatePerHour = Math.round(sweatRatePerHour * cal.sweat_coefficient);
+    sodiumPerHour = Math.round(sodiumPerHour * cal.sodium_coefficient);
+    calculationSteps.push(`Calibration (${cal.total_feedback_count} feedbacks): sweat ${origSweat}→${sweatRatePerHour}, sodium ×${cal.sodium_coefficient}`);
   }
 
-  // Daily Mg cap: pre + during + post ≤ MAX_TOTAL_SACHETS_DAY (1000mg Mg from product)
-  const preElectrolytes = 1;
-  const maxDuringFromDailyCap = MAX_TOTAL_SACHETS_DAY - preElectrolytes - 1; // reserve 1 for post
-  if (totalDuringSachets > maxDuringFromDailyCap) {
-    calculationSteps.push(`Daily cap: ${totalDuringSachets} → ${maxDuringFromDailyCap} during-sachets (Mg ≤${MAX_TOTAL_SACHETS_DAY * 100}mg from product)`);
-    totalDuringSachets = maxDuringFromDailyCap;
-  }
-  
   const totalSachetsNeeded = totalDuringSachets;
 
   // ====== 3. PRE-ACTIVITY HYDRATION ======
@@ -362,8 +544,59 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     preAdjustments.push('moderate altitude +5%');
   }
   
+  // Part D: Pre-water recovery modifiers
+  // D1: HRV (low HRV = stressed → needs more pre-hydration)
+  if (profile.hrv) {
+    const hrvLower = profile.hrv.toLowerCase();
+    if (hrvLower === 'low' || hrvLower === 'poor') {
+      preAdjustmentFactor += 0.10;
+      preAdjustments.push('low HRV +10%');
+    } else if (hrvLower === 'high' || hrvLower === 'good' || hrvLower === 'excellent') {
+      preAdjustmentFactor -= 0.05;
+      preAdjustments.push('high HRV -5%');
+    }
+  }
+
+  // D2: Sleep quality
+  if (profile.sleepQuality != null) {
+    if (profile.sleepQuality <= 3) {
+      preAdjustmentFactor += 0.10;
+      preAdjustments.push('poor sleep +10%');
+    } else if (profile.sleepQuality >= 8) {
+      preAdjustmentFactor -= 0.05;
+      preAdjustments.push('great sleep -5%');
+    }
+  }
+
+  // D3: Urine color (1-8 scale; 6+ = dehydrated)
+  if (profile.urineColor != null) {
+    if (profile.urineColor >= 7) {
+      preAdjustmentFactor += 0.20;
+      preAdjustments.push(`dark urine (${profile.urineColor}/8) +20%`);
+      preflight.push({ level: 'warning', message: `Urine color ${profile.urineColor}/8 indicates significant dehydration. Prioritise rehydration before exercise.`, source: 'recovery' });
+    } else if (profile.urineColor >= 5) {
+      preAdjustmentFactor += 0.10;
+      preAdjustments.push(`moderate urine (${profile.urineColor}/8) +10%`);
+    }
+  }
+
+  // D4: Daily water intake (low baseline = needs more pre-loading)
+  if (profile.dailyWaterIntake != null && profile.dailyWaterIntake > 0) {
+    const targetDailyMl = weight * 35; // ~35ml/kg/day baseline
+    if (profile.dailyWaterIntake < targetDailyMl * 0.6) {
+      preAdjustmentFactor += 0.10;
+      preAdjustments.push('low daily water +10%');
+    }
+  }
+
+  // D5: Caffeine diuresis
+  if (profile.caffeineIntake != null && profile.caffeineIntake > 300) {
+    preAdjustmentFactor += 0.05;
+    preAdjustments.push('high caffeine +5%');
+  }
+
   let preWater = Math.round(preWaterBase * preAdjustmentFactor / 10) * 10;
-  
+
   // Hard cap at 10ml/kg
   const maxPreWater = profile.weight * 10;
   if (preWater > maxPreWater) {
@@ -488,13 +721,12 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     postElectrolytes = 1;
   }
 
-  // Cap total sachets (pre + during + post) at daily Mg limit
-  const maxPostFromDailyCap = MAX_TOTAL_SACHETS_DAY - preElectrolytes - totalDuringSachets;
-  if (postElectrolytes > maxPostFromDailyCap) {
-    calculationSteps.push(`Daily cap: post ${postElectrolytes} → ${maxPostFromDailyCap} (total sachets ≤ ${MAX_TOTAL_SACHETS_DAY})`);
-    postElectrolytes = Math.max(0, maxPostFromDailyCap);
+  // Activity gate: cap post sachets too
+  if (postElectrolytes > gate.postMax) {
+    calculationSteps.push(`Activity gate: post ${postElectrolytes} → ${gate.postMax}`);
+    postElectrolytes = gate.postMax;
   }
-  
+
   calculationSteps.push(`Post-activity: ${postTotal}ml total (${postImmediate}ml within 30min), ${postElectrolytes} sachet(s)`);
 
   // ====== 6. RECOMMENDATIONS ======
@@ -549,6 +781,64 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     recommendations.push(`🏊 Triathlon: You cannot take electrolyte sachets while swimming. Your ${totalDuringSachets} during-activity sachets are for bike and run only (calculated excluding swim time). Pre-load with 1 sachet before the start; take the rest in T1, on the bike, in T2, and on the run.`);
   }
 
+  // ====== WATER CEILING (Part A3) ======
+  const safetyFlags: Record<string, boolean> = {};
+  if (duringWaterPerHour > SACHET_SAFETY.waterCeilingMlPerHour) {
+    calculationSteps.push(`Water ceiling: ${duringWaterPerHour} → ${SACHET_SAFETY.waterCeilingMlPerHour}ml/h (ACSM absorption limit)`);
+    duringWaterPerHour = SACHET_SAFETY.waterCeilingMlPerHour;
+    safetyFlags.waterCeilingApplied = true;
+  }
+  if (postImmediate > SACHET_SAFETY.postImmediateWaterCap) {
+    postImmediate = SACHET_SAFETY.postImmediateWaterCap;
+    calculationSteps.push(`Post water cap: immediate → ${SACHET_SAFETY.postImmediateWaterCap}ml`);
+  }
+
+  // ====== ABSOLUTE CEILING (Part A2) — very last block ======
+  // Total sachets must not exceed absoluteMaxPerEvent (6) or health ceiling.
+  // Also enforce health condition ceiling.
+  const absoluteMax = Math.min(SACHET_SAFETY.absoluteMaxPerEvent, healthSachetCeiling);
+  let totalSachets = preElectrolytes + totalDuringSachets + postElectrolytes;
+  if (totalSachets > absoluteMax) {
+    safetyFlags.absoluteCeilingApplied = true;
+    const excess = totalSachets - absoluteMax;
+    calculationSteps.push(`ABSOLUTE CEILING: ${totalSachets} sachets → ${absoluteMax} (reducing by ${excess})`);
+    // Reduce post first, then during, never reduce pre
+    let toReduce = excess;
+    const postReduction = Math.min(toReduce, postElectrolytes);
+    postElectrolytes -= postReduction;
+    toReduce -= postReduction;
+    if (toReduce > 0) {
+      const duringReduction = Math.min(toReduce, totalDuringSachets);
+      totalDuringSachets -= duringReduction;
+      toReduce -= duringReduction;
+    }
+    totalSachets = preElectrolytes + totalDuringSachets + postElectrolytes;
+    if (healthSachetCeiling < SACHET_SAFETY.absoluteMaxPerEvent) {
+      safetyFlags.healthConditionCap = true;
+    }
+  }
+  if (safetyFlags.absoluteCeilingApplied || safetyFlags.waterCeilingApplied) {
+    safetyFlags.maxAmountApplied = true;
+  }
+
+  // Log final nutrient totals
+  const finalMg = totalSachets * SUPPLME_ELECTROLYTE_SPEC.magnesium;
+  const finalNa = totalSachets * SUPPLME_ELECTROLYTE_SPEC.sodium;
+  calculationSteps.push(`Final nutrients: ${totalSachets} sachets = ${finalNa}mg Na, ${finalMg}mg Mg`);
+
+  // ====== CONFIDENCE SCORE (Part H) — 1-5 ======
+  let confidenceScore = 2; // Baseline: questionnaire only
+  if (profile.hrProfile) confidenceScore += 0.5;
+  if (profile.stravaIntelligence) confidenceScore += 1;
+  if (rawSmartWatchData) confidenceScore += 1;
+  if (profile.knownSodiumLossPerHour) confidenceScore += 0.5;
+  if (profile.calibration && profile.calibration.total_feedback_count >= 3) confidenceScore += 0.5;
+  confidenceScore = Math.min(5, Math.round(confidenceScore));
+
+  if (rawSmartWatchData) activeDataSources.push('smartwatch');
+  if (profile.hrProfile) activeDataSources.push('strava-hr');
+  if (profile.knownSodiumLossPerHour) activeDataSources.push('sweat-test');
+
   // ====== 7. TRIATHLON SEGMENT PLAN ======
   let triathlonSegments = undefined;
   if (primaryDiscipline === 'Triathlon') {
@@ -583,6 +873,11 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     triathlonSegments,
     recommendations,
     calculationSteps,
+    confidenceScore,
+    activeDataSources,
+    preflight: preflight.length > 0 ? preflight : undefined,
+    validation: validation.length > 0 ? validation : undefined,
+    safetyFlags: Object.keys(safetyFlags).length > 0 ? safetyFlags : undefined,
     scientificReferences: [
       {
         pmid: '17277604',

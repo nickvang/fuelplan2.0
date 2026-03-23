@@ -1,7 +1,7 @@
 import { useState, useEffect as React_useEffect } from 'react';
 import * as React from 'react';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
-import { HydrationProfile } from '@/types/hydration';
+import { HydrationProfile, SACHET_SAFETY } from '@/types/hydration';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -21,6 +21,12 @@ interface TestScenario {
   sunExposure: 'shade' | 'partial' | 'full-sun';
   isRaceDay: boolean;
   hasSmartwatch: boolean;
+  healthConditions?: string;
+  crampTiming?: 'none' | 'early' | 'mid' | 'late' | 'post';
+  urineColor?: number;
+  raceDistance?: string;
+  /** Custom validation function — returns flags */
+  customValidation?: (plan: any) => { flags: string[]; severity: 'OK' | 'WARNING' | 'ERROR' };
 }
 
 interface TestResult extends TestScenario {
@@ -178,6 +184,151 @@ export default function QATest() {
         sunExposure: edge.sun,
         isRaceDay: edge.race,
         hasSmartwatch: false,
+      });
+      id++;
+    });
+
+    // ====== NEW SCENARIOS: Activity gate, safety, Strava, calibration, health, recovery ======
+    const newScenarios: (Partial<TestScenario> & { name: string })[] = [
+      // Activity gate scenarios
+      { name: '5K race (Running)', discipline: '5K Race (Running)', duration: 0.35, isRaceDay: true, raceDistance: '5k',
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 0) return { flags: [`5K race: ${during} during-sachets should be 0`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Gym 40min', discipline: 'Gym (Gym)', duration: 0.67,
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 0) return { flags: [`Gym <45min: ${during} during-sachets should be 0`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Gym 90min', discipline: 'Gym (Gym)', duration: 1.5,
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 1) return { flags: [`Gym 90min: ${during} during-sachets should be <=1`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Walk 1h', discipline: 'Walking (Walking)', duration: 1,
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 1) return { flags: [`Walk 1h: ${during} during-sachets should be <=1`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Walk 3h', discipline: 'Hiking (Hiking)', duration: 3,
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 2) return { flags: [`Walk 3h: ${during} during-sachets should be <=2`], severity: 'WARNING' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Swim race', discipline: 'Swimming race (Swimming)', duration: 1, isRaceDay: true, raceDistance: '1500m',
+        customValidation: (plan) => {
+          if (plan.duringActivity.totalElectrolytes > 0) return { flags: ['Swim race: should have 0 during-sachets'], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Swim training 2.5h', discipline: 'Pool (Swimming)', duration: 2.5,
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 2) return { flags: [`Swim training 2.5h: ${during} during-sachets should be <=2`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Sprint Tri', discipline: 'Triathlon (Triathlon)', duration: 1.25, isRaceDay: true, raceDistance: 'Sprint',
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 1) return { flags: [`Sprint tri: ${during} during-sachets should be <=1`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Olympic Tri', discipline: 'Triathlon (Triathlon)', duration: 2.5, isRaceDay: true, raceDistance: 'Olympic',
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 2) return { flags: [`Olympic tri: ${during} during-sachets should be <=2`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: '70.3 Tri', discipline: 'Triathlon (Triathlon)', duration: 5.5, isRaceDay: true, raceDistance: 'Ironman 70.3',
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 4) return { flags: [`70.3: ${during} during-sachets should be <=4`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Ironman', discipline: 'Triathlon (Triathlon)', duration: 11, isRaceDay: true, raceDistance: 'Ironman',
+        customValidation: (plan) => {
+          const during = plan.duringActivity.totalElectrolytes;
+          if (during > 5) return { flags: [`Ironman: ${during} during-sachets should be <=5`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      // Safety scenarios
+      { name: 'Absolute ceiling (extreme)', discipline: 'Long Trail Run (Running)', duration: 8, sweatRate: 'high' as const, sweatSaltiness: 'high' as const,
+        customValidation: (plan) => {
+          const total = plan.preActivity.electrolytes + plan.duringActivity.totalElectrolytes + plan.postActivity.electrolytes;
+          if (total > SACHET_SAFETY.absoluteMaxPerEvent) return { flags: [`Total ${total} sachets exceeds absolute max ${SACHET_SAFETY.absoluteMaxPerEvent}`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Water cap check', discipline: 'Marathon (Running)', duration: 3.5, sweatRate: 'high' as const,
+        customValidation: (plan) => {
+          if (plan.duringActivity.waterPerHour > SACHET_SAFETY.waterCeilingMlPerHour) return { flags: [`Water ${plan.duringActivity.waterPerHour}ml/h > ${SACHET_SAFETY.waterCeilingMlPerHour} cap`], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      // Health scenarios
+      { name: 'Kidney disease', discipline: 'Walking (Walking)', duration: 1.5, healthConditions: 'chronic kidney disease',
+        customValidation: (plan) => {
+          const total = plan.preActivity.electrolytes + plan.duringActivity.totalElectrolytes + plan.postActivity.electrolytes;
+          if (total > 2) return { flags: [`Kidney: ${total} total sachets should be <=2`], severity: 'ERROR' };
+          if (!plan.preflight?.some((a: any) => a.level === 'error')) return { flags: ['Kidney: missing error preflight alert'], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Cystic fibrosis', discipline: 'Running (Running)', duration: 2, healthConditions: 'cystic fibrosis',
+        customValidation: (plan) => {
+          if (!plan.preflight?.some((a: any) => a.message?.toLowerCase().includes('cystic fibrosis'))) return { flags: ['CF: missing preflight warning'], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      // Recovery scenarios
+      { name: 'Urine color 7', discipline: 'Running (Running)', duration: 1.5, urineColor: 7,
+        customValidation: (plan) => {
+          if (!plan.preflight?.some((a: any) => a.message?.toLowerCase().includes('urine'))) return { flags: ['Urine 7: missing dehydration warning'], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      { name: 'Urine color 8', discipline: 'Running (Running)', duration: 2, urineColor: 8,
+        customValidation: (plan) => {
+          if (!plan.preflight?.some((a: any) => a.message?.toLowerCase().includes('urine'))) return { flags: ['Urine 8: missing dehydration warning'], severity: 'ERROR' };
+          return { flags: [], severity: 'OK' };
+        }},
+      // Calibration scenario
+      { name: '3x cramp feedback', discipline: 'Running (Running)', duration: 3, crampTiming: 'mid' as const,
+        customValidation: (plan) => {
+          // Just verify cramping floor is applied (sodium floor 700mg/h)
+          const steps = plan.calculationSteps?.join(' ') || '';
+          if (!steps.includes('Cramping history')) return { flags: ['Cramp: cramping floor not applied'], severity: 'WARNING' };
+          return { flags: [], severity: 'OK' };
+        }},
+      // 20min gap scenario
+      { name: '20min gap check (3 sachets, 2h)', discipline: 'Running (Running)', duration: 2, sweatRate: 'high' as const, sweatSaltiness: 'high' as const, isRaceDay: true, raceDistance: 'Half Marathon',
+        customValidation: () => {
+          // This is a UI-level check; can't fully validate here but ensure sachets are reasonable
+          return { flags: [], severity: 'OK' };
+        }},
+    ];
+
+    newScenarios.forEach(ns => {
+      const disc = ns.discipline || 'Running (Running)';
+      scenarios.push({
+        id: `NEW-${String(id).padStart(4, '0')}`,
+        sex: ns.sex || 'male',
+        weight: ns.weight || 75,
+        age: ns.age || 35,
+        discipline: disc,
+        duration: ns.duration || 1,
+        sweatRate: ns.sweatRate || 'medium',
+        sweatSaltiness: ns.sweatSaltiness || 'medium',
+        tempMin: ns.tempMin || 20,
+        tempMax: ns.tempMax || 25,
+        sunExposure: ns.sunExposure || 'partial',
+        isRaceDay: ns.isRaceDay || false,
+        hasSmartwatch: false,
+        healthConditions: ns.healthConditions,
+        crampTiming: ns.crampTiming,
+        urineColor: ns.urineColor,
+        raceDistance: ns.raceDistance,
+        customValidation: ns.customValidation,
       });
       id++;
     });
@@ -347,18 +498,15 @@ export default function QATest() {
       const estimatedSwimHours = Math.min(1.5, scenario.duration * 0.12);
       consumableHours = Math.max(0, consumableHours - estimatedSwimHours);
     }
-    let individualMaxSachets = 10;
-    if (scenario.sweatRate === 'high' && scenario.sweatSaltiness === 'high') individualMaxSachets = 16;
-    else if (scenario.sweatRate === 'high' || scenario.sweatSaltiness === 'high') individualMaxSachets = 14;
-    else if (scenario.sweatRate === 'medium' || scenario.sweatSaltiness === 'medium') individualMaxSachets = 12;
-    if (scenario.weight < 65) individualMaxSachets = Math.max(8, Math.round(individualMaxSachets * 0.75));
-    else if (scenario.weight >= 65 && scenario.weight <= 80) individualMaxSachets = Math.round(individualMaxSachets * 0.9);
-    const MAX_SACHETS_PER_HOUR = 2;
-    const MAX_TOTAL_SACHETS_DAY = 10; // same as calculator (Mg safety)
+    // New safety caps using SACHET_SAFETY
+    const MAX_SACHETS_PER_HOUR = SACHET_SAFETY.extremePerHour;
+    let durationBudget = 0;
+    for (const tier of SACHET_SAFETY.duringBudgets) {
+      if (scenario.duration >= tier.minHours) durationBudget = tier.max;
+    }
     const mgSafeMax = Math.round(MAX_SACHETS_PER_HOUR * consumableHours);
-    const finalMaxSachets = Math.min(individualMaxSachets, mgSafeMax);
-    const maxDuringFromDailyCap = MAX_TOTAL_SACHETS_DAY - 1 - 1; // pre=1, reserve 1 for post
-    const expectedCapped = Math.min(expectedTotalDuring, finalMaxSachets, maxDuringFromDailyCap);
+    const finalMaxDuring = Math.min(durationBudget, mgSafeMax, SACHET_SAFETY.absoluteMaxPerEvent - 1);
+    const expectedCapped = Math.min(expectedTotalDuring, finalMaxDuring);
 
     const tolerance = Math.max(1, Math.max(expectedCapped, totalDuringSachets) * 0.5);
     if (Math.abs(totalDuringSachets - expectedCapped) > tolerance + 0.5) {
@@ -418,14 +566,26 @@ export default function QATest() {
         sweatSaltiness: scenario.sweatSaltiness,
         dailySaltIntake: 'medium',
         sunExposure: scenario.sunExposure,
-        crampTiming: 'none',
+        crampTiming: scenario.crampTiming || 'none',
         primaryGoal: 'performance',
-        raceDistance: scenario.isRaceDay ? scenario.discipline : undefined,
+        raceDistance: scenario.raceDistance || (scenario.isRaceDay ? scenario.discipline : undefined),
+        healthConditions: scenario.healthConditions,
+        urineColor: scenario.urineColor,
       };
 
       const smartwatchData = scenario.hasSmartwatch ? { hrDrift: 8 } : undefined;
       const plan = calculateHydrationPlan(profile, smartwatchData);
-      const validation = validateResult(scenario, plan);
+      let validation = validateResult(scenario, plan);
+      // Apply custom validation for new scenarios
+      if (scenario.customValidation) {
+        const custom = scenario.customValidation(plan);
+        if (custom.flags.length > 0 || custom.severity !== 'OK') {
+          validation = {
+            flags: [...custom.flags],
+            severity: custom.severity,
+          };
+        }
+      }
 
       const totalSachets = plan.preActivity.electrolytes + 
                           plan.duringActivity.totalElectrolytes + 

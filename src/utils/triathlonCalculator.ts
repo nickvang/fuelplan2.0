@@ -240,29 +240,31 @@ export function getTriathlonSegmentPlan(
     fluid: 200,
   };
 
-  // T2: no sachet, but 100ml fluid
+  // T2: 1 sachet for non-sprint, 0 for sprint; 100ml fluid
+  const raceType = (profile.raceDistance || '').toLowerCase();
+  const isSprint = raceType.includes('sprint');
   const t2 = {
     duration: T2_DURATION,
-    sachets: 0,
+    sachets: isSprint ? 0 : 1,
     fluid: 100,
   };
 
   // Distribute the capped sachet budget proportionally across bike and run.
-  // T1 gets 1 sachet from the budget; remaining is split by duration.
-  const budgetAfterT1 = totalSachetBudget != null
-    ? Math.max(0, totalSachetBudget - t1.sachets)
+  // T1 and T2 get sachets from the budget; remaining is split by duration.
+  const budgetAfterTransitions = totalSachetBudget != null
+    ? Math.max(0, totalSachetBudget - t1.sachets - t2.sachets)
     : undefined;
 
   let bikeSachets: number;
   let runSachets: number;
 
-  if (budgetAfterT1 != null) {
+  if (budgetAfterTransitions != null) {
     // Proportional split by duration
     const consumableDuration = breakdown.bike.duration + breakdown.run.duration;
     if (consumableDuration > 0) {
       const bikeShare = breakdown.bike.duration / consumableDuration;
-      bikeSachets = Math.round(budgetAfterT1 * bikeShare);
-      runSachets = budgetAfterT1 - bikeSachets; // remainder to run so total is exact
+      bikeSachets = Math.round(budgetAfterTransitions * bikeShare);
+      runSachets = budgetAfterTransitions - bikeSachets; // remainder to run so total is exact
     } else {
       bikeSachets = 0;
       runSachets = 0;
