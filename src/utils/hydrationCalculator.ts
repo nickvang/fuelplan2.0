@@ -28,8 +28,43 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   
   const calculationSteps: string[] = [];
   const isRaceDay = profile.raceDistance && profile.raceDistance.length > 0;
-  
+  const altM = (typeof profile.altitudeMeters === 'number' && profile.altitudeMeters > 0)
+    ? profile.altitudeMeters
+    : profile.altitude === 'high' ? 3000
+    : profile.altitude === 'moderate' ? 1500
+    : 0;
+
   // ====== 1. SWEAT RATE CALCULATION (Updated Formula) ======
+  let paceSweatBonus = 0;
+  let paceIntensityLabel = '';
+  const primaryDisciplineForPace = profile.disciplines?.[0] || '';
+  if (primaryDisciplineForPace === 'Running') {
+    const pace = profile.avgPace || profile.runPace || '';
+    const m = pace.match(/^(\d+):(\d{2})/);
+    if (m) {
+      const minPerKm = parseInt(m[1]) + parseInt(m[2]) / 60;
+      if (minPerKm < 4.5) { paceSweatBonus = 0.12; paceIntensityLabel = `race pace (${pace} /km) +12%`; }
+      else if (minPerKm < 5.5) { paceSweatBonus = 0.07; paceIntensityLabel = `threshold pace (${pace} /km) +7%`; }
+      else if (minPerKm < 7.0) { paceSweatBonus = 0.03; paceIntensityLabel = `moderate pace (${pace} /km) +3%`; }
+    }
+  } else if (primaryDisciplineForPace === 'Cycling') {
+    const speedStr = profile.bikeSpeed || profile.avgPace || '';
+    const m = speedStr.match(/(\d+(?:\.\d+)?)/);
+    if (m) {
+      const kmh = parseFloat(m[1]);
+      if (kmh >= 35) { paceSweatBonus = 0.10; paceIntensityLabel = `race pace (${kmh} km/h) +10%`; }
+      else if (kmh >= 28) { paceSweatBonus = 0.06; paceIntensityLabel = `threshold pace (${kmh} km/h) +6%`; }
+      else if (kmh >= 22) { paceSweatBonus = 0.02; paceIntensityLabel = `moderate pace (${kmh} km/h) +2%`; }
+    }
+  } else if (primaryDisciplineForPace === 'Triathlon') {
+    const runPace = profile.runPace || '';
+    const m = runPace.match(/^(\d+):(\d{2})/);
+    if (m) {
+      const minPerKm = parseInt(m[1]) + parseInt(m[2]) / 60;
+      if (minPerKm < 4.8) { paceSweatBonus = 0.10; paceIntensityLabel = `race-effort triathlon run (${runPace} /km) +10%`; }
+      else if (minPerKm < 6.0) { paceSweatBonus = 0.05; paceIntensityLabel = `moderate triathlon run (${runPace} /km) +5%`; }
+    }
+  }
   const avgTemp = (profile.trainingTempRange.min + profile.trainingTempRange.max) / 2;
   const primaryDiscipline = profile.disciplines?.[0] || '';
   
@@ -89,7 +124,13 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     const hrInfo = hrProfile[primaryDiscipline];
     const avgHR = typeof hrInfo?.average === 'number' ? hrInfo.average : null;
     if (avgHR && avgHR > 80 && avgHR < 210) {
-      const estMax = 220 - profile.age;
+      const hrInfoExtended = hrInfo as { average?: number; max?: number } | undefined;
+      const stravaObservedMax = typeof hrInfoExtended?.max === 'number' && hrInfoExtended.max > 150
+        ? hrInfoExtended.max : null;
+      const estMax = stravaObservedMax ?? (220 - profile.age);
+      if (stravaObservedMax) {
+        sweatAdjustments.push(`HRmax from Strava: ${stravaObservedMax} bpm (220-age would give ${220 - profile.age})`);
+      }
       if (estMax > 100) {
         const intensity = avgHR / estMax; // 0.6–0.9 typical endurance zone
         if (intensity >= 0.85) {
@@ -122,7 +163,80 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     sweatModifier += sportAdj;
     sweatAdjustments.push(`${primaryDiscipline} ${sportAdj > 0 ? '+' : ''}${(sportAdj * 100).toFixed(0)}%`);
   }
-  
+
+  // Altitude sweat modifier — ACSM 2007 (PMID 17277604)
+  if (altM >= 2500) {
+    sweatModifier += 0.08;
+    sweatAdjustments.push(`high altitude (${altM}m) +8% (ACSM 2007, PMID 17277604)`);
+  } else if (altM >= 1000) {
+    sweatModifier += 0.04;
+    sweatAdjustments.push(`moderate altitude (${altM}m) +4% (ACSM 2007, PMID 17277604)`);
+  }
+
+  // Course profile — metabolic cost of terrain — Minetti 2002 (PMID 12090446)
+  const courseProfile = (profile as any).course_profile as string | undefined;
+  if (courseProfile) {
+    const courseAdjustments: { [key: string]: number } = {
+      'flat': 0.00, 'rolling': 0.05, 'hilly': 0.10, 'mountainous': 0.16, 'extreme': 0.22,
+    };
+    const courseAdj = courseAdjustments[courseProfile] ?? 0;
+    if (courseAdj > 0) {
+      sweatModifier += courseAdj;
+      sweatAdjustments.push(`${courseProfile} course +${(courseAdj * 100).toFixed(0)}% (Minetti 2002, PMID 12090446)`);
+    }
+  }
+
+  // Sex — Baker 2023 (GSSI SSE 237)
+  if (profile.sex === 'female') {
+    sweatModifier -= 0.10;
+    sweatAdjustments.push('female sex -10% (Baker 2023, GSSI SSE 237)');
+  }
+
+  // Age — Millyard 2020 (PMID 32596421)
+  if (profile.age && profile.age >= 50) {
+    const decadesOver50 = Math.min(3, Math.floor((profile.age - 50) / 10));
+    const agePenalty = decadesOver50 * 0.05;
+    if (agePenalty > 0) {
+      sweatModifier -= agePenalty;
+      sweatAdjustments.push(`age ${profile.age} (>=50): -${(agePenalty * 100).toFixed(0)}% (Millyard 2020, PMID 32596421)`);
+    }
+  }
+
+  // Clothing — Baker 2017 (PMID 27541586)
+  const clothingAdjustments: { [key: string]: number } = {
+    'minimal': -0.05, 'light': 0.00, 'moderate': 0.08, 'heavy': 0.18,
+  };
+  const clothingAdj = clothingAdjustments[profile.clothingType] ?? 0;
+  if (clothingAdj !== 0) {
+    sweatModifier += clothingAdj;
+    sweatAdjustments.push(`${profile.clothingType} clothing ${clothingAdj > 0 ? '+' : ''}${(clothingAdj * 100).toFixed(0)}% (Baker 2017, PMID 27541586)`);
+  }
+
+  // Wind — ACSM 2007 (PMID 17277604)
+  const windAdjustments: { [key: string]: number } = {
+    'calm': 0.00, 'moderate': -0.05, 'windy': -0.12,
+  };
+  const windAdj = windAdjustments[profile.windConditions] ?? 0;
+  if (windAdj !== 0) {
+    sweatModifier += windAdj;
+    sweatAdjustments.push(`${profile.windConditions} wind ${(windAdj * 100).toFixed(0)}% (ACSM 2007, PMID 17277604)`);
+  }
+
+  // Recovery quality — Meeusen 2013 (Eur J Sport Sci)
+  const hrvStr = typeof profile.hrv === 'string' ? profile.hrv.toLowerCase() : '';
+  const poorHRV = hrvStr.includes('low') || hrvStr.includes('poor') || hrvStr.includes('bad');
+  const poorSleep = typeof profile.sleepQuality === 'number' && profile.sleepQuality <= 4;
+  if (poorHRV || poorSleep) {
+    sweatModifier += 0.07;
+    sweatAdjustments.push('low recovery (HRV/sleep) +7% (Meeusen 2013, Eur J Sport Sci)');
+  }
+
+  // Pace intensity bonus
+  if (paceSweatBonus > 0) {
+    sweatModifier += paceSweatBonus;
+    sweatAdjustments.push(`pace intensity: ${paceIntensityLabel}`);
+  }
+
   // Apply all modifiers
   sweatRatePerHour = Math.round(sweatRatePerHour * sweatModifier);
   if (sweatAdjustments.length > 0) {
@@ -156,13 +270,27 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   const totalSodiumLoss = sodiumPerHour * profile.sessionDuration;
   calculationSteps.push(`Sodium loss: ${sodiumPerHour}mg/h × ${profile.sessionDuration}h = ${Math.round(totalSodiumLoss)}mg total`);
-  
+
+  let adjustedSodiumPerHour = sodiumPerHour;
+  if (profile.sex === 'female') {
+    adjustedSodiumPerHour = Math.round(adjustedSodiumPerHour * 0.90);
+    calculationSteps.push(`Female sex: sodium loss ${sodiumPerHour} -> ${adjustedSodiumPerHour} mg/h (Baker 2017, PMID 27541586)`);
+  }
+  const saltIntakeModifiers: { [key: string]: number } = {
+    'low': 0.88, 'medium': 1.00, 'high': 1.12,
+  };
+  const saltMod = saltIntakeModifiers[profile.dailySaltIntake] ?? 1.0;
+  if (saltMod !== 1.0) {
+    adjustedSodiumPerHour = Math.round(adjustedSodiumPerHour * saltMod);
+    calculationSteps.push(`Daily salt (${profile.dailySaltIntake}): sodium x${saltMod} -> ${adjustedSodiumPerHour} mg/h (Baker 2017, PMID 27541586)`);
+  }
+
   const SACHET_SODIUM = SUPPLME_ELECTROLYTE_SPEC.sodium;
-  
+
   // ====== SACHETS PER HOUR CALCULATION (NEW FORMULA) ======
   // Base: Sachets per hour = Sodium need per hour ÷ 500
-  let baseSachetsPerHour = sodiumPerHour / SACHET_SODIUM;
-  calculationSteps.push(`Base sachets/hour: ${sodiumPerHour}mg ÷ ${SACHET_SODIUM}mg = ${baseSachetsPerHour.toFixed(2)}`);
+  let baseSachetsPerHour = adjustedSodiumPerHour / SACHET_SODIUM;
+  calculationSteps.push(`Base sachets/hour: ${adjustedSodiumPerHour}mg ÷ ${SACHET_SODIUM}mg = ${baseSachetsPerHour.toFixed(2)}`);
   
   // Weight scaling (NEW FORMULA)
   let weightMultiplier = 0.8; // default for 65-80kg
@@ -226,13 +354,24 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   // ACSM recommends 300-600mg sodium/hour for events >2h regardless of sweat profile
   // Minimum 0.5 sachets/hour ensures at least 1 sachet/hour after rounding for long events
   if (profile.sessionDuration >= 2 && sachetsPerHour < 0.5 && primaryDiscipline !== 'Swimming') {
-    calculationSteps.push(`Endurance floor: ${sachetsPerHour.toFixed(2)} → 0.5 (min for 2h+ activities)`);
+    calculationSteps.push(`Endurance floor: ${sachetsPerHour.toFixed(2)} -> 0.5 (min for 2h+ activities)`);
     sachetsPerHour = 0.5;
   }
-  
-  // Round to whole numbers only - no decimals
+
+  // Cramping history modifier — Schwellnus 2011 (Br J Sports Med)
+  // Applied AFTER the endurance floor and BEFORE rounding.
+  if (
+    profile.crampTiming &&
+    profile.crampTiming !== 'none' &&
+    profile.crampTiming !== 'post' &&
+    primaryDiscipline !== 'Swimming' &&
+    profile.sessionDuration >= 2
+  ) {
+    sachetsPerHour = sachetsPerHour * 1.15;
+    calculationSteps.push(`Cramp history (${profile.crampTiming}): sachets/hour x1.15 -> ${sachetsPerHour.toFixed(2)} (Schwellnus 2011, Br J Sports Med)`);
+  }
+
   sachetsPerHour = Math.round(sachetsPerHour);
-  
   calculationSteps.push(`Sachets per hour: ${sachetsPerHour} (whole number)`);
   
   // For triathlon: no sachets can be taken during the swim — only bike + run
@@ -354,17 +493,23 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   }
   
   // Altitude
-  if (profile.altitude === 'high') {
-    preAdjustmentFactor += 0.10;
-    preAdjustments.push('high altitude +10%');
-  } else if (profile.altitude === 'moderate') {
-    preAdjustmentFactor += 0.05;
-    preAdjustments.push('moderate altitude +5%');
+  if (altM >= 2500) {
+    preAdjustmentFactor += 0.12;
+    preAdjustments.push(`high altitude (${altM}m) +12% (ACSM 2007, PMID 17277604)`);
+  } else if (altM >= 1000) {
+    const altAdj = +(0.05 + ((altM - 1000) / 1500) * 0.05).toFixed(3);
+    preAdjustmentFactor += altAdj;
+    preAdjustments.push(`altitude (${altM}m) +${(altAdj * 100).toFixed(0)}% (ACSM 2007, PMID 17277604)`);
   }
-  
+
   let preWater = Math.round(preWaterBase * preAdjustmentFactor / 10) * 10;
-  
+
   // Hard cap at 10ml/kg
+  if (profile.urineColor && profile.urineColor >= 5) {
+    const dehydrationBoost = profile.urineColor >= 7 ? 0.25 : 0.15;
+    preAdjustmentFactor += dehydrationBoost;
+    preAdjustments.push(`urine colour ${profile.urineColor}/8 (dehydrated) +${(dehydrationBoost * 100).toFixed(0)}% (Armstrong 1994, PMID 8002581)`);
+  }
   const maxPreWater = profile.weight * 10;
   if (preWater > maxPreWater) {
     preWater = maxPreWater;
@@ -453,19 +598,16 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
   const remainingDeficit = totalFluidLoss - totalConsumedDuring;
   
   // Immediate intake (first 30 min): SAFE MAXIMUM 400ml
-  let postImmediate = Math.min(400, Math.round((remainingDeficit * 0.30) / 10) * 10);
-  
-  if (postImmediate < 200 && remainingDeficit > 500) {
+  const positiveDeficit = Math.max(0, remainingDeficit);
+  let postImmediate = Math.min(400, Math.round((positiveDeficit * 0.30) / 10) * 10);
+  if (postImmediate < 200 && positiveDeficit > 500) {
     postImmediate = 200;
   }
-  
   calculationSteps.push(`Post immediate (30min): ${postImmediate}ml (safe rate: max 400ml/30min)`);
-  
-  // Total recovery over 2-4 hours
-  let postTotal = Math.round((remainingDeficit * 1.0) / 10) * 10;
+  const postRehydrationRatio = isRaceDay ? 1.5 : 1.25;
+  let postTotal = Math.round((positiveDeficit * postRehydrationRatio) / 10) * 10;
   postTotal = Math.min(1500, postTotal);
-  
-  calculationSteps.push(`Post total (2-4h): ${postTotal}ml (conservative cap: 1500ml max)`);
+  calculationSteps.push(`Post total (2-4h): ${Math.round(positiveDeficit)}ml deficit x${postRehydrationRatio} (${isRaceDay ? 'race' : 'training'}) = ${postTotal}ml — Shirreffs 1996 (PMID 8897383)`);
   
   // Post-activity electrolytes
   const sodiumConsumedDuring = totalDuringSachets * SACHET_SODIUM;
@@ -549,6 +691,23 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     recommendations.push(`🏊 Triathlon: You cannot take electrolyte sachets while swimming. Your ${totalDuringSachets} during-activity sachets are for bike and run only (calculated excluding swim time). Pre-load with 1 sachet before the start; take the rest in T1, on the bike, in T2, and on the run.`);
   }
 
+  const twoPercentThresholdMl = Math.round(profile.weight * 20);
+  if (totalFluidLoss > twoPercentThresholdMl) {
+    recommendations.push(`Warning: Estimated fluid loss (${(totalFluidLoss / 1000).toFixed(1)}L) exceeds the ACSM 2% body-mass threshold (${(twoPercentThresholdMl / 1000).toFixed(1)}L for ${profile.weight}kg). Above this deficit, aerobic performance and thermoregulation are measurably impaired. Drink to your plan — do not rely on thirst alone. (ACSM 2007, PMID 17277604)`);
+  }
+  if (profile.sex === 'female' && profile.sessionDuration >= 3) {
+    recommendations.push(`Hyponatremia awareness: Exercise-associated hyponatremia (EAH) is more common in female endurance athletes on events >=3h. Do not exceed your planned fluid intake with plain water — each SUPPLME sachet helps maintain plasma sodium. If you experience nausea, headache, or bloating mid-event, slow your fluid intake. (Baker 2023, GSSI SSE 237)`);
+  }
+  if (profile.dehydrationSymptoms && profile.dehydrationSymptoms.length > 0) {
+    recommendations.push(`You reported dehydration symptoms (${profile.dehydrationSymptoms.join(', ')}). This suggests chronic under-hydration between sessions. Aim for >=35 ml/kg body weight daily on non-training days.`);
+  }
+  if (profile.age && profile.age >= 60) {
+    recommendations.push(`Masters athlete note (age ${profile.age}): Sweat gland output declines significantly above age 60. Start pre-loading 3-4h before activity, check urine colour before you begin, and reduce intensity if core temperature feels elevated. (Millyard 2020, PMID 32596421)`);
+  }
+  if (profile.urineColor && profile.urineColor >= 5) {
+    recommendations.push(`Urine colour ${profile.urineColor}/8 indicates you are starting this session already dehydrated. Begin drinking now and prioritise your pre-activity fluid intake. (Armstrong 1994, PMID 8002581)`);
+  }
+
   // ====== 7. TRIATHLON SEGMENT PLAN ======
   let triathlonSegments = undefined;
   if (primaryDiscipline === 'Triathlon') {
@@ -584,36 +743,18 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     recommendations,
     calculationSteps,
     scientificReferences: [
-      {
-        pmid: '17277604',
-        title: 'American College of Sports Medicine position stand. Exercise and fluid replacement.',
-        citation: 'Med Sci Sports Exerc. 2007 Feb;39(2):377-90',
-        url: 'https://pubmed.ncbi.nlm.nih.gov/17277604/'
-      },
-      {
-        pmid: '38732589',
-        title: 'Personalized Hydration Strategy to Improve Fluid Balance and Intermittent Exercise Performance In The Heat',
-        citation: 'Nutrients. 2024 May 3;16(9):1341',
-        url: 'https://pubmed.ncbi.nlm.nih.gov/38732589/'
-      },
-      {
-        pmid: '37490269',
-        title: 'The Effect of Pre-Exercise Hyperhydration on Exercise Performance, Physiological Outcomes and Gastrointestinal Symptoms: A Systematic Review',
-        citation: 'Sports Med. 2023 Jul 25;53(11):2111-2134',
-        url: 'https://pubmed.ncbi.nlm.nih.gov/37490269/'
-      },
-      {
-        pmid: '38695357',
-        title: 'Whole body sweat rate prediction: outdoor running and cycling exercise',
-        citation: 'Eur J Appl Physiol. 2024 May;124(9):2825-2840',
-        url: 'https://pubmed.ncbi.nlm.nih.gov/38695357/'
-      },
-      {
-        pmid: '23320854',
-        title: 'Water and sodium intake habits and status of ultra-endurance athletes',
-        citation: 'Nutr Metab Insights. 2013 Jan 6;6:13-27',
-        url: 'https://pubmed.ncbi.nlm.nih.gov/23320854/'
-      }
-    ]
+      { pmid: '17277604', title: 'American College of Sports Medicine position stand. Exercise and fluid replacement.', citation: 'Sawka MN et al. Med Sci Sports Exerc. 2007 Feb;39(2):377-90', url: 'https://pubmed.ncbi.nlm.nih.gov/17277604/' },
+      { pmid: '8897383', title: 'Post-exercise rehydration in man: effects of volume consumed and drink sodium content.', citation: 'Shirreffs SM et al. Med Sci Sports Exerc. 1996 Oct;28(10):1260-71', url: 'https://pubmed.ncbi.nlm.nih.gov/8897383/' },
+      { pmid: '28126906', title: 'Optimizing the restoration and maintenance of fluid balance after exercise-induced dehydration.', citation: 'Evans GH, James LJ, Shirreffs SM, Maughan RJ. J Appl Physiol. 2017 Apr;122(4):945-951', url: 'https://pubmed.ncbi.nlm.nih.gov/28126906/' },
+      { pmid: '27541586', title: 'Sweating Rate and Sweat Sodium Concentration in Athletes: A Review of Methodology and Intra/Interindividual Variability.', citation: 'Baker LB. Sports Med. 2017 Mar;47(Suppl 1):111-128', url: 'https://pubmed.ncbi.nlm.nih.gov/27541586/' },
+      { pmid: '38732589', title: 'Personalized Hydration Strategy to Improve Fluid Balance and Intermittent Exercise Performance In The Heat.', citation: 'Nutrients. 2024 May 3;16(9):1341', url: 'https://pubmed.ncbi.nlm.nih.gov/38732589/' },
+      { pmid: '37490269', title: 'The Effect of Pre-Exercise Hyperhydration on Exercise Performance, Physiological Outcomes and Gastrointestinal Symptoms: A Systematic Review.', citation: 'Sports Med. 2023 Jul 25;53(11):2111-2134', url: 'https://pubmed.ncbi.nlm.nih.gov/37490269/' },
+      { pmid: '38695357', title: 'Whole body sweat rate prediction: outdoor running and cycling exercise.', citation: 'Eur J Appl Physiol. 2024 May;124(9):2825-2840', url: 'https://pubmed.ncbi.nlm.nih.gov/38695357/' },
+      { pmid: '32596421', title: 'Impairments to Thermoregulation in the Elderly During Heat Exposure Events.', citation: 'Millyard A et al. Gerontol Geriatr Med. 2020 Jun;6:2333721420932432', url: 'https://pubmed.ncbi.nlm.nih.gov/32596421/' },
+      { pmid: '29068269', title: 'National Athletic Trainers Association position statement: Fluid replacement for the physically active.', citation: 'McDermott BP et al. J Athl Train. 2017 Sep;52(9):877-895', url: 'https://pubmed.ncbi.nlm.nih.gov/29068269/' },
+      { pmid: '8002581', title: 'Urinary indices of hydration status.', citation: 'Armstrong LE et al. Int J Sport Nutr. 1994 Sep;4(3):265-79', url: 'https://pubmed.ncbi.nlm.nih.gov/8002581/' },
+      { pmid: '12090446', title: 'Energy cost of walking and running at extreme uphill and downhill slopes.', citation: 'Minetti AE et al. J Physiol. 2002 Sep 1;543(Pt 2):667-72', url: 'https://pubmed.ncbi.nlm.nih.gov/12090446/' },
+      { pmid: '23320854', title: 'Water and sodium intake habits and status of ultra-endurance athletes.', citation: 'Nutr Metab Insights. 2013 Jan 6;6:13-27', url: 'https://pubmed.ncbi.nlm.nih.gov/23320854/' },
+    ],
   };
 }

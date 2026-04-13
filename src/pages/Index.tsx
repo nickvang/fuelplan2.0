@@ -453,6 +453,7 @@ const Index = () => {
       sunExposure: 'partial',
       windConditions: 'moderate',
       clothingType: 'light',
+      course_profile: race.course_profile,
       ...estimatedDuration,
     } as Partial<HydrationProfile>);
 

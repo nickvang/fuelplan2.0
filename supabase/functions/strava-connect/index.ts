@@ -121,6 +121,7 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
   const disciplinesSet = new Set<string>();
   const durations: number[] = [];
   const hrByDiscipline: Record<string, number[]> = {};
+  const maxHrByDiscipline: Record<string, number[]> = {};
 
   for (const a of strippedActivities) {
     const sport = (a.sport_type || a.type || "") as string;
@@ -135,6 +136,12 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
       if (!hrByDiscipline[mapped]) hrByDiscipline[mapped] = [];
       hrByDiscipline[mapped].push(avgHR);
     }
+
+    const maxHR = typeof a.max_heartrate === 'number' ? a.max_heartrate : null;
+    if (maxHR && maxHR > 120 && maxHR < 230 && mapped) {
+      if (!maxHrByDiscipline[mapped]) maxHrByDiscipline[mapped] = [];
+      maxHrByDiscipline[mapped].push(maxHR);
+    }
   }
 
   if (disciplinesSet.size > 0) {
@@ -148,14 +155,23 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
   prefill.indoorOutdoor = "outdoor";
 
   // Build a compact HR profile per discipline (median average HR)
-  const hrProfile: Record<string, { average: number }> = {};
+  const hrProfile: Record<string, { average: number; max?: number }> = {};
   for (const [discipline, values] of Object.entries(hrByDiscipline)) {
     if (!values.length) continue;
     values.sort((a, b) => a - b);
     const median = values[Math.floor(values.length / 2)];
-    if (median && isFinite(median)) {
-      hrProfile[discipline] = { average: Math.round(median) };
+    if (!median || !isFinite(median)) continue;
+    const entry: { average: number; max?: number } = { average: Math.round(median) };
+    const maxValues = maxHrByDiscipline[discipline] || [];
+    if (maxValues.length >= 3) {
+      maxValues.sort((a, b) => a - b);
+      const p90idx = Math.min(maxValues.length - 1, Math.floor(maxValues.length * 0.9));
+      const observedMax = maxValues[p90idx];
+      if (observedMax && isFinite(observedMax) && observedMax > 150) {
+        entry.max = Math.round(observedMax);
+      }
     }
+    hrProfile[discipline] = entry;
   }
   if (Object.keys(hrProfile).length > 0) {
     prefill.hrProfile = hrProfile;
