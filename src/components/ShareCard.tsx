@@ -53,43 +53,18 @@ function drawLine(
   ctx.stroke();
 }
 
-function drawCircle(
-  ctx: CanvasRenderingContext2D,
-  x: number,
-  y: number,
-  r: number,
-  strokeColor: string,
-  text?: string,
-) {
-  ctx.beginPath();
-  ctx.arc(x, y, r, 0, Math.PI * 2);
-  ctx.strokeStyle = strokeColor;
-  ctx.lineWidth = 1.5;
-  ctx.stroke();
-  if (text) {
-    ctx.font = 'bold 20px system-ui, sans-serif';
-    ctx.fillStyle = strokeColor;
-    ctx.textAlign = 'center';
-    ctx.textBaseline = 'middle';
-    ctx.fillText(text, x, y);
-  }
-}
-
-// ── Colors ──
-const BG = '#0a0a0a';
-const WHITE = '#ffffff';
-const DIM = 'rgba(255,255,255,0.40)';
-const MED = 'rgba(255,255,255,0.60)';
-const LINE_COLOR = 'rgba(255,255,255,0.12)';
-const FOOTER_DIM = 'rgba(255,255,255,0.20)';
+// ── Colors (monochrome, white bg) ──
+const BG = '#ffffff';
+const BLACK = '#0a0a0a';
+const GRAY = '#6b7280';
+const LIGHT_GRAY = '#d1d5db';
+const LABEL_GRAY = '#9ca3af';
 
 // ── Fonts ──
-const MONO = (weight: string, size: number) => `${weight} ${size}px "SF Mono", Menlo, Consolas, monospace`;
 const SANS = (weight: string, size: number) => `${weight} ${size}px system-ui, -apple-system, "Helvetica Neue", Arial, sans-serif`;
 
 /**
- * Generates a 1080×1920 PNG Blob of the fuel plan using the Canvas 2D API.
- * No DOM rendering, no font embedding — just direct canvas drawing.
+ * Generates a 1080x1920 PNG Blob of the fuel plan — white background, black text, clean monochrome.
  */
 export async function generateFuelPlanImage(
   plan: HydrationPlan,
@@ -103,8 +78,6 @@ export async function generateFuelPlanImage(
   canvas.width = W;
   canvas.height = H;
   const ctx = canvas.getContext('2d')!;
-
-  // Reset text baseline for consistent positioning
   ctx.textBaseline = 'top';
 
   // ── Background ──
@@ -123,204 +96,199 @@ export async function generateFuelPlanImage(
   const isSwimOnly =
     profile.disciplines?.includes('Swimming') && !profile.disciplines?.includes('Triathlon');
 
-  const sodiumPerHour = (() => {
-    if (profile.knownSodiumLossPerHour != null && profile.knownSodiumLossPerHour >= 200)
-      return Math.round(profile.knownSodiumLossPerHour);
-    return { low: 400, medium: 650, high: 1100 }[profile.sweatSaltiness ?? 'medium'] ?? 650;
-  })();
-
   const raceName = selectedRace?.name || profile.disciplines?.[0] || 'Activity';
   const raceSubtitle = selectedRace
     ? `${selectedRace.distance_km % 1 === 0 ? selectedRace.distance_km : selectedRace.distance_km.toFixed(1)} km`
     : `${distance} km`;
 
-  // In-race sachet markers
-  const inRaceSachets: { letter: string; km: number }[] = [];
+  // Sachet markers for in-race
   const sachetCount = Math.min(plan.duringActivity.totalElectrolytes, 6);
-  for (let i = 0; i < sachetCount; i++) {
-    inRaceSachets.push({
-      letter: String.fromCharCode(65 + i),
-      km: Math.round((distance / (plan.duringActivity.totalElectrolytes + 1)) * (i + 1)),
-    });
+  const inRaceSachets: { number: number; km: number }[] = [];
+  if (sachetCount > 0 && distance > 0) {
+    const totalMin = Math.round(profile.sessionDuration * 60);
+    const startOffset = Math.round(totalMin * 0.2);
+    const endCutoff = Math.max(0, totalMin - 20);
+    const usableWindow = Math.max(1, endCutoff - startOffset);
+    const rawInterval = sachetCount > 1 ? Math.round(usableWindow / (sachetCount - 1)) : usableWindow;
+    const interval = Math.max(rawInterval, 20);
+    const pacePerKm = totalMin / distance;
+    for (let i = 0; i < sachetCount; i++) {
+      const minuteMark = Math.min(startOffset + Math.round(interval * i), endCutoff);
+      const km = Math.round((minuteMark / pacePerKm) * 10) / 10;
+      inRaceSachets.push({ number: i + 1, km });
+    }
   }
 
-  // ════════════════════════════════════════
-  // HEADER
-  // ════════════════════════════════════════
-  drawText(ctx, 'Supplme', 72, 64, SANS('700', 22), WHITE);
-  drawText(ctx, 'Hydration Plan', 72, 90, SANS('400', 13), DIM);
-  drawText(ctx, 'supplme.com', W - 72, 68, SANS('400', 13), DIM, 'right');
+  const PAD = 72;
+  const CW = W - PAD * 2; // content width
+  let y = PAD;
 
   // ════════════════════════════════════════
-  // RACE NAME
+  // SUPPLME LOGO (text-based)
   // ════════════════════════════════════════
-  const nameFontSize = raceName.length > 24 ? 52 : 68;
-  drawText(ctx, raceName, 72, 160, SANS('800', nameFontSize), WHITE);
-  drawText(ctx, 'Fuel Plan', 72, 160 + nameFontSize + 12, SANS('300', 42), 'rgba(255,255,255,0.35)');
+  drawText(ctx, 'SUPPLME', PAD, y, SANS('800', 32), BLACK);
+  y += 50;
 
   // ════════════════════════════════════════
-  // LEFT COLUMN — Protocol
+  // ACTIVITY LABEL
   // ════════════════════════════════════════
-  const LX = 72;
-  const LW = 600;
-  let ly = 380;
+  const activityParts: string[] = [];
+  if (profile.disciplines?.[0]) activityParts.push(profile.disciplines[0]);
+  if (profile.raceDistance) activityParts.push(profile.raceDistance);
+  if (profile.terrain) activityParts.push(profile.terrain);
+  const activityLabel = activityParts.join('  /  ') || 'Activity';
+  drawText(ctx, activityLabel.toUpperCase(), PAD, y, SANS('600', 16), LABEL_GRAY);
+  y += 32;
 
-  const drawDivider = () => {
-    drawLine(ctx, LX, ly, LX + LW, ly, LINE_COLOR);
-  };
+  // ════════════════════════════════════════
+  // TITLE
+  // ════════════════════════════════════════
+  drawText(ctx, 'Your Race Day', PAD, y, SANS('700', 52), BLACK);
+  y += 60;
+  drawText(ctx, 'Hydration Plan', PAD, y, SANS('700', 52), BLACK);
+  y += 80;
 
-  const drawSectionLabel = (text: string) => {
-    ly += 20;
-    drawText(ctx, text, LX, ly, MONO('400', 18), DIM);
-    ctx.letterSpacing = '6px';
-    // Canvas doesn't support letterSpacing universally — draw manually spaced
-    ctx.font = MONO('400', 18);
-    ctx.fillStyle = DIM;
-    ctx.textAlign = 'left';
-    let cx = LX;
-    for (const ch of text.toUpperCase()) {
-      ctx.fillText(ch, cx, ly);
-      cx += ctx.measureText(ch).width + 6;
+  // ════════════════════════════════════════
+  // STATS GRID (4 columns)
+  // ════════════════════════════════════════
+  const statW = Math.floor(CW / 4);
+  const stats = [
+    { label: 'DISTANCE', value: `${distance}`, unit: 'km' },
+    { label: 'TARGET TIME', value: formatDuration(profile.sessionDuration), unit: '' },
+    { label: 'FLUID LOSS', value: `${(safeNumber(plan.totalFluidLoss) / 1000).toFixed(1)}`, unit: 'L' },
+    { label: 'SACHETS', value: `${totalSachets}`, unit: 'total' },
+  ];
+
+  // Grid background
+  ctx.fillStyle = '#f9fafb';
+  ctx.beginPath();
+  ctx.roundRect(PAD, y, CW, 100, 12);
+  ctx.fill();
+  ctx.strokeStyle = LIGHT_GRAY;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  stats.forEach((stat, i) => {
+    const sx = PAD + statW * i;
+    if (i > 0) drawLine(ctx, sx, y + 16, sx, y + 84, LIGHT_GRAY);
+    drawText(ctx, stat.label, sx + statW / 2, y + 16, SANS('600', 13), LABEL_GRAY, 'center');
+    const valueText = stat.unit ? `${stat.value} ${stat.unit}` : stat.value;
+    drawText(ctx, valueText, sx + statW / 2, y + 42, SANS('700', 28), BLACK, 'center');
+  });
+  y += 130;
+
+  // ════════════════════════════════════════
+  // SACHET SUMMARY (3 columns)
+  // ════════════════════════════════════════
+  drawText(ctx, `SACHET SUMMARY  /  ${totalSachets} total`.toUpperCase(), PAD, y, SANS('600', 14), LABEL_GRAY);
+  y += 30;
+
+  const colW = Math.floor(CW / 3);
+  ctx.fillStyle = '#f9fafb';
+  ctx.beginPath();
+  ctx.roundRect(PAD, y, CW, 110, 12);
+  ctx.fill();
+  ctx.strokeStyle = LIGHT_GRAY;
+  ctx.lineWidth = 1;
+  ctx.stroke();
+
+  const sachetCols = [
+    { count: plan.preActivity.electrolytes, label: 'PRE-RACE', sub: 'T-2 h' },
+    { count: plan.duringActivity.totalElectrolytes, label: 'DURING', sub: plan.duringActivity.totalElectrolytes > 0 ? `at ${Math.round(distance / 2 * 10) / 10} km` : 'None' },
+    { count: plan.postActivity.electrolytes, label: 'POST-RACE', sub: 'at finish' },
+  ];
+
+  sachetCols.forEach((col, i) => {
+    const cx = PAD + colW * i;
+    if (i > 0) drawLine(ctx, cx, y + 16, cx, y + 94, LIGHT_GRAY);
+    drawText(ctx, `${col.count}`, cx + colW / 2, y + 16, SANS('700', 36), BLACK, 'center');
+    drawText(ctx, col.label, cx + colW / 2, y + 60, SANS('600', 13), LABEL_GRAY, 'center');
+    drawText(ctx, col.sub, cx + colW / 2, y + 80, SANS('400', 13), LABEL_GRAY, 'center');
+  });
+  y += 140;
+
+  // ════════════════════════════════════════
+  // 48-HOUR PROTOCOL
+  // ════════════════════════════════════════
+  drawText(ctx, '48-HOUR RACE DAY PROTOCOL', PAD, y, SANS('700', 18), BLACK);
+  y += 40;
+
+  const dotX = PAD + 12;
+  const contentX = PAD + 48;
+  const lineX = dotX;
+
+  const drawPhase = (timeLabel: string, name: string, rows: [string, string][], isLast = false) => {
+    // Dot
+    ctx.beginPath();
+    ctx.arc(dotX, y + 10, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = LIGHT_GRAY;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Time label + name
+    drawText(ctx, timeLabel.toUpperCase(), contentX, y, SANS('600', 13), LABEL_GRAY);
+    y += 22;
+    drawText(ctx, name, contentX, y, SANS('700', 24), BLACK);
+    y += 38;
+
+    // Rows
+    rows.forEach(([left, right]) => {
+      drawText(ctx, left, contentX, y, SANS('400', 18), GRAY);
+      drawText(ctx, right, W - PAD, y, SANS('600', 18), BLACK, 'right');
+      y += 32;
+    });
+
+    // Vertical line to next phase
+    if (!isLast) {
+      drawLine(ctx, lineX, y - rows.length * 32 - 50 + 24, lineX, y + 10, LIGHT_GRAY);
+      y += 28;
     }
-    ly += 30;
   };
 
-  const drawProtocolRow = (left: string, right: string) => {
-    drawText(ctx, left, LX, ly, SANS('600', 24), WHITE);
-    drawText(ctx, right, LX + LW, ly + 4, MONO('400', 18), MED, 'right');
-    ly += 36;
-  };
+  // Phase 1: Day Before
+  drawPhase('T-24 hours', 'Day Before', [
+    ['Water throughout the day', '2-3 L'],
+    ['With dinner', '500 ml'],
+  ]);
 
-  const drawMarkerRow = (letter: string, label: string, km: number) => {
-    drawText(ctx, letter, LX, ly + 2, MONO('600', 18), MED);
-    drawText(ctx, label, LX + 36, ly, SANS('600', 24), WHITE);
-    drawText(ctx, `${km} km`, LX + LW, ly + 4, MONO('400', 18), MED, 'right');
-    ly += 36;
-  };
+  // Phase 2: Race Morning
+  drawPhase('Race morning', 'Race Morning', [
+    ['-3h: Wake up', `${plan.preActivity.water}ml + breakfast`],
+    ['-2h: Pre-load', `200ml + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`],
+    ['-30min: Final', 'Sips only'],
+  ]);
 
-  // PRE-RACE
-  drawDivider();
-  drawSectionLabel('PRE-RACE');
-  drawProtocolRow(
-    `${plan.preActivity.electrolytes}x SUPPLME SACHET`,
-    plan.preActivity.timing || '2-4h before',
-  );
-  drawProtocolRow(`${plan.preActivity.water} ML WATER`, 'With breakfast');
-
-  // IN-RACE
+  // Phase 3: During Race
   if (!isSwimOnly) {
-    ly += 20;
-    drawDivider();
-    drawSectionLabel('IN-RACE');
+    const duringRows: [string, string][] = [];
+    // Show sachet markers when available (formula decides count, no duration gate)
     for (const s of inRaceSachets) {
-      drawMarkerRow(s.letter, 'SUPPLME SACHET', s.km);
+      duringRows.push([`Sachet #${s.number}`, `km ${s.km}`]);
     }
     if (plan.duringActivity.totalElectrolytes > 6) {
-      drawText(ctx, `+${plan.duringActivity.totalElectrolytes - 6} more`, LX + 36, ly, MONO('400', 18), DIM);
-      ly += 28;
+      duringRows.push([`+${plan.duringActivity.totalElectrolytes - 6} more sachets`, 'Spread evenly']);
     }
-    drawProtocolRow(
-      `${safeNumber(plan.duringActivity.waterPerHour)} ML/H WATER`,
-      plan.duringActivity.frequency || 'Every 12-15 min',
-    );
+    duringRows.push(['Water per hour', `${safeNumber(plan.duringActivity.waterPerHour)}ml`]);
+    drawPhase('Race start', 'During Race', duringRows);
   }
 
-  // POST-RACE
-  ly += 20;
-  drawDivider();
-  drawSectionLabel('POST-RACE');
-  drawProtocolRow(`${plan.postActivity.electrolytes}x SUPPLME SACHET`, 'After race');
-  drawProtocolRow(`${plan.postActivity.water} ML WATER`, 'Over 4-6h');
-
-  // PRODUCTS TO BRING
-  ly += 20;
-  drawDivider();
-  drawSectionLabel('PRODUCTS TO BRING');
-  drawText(ctx, `${totalSachets} SUPPLME SACHETS`, LX, ly, SANS('600', 24), WHITE);
-  ly += 32;
-  // Breakdown line
-  const breakdownText = `${plan.preActivity.electrolytes} pre \u00B7 ${plan.duringActivity.totalElectrolytes} during \u00B7 ${plan.postActivity.electrolytes} post`;
-  drawText(ctx, breakdownText, LX, ly, MONO('400', 16), MED);
-  ly += 28;
-  drawText(ctx, `${(totalFluid / 1000).toFixed(1)} L TOTAL FLUID`, LX, ly, SANS('600', 24), WHITE);
-
-  // ════════════════════════════════════════
-  // RIGHT COLUMN — Stats
-  // ════════════════════════════════════════
-  const RX = 740;
-  const RW = 280;
-  let ry = 380;
-
-  const drawStatLabel = (text: string) => {
-    ry += 18;
-    // Spaced uppercase
-    ctx.font = MONO('400', 16);
-    ctx.fillStyle = DIM;
-    ctx.textAlign = 'left';
-    let cx = RX;
-    for (const ch of text.toUpperCase()) {
-      ctx.fillText(ch, cx, ry);
-      cx += ctx.measureText(ch).width + 5;
-    }
-    ry += 24;
-  };
-
-  const drawStatValue = (text: string) => {
-    drawText(ctx, text, RX, ry, MONO('700', 24), WHITE);
-    ry += 30;
-  };
-
-  const drawStatLine = (text: string) => {
-    drawText(ctx, text, RX, ry, MONO('400', 20), MED);
-    ry += 28;
-  };
-
-  // Demographics
-  const sexLabel = profile.sex === 'male' ? 'MALE' : profile.sex === 'female' ? 'FEMALE' : 'ATHLETE';
-  drawText(ctx, sexLabel, RX, ry, SANS('700', 22), WHITE);
-  ry += 36;
-  drawStatLine(`Age ${profile.age}`);
-  drawStatLine(`${profile.weight} kg`);
-  drawStatLine(`${profile.height} cm`);
-
-  // Race info
-  ry += 32;
-  drawText(ctx, formatDuration(profile.sessionDuration), RX, ry, MONO('700', 28), WHITE);
-  ry += 36;
-  drawStatLine(raceSubtitle);
-  if (selectedRace) {
-    drawStatLine(`${selectedRace.typical_temp_c.min}-${selectedRace.typical_temp_c.max}\u00B0C`);
-    if (selectedRace.course_profile) {
-      drawStatLine(selectedRace.course_profile);
-    }
-  } else if (profile.trainingTempRange) {
-    drawStatLine(`${profile.trainingTempRange.min}-${profile.trainingTempRange.max}\u00B0C`);
-  }
-
-  // Key metrics
-  ry += 24;
-  drawStatLabel('Sodium');
-  drawStatValue(`${sodiumPerHour} mg/h`);
-
-  drawStatLabel('Fluid Loss');
-  drawStatValue(
-    safeNumber(plan.totalFluidLoss) > 0
-      ? `${(plan.totalFluidLoss / 1000).toFixed(1)} L`
-      : '\u2014',
-  );
-
-  drawStatLabel('Sachets/h');
-  drawStatValue(
-    plan.duringActivity.electrolytesPerHour > 0
-      ? `${plan.duringActivity.electrolytesPerHour}`
-      : '\u2014',
-  );
+  // Phase 4: Recovery
+  drawPhase('Finish line', 'Recovery', [
+    ['0h: Immediately', `500ml + ${safeNumber(plan.postActivity.electrolytes)} sachet${safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}`],
+    ['1-2h: Recover', '250ml + protein meal'],
+    ['2-6h: Rehydrate', '750ml, pale urine'],
+  ], true);
 
   // ════════════════════════════════════════
   // FOOTER
   // ════════════════════════════════════════
-  drawText(ctx, 'supplme.com', 72, H - 56, SANS('400', 13), FOOTER_DIM);
-  drawCircle(ctx, W - 72 - 24, H - 48 - 24, 24, 'rgba(255,255,255,0.15)', 'S');
+  y = H - 80;
+  drawLine(ctx, PAD, y, W - PAD, y, LIGHT_GRAY);
+  y += 20;
+  drawText(ctx, 'SUPPLME', PAD, y, SANS('800', 18), BLACK);
+  drawText(ctx, 'supplme.com', W - PAD, y, SANS('400', 16), LABEL_GRAY, 'right');
+  y += 28;
+  drawText(ctx, 'This plan is for educational purposes only. Consult a healthcare provider.', PAD, y, SANS('400', 13), LABEL_GRAY);
 
   // ── Export as Blob ──
   return new Promise<Blob>((resolve, reject) => {
