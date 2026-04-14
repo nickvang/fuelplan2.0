@@ -128,7 +128,8 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
           placeholder="Search by race name, city or series…"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
-          className="pl-9 text-sm"
+          className="text-sm"
+          style={{ paddingLeft: '2.5rem' }}
         />
       </div>
 

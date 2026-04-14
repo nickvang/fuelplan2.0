@@ -2,9 +2,10 @@ import { useLanguage } from '@/contexts/LanguageContext';
 
 interface PlanFooterProps {
   onDeleteData: () => void;
+  onExportData: () => void;
 }
 
-export function PlanFooter({ onDeleteData }: PlanFooterProps) {
+export function PlanFooter({ onDeleteData, onExportData }: PlanFooterProps) {
   const { t } = useLanguage();
 
   return (
@@ -25,6 +26,13 @@ export function PlanFooter({ onDeleteData }: PlanFooterProps) {
 
       {/* Links */}
       <div className="flex items-center justify-center gap-4 text-[11px] text-gray-400">
+        <button
+          onClick={onExportData}
+          className="hover:text-blue-500 transition-colors underline"
+        >
+          {t('gdpr.exportButton')}
+        </button>
+        <span>&middot;</span>
         <button
           onClick={onDeleteData}
           className="hover:text-red-500 transition-colors underline"

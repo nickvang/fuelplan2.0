@@ -252,6 +252,7 @@ serve(async (req) => {
     const code = body?.code;
     const redirect_uri = body?.redirect_uri;
     const code_verifier = body?.code_verifier;
+    const deletionToken = body?.deletionToken; // Optional: links Garmin connection to hydration profile for GDPR erasure
 
     if (!code || !redirect_uri || !code_verifier) {
       return new Response(
@@ -351,14 +352,19 @@ serve(async (req) => {
     const sb = getSupabaseClient();
     const sessionId = crypto.randomUUID();
 
+    const insertPayload: Record<string, unknown> = {
+      garmin_user_id: garminUserId,
+      access_token: accessToken,
+      refresh_token: refreshToken || null,
+      session_id: sessionId,
+    };
+    if (deletionToken) {
+      insertPayload.deletion_token = deletionToken;
+    }
+
     const { data: connData, error: connErr } = await sb
       .from("garmin_connections")
-      .insert({
-        garmin_user_id: garminUserId,
-        access_token: accessToken,
-        refresh_token: refreshToken || null,
-        session_id: sessionId,
-      })
+      .insert(insertPayload)
       .select("id")
       .single();
 

@@ -309,7 +309,7 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
 
   const disciplinesSet = new Set<string>();
   const durations: number[] = [];
-  const hrByDiscipline: Record<string, number[]> = {};
+  const hrByDiscipline: Record<string, { avg: number[]; max: number[]; speed: number[] }> = {};
 
   for (const a of strippedActivities) {
     const sport = (a.sport_type || a.type || "") as string;
@@ -319,10 +319,17 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
     const moving = a.moving_time as number;
     if (moving && moving > 0) durations.push(moving / 3600);
 
-    const avgHR = typeof a.average_heartrate === "number" ? a.average_heartrate : null;
-    if (avgHR && avgHR > 60 && avgHR < 220 && mapped) {
-      if (!hrByDiscipline[mapped]) hrByDiscipline[mapped] = [];
-      hrByDiscipline[mapped].push(avgHR);
+    if (mapped) {
+      if (!hrByDiscipline[mapped]) hrByDiscipline[mapped] = { avg: [], max: [], speed: [] };
+
+      const avgHR = typeof a.average_heartrate === "number" ? a.average_heartrate : null;
+      if (avgHR && avgHR > 60 && avgHR < 220) hrByDiscipline[mapped].avg.push(avgHR);
+
+      const maxHR = typeof a.max_heartrate === "number" ? a.max_heartrate : null;
+      if (maxHR && maxHR > 100 && maxHR < 230) hrByDiscipline[mapped].max.push(maxHR);
+
+      const speed = typeof a.average_speed === "number" ? a.average_speed : null;
+      if (speed && speed > 0) hrByDiscipline[mapped].speed.push(speed);
     }
   }
 
@@ -336,18 +343,53 @@ function mapStravaToPrefill(athlete: any, activities: any[]): {
   }
   prefill.indoorOutdoor = "outdoor";
 
-  // Build a compact HR profile per discipline (median average HR)
-  const hrProfile: Record<string, { average: number }> = {};
+  // Build a compact HR profile per discipline (median avg HR, 90th-pct max HR, median speed)
+  const hrProfile: Record<string, { average: number; max?: number; avgPaceMinPerKm?: number; avgSpeedKmh?: number }> = {};
   for (const [discipline, values] of Object.entries(hrByDiscipline)) {
-    if (!values.length) continue;
-    values.sort((a, b) => a - b);
-    const med = values[Math.floor(values.length / 2)];
-    if (med && isFinite(med)) {
-      hrProfile[discipline] = { average: Math.round(med) };
+    const entry: { average: number; max?: number; avgPaceMinPerKm?: number; avgSpeedKmh?: number } = { average: 0 };
+
+    if (values.avg.length > 0) {
+      values.avg.sort((a, b) => a - b);
+      const medAvg = values.avg[Math.floor(values.avg.length / 2)];
+      if (medAvg && isFinite(medAvg)) entry.average = Math.round(medAvg);
+    }
+    if (values.max.length > 0) {
+      values.max.sort((a, b) => a - b);
+      const p90idx = Math.floor(values.max.length * 0.90);
+      const p90 = values.max[Math.min(p90idx, values.max.length - 1)];
+      if (p90 && isFinite(p90)) entry.max = Math.round(p90);
+    }
+    if (values.speed.length > 0) {
+      values.speed.sort((a, b) => a - b);
+      const medianSpeed = values.speed[Math.floor(values.speed.length / 2)];
+      if (medianSpeed && isFinite(medianSpeed) && medianSpeed > 0) {
+        const speedKmh = medianSpeed * 3.6;
+        entry.avgSpeedKmh = Math.round(speedKmh * 10) / 10;
+        if (discipline === "Running") {
+          const minPerKm = 60 / speedKmh;
+          const mins = Math.floor(minPerKm);
+          const secs = Math.round((minPerKm - mins) * 60);
+          entry.avgPaceMinPerKm = Math.round(minPerKm * 100) / 100;
+          (entry as any).avgPaceFormatted = `${mins}:${secs.toString().padStart(2, "0")}`;
+        }
+      }
+    }
+
+    if (entry.average > 0 || entry.max || entry.avgSpeedKmh) {
+      hrProfile[discipline] = entry;
     }
   }
   if (Object.keys(hrProfile).length > 0) {
     prefill.hrProfile = hrProfile;
+  }
+
+  // Pipe pace/speed into top-level prefill fields for the calculator
+  if ((hrProfile["Running"] as any)?.avgPaceFormatted) {
+    prefill.avgPace = (hrProfile["Running"] as any).avgPaceFormatted;
+    prefill.runPace = (hrProfile["Running"] as any).avgPaceFormatted;
+  }
+  if (hrProfile["Cycling"]?.avgSpeedKmh) {
+    prefill.bikeSpeed = String(hrProfile["Cycling"].avgSpeedKmh);
   }
 
   // Compute Strava intelligence signals

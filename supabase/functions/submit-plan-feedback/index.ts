@@ -59,6 +59,8 @@ serve(async (req) => {
       pre_water_feedback, // "too_much" | "just_right" | "too_little"
       condition,         // optional: e.g. "cramping"
       condition_outcome, // optional: "better" | "same" | "worse"
+      issues,            // optional: string[] of issue tags from feedback UI
+      overall_rating,    // optional: 1-5 star rating
     } = body;
 
     if (!user_id) {
@@ -93,6 +95,8 @@ serve(async (req) => {
     let sodium_coefficient = existing?.sodium_coefficient ?? 1.0;
     let water_coefficient = existing?.water_coefficient ?? 1.0;
     let pre_water_coefficient = existing?.pre_water_coefficient ?? 1.0;
+    let sodium_loss_modifier = existing?.sodium_loss_modifier ?? 1.0;
+    let gi_tolerance_ceiling_ml_hr = existing?.gi_tolerance_ceiling_ml_hr ?? 800;
     let total_feedback_count = existing?.total_feedback_count ?? 0;
     const condition_outcomes = existing?.condition_outcomes ?? {};
 
@@ -101,6 +105,26 @@ serve(async (req) => {
     if (sodium_feedback) sodium_coefficient = updateCoefficient(sodium_coefficient, sodium_feedback);
     if (water_feedback) water_coefficient = updateCoefficient(water_coefficient, water_feedback);
     if (pre_water_feedback) pre_water_coefficient = updateCoefficient(pre_water_coefficient, pre_water_feedback);
+
+    // Issue-driven modifiers
+    const issueList: string[] = Array.isArray(issues) ? issues : [];
+
+    // Cramping → increase sodium_loss_modifier by 0.05 (cap 1.30)
+    if (issueList.includes("cramping")) {
+      sodium_loss_modifier = Math.min(1.30, Math.round((sodium_loss_modifier + 0.05) * 1000) / 1000);
+    }
+
+    // Bloating or Nausea → reduce GI tolerance ceiling by 25ml/hr (floor 400)
+    if (issueList.includes("nausea") || issueList.includes("gi_distress")) {
+      gi_tolerance_ceiling_ml_hr = Math.max(400, gi_tolerance_ceiling_ml_hr - 25);
+    }
+
+    // Good race (rating 4-5, no issues) → drift modifiers 5% toward neutral (1.0 / 800)
+    const rating = Number(overall_rating);
+    if (rating >= 4 && issueList.length === 0) {
+      sodium_loss_modifier = Math.round((sodium_loss_modifier * 0.95 + 1.0 * 0.05) * 1000) / 1000;
+      gi_tolerance_ceiling_ml_hr = Math.round(gi_tolerance_ceiling_ml_hr * 0.95 + 800 * 0.05);
+    }
 
     total_feedback_count += 1;
 
@@ -123,6 +147,8 @@ serve(async (req) => {
         sodium_coefficient,
         water_coefficient,
         pre_water_coefficient,
+        sodium_loss_modifier,
+        gi_tolerance_ceiling_ml_hr,
         total_feedback_count,
         condition_outcomes,
         updated_at: new Date().toISOString(),

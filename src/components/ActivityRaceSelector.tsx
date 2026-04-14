@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { HydrationProfile } from '@/types/hydration';
 import { calculateTriathlonDuration, getTriathlonBreakdown, TRIATHLON_DISTANCES, T1_DURATION, T2_DURATION } from '@/utils/triathlonCalculator';
 import { PaceDurationCalculator } from '@/components/PaceDurationCalculator';
@@ -8,6 +9,14 @@ import { InfoTooltip } from '@/components/InfoTooltip';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
+
+interface StageInfo {
+  day: number;
+  name: string;
+  distance_km: number;
+  typical_duration_h: { min: number; max: number };
+  queen?: boolean;
+}
 
 interface ActivityRaceSelectorProps {
   profile: Partial<HydrationProfile>;
@@ -33,6 +42,50 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
 
   const primaryDiscipline = profile.disciplines?.[0] || '';
   const isCustom = !selectedRace;
+
+  // Stage race detection
+  const isStageRace = !!(selectedRace && (selectedRace as any).is_stage_race && Array.isArray((selectedRace as any).stages));
+  const stageRaceStages: StageInfo[] = isStageRace ? (selectedRace as any).stages : [];
+
+  const [stageDurations, setStageDurations] = useState<Record<number, number>>({});
+
+  // When a stage race is selected, pass stage metadata to profile (durations left blank for user to enter)
+  useEffect(() => {
+    if (!selectedRace?.id) return;
+    setStageDurations({});
+    if (isStageRace && stageRaceStages.length > 0) {
+      // Compute sessionDuration from midpoints as a fallback for the calculator
+      let maxMidpoint = 0;
+      for (const stage of stageRaceStages) {
+        const mid = Math.round(((stage.typical_duration_h.min + stage.typical_duration_h.max) / 2) * 10) / 10;
+        if (mid > maxMidpoint) maxMidpoint = mid;
+      }
+      onUpdateProfile({ sessionDuration: maxMidpoint, stageDurations: undefined as any, stageRaceStages: stageRaceStages as any });
+    } else {
+      onUpdateProfile({ stageDurations: undefined as any, stageRaceStages: undefined as any });
+    }
+  }, [selectedRace?.id]);
+
+  function formatDurationInput(hours: number): string {
+    const h = Math.floor(hours);
+    const m = Math.round((hours - h) * 60);
+    return `${h}:${String(m).padStart(2, '0')}`;
+  }
+
+  function handleStageDurationChange(day: number, value: string) {
+    let hours: number;
+    const hmMatch = value.match(/^(\d+):(\d{0,2})$/);
+    if (hmMatch) {
+      hours = parseInt(hmMatch[1]) + (parseInt(hmMatch[2] || '0') / 60);
+    } else {
+      hours = parseFloat(value);
+    }
+    if (!isFinite(hours) || hours <= 0) return;
+    const updated = { ...stageDurations, [day]: hours };
+    setStageDurations(updated);
+    const maxDuration = Math.max(...Object.values(updated));
+    onUpdateProfile({ sessionDuration: maxDuration, stageDurations: updated as any, stageRaceStages: stageRaceStages as any });
+  }
 
   // Terrain options per sport
   const terrainOptions: Record<string, { value: string; label: string }[]> = {
@@ -193,15 +246,56 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
           })()}
         </div>
       ) : primaryDiscipline ? (
-        <PaceDurationCalculator
-          discipline={primaryDiscipline}
-          raceDistance={profile.raceDistance}
-          goalTime={profile.goalTime || undefined}
-          currentPace={profile.avgPace}
-          onPaceChange={(pace) => onUpdateProfile({ avgPace: pace })}
-          onDurationChange={(duration) => onUpdateProfile({ sessionDuration: duration })}
-          onGoalTimeChange={(goalTime) => onUpdateProfile({ goalTime })}
-        />
+        isStageRace ? (
+          <div className="space-y-3 p-4 rounded-xl border border-border/60 bg-card animate-in fade-in duration-200">
+            <div>
+              <p className="text-sm font-semibold text-foreground">How long do you expect each stage to take?</p>
+              <p className="text-xs text-muted-foreground mt-0.5">Enter your expected finish time for each stage</p>
+            </div>
+            <div className="space-y-2">
+              {stageRaceStages.map((stage) => (
+                <div
+                  key={stage.day}
+                  className={`flex items-center justify-between gap-3 px-3 py-2.5 rounded-lg border ${
+                    stage.queen
+                      ? 'border-amber-400/60 bg-amber-50/50 dark:bg-amber-900/10'
+                      : 'border-border/40 bg-muted/20'
+                  }`}
+                >
+                  <div className="min-w-0 flex-1">
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm font-medium text-foreground truncate">{stage.name}</span>
+                      {stage.queen && (
+                        <span className="text-[10px] font-bold uppercase tracking-wide text-amber-600 dark:text-amber-400 shrink-0">Queen</span>
+                      )}
+                    </div>
+                    <p className="text-[11px] text-muted-foreground">
+                      {stage.distance_km}km · {stage.typical_duration_h.min}–{stage.typical_duration_h.max}h typical
+                    </p>
+                  </div>
+                  <Input
+                    value={stageDurations[stage.day] != null ? formatDurationInput(stageDurations[stage.day]) : ''}
+                    onChange={(e) => handleStageDurationChange(stage.day, e.target.value)}
+                    placeholder="h:mm"
+                    className={`w-20 text-center font-mono text-sm ${
+                      stage.queen ? 'border-amber-400/60' : ''
+                    }`}
+                  />
+                </div>
+              ))}
+            </div>
+          </div>
+        ) : (
+          <PaceDurationCalculator
+            discipline={primaryDiscipline}
+            raceDistance={profile.raceDistance}
+            goalTime={profile.goalTime || undefined}
+            currentPace={profile.avgPace}
+            onPaceChange={(pace) => onUpdateProfile({ avgPace: pace })}
+            onDurationChange={(duration) => onUpdateProfile({ sessionDuration: duration })}
+            onGoalTimeChange={(goalTime) => onUpdateProfile({ goalTime })}
+          />
+        )
       ) : null}
 
       {/* Custom training fields — only when no race selected */}

@@ -14,6 +14,10 @@ interface DataSourceSelectorProps {
   onSelectSource: (source: DataSource) => void;
   consentGiven: boolean;
   onConsentChange: (consent: boolean) => void;
+  healthConsentGiven: boolean;
+  onHealthConsentChange: (v: boolean) => void;
+  algorithmConsentGiven: boolean;
+  onAlgorithmConsentChange: (v: boolean) => void;
   stravaConnected: boolean;
   garminConnected: boolean;
   onStravaConnect: () => void;
@@ -46,6 +50,10 @@ export function DataSourceSelector({
   onSelectSource,
   consentGiven,
   onConsentChange,
+  healthConsentGiven,
+  onHealthConsentChange,
+  algorithmConsentGiven,
+  onAlgorithmConsentChange,
   stravaConnected,
   garminConnected,
   onStravaConnect,
@@ -411,15 +419,54 @@ export function DataSourceSelector({
             </AccordionContent>
           </AccordionItem>
         </Accordion>
-        <div className="flex items-center gap-3 pt-2 border-t border-border/50 min-h-[44px]">
+        {/* Select all */}
+        <div className="flex items-start gap-3 pt-2 border-t border-border/50 min-h-[44px]">
           <Checkbox
-            id="ds-consent"
+            id="ds-consent-all"
+            checked={consentGiven && healthConsentGiven && algorithmConsentGiven}
+            onCheckedChange={(checked) => {
+              const v = checked === true;
+              onConsentChange(v);
+              onHealthConsentChange(v);
+              onAlgorithmConsentChange(v);
+            }}
+            className="shrink-0 h-5 w-5 mt-0.5"
+          />
+          <label htmlFor="ds-consent-all" className="text-xs sm:text-sm font-semibold cursor-pointer leading-snug py-0.5 flex-1 select-none">
+            {t('consent.acceptAll')}
+          </label>
+        </div>
+        <div className="flex items-start gap-3 pl-8 min-h-[44px]">
+          <Checkbox
+            id="ds-consent-plan"
             checked={consentGiven}
             onCheckedChange={(checked) => onConsentChange(checked === true)}
-            className="shrink-0 h-5 w-5"
+            className="shrink-0 h-5 w-5 mt-0.5"
           />
-          <label htmlFor="ds-consent" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-2 flex-1 select-none">
-            {t('consent.short')}
+          <label htmlFor="ds-consent-plan" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 select-none">
+            {t('consent.planGeneration')}
+          </label>
+        </div>
+        <div className="flex items-start gap-3 pl-8 min-h-[44px]">
+          <Checkbox
+            id="ds-consent-health"
+            checked={healthConsentGiven}
+            onCheckedChange={(checked) => onHealthConsentChange(checked === true)}
+            className="shrink-0 h-5 w-5 mt-0.5"
+          />
+          <label htmlFor="ds-consent-health" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 select-none">
+            {t('consent.healthData')}
+          </label>
+        </div>
+        <div className="flex items-start gap-3 pl-8 min-h-[44px]">
+          <Checkbox
+            id="ds-consent-algorithm"
+            checked={algorithmConsentGiven}
+            onCheckedChange={(checked) => onAlgorithmConsentChange(checked === true)}
+            className="shrink-0 h-5 w-5 mt-0.5"
+          />
+          <label htmlFor="ds-consent-algorithm" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 select-none">
+            {t('consent.algorithmImprovement')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span>
           </label>
         </div>
       </div>

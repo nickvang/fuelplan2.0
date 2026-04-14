@@ -59,6 +59,8 @@ export interface AthleteCalibration {
   sodium_coefficient: number;
   water_coefficient: number;
   pre_water_coefficient: number;
+  sodium_loss_modifier: number;
+  gi_tolerance_ceiling_ml_hr: number;
   total_feedback_count: number;
   condition_outcomes?: Record<string, { better: number; same: number; worse: number }>;
 }
@@ -178,6 +180,19 @@ export interface HydrationProfile {
   calibration?: AthleteCalibration;
 }
 
+export interface StagePlan {
+  /** ml/h water rate for this stage */
+  waterPerHour: number;
+  /** sachets/h electrolyte rate for this stage (queen stages may be elevated) */
+  electrolytesPerHour: number;
+  /** Total sachets recommended during this stage (safety-capped) */
+  totalElectrolytes: number;
+  /** Estimated total fluid loss for this stage in ml */
+  totalFluidLoss: number;
+  /** Stage duration in hours */
+  stageDuration: number;
+}
+
 export interface HydrationPlan {
   preActivity: {
     timing: string;
@@ -199,6 +214,8 @@ export interface HydrationPlan {
   recommendations: string[];
   calculationSteps: string[];
   triathlonSegments?: TriathlonSegmentPlan;
+  /** Per-stage hydration plans for multi-day stage races (keyed by stage day number) */
+  stagePlans?: Record<number, StagePlan>;
   scientificReferences: Array<{
     pmid: string;
     title: string;
@@ -219,6 +236,12 @@ export interface HydrationPlan {
     absoluteCeilingApplied?: boolean;
     waterCeilingApplied?: boolean;
     healthConditionCap?: boolean;
+  };
+  /** Calibration metadata for "Personalized" badge in UI. */
+  calibrationApplied?: {
+    dataPoints: number;
+    sodiumAdjustPct: number;
+    giCeilingReduced: boolean;
   };
 }
 

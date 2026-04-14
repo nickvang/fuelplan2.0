@@ -4,7 +4,9 @@ import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
 import { useToast } from '@/hooks/use-toast';
-import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight, FileDown, Zap, RefreshCw } from 'lucide-react';
+import { Download, LogOut, Trash2, Users, Database, Activity, ChevronDown, ChevronRight, FileDown, Zap, RefreshCw, Search, X, ImageDown } from 'lucide-react';
+import { Input } from '@/components/ui/input';
+import { generateFuelPlanImage } from '@/components/ShareCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -50,8 +52,53 @@ export default function Admin() {
     sodiumLossBuckets: [] as { label: string; avgMg: number; count: number }[],
   });
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
+
+  const [expandedStrava, setExpandedStrava] = useState<Set<string>>(new Set());
+  const toggleStrava = (id: string) => {
+    const next = new Set(expandedStrava);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setExpandedStrava(next);
+  };
+
+  // Submission filters
+  const [filterSearch, setFilterSearch] = useState('');
+  const [filterDiscipline, setFilterDiscipline] = useState('');
+  const [filterSmartwatch, setFilterSmartwatch] = useState<'all' | 'yes' | 'no'>('all');
+  const [filterStrava, setFilterStrava] = useState<'all' | 'yes' | 'no'>('all');
   const navigate = useNavigate();
   const { toast } = useToast();
+
+  const filteredProfiles = profiles.filter((profile) => {
+    const pd = profile.profile_data || {};
+    if (filterSearch) {
+      const q = filterSearch.toLowerCase();
+      const name = (pd.fullName || '').toLowerCase();
+      const email = (profile.user_email || '').toLowerCase();
+      if (!name.includes(q) && !email.includes(q)) return false;
+    }
+    if (filterDiscipline) {
+      const disciplines: string[] = pd.disciplines || [];
+      if (!disciplines.some((d: string) => d === filterDiscipline)) return false;
+    }
+    if (filterSmartwatch === 'yes' && !profile.has_smartwatch_data) return false;
+    if (filterSmartwatch === 'no' && profile.has_smartwatch_data) return false;
+    if (filterStrava === 'yes' && !pd.strava_snapshot) return false;
+    if (filterStrava === 'no' && pd.strava_snapshot) return false;
+    return true;
+  });
+
+  const allDisciplines = Array.from(
+    new Set(profiles.flatMap((p) => (p.profile_data?.disciplines as string[] | undefined) || []))
+  ).sort();
+
+  const hasActiveFilters = filterSearch || filterDiscipline || filterSmartwatch !== 'all' || filterStrava !== 'all';
+
+  const clearFilters = () => {
+    setFilterSearch('');
+    setFilterDiscipline('');
+    setFilterSmartwatch('all');
+    setFilterStrava('all');
+  };
 
   const toggleRow = (id: string) => {
     const newExpanded = new Set(expandedRows);
@@ -62,6 +109,15 @@ export default function Admin() {
     }
     setExpandedRows(newExpanded);
   };
+
+  useEffect(() => {
+    const html = document.documentElement;
+    const wasDark = html.classList.contains('dark');
+    html.classList.remove('dark');
+    return () => {
+      if (wasDark) html.classList.add('dark');
+    };
+  }, []);
 
   useEffect(() => {
     checkAdminAndLoadData();
@@ -859,6 +915,25 @@ export default function Admin() {
     });
   };
 
+  const downloadPlanImage = async (profile: HydrationProfileData) => {
+    const pd = profile.profile_data || {};
+    const plan = profile.plan_data || {};
+    try {
+      const distanceStr = pd.raceDistance || '';
+      const distanceKm = parseFloat(distanceStr) || 0;
+      const blob = await generateFuelPlanImage(plan, pd, distanceKm, null);
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.download = `supplme-plan-${pd.fullName?.replace(/\s+/g, '-').toLowerCase() || profile.id}.png`;
+      link.href = url;
+      link.click();
+      URL.revokeObjectURL(url);
+      toast({ title: "Image Downloaded", description: `Plan image for ${pd.fullName || 'user'} saved.` });
+    } catch (err: any) {
+      toast({ title: "Download Failed", description: err.message, variant: "destructive" });
+    }
+  };
+
   const deleteProfile = async (id: string) => {
     if (!confirm('Are you sure you want to delete this profile? This action cannot be undone.')) {
       return;
@@ -889,25 +964,25 @@ export default function Admin() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-zinc-950 flex items-center justify-center">
-        <p className="text-zinc-500">Checking access...</p>
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <p className="text-muted-foreground">Checking access...</p>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-zinc-950 text-zinc-100 p-4 sm:p-6">
+    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-zinc-800 pb-4 border-l-4 border-emerald-500/60">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border pb-4 border-l-4 border-l-product-warm">
           <div className="flex items-center gap-3 pl-1">
             <img src={supplmeLogo} alt="Supplme" className="h-12 opacity-95" />
             <div>
-              <h1 className="text-xl font-semibold tracking-tight text-zinc-100">Data Center</h1>
-              <p className="text-xs text-zinc-500">User submissions & product development</p>
+              <h1 className="text-xl font-semibold tracking-tight">Data Center</h1>
+              <p className="text-xs text-muted-foreground">User submissions & product development</p>
             </div>
           </div>
-          <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-red-500/30 hover:text-red-400/90">
+          <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2 border-border text-muted-foreground hover:bg-secondary hover:border-destructive/30 hover:text-destructive">
             <LogOut className="w-4 h-4" />
             Logout
           </Button>
@@ -915,92 +990,92 @@ export default function Admin() {
 
         {/* Key metrics strip */}
         <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div className="rounded-lg bg-zinc-900 border border-emerald-500/20 p-4 border-l-4 border-l-emerald-500/60">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Submissions</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5 text-emerald-400/90">{stats.total}</p>
+          <div className="rounded-lg bg-card border border-product-warm/20 p-4 border-l-4 border-l-product-warm shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Submissions</p>
+            <p className="text-2xl font-bold tabular-nums mt-0.5 text-product-warm">{stats.total}</p>
           </div>
-          <div className="rounded-lg bg-zinc-900 border border-emerald-500/20 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Smartwatch</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5 text-emerald-400/90">{stats.withSmartwatch}</p>
+          <div className="rounded-lg bg-card border border-product-warm/20 p-4 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Smartwatch</p>
+            <p className="text-2xl font-bold tabular-nums mt-0.5 text-product-warm">{stats.withSmartwatch}</p>
           </div>
-          <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg fluid loss</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5">{(stats.avgFluidLossMl / 1000).toFixed(1)}<span className="text-sm font-normal text-zinc-500"> L</span></p>
+          <div className="rounded-lg bg-card border border-border p-4 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg fluid loss</p>
+            <p className="text-2xl font-bold tabular-nums mt-0.5">{(stats.avgFluidLossMl / 1000).toFixed(1)}<span className="text-sm font-normal text-muted-foreground"> L</span></p>
           </div>
-          <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg sachets/hr</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.avgElectrolytesPerHour}<span className="text-sm font-normal text-zinc-500"></span></p>
+          <div className="rounded-lg bg-card border border-border p-4 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg sachets/hr</p>
+            <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.avgElectrolytesPerHour}<span className="text-sm font-normal text-muted-foreground"></span></p>
           </div>
-          <div className="rounded-lg bg-zinc-900 border border-red-500/20 p-4 border-l-4 border-l-red-500/50">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg Na loss/hr</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5 text-red-400/90">{stats.avgSodiumLossPerHourMg}<span className="text-sm font-normal text-zinc-500"> mg</span></p>
+          <div className="rounded-lg bg-card border border-brand-red/20 p-4 border-l-4 border-l-brand-red/50 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Na loss/hr</p>
+            <p className="text-2xl font-bold tabular-nums mt-0.5 text-brand-red">{stats.avgSodiumLossPerHourMg}<span className="text-sm font-normal text-muted-foreground"> mg</span></p>
           </div>
-          <div className="rounded-lg bg-zinc-900 border border-zinc-800 p-4">
-            <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg age</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.averageAge}<span className="text-sm font-normal text-zinc-500"> yrs</span></p>
+          <div className="rounded-lg bg-card border border-border p-4 shadow-sm">
+            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg age</p>
+            <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.averageAge}<span className="text-sm font-normal text-muted-foreground"> yrs</span></p>
           </div>
         </div>
 
         {/* Product development */}
-        <div className="rounded-xl border border-zinc-800 border-t-4 border-t-emerald-500/40 bg-zinc-900/50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-zinc-800 bg-emerald-500/5">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-emerald-400/90">Product development</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Hydration, sweat & electrolyte insights for Supplme</p>
+        <div className="rounded-xl border border-border border-t-4 border-t-product-warm bg-card overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-border bg-product-warm-muted">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-product-warm">Product development</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Hydration, sweat & electrolyte insights for Supplme</p>
           </div>
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
-            <div className="rounded-lg bg-zinc-800/80 border border-emerald-500/15 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg fluid loss</p>
-              <p className="text-xl font-bold tabular-nums text-emerald-400/90">{(stats.avgFluidLossMl / 1000).toFixed(1)} L</p>
-              <p className="text-[10px] text-zinc-500 mt-1">per session (n={stats.totalWithPlan})</p>
+            <div className="rounded-lg bg-secondary border border-product-warm/15 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg fluid loss</p>
+              <p className="text-xl font-bold tabular-nums text-product-warm">{(stats.avgFluidLossMl / 1000).toFixed(1)} L</p>
+              <p className="text-[10px] text-muted-foreground mt-1">per session (n={stats.totalWithPlan})</p>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-red-500/15 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg sodium loss/hr</p>
-              <p className="text-xl font-bold tabular-nums text-red-400/90">{stats.avgSodiumLossPerHourMg} mg</p>
-              <p className="text-[10px] text-zinc-500 mt-1">estimated from sweat saltiness</p>
+            <div className="rounded-lg bg-secondary border border-brand-red/15 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg sodium loss/hr</p>
+              <p className="text-xl font-bold tabular-nums text-brand-red">{stats.avgSodiumLossPerHourMg} mg</p>
+              <p className="text-[10px] text-muted-foreground mt-1">estimated from sweat saltiness</p>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-emerald-500/15 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg electrolytes/hr</p>
-              <p className="text-xl font-bold tabular-nums text-emerald-400/90">{stats.avgElectrolytesPerHour} sachets</p>
-              <p className="text-[10px] text-zinc-500 mt-1">during activity</p>
+            <div className="rounded-lg bg-secondary border border-product-warm/15 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg electrolytes/hr</p>
+              <p className="text-xl font-bold tabular-nums text-product-warm">{stats.avgElectrolytesPerHour} sachets</p>
+              <p className="text-[10px] text-muted-foreground mt-1">during activity</p>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-zinc-700 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg water/hr</p>
-              <p className="text-xl font-bold tabular-nums text-white">{stats.avgWaterPerHourDuring} ml</p>
-              <p className="text-[10px] text-zinc-500 mt-1">during activity</p>
+            <div className="rounded-lg bg-secondary border border-border p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg water/hr</p>
+              <p className="text-xl font-bold tabular-nums">{stats.avgWaterPerHourDuring} ml</p>
+              <p className="text-[10px] text-muted-foreground mt-1">during activity</p>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-zinc-700 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Avg session</p>
-              <p className="text-xl font-bold tabular-nums text-white">{stats.avgSessionDurationHours} h</p>
-              <p className="text-[10px] text-zinc-500 mt-1">duration</p>
+            <div className="rounded-lg bg-secondary border border-border p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg session</p>
+              <p className="text-xl font-bold tabular-nums">{stats.avgSessionDurationHours} h</p>
+              <p className="text-[10px] text-muted-foreground mt-1">duration</p>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-zinc-700 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Sweat rate</p>
+            <div className="rounded-lg bg-secondary border border-border p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Sweat rate</p>
               <div className="flex gap-2 mt-1.5 text-xs">
-                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">L: {stats.sweatRateDistribution.low}</span>
-                <span className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">M: {stats.sweatRateDistribution.medium}</span>
-                <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400/80 border border-red-500/20">H: {stats.sweatRateDistribution.high}</span>
+                <span className="px-2 py-0.5 rounded bg-brand-green/10 text-brand-green border border-brand-green/20">L: {stats.sweatRateDistribution.low}</span>
+                <span className="px-2 py-0.5 rounded bg-secondary text-secondary-foreground">M: {stats.sweatRateDistribution.medium}</span>
+                <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red border border-brand-red/20">H: {stats.sweatRateDistribution.high}</span>
               </div>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-zinc-700 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Sweat saltiness</p>
+            <div className="rounded-lg bg-secondary border border-border p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Sweat saltiness</p>
               <div className="flex gap-2 mt-1.5 text-xs">
-                <span className="px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400/80 border border-emerald-500/20">L: {stats.sweatSaltinessDistribution.low}</span>
-                <span className="px-2 py-0.5 rounded bg-zinc-700 text-zinc-300">M: {stats.sweatSaltinessDistribution.medium}</span>
-                <span className="px-2 py-0.5 rounded bg-red-500/10 text-red-400/80 border border-red-500/20">H: {stats.sweatSaltinessDistribution.high}</span>
+                <span className="px-2 py-0.5 rounded bg-brand-green/10 text-brand-green border border-brand-green/20">L: {stats.sweatSaltinessDistribution.low}</span>
+                <span className="px-2 py-0.5 rounded bg-secondary text-secondary-foreground">M: {stats.sweatSaltinessDistribution.medium}</span>
+                <span className="px-2 py-0.5 rounded bg-brand-red/10 text-brand-red border border-brand-red/20">H: {stats.sweatSaltinessDistribution.high}</span>
               </div>
             </div>
-            <div className="rounded-lg bg-zinc-800/80 border border-orange-500/20 p-3">
-              <p className="text-[10px] uppercase tracking-wider text-zinc-500">Strava-linked users</p>
-              <p className="text-xl font-bold tabular-nums text-orange-400/90">{stats.withStrava}</p>
-              <p className="text-[10px] text-zinc-500 mt-1">avg {stats.avgStravaActivitiesPerUser.toFixed(1)} activities imported</p>
+            <div className="rounded-lg bg-secondary border border-product-warm/20 p-3">
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Strava-linked users</p>
+              <p className="text-xl font-bold tabular-nums text-product-warm">{stats.withStrava}</p>
+              <p className="text-[10px] text-muted-foreground mt-1">avg {stats.avgStravaActivitiesPerUser.toFixed(1)} activities imported</p>
             </div>
           </div>
         </div>
 
         {/* Analytics */}
         <div className="grid grid-cols-1 lg:grid-cols-4 gap-4">
-          <div className="rounded-xl border border-zinc-800 border-l-4 border-l-emerald-500/50 bg-zinc-900/50 p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Gender</h3>
+          <div className="rounded-xl border border-border border-l-4 border-l-product-warm bg-card p-4 shadow-sm">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Gender</h3>
             <ResponsiveContainer width="100%" height={200}>
               <PieChart>
                 <Pie
@@ -1016,54 +1091,54 @@ export default function Admin() {
                   outerRadius={70}
                   dataKey="value"
                 >
-                  <Cell fill="#34d399" />
-                  <Cell fill="#f87171" />
-                  <Cell fill="#a1a1aa" />
+                  <Cell fill="hsl(199, 89%, 48%)" />
+                  <Cell fill="hsl(0, 72%, 51%)" />
+                  <Cell fill="hsl(0, 0%, 75%)" />
                 </Pie>
-                <Tooltip contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46' }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
               </PieChart>
             </ResponsiveContainer>
             <div className="mt-2 flex justify-between text-xs">
-              <span className="text-emerald-400/90">M {stats.genderDistribution.male}</span>
-              <span className="text-red-400/90">F {stats.genderDistribution.female}</span>
-              <span className="text-zinc-400">O {stats.genderDistribution.other}</span>
+              <span className="text-product-cool">M {stats.genderDistribution.male}</span>
+              <span className="text-brand-red">F {stats.genderDistribution.female}</span>
+              <span className="text-chrome">O {stats.genderDistribution.other}</span>
             </div>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 border-l-4 border-l-orange-500/60 bg-zinc-900/50 p-4">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Avg sodium loss / hr</h3>
+          <div className="rounded-xl border border-border border-l-4 border-l-product-warm bg-card p-4 shadow-sm">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Avg sodium loss / hr</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={stats.sodiumLossBuckets}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
-                <XAxis dataKey="label" tick={{ fill: '#a1a1aa', fontSize: 11 }} />
-                <YAxis tick={{ fill: '#71717a', fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46' }} />
-                <Bar dataKey="avgMg" fill="#fb923c" radius={[4, 4, 0, 0]} />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="label" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                <Bar dataKey="avgMg" fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} />
               </BarChart>
             </ResponsiveContainer>
-            <p className="mt-2 text-xs text-zinc-500">
+            <p className="mt-2 text-xs text-muted-foreground">
               n={stats.sodiumLossBuckets.reduce((sum, b) => sum + b.count, 0)} profiles
             </p>
           </div>
 
-          <div className="rounded-xl border border-zinc-800 border-l-4 border-l-red-500/40 bg-zinc-900/50 p-4 lg:col-span-2">
-            <h3 className="text-xs font-semibold uppercase tracking-wider text-zinc-500 mb-3">Activities (click bar)</h3>
+          <div className="rounded-xl border border-border border-l-4 border-l-brand-red bg-card p-4 shadow-sm lg:col-span-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Activities (click bar)</h3>
             <ResponsiveContainer width="100%" height={200}>
               <BarChart data={stats.activityStats.slice(0, 6)}>
-                <CartesianGrid strokeDasharray="3 3" stroke="#3f3f46" />
-                <XAxis dataKey="activity" tick={{ fill: '#a1a1aa', fontSize: 11 }} angle={-35} textAnchor="end" height={60} />
-                <YAxis tick={{ fill: '#71717a', fontSize: 11 }} />
-                <Tooltip contentStyle={{ backgroundColor: '#27272a', border: '1px solid #3f3f46' }} />
-                <Bar dataKey="count" fill="#34d399" radius={[4, 4, 0, 0]} onClick={(data) => setSelectedActivity(data.activity)} className="cursor-pointer hover:opacity-90" />
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="activity" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} angle={-35} textAnchor="end" height={60} />
+                <YAxis tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                <Bar dataKey="count" fill="hsl(24, 95%, 53%)" radius={[4, 4, 0, 0]} onClick={(data) => setSelectedActivity(data.activity)} className="cursor-pointer hover:opacity-90" />
               </BarChart>
             </ResponsiveContainer>
           </div>
 
           {selectedActivity && (
-            <div className="rounded-xl border border-zinc-700 border-t-4 border-t-emerald-500/40 bg-zinc-800/80 p-4 lg:col-span-3">
+            <div className="rounded-xl border border-border border-t-4 border-t-product-warm bg-card p-4 shadow-sm lg:col-span-3">
               <div className="flex justify-between items-start mb-3">
-                <h3 className="text-sm font-semibold text-zinc-200">{selectedActivity}</h3>
-                <Button variant="ghost" size="sm" onClick={() => setSelectedActivity(null)} className="text-zinc-400 hover:text-red-400/90">
+                <h3 className="text-sm font-semibold">{selectedActivity}</h3>
+                <Button variant="ghost" size="sm" onClick={() => setSelectedActivity(null)} className="text-muted-foreground hover:text-destructive">
                   Close
                 </Button>
               </div>
@@ -1076,26 +1151,26 @@ export default function Admin() {
                 return (
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <h4 className="text-[10px] uppercase tracking-wider text-zinc-500">Mode</h4>
-                      <div className="flex justify-between rounded-lg bg-zinc-800 border border-zinc-700 p-3">
-                        <span className="text-xs text-zinc-400">Race</span>
-                        <span className="font-bold tabular-nums text-zinc-100">{activity.raceDayCount}</span>
+                      <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">Mode</h4>
+                      <div className="flex justify-between rounded-lg bg-secondary border border-border p-3">
+                        <span className="text-xs text-muted-foreground">Race</span>
+                        <span className="font-bold tabular-nums">{activity.raceDayCount}</span>
                       </div>
-                      <div className="flex justify-between rounded-lg bg-zinc-800 border border-zinc-700 p-3">
-                        <span className="text-xs text-zinc-400">Training</span>
-                        <span className="font-bold tabular-nums text-zinc-100">{activity.trainingCount}</span>
+                      <div className="flex justify-between rounded-lg bg-secondary border border-border p-3">
+                        <span className="text-xs text-muted-foreground">Training</span>
+                        <span className="font-bold tabular-nums">{activity.trainingCount}</span>
                       </div>
                     </div>
                     <div className="md:col-span-2 space-y-2">
-                      <h4 className="text-[10px] uppercase tracking-wider text-zinc-500">Distances</h4>
+                      <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">Distances</h4>
                       <div className="grid grid-cols-2 gap-2">
                         {sortedDistances.slice(0, 8).map(([distance, count]) => (
-                          <div key={distance} className="flex justify-between items-center rounded-lg bg-zinc-800 border border-zinc-700 px-3 py-2">
-                            <span className="text-xs text-zinc-300 truncate">{distance || '—'}</span>
-                            <span className="text-xs tabular-nums text-zinc-500">{count}x</span>
+                          <div key={distance} className="flex justify-between items-center rounded-lg bg-secondary border border-border px-3 py-2">
+                            <span className="text-xs text-secondary-foreground truncate">{distance || '—'}</span>
+                            <span className="text-xs tabular-nums text-muted-foreground">{count}x</span>
                           </div>
                         ))}
-                        {sortedDistances.length === 0 && <p className="text-xs text-zinc-500 col-span-2">No distance data</p>}
+                        {sortedDistances.length === 0 && <p className="text-xs text-muted-foreground col-span-2">No distance data</p>}
                       </div>
                     </div>
                   </div>
@@ -1106,100 +1181,161 @@ export default function Admin() {
         </div>
 
         <div className="flex flex-wrap gap-2">
-          <Button onClick={downloadAllDataCSV} size="sm" className="gap-2 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400 hover:bg-emerald-500/25">
+          <Button onClick={downloadAllDataCSV} size="sm" className="gap-2 bg-product-warm/15 border border-product-warm/30 text-product-warm hover:bg-product-warm/25">
             <Download className="w-4 h-4" />
             Export CSV
           </Button>
-          <Button onClick={loadProfiles} variant="outline" size="sm" className="gap-2 border-zinc-700 text-zinc-300 hover:bg-zinc-800 hover:border-emerald-500/30 hover:text-emerald-400/90">
+          <Button onClick={loadProfiles} variant="outline" size="sm" className="gap-2 border-border text-muted-foreground hover:bg-secondary hover:border-product-warm/30 hover:text-product-warm">
             <RefreshCw className="w-4 h-4" />
             Refresh
           </Button>
         </div>
 
-        <div className="rounded-xl border border-zinc-800 border-t-4 border-t-red-500/40 bg-zinc-900/50 overflow-hidden">
-          <div className="px-4 py-3 border-b border-zinc-800 bg-red-500/5">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-red-400/90">User submissions</h2>
-            <p className="text-xs text-zinc-500 mt-0.5">Expand row to see full hydration plan and profile.</p>
+        <div className="rounded-xl border border-border border-t-4 border-t-primary bg-card overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-border bg-secondary">
+            <div className="flex items-center justify-between">
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wider">User submissions</h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  {hasActiveFilters ? `${filteredProfiles.length} of ${profiles.length}` : profiles.length} submission{profiles.length !== 1 ? 's' : ''} — expand row to see full hydration plan.
+                </p>
+              </div>
+              {hasActiveFilters && (
+                <Button variant="ghost" size="sm" onClick={clearFilters} className="text-xs text-muted-foreground hover:text-destructive gap-1">
+                  <X className="w-3 h-3" /> Clear filters
+                </Button>
+              )}
+            </div>
+            <div className="mt-3 flex flex-wrap gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3.5 h-3.5 text-muted-foreground pointer-events-none" />
+                <Input
+                  placeholder="Name or email…"
+                  value={filterSearch}
+                  onChange={(e) => setFilterSearch(e.target.value)}
+                  className="pl-7 h-8 text-xs w-48 bg-background border-border"
+                />
+              </div>
+              <select
+                value={filterDiscipline}
+                onChange={(e) => setFilterDiscipline(e.target.value)}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="">All disciplines</option>
+                {allDisciplines.map((d) => (
+                  <option key={d} value={d}>{d}</option>
+                ))}
+              </select>
+              <select
+                value={filterSmartwatch}
+                onChange={(e) => setFilterSmartwatch(e.target.value as 'all' | 'yes' | 'no')}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="all">Smartwatch: all</option>
+                <option value="yes">Smartwatch: yes</option>
+                <option value="no">Smartwatch: no</option>
+              </select>
+              <select
+                value={filterStrava}
+                onChange={(e) => setFilterStrava(e.target.value as 'all' | 'yes' | 'no')}
+                className="h-8 rounded-md border border-border bg-background px-2 text-xs text-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+              >
+                <option value="all">Strava: all</option>
+                <option value="yes">Strava: yes</option>
+                <option value="no">Strava: no</option>
+              </select>
+            </div>
           </div>
           <div className="p-4">
             {loading ? (
-              <p className="text-center text-zinc-500 py-8">Loading...</p>
+              <p className="text-center text-muted-foreground py-8">Loading...</p>
             ) : profiles.length === 0 ? (
-              <p className="text-center text-zinc-500 py-8">No data yet.</p>
+              <p className="text-center text-muted-foreground py-8">No data yet.</p>
+            ) : filteredProfiles.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">No submissions match the current filters.</p>
             ) : (
               <div className="space-y-2">
-                {profiles.map((profile) => {
+                {filteredProfiles.map((profile) => {
                   const pd = profile.profile_data || {};
                   const plan = profile.plan_data || {};
                   const isExpanded = expandedRows.has(profile.id);
 
                   return (
-                    <div key={profile.id} className="rounded-lg border border-zinc-800 bg-zinc-900 p-4 border-l-4 border-l-zinc-700 hover:border-l-emerald-500/40 transition-colors">
+                    <div key={profile.id} className="rounded-lg border border-border bg-card p-4 border-l-4 border-l-chrome hover:border-l-product-warm transition-colors shadow-sm">
                       <Collapsible open={isExpanded} onOpenChange={() => toggleRow(profile.id)}>
                         <div className="flex items-center justify-between">
                           <div className="flex items-center gap-4 flex-1">
                             <CollapsibleTrigger asChild>
-                              <Button variant="ghost" size="sm" className="p-1 text-zinc-400 hover:text-zinc-100">
+                              <Button variant="ghost" size="sm" className="p-1 text-muted-foreground hover:text-foreground">
                                 {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
                               </Button>
                             </CollapsibleTrigger>
 
                             <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-2 flex-1">
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Date</p>
-                                <p className="text-sm font-medium text-zinc-200 tabular-nums">{new Date(profile.created_at).toLocaleDateString()}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Date</p>
+                                <p className="text-sm font-medium tabular-nums">{new Date(profile.created_at).toLocaleDateString()}</p>
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Name</p>
-                                <p className="text-sm font-medium text-zinc-200">{pd.fullName || '—'}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Name</p>
+                                <p className="text-sm font-medium">{pd.fullName || '—'}</p>
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Email</p>
-                                <p className="text-sm font-medium text-zinc-200 truncate max-w-[140px]">{profile.user_email || '—'}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Email</p>
+                                <p className="text-sm font-medium truncate max-w-[140px]">{profile.user_email || '—'}</p>
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Discipline</p>
-                                <p className="text-sm font-medium text-zinc-200">{pd.disciplines?.[0] || '—'}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Discipline</p>
+                                <p className="text-sm font-medium">{pd.disciplines?.[0] || '—'}</p>
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Age / Sex</p>
-                                <p className="text-sm font-medium text-zinc-200 tabular-nums">{pd.age || '?'} / {pd.sex || '?'}</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Age / Sex</p>
+                                <p className="text-sm font-medium tabular-nums">{pd.age || '?'} / {pd.sex || '?'}</p>
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Watch</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Watch</p>
                                 {profile.has_smartwatch_data ? (
-                                  <span className="text-xs text-emerald-400">Yes</span>
+                                  <span className="text-xs text-brand-green">Yes</span>
                                 ) : (
-                                  <span className="text-xs text-zinc-500">No</span>
+                                  <span className="text-xs text-muted-foreground">No</span>
                                 )}
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Strava</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Strava</p>
                                 {pd.strava_snapshot ? (
-                                  <Badge variant="secondary" className="text-[10px] bg-orange-500/20 text-orange-400 border-orange-500/40">
+                                  <Badge variant="secondary" className="text-[10px] bg-product-warm/20 text-product-warm border-product-warm/40">
                                     Yes
                                   </Badge>
                                 ) : (
-                                  <span className="text-xs text-zinc-500">No</span>
+                                  <span className="text-xs text-muted-foreground">No</span>
                                 )}
                               </div>
                               <div>
-                                <p className="text-[10px] uppercase tracking-wider text-zinc-500">Consent</p>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Consent</p>
                                 {profile.consent_given ? (
-                                  <span className="text-xs text-emerald-400">✓</span>
+                                  <span className="text-xs text-brand-green">✓</span>
                                 ) : (
-                                  <span className="text-xs text-red-400">✗</span>
+                                  <span className="text-xs text-brand-red">✗</span>
                                 )}
                               </div>
                             </div>
 
                             <div className="flex items-center gap-1">
                               <Button
+                                onClick={() => downloadPlanImage(profile)}
+                                variant="ghost"
+                                size="sm"
+                                className="text-muted-foreground hover:text-foreground"
+                                title="Download plan image (same as user gets)"
+                              >
+                                <ImageDown className="w-4 h-4" />
+                              </Button>
+                              <Button
                                 onClick={() => downloadUserGuide(profile)}
                                 variant="ghost"
                                 size="sm"
-                                className="text-zinc-400 hover:text-zinc-100"
-                                title="Download hydration guide"
+                                className="text-muted-foreground hover:text-foreground"
+                                title="Download PDF guide"
                               >
                                 <FileDown className="w-4 h-4" />
                               </Button>
@@ -1207,7 +1343,7 @@ export default function Admin() {
                                 onClick={() => deleteProfile(profile.id)}
                                 variant="ghost"
                                 size="sm"
-                                className="text-zinc-400 hover:text-red-400"
+                                className="text-muted-foreground hover:text-destructive"
                               >
                                 <Trash2 className="w-4 h-4" />
                               </Button>
@@ -1215,185 +1351,264 @@ export default function Admin() {
                           </div>
                         </div>
 
-                        <CollapsibleContent className="mt-4 pt-4 border-t border-zinc-800">
+                        <CollapsibleContent className="mt-4 pt-4 border-t border-border">
+                          {/* ── Hydration Plan Result (exact user view) ── */}
+                          {plan.preActivity && (
+                            <div className="mb-6 p-4 rounded-xl border border-border bg-secondary/50">
+                              <div className="flex flex-wrap items-baseline gap-3 mb-3">
+                                <p className="text-xs font-semibold uppercase tracking-wider text-product-warm">Hydration Plan Result</p>
+                                {pd.disciplines?.[0] && (
+                                  <span className="text-xs text-muted-foreground">{pd.disciplines.join(' / ')}</span>
+                                )}
+                                {(pd.raceDistance || pd.trainingDistance) && (
+                                  <span className="text-xs font-medium tabular-nums">{pd.raceDistance || pd.trainingDistance}</span>
+                                )}
+                                {pd.hasUpcomingRace && (
+                                  <Badge variant="secondary" className="text-[10px] bg-brand-red/10 text-brand-red border-brand-red/20">Race day</Badge>
+                                )}
+                                {pd.goalTime && (
+                                  <span className="text-xs text-muted-foreground">Goal: {pd.goalTime}</span>
+                                )}
+                                {pd.sessionDuration && (
+                                  <span className="text-xs text-muted-foreground">{(() => { const h = Math.floor(pd.sessionDuration); const m = Math.round((pd.sessionDuration - h) * 60); return m > 0 ? `${h}h ${m}m` : `${h}h`; })()}</span>
+                                )}
+                              </div>
+                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
+                                {/* Total fluid loss */}
+                                <div className="rounded-lg border border-border bg-background p-3 text-center">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Total fluid loss</p>
+                                  <p className="text-2xl font-bold tabular-nums">{((plan.totalFluidLoss || 0) / 1000).toFixed(1)}<span className="text-sm font-normal text-muted-foreground"> L</span></p>
+                                </div>
+                                {/* Pre-activity */}
+                                <div className="rounded-lg border border-border bg-background p-3">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Pre-activity</p>
+                                  <p className="text-sm font-medium">Water: <span className="font-bold">{plan.preActivity.water} ml</span></p>
+                                  <p className="text-sm font-medium">Sachets: <span className="font-bold">{plan.preActivity.electrolytes}x</span></p>
+                                </div>
+                                {/* During activity */}
+                                <div className="rounded-lg border border-foreground bg-foreground text-background p-3">
+                                  <p className="text-[10px] uppercase tracking-wider opacity-60 mb-1">During activity</p>
+                                  <p className="text-sm font-medium">Water/hr: <span className="font-bold">{plan.duringActivity?.waterPerHour ?? 0} ml</span></p>
+                                  <p className="text-sm font-medium">Sachets/hr: <span className="font-bold">{plan.duringActivity?.electrolytesPerHour ?? 0}</span></p>
+                                  <p className="text-sm font-medium">Total sachets: <span className="font-bold">{plan.duringActivity?.totalElectrolytes ?? 0}</span></p>
+                                </div>
+                                {/* Post-activity */}
+                                <div className="rounded-lg border border-border bg-background p-3">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Post-activity</p>
+                                  <p className="text-sm font-medium">Water: <span className="font-bold">{plan.postActivity?.water ?? 0} ml</span></p>
+                                  <p className="text-sm font-medium">Sachets: <span className="font-bold">{plan.postActivity?.electrolytes ?? 0}x</span></p>
+                                </div>
+                              </div>
+                              {/* Recommendations */}
+                              {plan.recommendations?.length > 0 && (
+                                <div className="mb-3">
+                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Recommendations</p>
+                                  <ul className="space-y-0.5">
+                                    {plan.recommendations.map((rec: string, i: number) => (
+                                      <li key={i} className="text-xs flex gap-1.5"><span className="text-muted-foreground">·</span>{rec}</li>
+                                    ))}
+                                  </ul>
+                                </div>
+                              )}
+                              {/* Confidence & Sources */}
+                              <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
+                                {plan.confidenceScore != null && <span>Confidence: {plan.confidenceScore}/5</span>}
+                                {plan.activeDataSources?.length > 0 && <span>Sources: {plan.activeDataSources.join(', ')}</span>}
+                              </div>
+                            </div>
+                          )}
+
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {pd.strava_snapshot && (
-                              <div className="col-span-full space-y-4 mb-4 p-4 rounded-lg bg-zinc-800/50 border border-orange-500/20">
-                                <h4 className="font-semibold text-sm text-orange-400 flex items-center gap-2">
-                                  <Badge variant="secondary" className="text-[10px] bg-orange-500/20 text-orange-400 border-orange-500/40">Strava</Badge>
-                                  Full Strava data (product development)
-                                </h4>
-                                {/* Athlete: all fields */}
-                                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                                  <div className="space-y-2">
-                                    <h5 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">Athlete</h5>
-                                    <div className="space-y-1 text-sm text-zinc-300">
-                                      {pd.strava_snapshot.athlete && Object.entries(pd.strava_snapshot.athlete).map(([key, value]) => {
-                                        if (value == null || (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0)) return null;
-                                        if (typeof value === 'object' && !Array.isArray(value)) return <p key={key}><span className="text-zinc-500">{key}:</span> [object]</p>;
-                                        if (Array.isArray(value)) return <p key={key}><span className="text-zinc-500">{key}:</span> {value.length} items</p>;
-                                        return <p key={key}><span className="text-zinc-500">{key}:</span> {String(value)}</p>;
-                                      })}
-                                    </div>
+                              <div className="col-span-full mb-4">
+                                <button
+                                  onClick={() => toggleStrava(profile.id)}
+                                  className="w-full flex items-center justify-between px-4 py-2.5 rounded-lg bg-product-warm-muted border border-product-warm/20 hover:bg-product-warm/10 transition-colors"
+                                >
+                                  <div className="flex items-center gap-2">
+                                    <Badge variant="secondary" className="text-[10px] bg-product-warm/20 text-product-warm border-product-warm/40">Strava</Badge>
+                                    <span className="text-sm font-medium text-product-warm">Full Strava data</span>
+                                    {pd.strava_snapshot.activities?.length > 0 && (
+                                      <span className="text-xs text-muted-foreground">({pd.strava_snapshot.activities.length} activities)</span>
+                                    )}
                                   </div>
-                                </div>
-                                {/* Activities: full table for where/how much they run */}
-                                {pd.strava_snapshot.activities?.length > 0 && (
-                                  <div className="space-y-2">
-                                    <h5 className="text-xs font-semibold text-zinc-500 uppercase tracking-wider">
-                                      Activities ({pd.strava_snapshot.activities.length})
-                                    </h5>
-                                    <div className="overflow-x-auto -mx-2">
-                                      <Table>
-                                        <TableHeader>
-                                          <TableRow className="border-zinc-700">
-                                            <TableHead className="text-zinc-400">Name</TableHead>
-                                            <TableHead className="text-zinc-400">Type</TableHead>
-                                            <TableHead className="text-zinc-400">Distance</TableHead>
-                                            <TableHead className="text-zinc-400">Moving</TableHead>
-                                            <TableHead className="text-zinc-400">Elevation</TableHead>
-                                            <TableHead className="text-zinc-400">Date</TableHead>
-                                            <TableHead className="text-zinc-400">Avg speed</TableHead>
-                                            <TableHead className="text-zinc-400">Map</TableHead>
-                                          </TableRow>
-                                        </TableHeader>
-                                        <TableBody>
-                                          {pd.strava_snapshot.activities.map((act: any) => (
-                                            <TableRow key={act.id} className="border-zinc-800">
-                                              <TableCell className="text-zinc-300 text-sm font-medium max-w-[180px] truncate" title={act.name}>{act.name || '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm">{act.sport_type || act.type || '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm tabular-nums">{act.distance != null ? `${(act.distance / 1000).toFixed(2)} km` : '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm tabular-nums">{act.moving_time != null ? `${Math.floor(act.moving_time / 60)}m` : '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm tabular-nums">{act.total_elevation_gain != null ? `${act.total_elevation_gain} m` : '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm">{act.start_date_local ? new Date(act.start_date_local).toLocaleDateString(undefined, { dateStyle: 'short' }) : '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm tabular-nums">{act.average_speed != null ? `${(act.average_speed * 3.6).toFixed(1)} km/h` : '—'}</TableCell>
-                                              <TableCell className="text-zinc-400 text-sm">
-                                                {act.id ? (
-                                                  <a href={`https://www.strava.com/activities/${act.id}`} target="_blank" rel="noopener noreferrer" className="text-orange-400 hover:underline">View</a>
-                                                ) : act.map?.summary_polyline ? (
-                                                  <span className="text-zinc-500" title="Polyline present">Route</span>
-                                                ) : '—'}
-                                              </TableCell>
-                                            </TableRow>
-                                          ))}
-                                        </TableBody>
-                                      </Table>
+                                  {expandedStrava.has(profile.id)
+                                    ? <ChevronDown className="w-4 h-4 text-product-warm" />
+                                    : <ChevronRight className="w-4 h-4 text-product-warm" />
+                                  }
+                                </button>
+                                {expandedStrava.has(profile.id) && (
+                                  <div className="mt-2 p-4 rounded-lg bg-product-warm-muted border border-product-warm/20 space-y-4">
+                                    {/* Athlete: all fields */}
+                                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                                      <div className="space-y-2">
+                                        <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">Athlete</h5>
+                                        <div className="space-y-1 text-sm text-foreground">
+                                          {pd.strava_snapshot.athlete && Object.entries(pd.strava_snapshot.athlete).map(([key, value]) => {
+                                            if (value == null || (typeof value === 'object' && !Array.isArray(value) && Object.keys(value).length === 0)) return null;
+                                            if (typeof value === 'object' && !Array.isArray(value)) return <p key={key}><span className="text-muted-foreground">{key}:</span> [object]</p>;
+                                            if (Array.isArray(value)) return <p key={key}><span className="text-muted-foreground">{key}:</span> {value.length} items</p>;
+                                            return <p key={key}><span className="text-muted-foreground">{key}:</span> {String(value)}</p>;
+                                          })}
+                                        </div>
+                                      </div>
                                     </div>
-                                    {/* Aggregates for product dev */}
-                                    <div className="flex flex-wrap gap-4 pt-2 text-xs text-zinc-500">
-                                      <span>Total distance: {(pd.strava_snapshot.activities.reduce((s: number, a: any) => s + (a.distance || 0), 0) / 1000).toFixed(1)} km</span>
-                                      <span>Total moving time: {Math.round(pd.strava_snapshot.activities.reduce((s: number, a: any) => s + (a.moving_time || 0), 0) / 3600)} h</span>
-                                      <span>Total elevation: {pd.strava_snapshot.activities.reduce((s: number, a: any) => s + (a.total_elevation_gain || 0), 0)} m</span>
-                                    </div>
+                                    {/* Activities table */}
+                                    {pd.strava_snapshot.activities?.length > 0 && (
+                                      <div className="space-y-2">
+                                        <h5 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                          Activities ({pd.strava_snapshot.activities.length})
+                                        </h5>
+                                        <div className="overflow-x-auto -mx-2">
+                                          <Table>
+                                            <TableHeader>
+                                              <TableRow className="border-border">
+                                                <TableHead className="text-muted-foreground">Name</TableHead>
+                                                <TableHead className="text-muted-foreground">Type</TableHead>
+                                                <TableHead className="text-muted-foreground">Distance</TableHead>
+                                                <TableHead className="text-muted-foreground">Moving</TableHead>
+                                                <TableHead className="text-muted-foreground">Elevation</TableHead>
+                                                <TableHead className="text-muted-foreground">Date</TableHead>
+                                                <TableHead className="text-muted-foreground">Avg speed</TableHead>
+                                                <TableHead className="text-muted-foreground">Map</TableHead>
+                                              </TableRow>
+                                            </TableHeader>
+                                            <TableBody>
+                                              {pd.strava_snapshot.activities.map((act: any) => (
+                                                <TableRow key={act.id} className="border-border">
+                                                  <TableCell className="text-foreground text-sm font-medium max-w-[180px] truncate" title={act.name}>{act.name || '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm">{act.sport_type || act.type || '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm tabular-nums">{act.distance != null ? `${(act.distance / 1000).toFixed(2)} km` : '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm tabular-nums">{act.moving_time != null ? `${Math.floor(act.moving_time / 60)}m` : '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm tabular-nums">{act.total_elevation_gain != null ? `${act.total_elevation_gain} m` : '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm">{act.start_date_local ? new Date(act.start_date_local).toLocaleDateString(undefined, { dateStyle: 'short' }) : '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm tabular-nums">{act.average_speed != null ? `${(act.average_speed * 3.6).toFixed(1)} km/h` : '—'}</TableCell>
+                                                  <TableCell className="text-muted-foreground text-sm">
+                                                    {act.id ? (
+                                                      <a href={`https://www.strava.com/activities/${act.id}`} target="_blank" rel="noopener noreferrer" className="text-product-warm hover:underline">View</a>
+                                                    ) : act.map?.summary_polyline ? (
+                                                      <span className="text-muted-foreground" title="Polyline present">Route</span>
+                                                    ) : '—'}
+                                                  </TableCell>
+                                                </TableRow>
+                                              ))}
+                                            </TableBody>
+                                          </Table>
+                                        </div>
+                                        <div className="flex flex-wrap gap-4 pt-2 text-xs text-muted-foreground">
+                                          <span>Total distance: {(pd.strava_snapshot.activities.reduce((s: number, a: any) => s + (a.distance || 0), 0) / 1000).toFixed(1)} km</span>
+                                          <span>Total moving time: {Math.round(pd.strava_snapshot.activities.reduce((s: number, a: any) => s + (a.moving_time || 0), 0) / 3600)} h</span>
+                                          <span>Total elevation: {pd.strava_snapshot.activities.reduce((s: number, a: any) => s + (a.total_elevation_gain || 0), 0)} m</span>
+                                        </div>
+                                      </div>
+                                    )}
                                   </div>
                                 )}
                               </div>
                             )}
-                            <p className="col-span-full text-[10px] uppercase tracking-wider text-zinc-500 mb-1">Profile details</p>
+                            <p className="col-span-full text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Profile details</p>
                             {/* Body & Physiology */}
                             <div className="space-y-2">
-                              <h4 className="font-semibold text-sm text-zinc-400">Body & Physiology</h4>
-                              <div className="space-y-1 text-sm text-zinc-300">
-                                {(pd.fullName != null && pd.fullName !== '') && <p><span className="text-zinc-500">Full name:</span> {pd.fullName}</p>}
-                                {pd.age != null && <p><span className="text-zinc-500">Age:</span> {pd.age}</p>}
-                                {pd.sex && <p><span className="text-zinc-500">Sex:</span> {pd.sex}</p>}
-                                {pd.weight != null && <p><span className="text-zinc-500">Weight:</span> {pd.weight} kg</p>}
-                                {pd.height != null && <p><span className="text-zinc-500">Height:</span> {pd.height} cm</p>}
-                                {pd.bodyFat != null && <p><span className="text-zinc-500">Body fat:</span> {pd.bodyFat}%</p>}
-                                {pd.restingHeartRate != null && <p><span className="text-zinc-500">Resting HR:</span> {pd.restingHeartRate}</p>}
-                                {pd.hrv != null && pd.hrv !== '' && <p><span className="text-zinc-500">HRV:</span> {pd.hrv}</p>}
-                                {pd.healthConditions != null && pd.healthConditions !== '' && <p><span className="text-zinc-500">Health:</span> {pd.healthConditions}</p>}
-                                {pd.sweatSodiumTest != null && <p><span className="text-zinc-500">Sweat sodium test:</span> {pd.sweatSodiumTest}</p>}
+                              <h4 className="font-semibold text-sm text-muted-foreground">Body & Physiology</h4>
+                              <div className="space-y-1 text-sm text-foreground">
+                                {(pd.fullName != null && pd.fullName !== '') && <p><span className="text-muted-foreground">Full name:</span> {pd.fullName}</p>}
+                                {pd.age != null && <p><span className="text-muted-foreground">Age:</span> {pd.age}</p>}
+                                {pd.sex && <p><span className="text-muted-foreground">Sex:</span> {pd.sex}</p>}
+                                {pd.weight != null && <p><span className="text-muted-foreground">Weight:</span> {pd.weight} kg</p>}
+                                {pd.height != null && <p><span className="text-muted-foreground">Height:</span> {pd.height} cm</p>}
+                                {pd.bodyFat != null && <p><span className="text-muted-foreground">Body fat:</span> {pd.bodyFat}%</p>}
+                                {pd.restingHeartRate != null && <p><span className="text-muted-foreground">Resting HR:</span> {pd.restingHeartRate}</p>}
+                                {pd.hrv != null && pd.hrv !== '' && <p><span className="text-muted-foreground">HRV:</span> {pd.hrv}</p>}
+                                {pd.healthConditions != null && pd.healthConditions !== '' && <p><span className="text-muted-foreground">Health:</span> {pd.healthConditions}</p>}
+                                {pd.sweatSodiumTest != null && <p><span className="text-muted-foreground">Sweat sodium test:</span> {pd.sweatSodiumTest}</p>}
                               </div>
                             </div>
 
                             <div className="space-y-2">
-                              <h4 className="font-semibold text-sm text-zinc-400">Activity & terrain</h4>
-                              <div className="space-y-1 text-sm text-zinc-300">
-                                {pd.disciplines && pd.disciplines.length > 0 && <p><span className="text-zinc-500">Disciplines:</span> {pd.disciplines.join(', ')}</p>}
-                                {pd.terrain != null && pd.terrain !== '' && <p><span className="text-zinc-500">Terrain:</span> {pd.terrain}</p>}
-                                {pd.sessionDuration != null && <p><span className="text-zinc-500">Duration:</span> {(() => {
+                              <h4 className="font-semibold text-sm text-muted-foreground">Activity & terrain</h4>
+                              <div className="space-y-1 text-sm text-foreground">
+                                {pd.disciplines && pd.disciplines.length > 0 && <p><span className="text-muted-foreground">Disciplines:</span> {pd.disciplines.join(', ')}</p>}
+                                {pd.terrain != null && pd.terrain !== '' && <p><span className="text-muted-foreground">Terrain:</span> {pd.terrain}</p>}
+                                {pd.sessionDuration != null && <p><span className="text-muted-foreground">Duration:</span> {(() => {
                                   const hours = pd.sessionDuration || 0;
                                   const h = Math.floor(hours);
                                   const m = Math.round((hours - h) * 60);
                                   return m > 0 ? `${h}h ${m}m` : `${h}h`;
                                 })()}</p>}
-                                {pd.indoorOutdoor && <p><span className="text-zinc-500">Location:</span> {pd.indoorOutdoor}</p>}
-                                {pd.raceDistance != null && pd.raceDistance !== '' && <p><span className="text-zinc-500">Race distance:</span> {pd.raceDistance}</p>}
-                                {pd.trainingDistance != null && pd.trainingDistance !== '' && <p><span className="text-zinc-500">Training distance:</span> {pd.trainingDistance}</p>}
-                                {pd.goalTime != null && pd.goalTime !== '' && <p><span className="text-zinc-500">Goal time:</span> {pd.goalTime}</p>}
-                                {pd.hasUpcomingRace != null && <p><span className="text-zinc-500">Has upcoming race:</span> {pd.hasUpcomingRace ? 'Yes' : 'No'}</p>}
-                                {pd.avgPace != null && pd.avgPace !== '' && <p><span className="text-zinc-500">Avg pace:</span> {pd.avgPace}</p>}
-                                {pd.swimPace != null && pd.swimPace !== '' && <p><span className="text-zinc-500">Swim pace:</span> {pd.swimPace}</p>}
-                                {pd.swimDistance != null && pd.swimDistance !== '' && <p><span className="text-zinc-500">Swim distance:</span> {pd.swimDistance}</p>}
-                                {pd.bikePower != null && pd.bikePower !== '' && <p><span className="text-zinc-500">Bike power:</span> {pd.bikePower}</p>}
-                                {pd.bikeSpeed != null && pd.bikeSpeed !== '' && <p><span className="text-zinc-500">Bike speed:</span> {pd.bikeSpeed}</p>}
-                                {pd.runPace != null && pd.runPace !== '' && <p><span className="text-zinc-500">Run pace:</span> {pd.runPace}</p>}
-                                {pd.elevationGain != null && <p><span className="text-zinc-500">Elevation:</span> {pd.elevationGain} m</p>}
-                                {pd.longestSession != null && <p><span className="text-zinc-500">Longest session:</span> {pd.longestSession} h</p>}
-                                {pd.trainingFrequency != null && <p><span className="text-zinc-500">Frequency:</span> {pd.trainingFrequency}/week</p>}
+                                {pd.indoorOutdoor && <p><span className="text-muted-foreground">Location:</span> {pd.indoorOutdoor}</p>}
+                                {pd.raceDistance != null && pd.raceDistance !== '' && <p><span className="text-muted-foreground">Race distance:</span> {pd.raceDistance}</p>}
+                                {pd.trainingDistance != null && pd.trainingDistance !== '' && <p><span className="text-muted-foreground">Training distance:</span> {pd.trainingDistance}</p>}
+                                {pd.goalTime != null && pd.goalTime !== '' && <p><span className="text-muted-foreground">Goal time:</span> {pd.goalTime}</p>}
+                                {pd.hasUpcomingRace != null && <p><span className="text-muted-foreground">Has upcoming race:</span> {pd.hasUpcomingRace ? 'Yes' : 'No'}</p>}
+                                {pd.avgPace != null && pd.avgPace !== '' && <p><span className="text-muted-foreground">Avg pace:</span> {pd.avgPace}</p>}
+                                {pd.swimPace != null && pd.swimPace !== '' && <p><span className="text-muted-foreground">Swim pace:</span> {pd.swimPace}</p>}
+                                {pd.swimDistance != null && pd.swimDistance !== '' && <p><span className="text-muted-foreground">Swim distance:</span> {pd.swimDistance}</p>}
+                                {pd.bikePower != null && pd.bikePower !== '' && <p><span className="text-muted-foreground">Bike power:</span> {pd.bikePower}</p>}
+                                {pd.bikeSpeed != null && pd.bikeSpeed !== '' && <p><span className="text-muted-foreground">Bike speed:</span> {pd.bikeSpeed}</p>}
+                                {pd.runPace != null && pd.runPace !== '' && <p><span className="text-muted-foreground">Run pace:</span> {pd.runPace}</p>}
+                                {pd.elevationGain != null && <p><span className="text-muted-foreground">Elevation:</span> {pd.elevationGain} m</p>}
+                                {pd.longestSession != null && <p><span className="text-muted-foreground">Longest session:</span> {pd.longestSession} h</p>}
+                                {pd.trainingFrequency != null && <p><span className="text-muted-foreground">Frequency:</span> {pd.trainingFrequency}/week</p>}
                               </div>
                             </div>
 
                             <div className="space-y-2">
-                              <h4 className="font-semibold text-sm text-zinc-400">Environment</h4>
-                              <div className="space-y-1 text-sm text-zinc-300">
-                                {pd.trainingTempRange != null && <p><span className="text-zinc-500">Temp (training):</span> {pd.trainingTempRange.min}–{pd.trainingTempRange.max}°C</p>}
-                                {pd.raceTempRange != null && <p><span className="text-zinc-500">Temp (race):</span> {pd.raceTempRange.min}–{pd.raceTempRange.max}°C</p>}
-                                {pd.humidity != null && <p><span className="text-zinc-500">Humidity:</span> {pd.humidity}%</p>}
-                                {pd.altitude != null && pd.altitude !== '' && <p><span className="text-zinc-500">Altitude:</span> {pd.altitude}</p>}
-                                {pd.altitudeMeters != null && <p><span className="text-zinc-500">Altitude (m):</span> {pd.altitudeMeters} m</p>}
-                                {pd.sunExposure != null && pd.sunExposure !== '' && <p><span className="text-zinc-500">Sun:</span> {pd.sunExposure}</p>}
-                                {pd.windConditions != null && pd.windConditions !== '' && <p><span className="text-zinc-500">Wind:</span> {pd.windConditions}</p>}
-                                {pd.clothingType != null && pd.clothingType !== '' && <p><span className="text-zinc-500">Clothing:</span> {pd.clothingType}</p>}
-                                {pd.climate != null && pd.climate !== '' && <p><span className="text-zinc-500">Climate:</span> {pd.climate}</p>}
+                              <h4 className="font-semibold text-sm text-muted-foreground">Environment</h4>
+                              <div className="space-y-1 text-sm text-foreground">
+                                {pd.trainingTempRange != null && <p><span className="text-muted-foreground">Temp (training):</span> {pd.trainingTempRange.min}–{pd.trainingTempRange.max}°C</p>}
+                                {pd.raceTempRange != null && <p><span className="text-muted-foreground">Temp (race):</span> {pd.raceTempRange.min}–{pd.raceTempRange.max}°C</p>}
+                                {pd.humidity != null && <p><span className="text-muted-foreground">Humidity:</span> {pd.humidity}%</p>}
+                                {pd.altitude != null && pd.altitude !== '' && <p><span className="text-muted-foreground">Altitude:</span> {pd.altitude}</p>}
+                                {pd.altitudeMeters != null && <p><span className="text-muted-foreground">Altitude (m):</span> {pd.altitudeMeters} m</p>}
+                                {pd.sunExposure != null && pd.sunExposure !== '' && <p><span className="text-muted-foreground">Sun:</span> {pd.sunExposure}</p>}
+                                {pd.windConditions != null && pd.windConditions !== '' && <p><span className="text-muted-foreground">Wind:</span> {pd.windConditions}</p>}
+                                {pd.clothingType != null && pd.clothingType !== '' && <p><span className="text-muted-foreground">Clothing:</span> {pd.clothingType}</p>}
+                                {pd.climate != null && pd.climate !== '' && <p><span className="text-muted-foreground">Climate:</span> {pd.climate}</p>}
                               </div>
                             </div>
 
                             <div className="space-y-2">
-                              <h4 className="font-semibold text-sm text-zinc-400">Hydration & sweat</h4>
-                              <div className="space-y-1 text-sm text-zinc-300">
-                                {pd.sweatRate && <p><span className="text-zinc-500">Sweat rate:</span> {pd.sweatRate}</p>}
-                                {pd.sweatSaltiness && <p><span className="text-zinc-500">Saltiness:</span> {pd.sweatSaltiness}</p>}
-                                {pd.fluidIntake && <p><span className="text-zinc-500">Fluid Intake:</span> {pd.fluidIntake}L</p>}
-                                {pd.urineColor && <p><span className="text-zinc-500">Urine Color:</span> {pd.urineColor}</p>}
-                                {pd.crampTiming && <p><span className="text-zinc-500">Cramps:</span> {pd.crampTiming}</p>}
+                              <h4 className="font-semibold text-sm text-muted-foreground">Hydration & sweat</h4>
+                              <div className="space-y-1 text-sm text-foreground">
+                                {pd.sweatRate && <p><span className="text-muted-foreground">Sweat rate:</span> {pd.sweatRate}</p>}
+                                {pd.sweatSaltiness && <p><span className="text-muted-foreground">Saltiness:</span> {pd.sweatSaltiness}</p>}
+                                {pd.fluidIntake && <p><span className="text-muted-foreground">Fluid Intake:</span> {pd.fluidIntake}L</p>}
+                                {pd.urineColor && <p><span className="text-muted-foreground">Urine Color:</span> {pd.urineColor}</p>}
+                                {pd.crampTiming && <p><span className="text-muted-foreground">Cramps:</span> {pd.crampTiming}</p>}
                                 {pd.dehydrationSymptoms && pd.dehydrationSymptoms.length > 0 && (
-                                  <p><span className="text-zinc-500">Symptoms:</span> {pd.dehydrationSymptoms.join(', ')}</p>
+                                  <p><span className="text-muted-foreground">Symptoms:</span> {pd.dehydrationSymptoms.join(', ')}</p>
                                 )}
-                                {pd.hydrationStrategy && <p><span className="text-zinc-500">Strategy:</span> {pd.hydrationStrategy}</p>}
+                                {pd.hydrationStrategy && <p><span className="text-muted-foreground">Strategy:</span> {pd.hydrationStrategy}</p>}
                               </div>
                             </div>
 
                             <div className="space-y-2">
-                              <h4 className="font-semibold text-sm text-zinc-400">Nutrition</h4>
-                              <div className="space-y-1 text-sm text-zinc-300">
-                                {pd.dailySaltIntake != null && pd.dailySaltIntake !== '' && <p><span className="text-zinc-500">Daily salt:</span> {pd.dailySaltIntake}</p>}
-                                {pd.dailyWaterIntake != null && <p><span className="text-zinc-500">Daily water:</span> {pd.dailyWaterIntake} L</p>}
-                                {pd.caffeineIntake != null && <p><span className="text-zinc-500">Caffeine:</span> {pd.caffeineIntake} mg</p>}
-                                {pd.dietType != null && pd.dietType !== '' && <p><span className="text-zinc-500">Diet:</span> {pd.dietType}</p>}
-                                {pd.specialDiet != null && pd.specialDiet !== '' && <p><span className="text-zinc-500">Special diet:</span> {pd.specialDiet}</p>}
-                                {pd.fuelingStrategy != null && pd.fuelingStrategy !== '' && <p><span className="text-zinc-500">Fueling:</span> {pd.fuelingStrategy}</p>}
-                                {pd.caffeineStrategy != null && pd.caffeineStrategy !== '' && <p><span className="text-zinc-500">Caffeine strategy:</span> {pd.caffeineStrategy}</p>}
-                                {pd.preMealTiming != null && <p><span className="text-zinc-500">Pre-meal timing:</span> {pd.preMealTiming} h</p>}
-                                {pd.recoveryWindow != null && <p><span className="text-zinc-500">Recovery window:</span> {pd.recoveryWindow} h</p>}
-                                {pd.nutritionNotes != null && pd.nutritionNotes !== '' && <p><span className="text-zinc-500">Nutrition notes:</span> {pd.nutritionNotes}</p>}
-                                {pd.otherSupplements != null && pd.otherSupplements !== '' && <p><span className="text-zinc-500">Supplements:</span> {pd.otherSupplements}</p>}
+                              <h4 className="font-semibold text-sm text-muted-foreground">Nutrition</h4>
+                              <div className="space-y-1 text-sm text-foreground">
+                                {pd.dailySaltIntake != null && pd.dailySaltIntake !== '' && <p><span className="text-muted-foreground">Daily salt:</span> {pd.dailySaltIntake}</p>}
+                                {pd.dailyWaterIntake != null && <p><span className="text-muted-foreground">Daily water:</span> {pd.dailyWaterIntake} L</p>}
+                                {pd.caffeineIntake != null && <p><span className="text-muted-foreground">Caffeine:</span> {pd.caffeineIntake} mg</p>}
+                                {pd.dietType != null && pd.dietType !== '' && <p><span className="text-muted-foreground">Diet:</span> {pd.dietType}</p>}
+                                {pd.specialDiet != null && pd.specialDiet !== '' && <p><span className="text-muted-foreground">Special diet:</span> {pd.specialDiet}</p>}
+                                {pd.fuelingStrategy != null && pd.fuelingStrategy !== '' && <p><span className="text-muted-foreground">Fueling:</span> {pd.fuelingStrategy}</p>}
+                                {pd.caffeineStrategy != null && pd.caffeineStrategy !== '' && <p><span className="text-muted-foreground">Caffeine strategy:</span> {pd.caffeineStrategy}</p>}
+                                {pd.preMealTiming != null && <p><span className="text-muted-foreground">Pre-meal timing:</span> {pd.preMealTiming} h</p>}
+                                {pd.recoveryWindow != null && <p><span className="text-muted-foreground">Recovery window:</span> {pd.recoveryWindow} h</p>}
+                                {pd.nutritionNotes != null && pd.nutritionNotes !== '' && <p><span className="text-muted-foreground">Nutrition notes:</span> {pd.nutritionNotes}</p>}
+                                {pd.otherSupplements != null && pd.otherSupplements !== '' && <p><span className="text-muted-foreground">Supplements:</span> {pd.otherSupplements}</p>}
                               </div>
                             </div>
-
-                            {/* Full Hydration Plan removed — Race Day Protocol is shown on the user result page */}
 
                             {/* Sport-Specific Data (Football) */}
                             {(pd.position || pd.matchesPerWeek || pd.playingLevel) && (
                               <div className="space-y-2">
-                                <h4 className="font-semibold text-sm text-zinc-400">Football</h4>
-                                <div className="space-y-1 text-sm text-zinc-300">
-                                  {pd.position && <p><span className="text-zinc-500">Position:</span> {pd.position}</p>}
-                                  {pd.matchesPerWeek && <p><span className="text-zinc-500">Matches/Week:</span> {pd.matchesPerWeek}</p>}
-                                  {pd.playingLevel && <p><span className="text-zinc-500">Level:</span> {pd.playingLevel}</p>}
-                                  {pd.playingSurface && <p><span className="text-zinc-500">Surface:</span> {pd.playingSurface}</p>}
-                                  {pd.avgDistanceCovered && <p><span className="text-zinc-500">Avg Distance:</span> {pd.avgDistanceCovered}km</p>}
+                                <h4 className="font-semibold text-sm text-muted-foreground">Football</h4>
+                                <div className="space-y-1 text-sm text-foreground">
+                                  {pd.position && <p><span className="text-muted-foreground">Position:</span> {pd.position}</p>}
+                                  {pd.matchesPerWeek && <p><span className="text-muted-foreground">Matches/Week:</span> {pd.matchesPerWeek}</p>}
+                                  {pd.playingLevel && <p><span className="text-muted-foreground">Level:</span> {pd.playingLevel}</p>}
+                                  {pd.playingSurface && <p><span className="text-muted-foreground">Surface:</span> {pd.playingSurface}</p>}
+                                  {pd.avgDistanceCovered && <p><span className="text-muted-foreground">Avg Distance:</span> {pd.avgDistanceCovered}km</p>}
                                 </div>
                               </div>
                             )}
@@ -1401,39 +1616,39 @@ export default function Admin() {
                             {/* Sport-Specific Data (Padel) */}
                             {(pd.padelPlayingLevel || pd.padelCourtType || pd.padelMatchesPerWeek) && (
                               <div className="space-y-2">
-                                <h4 className="font-semibold text-sm text-zinc-400">Padel</h4>
-                                <div className="space-y-1 text-sm text-zinc-300">
-                                  {pd.padelPlayingLevel && <p><span className="text-zinc-500">Level:</span> {pd.padelPlayingLevel}</p>}
-                                  {pd.padelCourtType && <p><span className="text-zinc-500">Court:</span> {pd.padelCourtType}</p>}
-                                  {pd.padelPlayingStyle && <p><span className="text-zinc-500">Style:</span> {pd.padelPlayingStyle}</p>}
-                                  {pd.padelMatchesPerWeek && <p><span className="text-zinc-500">Matches/Week:</span> {pd.padelMatchesPerWeek}</p>}
-                                  {pd.padelTournamentPlay && <p><span className="text-zinc-500">Tournament:</span> Yes</p>}
+                                <h4 className="font-semibold text-sm text-muted-foreground">Padel</h4>
+                                <div className="space-y-1 text-sm text-foreground">
+                                  {pd.padelPlayingLevel && <p><span className="text-muted-foreground">Level:</span> {pd.padelPlayingLevel}</p>}
+                                  {pd.padelCourtType && <p><span className="text-muted-foreground">Court:</span> {pd.padelCourtType}</p>}
+                                  {pd.padelPlayingStyle && <p><span className="text-muted-foreground">Style:</span> {pd.padelPlayingStyle}</p>}
+                                  {pd.padelMatchesPerWeek && <p><span className="text-muted-foreground">Matches/Week:</span> {pd.padelMatchesPerWeek}</p>}
+                                  {pd.padelTournamentPlay && <p><span className="text-muted-foreground">Tournament:</span> Yes</p>}
                                 </div>
                               </div>
                             )}
 
                             {/* Goals & Notes */}
                             <div className="space-y-2">
-                              <h4 className="font-semibold text-sm text-zinc-400">Goals & notes</h4>
-                              <div className="space-y-1 text-sm text-zinc-300">
-                                {pd.primaryGoal != null && pd.primaryGoal !== '' && <p><span className="text-zinc-500">Primary goal:</span> {pd.primaryGoal}</p>}
-                                {pd.performanceGoal != null && pd.performanceGoal !== '' && <p><span className="text-zinc-500">Performance goal:</span> {pd.performanceGoal}</p>}
-                                {pd.targetEvents != null && pd.targetEvents !== '' && <p><span className="text-zinc-500">Target events:</span> {pd.targetEvents}</p>}
-                                {pd.upcomingEvents != null && pd.upcomingEvents !== '' && <p><span className="text-zinc-500">Upcoming events:</span> {pd.upcomingEvents}</p>}
-                                {pd.pastIssues != null && pd.pastIssues !== '' && <p><span className="text-zinc-500">Past issues:</span> {pd.pastIssues}</p>}
-                                {pd.specificConcerns != null && pd.specificConcerns !== '' && <p><span className="text-zinc-500">Concerns:</span> {pd.specificConcerns}</p>}
-                                {pd.otherNotes != null && pd.otherNotes !== '' && <p><span className="text-zinc-500">Notes:</span> {pd.otherNotes}</p>}
+                              <h4 className="font-semibold text-sm text-muted-foreground">Goals & notes</h4>
+                              <div className="space-y-1 text-sm text-foreground">
+                                {pd.primaryGoal != null && pd.primaryGoal !== '' && <p><span className="text-muted-foreground">Primary goal:</span> {pd.primaryGoal}</p>}
+                                {pd.performanceGoal != null && pd.performanceGoal !== '' && <p><span className="text-muted-foreground">Performance goal:</span> {pd.performanceGoal}</p>}
+                                {pd.targetEvents != null && pd.targetEvents !== '' && <p><span className="text-muted-foreground">Target events:</span> {pd.targetEvents}</p>}
+                                {pd.upcomingEvents != null && pd.upcomingEvents !== '' && <p><span className="text-muted-foreground">Upcoming events:</span> {pd.upcomingEvents}</p>}
+                                {pd.pastIssues != null && pd.pastIssues !== '' && <p><span className="text-muted-foreground">Past issues:</span> {pd.pastIssues}</p>}
+                                {pd.specificConcerns != null && pd.specificConcerns !== '' && <p><span className="text-muted-foreground">Concerns:</span> {pd.specificConcerns}</p>}
+                                {pd.otherNotes != null && pd.otherNotes !== '' && <p><span className="text-muted-foreground">Notes:</span> {pd.otherNotes}</p>}
                               </div>
                             </div>
 
                             {/* Sleep & Recovery */}
                             {(pd.sleepHours != null || pd.sleepQuality != null || pd.weeklyVolume != null) && (
                               <div className="space-y-2">
-                                <h4 className="font-semibold text-sm text-zinc-400">Sleep & recovery</h4>
-                                <div className="space-y-1 text-sm text-zinc-300">
-                                  {pd.sleepHours != null && <p><span className="text-zinc-500">Sleep:</span> {pd.sleepHours} h</p>}
-                                  {pd.sleepQuality != null && <p><span className="text-zinc-500">Sleep quality:</span> {pd.sleepQuality}/10</p>}
-                                  {pd.weeklyVolume != null && <p><span className="text-zinc-500">Weekly volume:</span> {pd.weeklyVolume} h</p>}
+                                <h4 className="font-semibold text-sm text-muted-foreground">Sleep & recovery</h4>
+                                <div className="space-y-1 text-sm text-foreground">
+                                  {pd.sleepHours != null && <p><span className="text-muted-foreground">Sleep:</span> {pd.sleepHours} h</p>}
+                                  {pd.sleepQuality != null && <p><span className="text-muted-foreground">Sleep quality:</span> {pd.sleepQuality}/10</p>}
+                                  {pd.weeklyVolume != null && <p><span className="text-muted-foreground">Weekly volume:</span> {pd.weeklyVolume} h</p>}
                                 </div>
                               </div>
                             )}

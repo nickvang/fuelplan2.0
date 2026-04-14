@@ -42,8 +42,8 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
   const during = plan?.duringActivity;
   const post = plan?.postActivity;
   const sessionDuration = pd.sessionDuration ?? 0;
-  const effectiveDuration = sessionDuration >= 2 ? Math.max(0, sessionDuration - 0.5) : 0;
-  const totalDuringSachets = sessionDuration >= 2 && during
+  const effectiveDuration = Math.max(0, sessionDuration - 0.5);
+  const totalDuringSachets = during
     ? Math.round((during.electrolytesPerHour ?? 0) * effectiveDuration)
     : 0;
   const totalWaterDuring = Math.round((during?.waterPerHour ?? 0) * sessionDuration);
@@ -148,7 +148,7 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
                   <span className={isAdmin ? 'text-zinc-200 font-semibold' : 'text-foreground font-semibold'}>{totalDuringSachets} total</span>
                 </>
               ) : (
-                <span className={isAdmin ? 'text-zinc-400 text-xs' : 'text-muted-foreground text-xs'}>Under 2h — sachets in pre + post only</span>
+                <span className={isAdmin ? 'text-zinc-400 text-xs' : 'text-muted-foreground text-xs'}>No sachets — conditions don't warrant electrolytes</span>
               )}
             </p>
           </div>
@@ -180,11 +180,6 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
           <p>Calculation: {sodiumLossPerHour} ÷ 500 ≈ {Math.round(sodiumLossPerHour / 500 * 10) / 10} sachets/hr</p>
           <p>Adjustments: weight {pd.weight ?? '—'} kg, temp {pd.trainingTempRange?.min ?? '—'}–{pd.trainingTempRange?.max ?? '—'}°C, sweat {pd.sweatRate ?? '—'}</p>
           <p>Result: <strong className={isAdmin ? 'text-zinc-200' : 'text-foreground'}>{sachetsPerHour} sachet{sachetsPerHour !== 1 ? 's' : ''}/hr</strong></p>
-          {sessionDuration < 2 && (
-            <p className={isAdmin ? 'text-amber-400/90 font-medium' : 'text-primary font-semibold'}>
-              Under 2 hr: sachets in pre + post only
-            </p>
-          )}
         </div>
       </div>
       )}

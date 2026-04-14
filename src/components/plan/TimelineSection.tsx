@@ -20,18 +20,11 @@ const PillBadge = ({ children, inverted = false }: { children: React.ReactNode; 
 );
 
 export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriathlon }: TimelineSectionProps) {
-  const sessionDuration = profile.sessionDuration;
-  const isShortSession = sessionDuration < 2;
   const sachetSchedule = computeDuringSachetSchedule(plan, profile, distanceKm);
   const showCourseBar = distanceKm >= 5 && !isSwimming && !isTriathlon && sachetSchedule.length > 0;
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-bold text-[#0a0a0a]">48-hour race day protocol</h2>
-        <p className="text-[13px] text-gray-500 mt-0.5">Your complete hydration timeline from day before to recovery</p>
-      </div>
-
       <div>
         {/* Phase 1: Day Before */}
         <TimelinePhaseCard timeLabel="T-24 hours" phaseName="Day Before">
@@ -80,12 +73,7 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
         {/* Phase 3: During Race */}
         {!isSwimming && (
           <TimelinePhaseCard timeLabel="Race start" phaseName="During Race">
-            {isShortSession ? (
-              <div className="border border-gray-200 rounded-lg px-3.5 py-4 text-center">
-                <p className="text-[13px] text-gray-600">No sachet needed — session under 2 hours</p>
-                <p className="text-[11px] text-gray-400 mt-1">Sip {safeNumber(plan.duringActivity.waterPerHour)}ml water per hour</p>
-              </div>
-            ) : isTriathlon && plan.triathlonSegments ? (
+            {isTriathlon && plan.triathlonSegments ? (
               <div className="rounded-lg bg-[#0a0a0a] text-white overflow-hidden">
                 <div className="p-3.5 space-y-3">
                   {/* Bike segment */}

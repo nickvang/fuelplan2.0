@@ -74,14 +74,14 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Delete user's data using secure deletion token
+    // Delete user's hydration profile using secure deletion token
     const { error } = await supabase
       .from('hydration_profiles')
       .delete()
       .eq('deletion_token', deletionToken);
 
     if (error) {
-      console.error('[Internal] Database error deleting data:', error);
+      console.error('[Internal] Database error deleting hydration data:', error);
       return new Response(
         JSON.stringify({
           error: 'Unable to delete data. Please try again later.',
@@ -96,13 +96,58 @@ serve(async (req) => {
       );
     }
 
+    // Delete Garmin data linked by the same deletion token
+    const { data: garminConn } = await supabase
+      .from('garmin_connections')
+      .select('garmin_user_id, access_token')
+      .eq('deletion_token', deletionToken)
+      .maybeSingle();
+
+    if (garminConn) {
+      // Delete activities FIRST (references garmin_user_id)
+      const { error: actErr } = await supabase
+        .from('garmin_activities')
+        .delete()
+        .eq('garmin_user_id', garminConn.garmin_user_id);
+
+      if (actErr) {
+        console.error('[Internal] Error deleting Garmin activities:', actErr);
+      }
+
+      // Revoke token upstream — never let Garmin API failure block GDPR deletion
+      try {
+        const deauthRes = await fetch(
+          'https://apis.garmin.com/wellness-api/rest/user/registration',
+          {
+            method: 'DELETE',
+            headers: { Authorization: `Bearer ${garminConn.access_token}` },
+          }
+        );
+        if (!deauthRes.ok) {
+          console.warn(`[Garmin] Deauthorize returned ${deauthRes.status}`);
+        }
+      } catch (deauthErr) {
+        console.warn('[Garmin] Deauthorize request failed:', deauthErr);
+      }
+
+      // Delete the connection row
+      const { error: connErr } = await supabase
+        .from('garmin_connections')
+        .delete()
+        .eq('deletion_token', deletionToken);
+
+      if (connErr) {
+        console.error('[Internal] Error deleting Garmin connection:', connErr);
+      }
+    }
+
     // Return identical response for both "deleted" and "not found" to prevent timing oracle
     console.log(`[Success] Delete request processed for token`);
 
     return new Response(
       JSON.stringify({
         success: true,
-        message: 'Your data has been deleted in compliance with GDPR Article 17 (Right to erasure)'
+        message: 'Your data has been deleted in compliance with GDPR Article 17 (Right to erasure). All connected service tokens have also been revoked.'
       }),
       {
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },

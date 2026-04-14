@@ -1,5 +1,4 @@
 import { useLanguage } from '@/contexts/LanguageContext';
-import { Link } from 'react-router-dom';
 
 const PrivacyPolicy = () => {
   const { language } = useLanguage();
@@ -8,15 +7,16 @@ const PrivacyPolicy = () => {
   return (
     <div className="min-h-screen bg-background text-foreground">
       <div className="max-w-3xl mx-auto px-4 py-12 space-y-8">
-        <Link to="/" className="text-sm text-primary hover:underline">&larr; {isDA ? 'Tilbage' : 'Back to app'}</Link>
-
         <h1 className="text-3xl font-bold">{isDA ? 'Privatlivspolitik' : 'Privacy Policy'}</h1>
         <p className="text-sm text-muted-foreground">{isDA ? 'Senest opdateret' : 'Last updated'}: 2026-03-20</p>
 
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">{isDA ? '1. Dataansvarlig' : '1. Data Controller'}</h2>
-          <p>Supplme / FuelPlan 2.0<br />
-            {isDA ? 'Kontakt' : 'Contact'}: <a href="mailto:info@supplme.com" className="underline">info@supplme.com</a>
+          <p>
+            {isDA
+              ? 'Dataansvarlig: [LEGAL_ENTITY_NAME], CVR: [CVR_NUMMER], [REGISTRERET_ADRESSE], Danmark. Kontakt: '
+              : 'Data Controller: [LEGAL_ENTITY_NAME], CVR: [CVR_NUMBER], [REGISTERED_ADDRESS], Denmark. Contact: '}
+            <a href="mailto:info@supplme.com" className="underline">info@supplme.com</a>
           </p>
         </section>
 
@@ -24,13 +24,13 @@ const PrivacyPolicy = () => {
           <h2 className="text-xl font-semibold">{isDA ? '2. Data vi indsamler' : '2. Data We Collect'}</h2>
           <ul className="list-disc pl-6 space-y-1">
             <li>{isDA
-              ? 'Krop & fysiologi: alder, kon, hojde, vaegt, kropsfedt, hvilepuls, HRV'
+              ? 'Krop & fysiologi: alder, køn, højde, vægt, kropsfedt, hvilepuls, HRV'
               : 'Body & physiology: age, sex, height, weight, body fat, resting HR, HRV'}</li>
             <li>{isDA
-              ? 'Aktivitetsdata: disciplin, distance, varighed, tempo, hojde'
+              ? 'Aktivitetsdata: disciplin, distance, varighed, tempo, højde'
               : 'Activity data: discipline, distance, duration, pace, elevation'}</li>
             <li>{isDA
-              ? 'Miljodata: temperatur, fugtighed, hojde, soleksponering'
+              ? 'Miljødata: temperatur, fugtighed, højde, soleksponering'
               : 'Environmental data: temperature, humidity, altitude, sun exposure'}</li>
             <li>{isDA
               ? 'Svedprofil: svedrate, saltniveau, symptomer'
@@ -39,16 +39,19 @@ const PrivacyPolicy = () => {
               ? 'Valgfrit: fuldt navn, e-mail, sundhedstilstande'
               : 'Optional: full name, email, health conditions'}</li>
             <li>{isDA
-              ? 'Metadata: IP-adresse (anonymiseret), brugeragent, tidsstempel'
-              : 'Metadata: IP address (anonymized), user agent, timestamp'}</li>
+              ? 'Helbredsdata (behandlet under Art. 9(2)(a) med eksplicit samtykke): HRV, søvnkvalitet, helbredstilstande, svedsodium fra medicinske tests, kropsfedt'
+              : 'Health data (processed under Art. 9(2)(a) with explicit consent): HRV, sleep quality, health conditions, sweat sodium from medical tests, body fat percentage'}</li>
+            <li>{isDA
+              ? 'Metadata: IP-adresse (pseudonymiseret), brugeragent, tidsstempel'
+              : 'Metadata: IP address (pseudonymised), user agent, timestamp'}</li>
           </ul>
         </section>
 
         <section className="space-y-3">
-          <h2 className="text-xl font-semibold">{isDA ? '3. Formal med behandling' : '3. Purpose of Processing'}</h2>
+          <h2 className="text-xl font-semibold">{isDA ? '3. Formål med behandling' : '3. Purpose of Processing'}</h2>
           <p>{isDA
-            ? 'Vi behandler dine data udelukkende for at generere din personlige hydrationsplan og forbedre vores anbefalingsalgoritmer. Retsgrundlaget er eksplicit samtykke (GDPR Art. 6(1)(a)).'
-            : 'We process your data solely to generate your personalized hydration plan and to improve our recommendation algorithms. The legal basis is explicit consent (GDPR Art. 6(1)(a)).'}</p>
+            ? 'Vi behandler dine personoplysninger til to klart adskilte formål, som hver kræver separat samtykke: (1) For at generere din personlige hydrationsplan — dette er kerneservicen og kræver både generelt samtykke og samtykke til helbredsdata. Retsgrundlag: Art. 6(1)(a) og Art. 9(2)(a). (2) For at forbedre FuelPlan-algoritmen med anonymiserede, ikke-identificerbare data — dette er valgfrit og kræver separat samtykke. Retsgrundlag: Art. 6(1)(a).'
+            : 'We process your personal data for two distinct purposes, each requiring separate consent: (1) To generate your personalised hydration plan — this is the core service and requires both general and health data consent. Legal basis: Art. 6(1)(a) and Art. 9(2)(a). (2) To improve the FuelPlan algorithm with anonymised, non-identifiable data — this is optional and requires separate consent. Legal basis: Art. 6(1)(a).'}</p>
         </section>
 
         <section className="space-y-3">
@@ -97,8 +100,8 @@ const PrivacyPolicy = () => {
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">{isDA ? '7. Cookies & lokal lagring' : '7. Cookies & Local Storage'}</h2>
           <p>{isDA
-            ? 'Vi bruger ikke cookies. Vi bruger browserens localStorage til at gemme dine kropsmaalinger (sa du ikke skal indtaste dem igen) og dit sprog. Disse data forlader aldrig din enhed.'
-            : 'We do not use cookies. We use browser localStorage to save your body measurements (so you don\'t have to re-enter them) and your language preference. This data never leaves your device.'}</p>
+            ? 'Vi bruger ikke sporings-cookies. Vi bruger browserens localStorage til at gemme dine kropsdata efter du har givet samtykke, så du ikke skal indtaste dem igen ved fremtidige besøg. Disse data opbevares kun på din enhed og sendes aldrig til vores servere. Du kan slette dem til enhver tid ved at rydde din browsers lokale lagerplads eller sitedata.'
+            : 'We do not use tracking cookies. We use browser localStorage to save your body measurements after you give consent, so you do not have to re-enter them on future visits. This data is stored only on your device and never sent to our servers. You can clear it at any time by clearing your browser\'s local storage or site data.'}</p>
         </section>
 
         <section className="space-y-3">
@@ -111,9 +114,21 @@ const PrivacyPolicy = () => {
         <section className="space-y-3">
           <h2 className="text-xl font-semibold">{isDA ? '9. Kontakt' : '9. Contact'}</h2>
           <p>{isDA
-            ? 'For sporgsmal om privatlivets fred eller anmodninger om datasletning:'
+            ? 'For spørgsmål om privatlivets fred eller anmodninger om datasletning:'
             : 'For privacy questions or data deletion requests:'}</p>
           <p><a href="mailto:info@supplme.com" className="underline">info@supplme.com</a></p>
+        </section>
+
+        <section className="space-y-3">
+          <h2 className="text-xl font-semibold">{isDA ? '10. Ret til at indgive klage' : '10. Right to Lodge a Complaint'}</h2>
+          <p>{isDA
+            ? 'Du har ret til at indgive en klage til Datatilsynet, hvis du mener, at dine personoplysninger er behandlet ulovligt eller i strid med GDPR. Kontakt Datatilsynet:'
+            : 'You have the right to lodge a complaint with the Danish Data Protection Authority (Datatilsynet) if you believe your personal data has been processed unlawfully or in violation of GDPR. Contact Datatilsynet at:'}</p>
+          <p>
+            <a href="mailto:dt@datatilsynet.dk" className="underline">dt@datatilsynet.dk</a>
+            {' | '}Borgergade 28, 5., {isDA ? '1300 København K' : 'DK-1300 Copenhagen K'}
+            {' | '}<a href="https://www.datatilsynet.dk" className="underline" target="_blank" rel="noopener noreferrer">datatilsynet.dk</a>
+          </p>
         </section>
       </div>
     </div>

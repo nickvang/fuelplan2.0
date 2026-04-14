@@ -267,6 +267,35 @@ export function PaceDurationCalculator({
     }
   };
 
+  const getGoalTimePlaceholder = () => {
+    if (!raceDistance) return 'e.g., 3:30:00';
+    const key = normalizeDistanceKey(raceDistance);
+    const namedExamples: { [k: string]: string } = {
+      '5 km': '0:25:00', '5km': '0:25:00', '5k': '0:25:00',
+      '10 km': '0:50:00', '10km': '0:50:00', '10k': '0:50:00',
+      '15 km': '1:15:00', '15km': '1:15:00', '15k': '1:15:00',
+      'half marathon': '2:00:00',
+      'marathon': '4:00:00',
+      '50 km': '6:00:00', '50km': '6:00:00', '50k': '6:00:00',
+      '100 km': '12:00:00', '100km': '12:00:00', '100k': '12:00:00',
+    };
+    if (namedExamples[key]) return `e.g., ${namedExamples[key]}`;
+
+    // Fall back to parsing the numeric km value (e.g. "21.1 km" from race database)
+    const kmMatch = key.match(/^([\d.]+)\s*km$/);
+    if (kmMatch) {
+      const km = parseFloat(kmMatch[1]);
+      // Use average recreational running pace ~5:41/km to compute a round example
+      const totalMins = km * 5.688; // ~5:41/km → gives 2:00 for half, 4:00 for marathon
+      const h = Math.floor(totalMins / 60);
+      const m = Math.round(totalMins % 60);
+      const mPadded = m.toString().padStart(2, '0');
+      return `e.g., ${h}:${mPadded}:00`;
+    }
+
+    return 'e.g., 3:30:00';
+  };
+
   const getPaceTooltip = () => {
     switch (discipline) {
       case 'Swimming':
@@ -289,7 +318,7 @@ export function PaceDurationCalculator({
             type="text"
             value={goalTime || ''}
             onChange={(e) => onGoalTimeChange(e.target.value)}
-            placeholder="e.g., 3:30:00"
+            placeholder={getGoalTimePlaceholder()}
             className="font-mono bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
           />
           {raceDistance && (

@@ -92,11 +92,16 @@ export function activityCommonSenseGate(
         duringMax = 0;
         notes.push('Running <1h: 0 during-sachets');
       } else if (durationHours < 2) {
-        duringMax = hasCramping ? 1 : 0;
-        if (hasCramping) {
-          notes.push('Running 1-2h with cramping history: 1 during-sachet allowed');
+        if (isRaceDay || hasCramping) {
+          duringMax = 1;
+          if (isRaceDay) {
+            notes.push('Running race 1-2h (half marathon): 1 during-sachet allowed');
+          } else {
+            notes.push('Running 1-2h with cramping history: 1 during-sachet allowed');
+          }
         } else {
-          notes.push('Running 1-2h: 0 during-sachets (pre+post covers it)');
+          duringMax = 0;
+          notes.push('Running 1-2h training: 0 during-sachets (pre+post covers it)');
         }
       } else {
         // Duration-based: ~1 per hour of consumable time

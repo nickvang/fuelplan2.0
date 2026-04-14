@@ -13,22 +13,27 @@ export default function Auth() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [isLogin, setIsLogin] = useState(true);
   const navigate = useNavigate();
   const { toast } = useToast();
 
   useEffect(() => {
-    // Check if user is already logged in
+    // Only redirect if already logged in AND has admin role
+    const checkAdminAndRedirect = async (userId: string) => {
+      const { data: roleData } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', userId)
+        .eq('role', 'admin')
+        .maybeSingle();
+      if (roleData) navigate('/admin');
+    };
+
     supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate('/admin');
-      }
+      if (session) checkAdminAndRedirect(session.user.id);
     });
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-      if (session) {
-        navigate('/admin');
-      }
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) checkAdminAndRedirect(session.user.id);
     });
 
     return () => subscription.unsubscribe();
@@ -39,62 +44,40 @@ export default function Auth() {
     setLoading(true);
 
     try {
-      if (isLogin) {
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email,
-          password,
-        });
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
 
-        if (error) throw error;
+      if (error) throw error;
 
-        // Verify if user has admin role immediately after login
-        const { data: roleData, error: roleError } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', data.user.id)
-          .eq('role', 'admin')
-          .maybeSingle();
+      // Verify if user has admin role immediately after login
+      const { data: roleData, error: roleError } = await supabase
+        .from('user_roles')
+        .select('role')
+        .eq('user_id', data.user.id)
+        .eq('role', 'admin')
+        .maybeSingle();
 
-        if (roleError) {
-          console.error("Role check error:", roleError);
-        }
-
-        if (!roleData) {
-          toast({
-            title: "Access Restricted",
-            description: "You are logged in but don't have admin permissions. Please contact an administrator.",
-            variant: "destructive",
-          });
-          // Not throwing error here, user is authenticated, just not authorized for admin
-          navigate('/');
-          return;
-        }
-
-        toast({
-          title: "Login Successful",
-          description: "Welcome back to the Admin Dashboard.",
-        });
-        navigate('/admin');
-      } else {
-        const { error } = await supabase.auth.signUp({
-          email,
-          password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/auth`,
-            data: {
-              full_name: email.split('@')[0], // Default name from email
-            }
-          },
-        });
-
-        if (error) throw error;
-
-        toast({
-          title: "Account Created",
-          description: "Please check your email to verify your account before logging in.",
-        });
-        setIsLogin(true);
+      if (roleError) {
+        console.error("Role check error:", roleError);
       }
+
+      if (!roleData) {
+        await supabase.auth.signOut();
+        toast({
+          title: "Access Restricted",
+          description: "This login is for admin accounts only.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      toast({
+        title: "Login Successful",
+        description: "Welcome back to the Admin Dashboard.",
+      });
+      navigate('/admin');
     } catch (error: any) {
       console.error("Auth error:", error);
       toast({
@@ -114,7 +97,7 @@ export default function Auth() {
           <img src={supplmeLogo} alt="Supplme" className="h-32 mx-auto mb-2" />
           <h1 className="text-2xl font-bold">Admin Access</h1>
           <p className="text-muted-foreground text-sm">
-            {isLogin ? 'Sign in to access admin dashboard' : 'Create admin account'}
+            Sign in to access admin dashboard
           </p>
         </div>
 
@@ -153,18 +136,8 @@ export default function Auth() {
                 Processing...
               </>
             ) : (
-              isLogin ? 'Sign In' : 'Sign Up'
+              'Sign In'
             )}
-          </Button>
-
-          <Button
-            type="button"
-            variant="ghost"
-            className="w-full"
-            onClick={() => setIsLogin(!isLogin)}
-            disabled={loading}
-          >
-            {isLogin ? 'Need an account? Sign up' : 'Already have an account? Sign in'}
           </Button>
         </form>
 

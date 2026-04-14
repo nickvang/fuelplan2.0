@@ -58,8 +58,18 @@ const requestSchema = z.object({
   plan: planSchema,
   hasSmartWatchData: z.boolean().optional(),
   consentGiven: z.boolean(),
+  healthConsentGiven: z.boolean(),
+  algorithmConsentGiven: z.boolean().optional().default(false),
   userEmail: z.string().email().max(255).optional().nullable()
 });
+
+async function pseudonymiseIP(ip: string): Promise<string> {
+  const salt = Deno.env.get('IP_HASH_SALT') || 'supplme-fuelplan-salt-v1';
+  const data = new TextEncoder().encode(ip + salt);
+  const hashBuffer = await crypto.subtle.digest('SHA-256', data);
+  const hashArray = Array.from(new Uint8Array(hashBuffer));
+  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('').slice(0, 24);
+}
 
 serve(async (req) => {
   const corsHeaders = getCorsHeaders(req);
@@ -111,12 +121,12 @@ serve(async (req) => {
       );
     }
 
-    const { profile, plan, hasSmartWatchData, consentGiven, userEmail } = validationResult.data;
+    const { profile, plan, hasSmartWatchData, consentGiven, healthConsentGiven, algorithmConsentGiven, userEmail } = validationResult.data;
 
-    if (!consentGiven) {
+    if (!consentGiven || !healthConsentGiven) {
       return new Response(
         JSON.stringify({
-          error: 'User consent is required to save data',
+          error: 'Both general and health data consent are required',
           code: 'CONSENT_REQUIRED'
         }),
         {
@@ -131,9 +141,24 @@ serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!;
     const supabase = createClient(supabaseUrl, supabaseKey);
 
-    // Get user agent and IP using shared utility
+    // Get user agent for audit trail (IP is intentionally not stored — GDPR)
     const userAgent = req.headers.get('user-agent') || '';
-    const ipAddress = clientIP;
+
+    // Extract user_id from auth header if present
+    let userId: string | null = null;
+    const authHeader = req.headers.get('Authorization');
+    if (authHeader) {
+      try {
+        const token = authHeader.replace('Bearer ', '');
+        const { data: { user: authUser } } = await supabase.auth.getUser(token);
+        if (authUser) userId = authUser.id;
+      } catch {
+        // Ignore auth errors — save anonymously
+      }
+    }
+
+    // Get client IP for pseudonymisation
+    const ipAddress = getClientIP(req);
 
     // Save profile to database with GDPR compliance
     const { data, error } = await supabase
@@ -143,10 +168,14 @@ serve(async (req) => {
         plan_data: plan,
         consent_given: consentGiven,
         consent_timestamp: new Date().toISOString(),
+        health_consent_given: healthConsentGiven,
+        algorithm_consent_given: algorithmConsentGiven || false,
+        consent_version: 'v2-2026-04',
         has_smartwatch_data: hasSmartWatchData || false,
         user_email: userEmail || null,
-        ip_address: ipAddress !== 'unknown' ? ipAddress : null,
         user_agent: userAgent,
+        user_id: userId,
+        ip_address: ipAddress !== 'unknown' ? await pseudonymiseIP(ipAddress) : null,
       })
       .select()
       .single();

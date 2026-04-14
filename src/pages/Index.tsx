@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { HydrationProfile } from '@/types/hydration';
+import { useNavigate, useSearchParams } from 'react-router-dom';
+import { HydrationProfile, AthleteCalibration } from '@/types/hydration';
 import { calculateHydrationPlan } from '@/utils/hydrationCalculator';
 import { validateAndSanitizeProfile } from '@/utils/profileValidation';
 import { parseSmartWatchFiles } from '@/utils/garminDataParser';
@@ -7,6 +8,7 @@ import { calculateTriathlonDuration, getTriathlonBreakdown, TRIATHLON_DISTANCES,
 import { ProgressBar } from '@/components/ProgressBar';
 import { QuestionnaireStep } from '@/components/QuestionnaireStep';
 import { HydrationPlanDisplay } from '@/components/HydrationPlanDisplay';
+import { LoggedInHome } from '@/components/LoggedInHome';
 import { InfoTooltip } from '@/components/InfoTooltip';
 import { ValidationWarning, getValidationWarnings } from '@/components/ValidationWarning';
 import { LanguageSwitcher } from '@/components/LanguageSwitcher';
@@ -14,6 +16,7 @@ import { PaceDurationCalculator } from '@/components/PaceDurationCalculator';
 import { DataSourceSelector, DataSource } from '@/components/DataSourceSelector';
 import { ActivityRaceSelector } from '@/components/ActivityRaceSelector';
 import { useLanguage } from '@/contexts/LanguageContext';
+import { useAuth } from '@/contexts/AuthContext';
 import { useRace, Race } from '@/contexts/RaceContext';
 import { RaceSelector } from '@/components/RaceSelector';
 import { Label } from '@/components/ui/label';
@@ -25,7 +28,7 @@ import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
-import { ArrowRight, ListOrdered } from 'lucide-react';
+import { ArrowRight, ListOrdered, X } from 'lucide-react';
 import supplmeLogo from '@/assets/supplme-logo-sort.svg';
 import { STRAVA_PREFILL_KEY, STRAVA_STATE_KEY, STRAVA_ERROR_KEY } from './StravaCallback';
 import { GARMIN_STATE_KEY, GARMIN_PREFILL_KEY, GARMIN_CODE_VERIFIER_KEY, GARMIN_ERROR_KEY } from './GarminCallback';
@@ -51,22 +54,33 @@ async function generatePKCE() {
 const Index = () => {
   console.log('[Index] component rendering');
   const { t } = useLanguage();
+  const { user, loading: authLoading } = useAuth();
+  const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { selectedRace, setSelectedRace } = useRace();
+  const [showHome, setShowHome] = useState(false); // Skip LoggedInHome, go straight to questionnaire
   const [version, setVersion] = useState<'pro' | null>('pro'); // Single flow (no Quick/Pro choice)
-  const [dataSource, setDataSource] = useState<DataSource | null>(null);
+  const [dataSource, setDataSource] = useState<DataSource | null>('strava');
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
+  const [welcomeBannerDismissed, setWelcomeBannerDismissed] = useState(false);
   const [isGenerating, setIsGenerating] = useState(false);
   const [consentGiven, setConsentGiven] = useState(false); // GDPR: explicit opt-in required
+  const [healthConsentGiven, setHealthConsentGiven] = useState(false);
+  const [algorithmConsentGiven, setAlgorithmConsentGiven] = useState(false);
   const [smartwatchData, setSmartWatchData] = useState<File[]>([]);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [analyzedData, setAnalyzedData] = useState<Partial<HydrationProfile> | null>(null);
   const [rawSmartWatchData, setRawSmartWatchData] = useState<any>(null);
   const [validationWarnings, setValidationWarnings] = useState<string[]>([]);
   const [honeypot, setHoneypot] = useState(''); // Bot protection
+  const [profilePreFilled, setProfilePreFilled] = useState(false);
+  const upsertTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const [stravaSnapshot, setStravaSnapshot] = useState<{ athlete: unknown; activities: unknown[] } | null>(null);
+  const [stravaBirthYearInput, setStravaBirthYearInput] = useState('');
   const [garminSnapshot, setGarminSnapshot] = useState<{ userId: string; permissions?: string[] } | null>(null);
   const [garminConnectionId, setGarminConnectionId] = useState<string | null>(null);
+  const [userCalibration, setUserCalibration] = useState<AthleteCalibration | null>(null);
   const isInitialMount = useRef(true);
   const stravaPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const garminPollRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -89,6 +103,19 @@ const Index = () => {
       }
     };
   }, []);
+
+  // Fetch athlete calibration for logged-in users
+  useEffect(() => {
+    if (!user) { setUserCalibration(null); return; }
+    supabase
+      .from('athlete_calibration')
+      .select('sweat_coefficient, sodium_coefficient, water_coefficient, pre_water_coefficient, sodium_loss_modifier, gi_tolerance_ceiling_ml_hr, total_feedback_count, condition_outcomes')
+      .eq('user_id', user.id)
+      .single()
+      .then(({ data }) => {
+        if (data) setUserCalibration(data as unknown as AthleteCalibration);
+      });
+  }, [user]);
 
   // 4-page UX: Source+Body → Activity+Race → Sweat → Diet
   const uiStep = step + 1; // step 0→1, 1→2, 2→3, 3→4
@@ -137,7 +164,7 @@ const Index = () => {
       sessionStorage.removeItem(STRAVA_PREFILL_KEY);
       localStorage.removeItem(STRAVA_PREFILL_KEY);
       if (prefill && typeof prefill === 'object') {
-        const prefillKeys = ['fullName', 'age', 'sex', 'height', 'weight', 'restingHeartRate', 'sessionDuration', 'indoorOutdoor'] as const;
+        const prefillKeys = ['fullName', 'age', 'sex', 'height', 'weight', 'restingHeartRate', 'sessionDuration', 'indoorOutdoor', 'avgPace', 'runPace', 'bikeSpeed'] as const;
         const filtered: Partial<HydrationProfile> = {};
         for (const k of prefillKeys) {
           if (prefill[k] !== undefined && prefill[k] !== null) filtered[k] = prefill[k] as never;
@@ -173,7 +200,6 @@ const Index = () => {
       const detail = sessionStorage.getItem(STRAVA_ERROR_KEY) || localStorage.getItem(STRAVA_ERROR_KEY);
       sessionStorage.removeItem(STRAVA_ERROR_KEY);
       localStorage.removeItem(STRAVA_ERROR_KEY);
-      toast.error(detail || t('strava.error'));
       return;
     }
     applyStravaPrefill();
@@ -208,14 +234,8 @@ const Index = () => {
       if (e.data?.type === 'strava-connected') {
         applyStravaPrefill();
       }
-      if (e.data?.type === 'strava-error') {
-        toast.error(e.data.message || t('strava.error'));
-      }
       if (e.data?.type === 'garmin-connected') {
         applyGarminPrefill();
-      }
-      if (e.data?.type === 'garmin-error') {
-        toast.error(e.data.message || t('garmin.error'));
       }
     };
     window.addEventListener('message', handleMessage);
@@ -232,7 +252,6 @@ const Index = () => {
       const detail = sessionStorage.getItem(GARMIN_ERROR_KEY) || localStorage.getItem(GARMIN_ERROR_KEY);
       sessionStorage.removeItem(GARMIN_ERROR_KEY);
       localStorage.removeItem(GARMIN_ERROR_KEY);
-      toast.error(detail || t('garmin.error'));
       return;
     }
     applyGarminPrefill();
@@ -327,20 +346,51 @@ const Index = () => {
     });
   };
 
-  // Persist key body data in localStorage so returning users are pre-filled
+  // Load saved body data: from athlete_profiles (authenticated) or localStorage (anonymous)
   useEffect(() => {
-    try {
-      const raw = localStorage.getItem('supplme_profile_body');
-      if (raw) {
-        const saved = JSON.parse(raw);
-        setProfile((prev) => ({ ...prev, ...saved }));
+    if (user) {
+      supabase
+        .from('athlete_profiles')
+        .select('*')
+        .eq('user_id', user.id)
+        .single()
+        .then(({ data }) => {
+          if (!data) return;
+          const mapped: Partial<HydrationProfile> = {};
+          if (data.full_name) mapped.fullName = data.full_name;
+          if (data.age != null) mapped.age = data.age;
+          if (data.sex) mapped.sex = data.sex as any;
+          if (data.height != null) mapped.height = Number(data.height);
+          if (data.weight != null) mapped.weight = Number(data.weight);
+          if (data.body_fat != null) mapped.bodyFat = Number(data.body_fat);
+          if (data.resting_heart_rate != null) mapped.restingHeartRate = data.resting_heart_rate;
+          if (data.hrv) mapped.hrv = data.hrv;
+          if (data.sleep_hours != null) mapped.sleepHours = Number(data.sleep_hours);
+          if (data.sleep_quality != null) mapped.sleepQuality = data.sleep_quality;
+          if (data.sweat_rate) mapped.sweatRate = data.sweat_rate as any;
+          if (data.sweat_saltiness) mapped.sweatSaltiness = data.sweat_saltiness as any;
+          if (data.known_sodium_loss != null) mapped.sweatSodiumTest = Number(data.known_sodium_loss);
+
+          const hasBody = mapped.age != null && mapped.sex && mapped.weight != null && mapped.height != null;
+          if (hasBody) setProfilePreFilled(true);
+
+          setProfile((prev) => ({ ...prev, ...mapped }));
+        });
+    } else {
+      try {
+        const raw = localStorage.getItem('supplme_profile_body');
+        if (raw) {
+          const saved = JSON.parse(raw);
+          setProfile((prev) => ({ ...prev, ...saved }));
+        }
+      } catch {
+        // ignore parse errors
       }
-    } catch {
-      // ignore parse errors
     }
-  }, []);
+  }, [user]);
 
   useEffect(() => {
+    if (!consentGiven) return;
     // Only store a compact subset of body-related fields
     const bodySnapshot: Partial<HydrationProfile> = {
       fullName: profile.fullName,
@@ -358,14 +408,72 @@ const Index = () => {
     const hasValues = Object.values(bodySnapshot).some(
       (v) => v !== undefined && v !== null && v !== ''
     );
-    if (hasValues) {
+    if (!hasValues) return;
+
+    if (user) {
+      // Debounced upsert to athlete_profiles
+      if (upsertTimerRef.current) clearTimeout(upsertTimerRef.current);
+      upsertTimerRef.current = setTimeout(() => {
+        supabase.from('athlete_profiles').upsert(
+          {
+            user_id: user.id,
+            full_name: bodySnapshot.fullName ?? null,
+            age: bodySnapshot.age ?? null,
+            sex: bodySnapshot.sex ?? null,
+            height: bodySnapshot.height ?? null,
+            weight: bodySnapshot.weight ?? null,
+            body_fat: bodySnapshot.bodyFat ?? null,
+            resting_heart_rate: bodySnapshot.restingHeartRate ?? null,
+            hrv: bodySnapshot.hrv ?? null,
+            sleep_hours: bodySnapshot.sleepHours ?? null,
+            sleep_quality: bodySnapshot.sleepQuality ?? null,
+            updated_at: new Date().toISOString(),
+          },
+          { onConflict: 'user_id' }
+        );
+      }, 1500);
+    } else if (consentGiven) {
+      // GDPR: only persist personal data after explicit consent
       try {
         localStorage.setItem('supplme_profile_body', JSON.stringify(bodySnapshot));
       } catch {
         // ignore storage errors
       }
     }
-  }, [profile.fullName, profile.age, profile.sex, profile.height, profile.weight, profile.bodyFat, profile.restingHeartRate, profile.hrv, profile.sleepHours, profile.sleepQuality]);
+  }, [user, consentGiven, profile.fullName, profile.age, profile.sex, profile.height, profile.weight, profile.bodyFat, profile.restingHeartRate, profile.hrv, profile.sleepHours, profile.sleepQuality]);
+
+  // Handle pending plan save after login redirect
+  useEffect(() => {
+    if (!user || searchParams.get('savePlan') !== 'true') return;
+
+    const raw = sessionStorage.getItem('supplme_pending_plan');
+    if (!raw) return;
+
+    try {
+      const { profileData, planData } = JSON.parse(raw);
+      if (profileData && planData) {
+        supabase.functions.invoke('save-hydration-profile', {
+          body: {
+            profile: profileData,
+            plan: planData,
+            consentGiven: true,
+            hasSmartWatchData: false,
+          },
+        }).then(({ error }) => {
+          if (!error) {
+            toast.success(t('auth.planSaved'));
+          }
+        });
+      }
+    } catch { /* ignore */ }
+
+    sessionStorage.removeItem('supplme_pending_plan');
+    setSearchParams((prev) => {
+      prev.delete('savePlan');
+      prev.delete('returnTo');
+      return prev;
+    }, { replace: true });
+  }, [user]);
 
   function mapTriathlonDistanceKey(distanceKm: number): string {
     if (distanceKm >= 220 && distanceKm <= 230) return 'Ironman';
@@ -418,11 +526,28 @@ const Index = () => {
     if (race.distance_km) {
       let estimatedHours: number | undefined;
       const primaryDiscipline = profile.disciplines?.[0] || '';
-      if (primaryDiscipline === 'Running') {
-        const paceMinPerKm = 5.5; // default moderate race pace
+
+      // Stage races: use the longest stage midpoint as the session duration
+      if (race.is_stage_race && Array.isArray(race.stages) && race.stages.length > 0) {
+        let maxMidpoint = 0;
+        for (const stage of race.stages) {
+          const mid = (stage.typical_duration_h.min + stage.typical_duration_h.max) / 2;
+          if (mid > maxMidpoint) maxMidpoint = mid;
+        }
+        if (maxMidpoint > 0) estimatedHours = maxMidpoint;
+      } else if (primaryDiscipline === 'Running') {
+        let paceMinPerKm = 5.5; // default fallback
+        const stravaRunPace = (profile as any).hrProfile?.['Running']?.avgPaceMinPerKm;
+        if (stravaRunPace && stravaRunPace > 2.5 && stravaRunPace < 12) {
+          paceMinPerKm = stravaRunPace;
+        }
         estimatedHours = (race.distance_km * paceMinPerKm) / 60;
       } else if (primaryDiscipline === 'Cycling') {
-        const speedKmh = 28; // moderate gran fondo speed
+        let speedKmh = 28; // default fallback
+        const stravaSpeed = (profile as any).hrProfile?.['Cycling']?.avgSpeedKmh;
+        if (stravaSpeed && stravaSpeed > 10 && stravaSpeed < 60) {
+          speedKmh = stravaSpeed;
+        }
         estimatedHours = race.distance_km / speedKmh;
       }
       if (estimatedHours && isFinite(estimatedHours)) {
@@ -453,6 +578,8 @@ const Index = () => {
       sunExposure: 'partial',
       windConditions: 'moderate',
       clothingType: 'light',
+      course_profile: race.course_profile,
+      is_stage_race: !!race.is_stage_race,
       ...estimatedDuration,
     } as Partial<HydrationProfile>);
 
@@ -487,7 +614,6 @@ const Index = () => {
       return extractedData;
     } catch (error) {
       console.error('Error analyzing smartwatch files:', error);
-      toast.error('Error analyzing smartwatch data');
       setIsAnalyzing(false);
       return {};
     }
@@ -525,8 +651,8 @@ const Index = () => {
   const isStepValid = (): boolean => {
     switch (step) {
       case 0: { // Data source + consent + body (manual needs body fields)
-        if (!consentGiven) return false;
-        if (dataSource === 'strava') return !!stravaSnapshot;
+        if (!consentGiven || !healthConsentGiven) return false;
+        if (dataSource === 'strava') return !!stravaSnapshot && !!profile.age;
         if (dataSource === 'garmin') return !!garminSnapshot;
         if (dataSource === 'manual') return !!(profile.age && profile.sex && profile.height && profile.weight);
         return false;
@@ -576,7 +702,6 @@ const Index = () => {
     if (isStepValid()) {
       // Bot protection - if honeypot field is filled, it's a bot
       if (honeypot) {
-        toast.error('Spam detected. Please try again.');
         return;
       }
 
@@ -594,7 +719,6 @@ const Index = () => {
         if (!completeProfile.sunExposure) completeProfile.sunExposure = 'partial';
         if (!completeProfile.windConditions) completeProfile.windConditions = 'calm';
         if (!completeProfile.clothingType) completeProfile.clothingType = 'light';
-        if (completeProfile.age == null) completeProfile.age = 30;
         if (completeProfile.height == null) completeProfile.height = 175;
         if (!completeProfile.raceDistance && completeProfile.disciplines?.[0]) completeProfile.raceDistance = 'Other';
       }
@@ -611,6 +735,8 @@ const Index = () => {
             plan: calculateHydrationPlan(completeProfile as HydrationProfile),
             hasSmartWatchData: !!analyzedData && smartwatchData.length > 0,
             consentGiven,
+            healthConsentGiven,
+            algorithmConsentGiven,
             userEmail: null // Optional: could add email field for users who want to save
           }
         });
@@ -619,7 +745,6 @@ const Index = () => {
           if (import.meta.env.DEV) {
             console.error('Error saving profile:', error);
           }
-          toast.error('Failed to save profile. Your hydration plan will still be displayed.');
         } else if (data?.deletionToken) {
           // Store deletion token securely in localStorage for GDPR data deletion
           localStorage.setItem('hydration_deletion_token', data.deletionToken);
@@ -629,14 +754,10 @@ const Index = () => {
           console.error('Failed to save profile:', error);
         }
 
-        // Show validation error to user
         if (error instanceof Error) {
-          toast.error(error.message);
           setIsGenerating(false);
-          return; // Don't show plan if validation fails
+          return;
         }
-
-        toast.error('Failed to save profile. Your hydration plan will still be displayed.');
       }
 
       // Update profile with complete values before showing plan
@@ -652,11 +773,13 @@ const Index = () => {
 
   const handleReset = () => {
     setVersion('pro');
-    setDataSource(null);
+    setDataSource('strava');
     setStep(0);
     setShowPlan(false);
+    setShowHome(false);
     setIsGenerating(false);
     setConsentGiven(false);
+    localStorage.removeItem('supplme_profile_body');
     setSmartWatchData([]);
     setAnalyzedData(null);
     setRawSmartWatchData(null);
@@ -722,6 +845,21 @@ const Index = () => {
 
   console.log('[Index] render path: isGenerating=', isGenerating, 'showPlan=', showPlan, 'step=', step);
 
+  // Authenticated users with showHome → LoggedInHome (skipped during questionnaire/plan flow)
+  if (!authLoading && user && showHome && !showPlan && !isGenerating) {
+    return (
+      <LoggedInHome
+        onStartQuestionnaire={() => setShowHome(false)}
+        onRedoPlan={(profileData) => {
+          // Merge saved profile data into current profile, skip Step 0 (body/source), go to Step 1 (activity/race)
+          setProfile((prev) => ({ ...prev, ...profileData }));
+          setStep(1);
+          setShowHome(false);
+        }}
+      />
+    );
+  }
+
   // Show generating animation
   if (isGenerating) {
     return (
@@ -761,7 +899,11 @@ const Index = () => {
   }
 
   if (showPlan && profile as HydrationProfile) {
-    const plan = calculateHydrationPlan(profile as HydrationProfile, rawSmartWatchData);
+    // Inject calibration data for logged-in users before calculation
+    const profileWithCalibration = userCalibration
+      ? { ...profile, calibration: userCalibration } as HydrationProfile
+      : profile as HydrationProfile;
+    const plan = calculateHydrationPlan(profileWithCalibration, rawSmartWatchData);
     return (
       <div id="results-page" className="min-h-screen min-w-0 bg-gradient-to-b from-background via-background to-primary/5 py-6 sm:py-12 px-3 sm:px-4 overflow-x-hidden pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {import.meta.env.DEV && (
@@ -824,8 +966,22 @@ const Index = () => {
               </p>
             )}
           </div>
-
         </div>
+
+        {/* Welcome banner for logged-in users */}
+        {user && !welcomeBannerDismissed && step === 0 && (
+          <div className="flex items-center justify-between gap-3 px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
+            <p className="text-[13px] text-[#0a0a0a]">
+              {t('home.welcomeBack', { name: user.user_metadata?.full_name || user.email?.split('@')[0] || '' })}
+            </p>
+            <button
+              onClick={() => setWelcomeBannerDismissed(true)}
+              className="text-gray-400 hover:text-[#0a0a0a] p-1 shrink-0"
+            >
+              <X className="w-4 h-4" />
+            </button>
+          </div>
+        )}
 
         {/* Honeypot field - hidden from real users, visible to bots */}
         <input
@@ -878,6 +1034,20 @@ const Index = () => {
         {/* STEP 0: Data Source Selection */}
         {step === 0 && !isAnalyzing && (
           <div id="step-0-content" key="step-0" className="animate-in fade-in duration-300 space-y-4">
+            {profilePreFilled && (
+              <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2 text-sm">
+                <span className="text-muted-foreground">{t('auth.savedProfileBadge')}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs"
+                  onClick={() => setProfilePreFilled(false)}
+                >
+                  {t('auth.editProfile')}
+                </Button>
+              </div>
+            )}
             <div className="py-2 sm:py-4 space-y-4">
               <DataSourceSelector
                 selectedSource={dataSource}
@@ -891,6 +1061,10 @@ const Index = () => {
                 }}
                 consentGiven={consentGiven}
                 onConsentChange={(consent) => setConsentGiven(consent)}
+                healthConsentGiven={healthConsentGiven}
+                onHealthConsentChange={(v) => setHealthConsentGiven(v)}
+                algorithmConsentGiven={algorithmConsentGiven}
+                onAlgorithmConsentChange={(v) => setAlgorithmConsentGiven(v)}
                 stravaConnected={!!stravaSnapshot}
                 garminConnected={!!garminSnapshot}
                 onStravaConnect={() => document.getElementById('strava-connect-trigger')?.click()}
@@ -902,6 +1076,68 @@ const Index = () => {
                 profile={profile}
                 onUpdateProfile={updateProfile}
               />
+
+              {/* Strava age field — shown after connect because Strava doesn't share DOB */}
+              {stravaSnapshot && (
+                <div className={`border rounded-lg p-4 space-y-3 ${profile.age ? 'border-border bg-muted/30' : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30'}`}>
+                  {!profile.age && (
+                    <div>
+                      <p className="text-sm font-semibold text-foreground">{t('strava.ageRequired')}</p>
+                      <p className="text-xs text-muted-foreground mt-0.5">{t('strava.ageRequiredHint')}</p>
+                    </div>
+                  )}
+                  <div className="flex items-center gap-3">
+                    <Label htmlFor="strava-birth-year" className="text-sm shrink-0">Born in</Label>
+                    <Input
+                      id="strava-birth-year"
+                      type="number"
+                      min={1920}
+                      max={new Date().getFullYear() - 10}
+                      placeholder="e.g. 1990"
+                      className="w-32"
+                      value={stravaBirthYearInput}
+                      onChange={(e) => {
+                        setStravaBirthYearInput(e.target.value);
+                        const year = parseInt(e.target.value, 10);
+                        if (year >= 1920 && year <= new Date().getFullYear() - 10) {
+                          updateProfile({ age: new Date().getFullYear() - year });
+                        }
+                      }}
+                    />
+                    {profile.age && (
+                      <span className="text-xs text-muted-foreground">Age: {profile.age}</span>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {/* Strava data completeness banner — hidden */}
+              {false && stravaSnapshot && (
+                <div className="border border-border/50 rounded-lg p-3 space-y-2 text-xs">
+                  <div className="flex items-start gap-2">
+                    <span className="text-green-600 dark:text-green-400 font-semibold shrink-0">✓ {t('strava.capturedFrom')}:</span>
+                    <span className="text-muted-foreground">
+                      {[
+                        profile.weight && 'weight',
+                        profile.sex && 'sex',
+                        (profile.disciplines?.length || 0) > 0 && 'disciplines',
+                        profile.sessionDuration && 'session length',
+                        (profile.avgPace || profile.runPace) && 'training pace',
+                      ].filter(Boolean).join(' · ') || '—'}
+                    </span>
+                  </div>
+                  <div className="flex items-start gap-2">
+                    <span className="text-amber-600 dark:text-amber-400 font-semibold shrink-0">✎ {t('strava.stillNeeded')}:</span>
+                    <span className="text-muted-foreground">
+                      {[
+                        !profile.age && 'age',
+                        'sweat rate',
+                        'sweat saltiness',
+                      ].filter(Boolean).join(' · ')}
+                    </span>
+                  </div>
+                </div>
+              )}
 
               {/* Hidden OAuth triggers - preserves existing Strava/Garmin OAuth popup logic */}
               <div className="hidden">
@@ -992,16 +1228,12 @@ const Index = () => {
                               const errMsg = sessionStorage.getItem(STRAVA_ERROR_KEY) || localStorage.getItem(STRAVA_ERROR_KEY);
                               sessionStorage.removeItem(STRAVA_ERROR_KEY);
                               localStorage.removeItem(STRAVA_ERROR_KEY);
-                              if (errMsg) {
-                                toast.error(errMsg);
-                              }
                             }
                           } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
                             clearInterval(stravaPollRef.current!);
                             stravaPollRef.current = null;
                             sessionStorage.removeItem('strava_use_popup');
                             popup.close();
-                            toast.error('Strava connection timed out. Please try again.');
                           }
                         }, 300);
                       }}
@@ -1104,16 +1336,12 @@ const Index = () => {
                               const errMsg = sessionStorage.getItem(GARMIN_ERROR_KEY) || localStorage.getItem(GARMIN_ERROR_KEY);
                               sessionStorage.removeItem(GARMIN_ERROR_KEY);
                               localStorage.removeItem(GARMIN_ERROR_KEY);
-                              if (errMsg) {
-                                toast.error(errMsg);
-                              }
                             }
                           } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
                             clearInterval(garminPollRef.current!);
                             garminPollRef.current = null;
                             sessionStorage.removeItem('garmin_use_popup');
                             popup.close();
-                            toast.error('Garmin connection timed out. Please try again.');
                           }
                         }, 300);
                       }}
@@ -1608,15 +1836,37 @@ const Index = () => {
                     </AccordionContent>
                   </AccordionItem>
                 </Accordion>
-                <div className="flex items-center gap-3 pt-3 border-t border-border/50 min-h-[48px]">
+                <div className="flex items-start gap-3 pt-3 border-t border-border/50 min-h-[48px]">
                   <Checkbox
-                    id="consent"
+                    id="consent-plan"
                     checked={consentGiven}
                     onCheckedChange={(checked) => setConsentGiven(checked === true)}
-                    className="shrink-0 h-5 w-5 touch-manipulation"
+                    className="shrink-0 h-5 w-5 touch-manipulation mt-0.5"
                   />
-                  <label htmlFor="consent" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-2.5 flex-1 touch-manipulation select-none">
-                    {t('consent.short')}
+                  <label htmlFor="consent-plan" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 touch-manipulation select-none">
+                    {t('consent.planGeneration')}
+                  </label>
+                </div>
+                <div className="flex items-start gap-3 min-h-[48px]">
+                  <Checkbox
+                    id="consent-health"
+                    checked={healthConsentGiven}
+                    onCheckedChange={(checked) => setHealthConsentGiven(checked === true)}
+                    className="shrink-0 h-5 w-5 touch-manipulation mt-0.5"
+                  />
+                  <label htmlFor="consent-health" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 touch-manipulation select-none">
+                    {t('consent.healthData')}
+                  </label>
+                </div>
+                <div className="flex items-start gap-3 min-h-[48px]">
+                  <Checkbox
+                    id="consent-algorithm"
+                    checked={algorithmConsentGiven}
+                    onCheckedChange={(checked) => setAlgorithmConsentGiven(checked === true)}
+                    className="shrink-0 h-5 w-5 touch-manipulation mt-0.5"
+                  />
+                  <label htmlFor="consent-algorithm" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 touch-manipulation select-none">
+                    {t('consent.algorithmImprovement')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span>
                   </label>
                 </div>
               </div>

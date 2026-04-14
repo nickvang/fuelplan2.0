@@ -194,7 +194,7 @@ export async function generateFuelPlanImage(
 
   const sachetCols = [
     { count: plan.preActivity.electrolytes, label: 'PRE-RACE', sub: 'T-2 h' },
-    { count: plan.duringActivity.totalElectrolytes, label: 'DURING', sub: profile.sessionDuration >= 2 ? `at ${Math.round(distance / 2 * 10) / 10} km` : 'None' },
+    { count: plan.duringActivity.totalElectrolytes, label: 'DURING', sub: plan.duringActivity.totalElectrolytes > 0 ? `at ${Math.round(distance / 2 * 10) / 10} km` : 'None' },
     { count: plan.postActivity.electrolytes, label: 'POST-RACE', sub: 'at finish' },
   ];
 
@@ -261,19 +261,14 @@ export async function generateFuelPlanImage(
   // Phase 3: During Race
   if (!isSwimOnly) {
     const duringRows: [string, string][] = [];
-    if (profile.sessionDuration < 2) {
-      duringRows.push(['No sachet needed', 'Under 2 hours']);
-      duringRows.push(['Water per hour', `${safeNumber(plan.duringActivity.waterPerHour)}ml`]);
-    } else {
-      // Show each sachet marker
-      for (const s of inRaceSachets) {
-        duringRows.push([`Sachet #${s.number}`, `km ${s.km}`]);
-      }
-      if (plan.duringActivity.totalElectrolytes > 6) {
-        duringRows.push([`+${plan.duringActivity.totalElectrolytes - 6} more sachets`, 'Spread evenly']);
-      }
-      duringRows.push(['Water per hour', `${safeNumber(plan.duringActivity.waterPerHour)}ml`]);
+    // Show sachet markers when available (formula decides count, no duration gate)
+    for (const s of inRaceSachets) {
+      duringRows.push([`Sachet #${s.number}`, `km ${s.km}`]);
     }
+    if (plan.duringActivity.totalElectrolytes > 6) {
+      duringRows.push([`+${plan.duringActivity.totalElectrolytes - 6} more sachets`, 'Spread evenly']);
+    }
+    duringRows.push(['Water per hour', `${safeNumber(plan.duringActivity.waterPerHour)}ml`]);
     drawPhase('Race start', 'During Race', duringRows);
   }
 

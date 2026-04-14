@@ -14,6 +14,210 @@ export type Database = {
   }
   public: {
     Tables: {
+      athlete_calibration: {
+        Row: {
+          id: string
+          user_id: string
+          sweat_coefficient: number
+          sodium_coefficient: number
+          water_coefficient: number
+          pre_water_coefficient: number
+          sodium_loss_modifier: number
+          gi_tolerance_ceiling_ml_hr: number
+          total_feedback_count: number
+          condition_outcomes: Record<string, { better: number; same: number; worse: number }>
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          sweat_coefficient?: number
+          sodium_coefficient?: number
+          water_coefficient?: number
+          pre_water_coefficient?: number
+          sodium_loss_modifier?: number
+          gi_tolerance_ceiling_ml_hr?: number
+          total_feedback_count?: number
+          condition_outcomes?: Record<string, { better: number; same: number; worse: number }>
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          sweat_coefficient?: number
+          sodium_coefficient?: number
+          water_coefficient?: number
+          pre_water_coefficient?: number
+          sodium_loss_modifier?: number
+          gi_tolerance_ceiling_ml_hr?: number
+          total_feedback_count?: number
+          condition_outcomes?: Record<string, { better: number; same: number; worse: number }>
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      race_feedback: {
+        Row: {
+          id: string
+          user_id: string
+          race_id: string | null
+          plan_id: string | null
+          overall_rating: number | null
+          issues: string[]
+          water_feedback: string | null
+          sodium_feedback: string | null
+          notes: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          race_id?: string | null
+          plan_id?: string | null
+          overall_rating?: number | null
+          issues?: string[]
+          water_feedback?: string | null
+          sodium_feedback?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          race_id?: string | null
+          plan_id?: string | null
+          overall_rating?: number | null
+          issues?: string[]
+          water_feedback?: string | null
+          sodium_feedback?: string | null
+          notes?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      athlete_races: {
+        Row: {
+          id: string
+          user_id: string
+          race_name: string
+          race_date: string
+          distance_km: number | null
+          discipline: string | null
+          location_city: string | null
+          location_country: string | null
+          latitude: number | null
+          longitude: number | null
+          plan_id: string | null
+          notes: string | null
+          status: string
+          sent_reminders: Record<string, string>
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          race_name: string
+          race_date: string
+          distance_km?: number | null
+          discipline?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          plan_id?: string | null
+          notes?: string | null
+          status?: string
+          sent_reminders?: Record<string, string>
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          race_name?: string
+          race_date?: string
+          distance_km?: number | null
+          discipline?: string | null
+          location_city?: string | null
+          location_country?: string | null
+          latitude?: number | null
+          longitude?: number | null
+          plan_id?: string | null
+          notes?: string | null
+          status?: string
+          sent_reminders?: Record<string, string>
+          created_at?: string
+        }
+        Relationships: []
+      }
+      athlete_profiles: {
+        Row: {
+          id: string
+          user_id: string
+          full_name: string | null
+          age: number | null
+          sex: string | null
+          height: number | null
+          weight: number | null
+          body_fat: number | null
+          resting_heart_rate: number | null
+          hrv: string | null
+          sleep_hours: number | null
+          sleep_quality: number | null
+          sweat_rate: string | null
+          sweat_saltiness: string | null
+          known_sodium_loss: number | null
+          strava_connected: boolean | null
+          strava_refresh_token: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          full_name?: string | null
+          age?: number | null
+          sex?: string | null
+          height?: number | null
+          weight?: number | null
+          body_fat?: number | null
+          resting_heart_rate?: number | null
+          hrv?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          sweat_rate?: string | null
+          sweat_saltiness?: string | null
+          known_sodium_loss?: number | null
+          strava_connected?: boolean | null
+          strava_refresh_token?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          full_name?: string | null
+          age?: number | null
+          sex?: string | null
+          height?: number | null
+          weight?: number | null
+          body_fat?: number | null
+          resting_heart_rate?: number | null
+          hrv?: string | null
+          sleep_hours?: number | null
+          sleep_quality?: number | null
+          sweat_rate?: string | null
+          sweat_saltiness?: string | null
+          known_sodium_loss?: number | null
+          strava_connected?: boolean | null
+          strava_refresh_token?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       hydration_profiles: {
         Row: {
           consent_given: boolean
@@ -28,6 +232,7 @@ export type Database = {
           profile_data: Json
           user_agent: string | null
           user_email: string | null
+          user_id: string | null
         }
         Insert: {
           consent_given?: boolean
@@ -42,6 +247,7 @@ export type Database = {
           profile_data: Json
           user_agent?: string | null
           user_email?: string | null
+          user_id?: string | null
         }
         Update: {
           consent_given?: boolean
@@ -56,6 +262,7 @@ export type Database = {
           profile_data?: Json
           user_agent?: string | null
           user_email?: string | null
+          user_id?: string | null
         }
         Relationships: []
       }

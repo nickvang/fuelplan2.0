@@ -480,16 +480,13 @@ export default function QATest() {
     const expectedSachetsPerHour = Math.round(baseSachets * weightMult * envMult * sweatMult);
     
     // Swimming races: 0 during-sachets (can't consume while swimming)
-    // Activities under 2h: 0 during-sachets (pre + post covers it)
-    // For longer activities: use effective duration (excluding last 30 min)
+    // All other activities: formula decides via effective duration (excluding last 30 min)
     let expectedTotalDuring = 0;
     if (isDiscipline('Swimming') && scenario.isRaceDay) {
       expectedTotalDuring = 0; // Can't consume during swimming race
-    } else if (scenario.duration < 2) {
-      expectedTotalDuring = 0; // Short activities don't need during-sachets
     } else {
       const effectiveDuration = Math.max(0, scenario.duration - 0.5);
-      expectedTotalDuring = expectedSachetsPerHour * effectiveDuration;
+      expectedTotalDuring = Math.round(expectedSachetsPerHour * effectiveDuration);
     }
     
     // Apply same safety cap as calculator (Mg-safe + individual max) so we don't flag capped results as errors
