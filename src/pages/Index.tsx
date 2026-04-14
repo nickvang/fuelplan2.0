@@ -60,7 +60,7 @@ const Index = () => {
   const { selectedRace, setSelectedRace } = useRace();
   const [showHome, setShowHome] = useState(false); // Skip LoggedInHome, go straight to questionnaire
   const [version, setVersion] = useState<'pro' | null>('pro'); // Single flow (no Quick/Pro choice)
-  const [dataSource, setDataSource] = useState<DataSource | null>('strava');
+  const [dataSource, setDataSource] = useState<DataSource | null>(null);
   const [step, setStep] = useState(0);
   const [showPlan, setShowPlan] = useState(false);
   const [welcomeBannerDismissed, setWelcomeBannerDismissed] = useState(false);
@@ -773,7 +773,7 @@ const Index = () => {
 
   const handleReset = () => {
     setVersion('pro');
-    setDataSource('strava');
+    setDataSource(null);
     setStep(0);
     setShowPlan(false);
     setShowHome(false);
