@@ -102,7 +102,10 @@ export const computeDuringSachetSchedule = (
   const pacePerKm = distanceKm > 0 ? totalMin / distanceKm : 0;
 
   return Array.from({ length: total }, (_, i) => {
-    const minuteMark = Math.min(startOffset + Math.round(interval * i), endCutoff);
+    // Single sachet: place at midpoint of usable window rather than at the 20% start offset
+    const minuteMark = (total === 1)
+      ? Math.round(startOffset + usableWindow / 2)
+      : Math.min(startOffset + Math.round(interval * i), endCutoff);
     const km = pacePerKm > 0 ? Math.round((minuteMark / pacePerKm) * 10) / 10 : 0;
     const h = Math.floor(minuteMark / 60);
     const m = minuteMark % 60;

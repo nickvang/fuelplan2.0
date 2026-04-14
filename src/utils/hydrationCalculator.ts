@@ -839,8 +839,8 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
     postElectrolytes = Math.min(isRaceDay ? 2 : 1, postElectrolytes);
   }
   
-  // Minimum 1 post-sachet for longer sessions
-  if (profile.sessionDuration >= 3 && postElectrolytes === 0) {
+  // Minimum 1 post-sachet for race day or longer sessions
+  if ((isRaceDay || profile.sessionDuration >= 3) && postElectrolytes === 0) {
     postElectrolytes = 1;
   }
 
