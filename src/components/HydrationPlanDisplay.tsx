@@ -343,7 +343,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         const tempMax = profile.raceTempRange?.max ?? 20;
         if (tempMax >= 30) warnings.push({ color: 'bg-red-500/10 text-red-700 dark:text-red-400 border-red-500/20', text: `🌡️ Extreme heat (${tempMax}°C) — increase fluid intake and monitor for heat illness` });
         else if (tempMax >= 25) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: `🌡️ Warm conditions (${tempMax}°C) — stay ahead of fluid losses` });
+        if (profile.sessionDuration >= 4) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: '⏱️ Long-duration event — sodium losses accumulate; stick to sachet schedule' });
         if (profile.altitudeMeters > 1500) warnings.push({ color: 'bg-blue-500/10 text-blue-700 dark:text-blue-400 border-blue-500/20', text: `🏔️ Altitude (${profile.altitudeMeters}m) — increased respiratory water loss factored in` });
+        if (plan.safetyFlags?.maxAmountApplied) warnings.push({ color: 'bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-500/20', text: '⚠️ Maximum safe intake limits applied — do not exceed recommended amounts' });
         if (warnings.length === 0) return null;
         return (
           <div className="space-y-2">
@@ -355,19 +357,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
         );
       })()}
-
-      {/* K1: Preflight error/warning alerts */}
-      {plan.preflight && plan.preflight.length > 0 && (
-        <div className="space-y-2">
-          {plan.preflight.map((alert, i) => (
-            <Alert key={i} variant={alert.level === 'error' ? 'destructive' : 'default'} className={alert.level === 'warning' ? 'border-amber-500/30 bg-amber-500/5' : alert.level === 'info' ? 'border-blue-500/30 bg-blue-500/5' : ''}>
-              <AlertCircle className="h-4 w-4" />
-              <AlertTitle>{alert.level === 'error' ? 'Medical Alert' : alert.level === 'warning' ? 'Warning' : 'Info'}</AlertTitle>
-              <AlertDescription className="text-sm">{alert.message}</AlertDescription>
-            </Alert>
-          ))}
-        </div>
-      )}
 
       {/* AI Validation Badge */}
       {(() => {
@@ -651,8 +640,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           </div>
                           <div className="pb-4">
                             <p className="text-sm font-bold text-white">Transition 2</p>
-                            <p className="text-xs text-zinc-300">{seg.t2.sachets > 0 ? `${seg.t2.sachets} sachet + ` : ''}{safeNumber(seg.t2.fluid)}ml</p>
-                            <p className="text-xs text-zinc-400">{seg.t2.sachets > 0 ? 'Sachet + quick sip before the run' : 'Quick sip before the run'}</p>
+                            <p className="text-xs text-zinc-300">{safeNumber(seg.t2.fluid)}ml</p>
+                            <p className="text-xs text-zinc-400">Quick sip before the run</p>
                           </div>
                         </div>
 
@@ -739,26 +728,16 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                 </div>
 
-                {/* Sachet-by-sachet timeline — offset-based with 20min gaps */}
+                {/* Sachet-by-sachet timeline */}
                 {plan.duringActivity.totalElectrolytes > 0 && (() => {
                   const total = plan.duringActivity.totalElectrolytes;
                   const totalMin = Math.round(profile.sessionDuration * 60);
-                  const isRace = profile.raceDistance && profile.raceDistance.length > 0;
-                  // Offset: 20% of race time for race day, 15min for training
-                  const startOffset = isRace ? Math.round(totalMin * 0.20) : 15;
-                  // Absorption cutoff: 20min before finish
-                  const endCutoff = Math.max(0, totalMin - 20);
-                  const usableWindow = Math.max(1, endCutoff - startOffset);
-                  const minGap = 20; // 20min minimum gap between sachets
-                  const rawInterval = total > 1 ? Math.round(usableWindow / (total - 1)) : usableWindow;
-                  const interval = Math.max(rawInterval, minGap);
+                  const interval = total > 1 ? Math.round(totalMin / total) : totalMin;
                   const pacePerKm = distance > 0 ? totalMin / distance : 0;
                   const sachets = Array.from({ length: total }, (_, i) => {
-                    const minuteMark = Math.min(startOffset + Math.round(interval * i), endCutoff);
+                    const minuteMark = Math.round(interval * (i + 1));
                     const km = pacePerKm > 0 ? Math.round((minuteMark / pacePerKm) * 10) / 10 : 0;
-                    // "before final 2km" fallback
-                    const remainingKm = distance > 0 ? Math.round((distance - km) * 10) / 10 : 0;
-                    return { number: i + 1, minute: Math.min(minuteMark, totalMin), km, remainingKm };
+                    return { number: i + 1, minute: Math.min(minuteMark, totalMin), km };
                   });
                   return (
                     <div className="space-y-1">
@@ -773,7 +752,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                               </p>
                               <p className="text-xs text-zinc-300">
                                 At <strong className="text-white">{Math.floor(s.minute / 60) > 0 ? `${Math.floor(s.minute / 60)}h ${s.minute % 60}min` : `${s.minute} min`}</strong>
-                                {s.km > 0 && <> — approx. <strong className="text-white">km {s.km}</strong>{s.remainingKm > 0 && s.remainingKm <= 3 ? <> (before final {s.remainingKm}km)</> : null}</>}
+                                {s.km > 0 && <> — approx. <strong className="text-white">km {s.km}</strong></>}
                               </p>
                             </div>
                             <span className="text-xs text-zinc-500 shrink-0">+ water</span>
@@ -1467,49 +1446,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               {t('result.buySupplme')}
             </a>
           </Button>
-        </div>
-      </Card>
-
-      {/* K4: Post-session feedback widget */}
-      <Card className="p-4 sm:p-6 space-y-4">
-        <div className="flex items-center gap-2 mb-1">
-          <TrendingUp className="w-4 h-4 text-primary" />
-          <h3 className="text-sm font-bold uppercase tracking-wider">Post-Session Feedback</h3>
-        </div>
-        <p className="text-xs text-muted-foreground">Help us personalise your next plan. After your session, tell us how it went (requires 3+ feedbacks to activate).</p>
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
-          {[
-            { label: 'Hydration level', key: 'water' },
-            { label: 'Electrolyte level', key: 'sodium' },
-            { label: 'Sweat amount', key: 'sweat' },
-            { label: 'Pre-hydration', key: 'pre_water' },
-          ].map(q => (
-            <div key={q.key} className="space-y-1.5">
-              <p className="text-xs font-medium">{q.label}</p>
-              <div className="flex gap-1.5">
-                {['too_little', 'just_right', 'too_much'].map(opt => (
-                  <Button
-                    key={opt}
-                    variant="outline"
-                    size="sm"
-                    className="flex-1 text-[10px] min-h-[36px]"
-                    onClick={async () => {
-                      try {
-                        await supabase.functions.invoke('submit-plan-feedback', {
-                          body: { user_id: 'anonymous', [`${q.key}_feedback`]: opt }
-                        });
-                        toast({ title: 'Feedback saved', description: `${q.label}: ${opt.replace('_', ' ')}` });
-                      } catch {
-                        toast({ title: 'Failed', description: 'Could not save feedback', variant: 'destructive' });
-                      }
-                    }}
-                  >
-                    {opt === 'too_little' ? 'Too little' : opt === 'just_right' ? 'Just right' : 'Too much'}
-                  </Button>
-                ))}
-              </div>
-            </div>
-          ))}
         </div>
       </Card>
 
