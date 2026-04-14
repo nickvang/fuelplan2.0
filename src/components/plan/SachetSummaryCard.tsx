@@ -29,22 +29,22 @@ export function SachetSummaryCard({ plan, distanceKm, sessionDuration, stageRace
         </p>
       </div>
       <div className="grid grid-cols-3 gap-px bg-gray-200">
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-2xl font-bold text-[#0a0a0a]">{preCount}</p>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-1">Pre-race</p>
-          <p className="text-[11px] text-gray-400">{isStageRace ? `${plan.preActivity.electrolytes}/stage` : 'T-2 h'}</p>
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-1">Pre-race</p>
+          <p className="text-[10px] sm:text-[11px] text-gray-400">{isStageRace ? `${plan.preActivity.electrolytes}/stage` : 'T-2 h'}</p>
         </div>
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-2xl font-bold text-[#0a0a0a]">{duringCount}</p>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-1">During</p>
-          <p className="text-[11px] text-gray-400">
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-1">During</p>
+          <p className="text-[10px] sm:text-[11px] text-gray-400">
             {isStageRace ? 'all stages' : showDuringLocation ? `at ${halfwayKm} km` : duringCount === 0 ? 'None' : 'Spread evenly'}
           </p>
         </div>
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-2xl font-bold text-[#0a0a0a]">{postCount}</p>
-          <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-1">Post-race</p>
-          <p className="text-[11px] text-gray-400">{isStageRace ? `${plan.postActivity.electrolytes}/stage` : 'at finish'}</p>
+          <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-1">Post-race</p>
+          <p className="text-[10px] sm:text-[11px] text-gray-400">{isStageRace ? `${plan.postActivity.electrolytes}/stage` : 'at finish'}</p>
         </div>
       </div>
     </div>

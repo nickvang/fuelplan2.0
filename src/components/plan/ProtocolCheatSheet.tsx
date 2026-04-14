@@ -17,7 +17,7 @@ export function ProtocolCheatSheet({ plan, profile }: ProtocolCheatSheetProps) {
 
   return (
     <div className="border border-gray-200 rounded-lg bg-white overflow-hidden">
-      <div className="px-4 py-4 space-y-3">
+      <div className="px-3 sm:px-4 py-3 sm:py-4 space-y-3">
         <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
           {t('result.cheatSheetTitle')}
         </p>
@@ -25,7 +25,7 @@ export function ProtocolCheatSheet({ plan, profile }: ProtocolCheatSheetProps) {
         <div className="space-y-2.5">
           {/* Before */}
           <div className="flex gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 w-14 shrink-0 pt-0.5">{t('result.before')}</span>
+            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 w-12 sm:w-14 shrink-0 pt-0.5">{t('result.before')}</span>
             <p className="text-[13px] text-[#0a0a0a] leading-snug">
               {plan.preActivity.water}ml water + {plan.preActivity.electrolytes} sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''}, 2h before start
             </p>
@@ -35,7 +35,7 @@ export function ProtocolCheatSheet({ plan, profile }: ProtocolCheatSheetProps) {
 
           {/* During */}
           <div className="flex gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 w-14 shrink-0 pt-0.5">{t('result.during')}</span>
+            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 w-12 sm:w-14 shrink-0 pt-0.5">{t('result.during')}</span>
             <p className="text-[13px] text-[#0a0a0a] leading-snug">
               {waterPerHour}ml water/hr
               {duringElectrolytes > 0 && (
@@ -50,7 +50,7 @@ export function ProtocolCheatSheet({ plan, profile }: ProtocolCheatSheetProps) {
 
           {/* After */}
           <div className="flex gap-3">
-            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 w-14 shrink-0 pt-0.5">{t('result.after')}</span>
+            <span className="text-[11px] font-bold uppercase tracking-wide text-gray-400 w-12 sm:w-14 shrink-0 pt-0.5">{t('result.after')}</span>
             <p className="text-[13px] text-[#0a0a0a] leading-snug">
               {safeNumber(plan.postActivity.water)}ml + {safeNumber(plan.postActivity.electrolytes)} sachet{safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''} within 30min
             </p>

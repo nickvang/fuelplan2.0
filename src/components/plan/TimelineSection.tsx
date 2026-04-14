@@ -30,13 +30,13 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
         <TimelinePhaseCard timeLabel="T-24 hours" phaseName="Day Before">
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="divide-y divide-gray-100">
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">Water throughout the day</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">Water throughout the day</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a]">2-3 L</span>
               </div>
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">With dinner</span>
-                <span className="text-[13px] font-semibold text-[#0a0a0a]">500 ml</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">With dinner</span>
+                <span className="text-[13px] font-semibold text-[#0a0a0a] shrink-0">500 ml</span>
               </div>
             </div>
             <div className="px-3.5 py-2.5 bg-gray-50 border-t border-gray-200">
@@ -49,19 +49,19 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
         <TimelinePhaseCard timeLabel="Race morning" phaseName="Race Morning" isActive>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="divide-y divide-gray-100">
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">-3h: Wake up</span>
-                <span className="text-[13px] font-semibold text-[#0a0a0a]">{plan.preActivity.water}ml + breakfast</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">-3h: Wake up</span>
+                <span className="text-[13px] font-semibold text-[#0a0a0a] shrink-0 text-right">{plan.preActivity.water}ml + breakfast</span>
               </div>
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">-2h: Pre-load</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">-2h: Pre-load</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a] flex items-center gap-1.5">
                   200ml + <PillBadge>{plan.preActivity.electrolytes} sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''}</PillBadge>
                 </span>
               </div>
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">-30min: Final</span>
-                <span className="text-[13px] font-semibold text-[#0a0a0a]">Sips only</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">-30min: Final</span>
+                <span className="text-[13px] font-semibold text-[#0a0a0a] shrink-0">Sips only</span>
               </div>
             </div>
             <div className="px-3.5 py-2.5 bg-gray-50 border-t border-gray-200">
@@ -161,18 +161,18 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
         <TimelinePhaseCard timeLabel="Finish line" phaseName="Recovery" isLast>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="divide-y divide-gray-100">
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">0h: Immediately</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">0h: Immediately</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a] flex items-center gap-1.5">
                   500ml + <PillBadge>{safeNumber(plan.postActivity.electrolytes)} sachet{safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}</PillBadge>
                 </span>
               </div>
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">1-2h: Recover</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">1-2h: Recover</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a]">250ml + protein meal</span>
               </div>
-              <div className="flex justify-between items-center px-3.5 py-3">
-                <span className="text-[13px] text-gray-600">2-6h: Rehydrate</span>
+              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 min-w-0 shrink">2-6h: Rehydrate</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a]">750ml, pale urine</span>
               </div>
             </div>

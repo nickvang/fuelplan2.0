@@ -236,7 +236,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   };
 
   return (
-    <div className="max-w-[540px] mx-auto px-5 py-6 pb-24 sm:pb-8 space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-[540px] mx-auto px-4 sm:px-5 py-6 pb-24 sm:pb-8 space-y-6 animate-in fade-in duration-500">
 
       {/* ── 1. Logo + activity label ── */}
       <div className="flex items-center justify-between" ref={heroRef}>
@@ -249,17 +249,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       {/* ── 2. Hero numbers — above the fold ── */}
       <div>
         <div className="grid grid-cols-3 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-white py-4 px-2 text-center">
-            <p className="text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets}</p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Sachets' : t('result.sachets')}</p>
+          <div className="bg-white py-3 sm:py-4 px-1 sm:px-2 text-center">
+            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets}</p>
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Sachets' : t('result.sachets')}</p>
           </div>
-          <div className="bg-white py-4 px-2 text-center">
-            <p className="text-3xl font-black text-[#0a0a0a] tabular-nums">{(safeNumber(displayFluidLoss) / 1000).toFixed(1)}<span className="text-lg font-bold">L</span></p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Loss' : t('result.fluidLoss')}</p>
+          <div className="bg-white py-3 sm:py-4 px-1 sm:px-2 text-center">
+            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{(safeNumber(displayFluidLoss) / 1000).toFixed(1)}<span className="text-base sm:text-lg font-bold">L</span></p>
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Loss' : t('result.fluidLoss')}</p>
           </div>
-          <div className="bg-white py-4 px-2 text-center">
-            <p className="text-3xl font-black text-[#0a0a0a] tabular-nums">{formatHoursAsTime(displayDuration).slice(0, -3)}</p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Time' : t('result.targetTime')}</p>
+          <div className="bg-white py-3 sm:py-4 px-1 sm:px-2 text-center">
+            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{formatHoursAsTime(displayDuration).slice(0, -3)}</p>
+            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Time' : t('result.targetTime')}</p>
           </div>
         </div>
 

@@ -17,7 +17,7 @@ export function CourseDistanceBar({ distanceKm, sachets }: CourseDistanceBarProp
   }));
 
   return (
-    <div className="space-y-2">
+    <div className="space-y-2 overflow-x-hidden">
       {/* Sachet marker labels above the bar */}
       <div className="relative h-10">
         {sachetPositions.map(s => (
@@ -55,7 +55,7 @@ export function CourseDistanceBar({ distanceKm, sachets }: CourseDistanceBarProp
       </div>
 
       {/* KM labels */}
-      <div className="flex justify-between text-[10px] text-gray-500 px-1">
+      <div className="flex justify-between text-[10px] text-gray-500 px-2">
         <span>Start</span>
         <span>{quarterKm} km</span>
         <span>{halfKm} km</span>

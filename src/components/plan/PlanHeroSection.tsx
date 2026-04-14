@@ -24,21 +24,21 @@ export function PlanHeroSection({ plan, profile, distanceKm, hasStrava, selected
 
       {/* 4-stat grid */}
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Distance</p>
           <p className="text-xl font-bold text-[#0a0a0a]">{distanceKm}</p>
           <p className="text-[11px] text-gray-400">km</p>
         </div>
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Target time</p>
           <p className="text-xl font-bold text-[#0a0a0a]">{formatHoursAsTime(profile.sessionDuration)}</p>
         </div>
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Est. fluid loss</p>
           <p className="text-xl font-bold text-[#0a0a0a]">{(safeNumber(plan.totalFluidLoss) / 1000).toFixed(1)}</p>
           <p className="text-[11px] text-gray-400">litres</p>
         </div>
-        <div className="bg-white p-3.5 text-center">
+        <div className="bg-white p-2.5 sm:p-3.5 text-center">
           <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400">Sachets total</p>
           <p className="text-xl font-bold text-[#0a0a0a]">{totalSachets}</p>
         </div>
