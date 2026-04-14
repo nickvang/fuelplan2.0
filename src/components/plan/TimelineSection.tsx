@@ -129,19 +129,6 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
                     />
                   )}
 
-                  {/* Sachet summary + interval pill */}
-                  {plan.duringActivity.totalElectrolytes > 0 && (
-                    <div className="flex justify-between items-center">
-                      <span className="text-[13px] text-gray-300">
-                        {plan.duringActivity.totalElectrolytes} sachet{plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''} during race
-                      </span>
-                      <PillBadge inverted>
-                        1 every {plan.duringActivity.electrolytesPerHour > 0
-                          ? `${Math.round(60 / plan.duringActivity.electrolytesPerHour)} min`
-                          : 'session'}
-                      </PillBadge>
-                    </div>
-                  )}
 
                   {/* Water instruction */}
                   <div className="flex justify-between items-center">
