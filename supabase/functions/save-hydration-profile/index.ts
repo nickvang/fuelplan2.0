@@ -42,7 +42,8 @@ const planSchema = z.object({
   }),
   duringActivity: z.object({
     waterPerHour: z.number().min(0).max(5000),
-    electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)]).nullable()
+    electrolytesPerHour: z.union([z.number().min(0).max(100), z.string().max(100)]).nullable(),
+    totalElectrolytes: z.number().min(0).max(100).optional()
   }),
   postActivity: z.object({
     water: z.number().min(0).max(5000).nullable(),
@@ -60,7 +61,8 @@ const requestSchema = z.object({
   consentGiven: z.boolean(),
   healthConsentGiven: z.boolean(),
   algorithmConsentGiven: z.boolean().optional().default(false),
-  userEmail: z.string().email().max(255).optional().nullable()
+  userEmail: z.string().email().max(255).optional().nullable(),
+  authUserId: z.string().uuid().optional().nullable(),
 });
 
 async function pseudonymiseIP(ip: string): Promise<string> {
@@ -121,7 +123,7 @@ serve(async (req) => {
       );
     }
 
-    const { profile, plan, hasSmartWatchData, consentGiven, healthConsentGiven, algorithmConsentGiven, userEmail } = validationResult.data;
+    const { profile, plan, hasSmartWatchData, consentGiven, healthConsentGiven, algorithmConsentGiven, userEmail, authUserId } = validationResult.data;
 
     if (!consentGiven || !healthConsentGiven) {
       return new Response(
@@ -175,6 +177,7 @@ serve(async (req) => {
         user_email: userEmail || null,
         user_agent: userAgent,
         user_id: userId,
+        auth_user_id: authUserId || userId || null,
         ip_address: ipAddress !== 'unknown' ? await pseudonymiseIP(ipAddress) : null,
       })
       .select()

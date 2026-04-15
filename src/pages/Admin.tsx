@@ -50,6 +50,13 @@ export default function Admin() {
     avgSessionDurationHours: 0,
     totalWithPlan: 0,
     sodiumLossBuckets: [] as { label: string; avgMg: number; count: number }[],
+    weeklySubmissions: [] as { week: string; count: number }[],
+  });
+  const [accountStats, setAccountStats] = useState({
+    totalAccounts: 0,
+    activatedAccounts: 0,
+    retainedAccounts: 0,
+    accountsByWeek: [] as { week: string; count: number }[],
   });
   const [selectedActivity, setSelectedActivity] = useState<string | null>(null);
 
@@ -164,7 +171,7 @@ export default function Admin() {
       }
 
       setIsAdmin(true);
-      await loadProfiles();
+      await Promise.all([loadProfiles(), loadAccountStats()]);
     } catch (error: any) {
       console.error('Unexpected error in admin check:', error);
       toast({
@@ -322,6 +329,29 @@ export default function Admin() {
       const avgStravaActivitiesPerUser = withStrava
         ? Math.round((totalStravaActivities / withStrava) * 10) / 10
         : 0;
+
+      // Weekly submissions: group by ISO week (Mon–Sun), last 16 weeks
+      const weekMap = new Map<string, number>();
+      data?.forEach((p: any) => {
+        const d = new Date(p.created_at);
+        // Get Monday of that week
+        const day = d.getDay(); // 0=Sun
+        const diff = (day === 0 ? -6 : 1 - day);
+        const mon = new Date(d);
+        mon.setDate(d.getDate() + diff);
+        mon.setHours(0, 0, 0, 0);
+        const key = mon.toISOString().slice(0, 10); // YYYY-MM-DD
+        weekMap.set(key, (weekMap.get(key) || 0) + 1);
+      });
+      const weeklySubmissions = Array.from(weekMap.entries())
+        .sort((a, b) => a[0].localeCompare(b[0]))
+        .slice(-16)
+        .map(([dateStr, count]) => {
+          const d = new Date(dateStr);
+          const label = d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+          return { week: label, count };
+        });
+
       setStats({
         total,
         withSmartwatch,
@@ -341,6 +371,7 @@ export default function Admin() {
         withStrava,
         avgStravaActivitiesPerUser,
         sodiumLossBuckets,
+        weeklySubmissions,
       });
     } catch (error: any) {
       toast({
@@ -350,6 +381,33 @@ export default function Admin() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadAccountStats = async () => {
+    try {
+      const { data, error } = await supabase.rpc('get_admin_account_stats');
+      if (error) throw error;
+
+      const raw = data as any;
+      const byWeek: { week: string; count: number }[] = (raw.accounts_by_week || [])
+        .slice(-16)
+        .map((row: any) => {
+          const d = new Date(row.week_start);
+          return {
+            week: d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }),
+            count: Number(row.count),
+          };
+        });
+
+      setAccountStats({
+        totalAccounts: Number(raw.total_accounts ?? 0),
+        activatedAccounts: Number(raw.activated_accounts ?? 0),
+        retainedAccounts: Number(raw.retained_accounts ?? 0),
+        accountsByWeek: byWeek,
+      });
+    } catch (error: any) {
+      console.error('Error loading account stats:', error);
     }
   };
 
@@ -1016,6 +1074,61 @@ export default function Admin() {
           </div>
         </div>
 
+        {/* Accounts & Retention */}
+        <div className="rounded-xl border border-border border-t-4 border-t-brand-green bg-card overflow-hidden shadow-sm">
+          <div className="px-4 py-3 border-b border-border">
+            <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-green">Accounts & Retention</h2>
+            <p className="text-xs text-muted-foreground mt-0.5">Registered users, activation, and repeat-use</p>
+          </div>
+          <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
+            {/* Stat cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="rounded-lg bg-secondary border border-brand-green/20 p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Accounts</p>
+                <p className="text-2xl font-bold tabular-nums mt-0.5 text-brand-green">{accountStats.totalAccounts}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">registered</p>
+              </div>
+              <div className="rounded-lg bg-secondary border border-border p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Activated</p>
+                <p className="text-2xl font-bold tabular-nums mt-0.5">{accountStats.activatedAccounts}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {accountStats.totalAccounts > 0
+                    ? `${Math.round((accountStats.activatedAccounts / accountStats.totalAccounts) * 100)}% of accounts`
+                    : '—'}
+                </p>
+              </div>
+              <div className="rounded-lg bg-secondary border border-border p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Retained</p>
+                <p className="text-2xl font-bold tabular-nums mt-0.5">{accountStats.retainedAccounts}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">
+                  {accountStats.activatedAccounts > 0
+                    ? `${Math.round((accountStats.retainedAccounts / accountStats.activatedAccounts) * 100)}% of activated`
+                    : '—'}
+                </p>
+              </div>
+              <div className="rounded-lg bg-secondary border border-border p-3">
+                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Anon plans</p>
+                <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.total - accountStats.activatedAccounts > 0 ? stats.total - accountStats.activatedAccounts : '—'}</p>
+                <p className="text-[10px] text-muted-foreground mt-1">no account linked</p>
+              </div>
+            </div>
+
+            {/* New accounts per week chart */}
+            <div>
+              <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-2">New accounts per week</p>
+              <ResponsiveContainer width="100%" height={150}>
+                <BarChart data={accountStats.accountsByWeek}>
+                  <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                  <XAxis dataKey="week" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} angle={-35} textAnchor="end" height={55} />
+                  <YAxis allowDecimals={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} width={28} />
+                  <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                  <Bar dataKey="count" fill="hsl(142, 72%, 29%)" radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
+          </div>
+        </div>
+
         {/* Product development */}
         <div className="rounded-xl border border-border border-t-4 border-t-product-warm bg-card overflow-hidden shadow-sm">
           <div className="px-4 py-3 border-b border-border bg-product-warm-muted">
@@ -1119,6 +1232,20 @@ export default function Admin() {
             <p className="mt-2 text-xs text-muted-foreground">
               n={stats.sodiumLossBuckets.reduce((sum, b) => sum + b.count, 0)} profiles
             </p>
+          </div>
+
+          <div className="rounded-xl border border-border border-l-4 border-l-brand-green bg-card p-4 shadow-sm lg:col-span-2">
+            <h3 className="text-xs font-semibold uppercase tracking-wider text-muted-foreground mb-3">Weekly submissions</h3>
+            <ResponsiveContainer width="100%" height={200}>
+              <BarChart data={stats.weeklySubmissions}>
+                <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
+                <XAxis dataKey="week" tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 10 }} angle={-35} textAnchor="end" height={60} />
+                <YAxis allowDecimals={false} tick={{ fill: 'hsl(var(--muted-foreground))', fontSize: 11 }} />
+                <Tooltip contentStyle={{ backgroundColor: 'hsl(var(--card))', border: '1px solid hsl(var(--border))' }} />
+                <Bar dataKey="count" fill="hsl(142, 72%, 29%)" radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+            <p className="mt-2 text-xs text-muted-foreground">Last {stats.weeklySubmissions.length} weeks · week starts Monday</p>
           </div>
 
           <div className="rounded-xl border border-border border-l-4 border-l-brand-red bg-card p-4 shadow-sm lg:col-span-2">
@@ -1353,7 +1480,13 @@ export default function Admin() {
 
                         <CollapsibleContent className="mt-4 pt-4 border-t border-border">
                           {/* ── Hydration Plan Result (exact user view) ── */}
-                          {plan.preActivity && (
+                          {plan.preActivity && (() => {
+                            // totalElectrolytes was missing from the save schema before the fix —
+                            // fall back to electrolytesPerHour × effective duration for old records
+                            const effectiveDur = Math.max(0, (pd.sessionDuration || 0) - 0.5);
+                            const duringTotal = plan.duringActivity?.totalElectrolytes
+                              ?? Math.round((plan.duringActivity?.electrolytesPerHour || 0) * effectiveDur);
+                            return (
                             <div className="mb-6 p-4 rounded-xl border border-border bg-secondary/50">
                               <div className="flex flex-wrap items-baseline gap-3 mb-3">
                                 <p className="text-xs font-semibold uppercase tracking-wider text-product-warm">Hydration Plan Result</p>
@@ -1390,7 +1523,7 @@ export default function Admin() {
                                   <p className="text-[10px] uppercase tracking-wider opacity-60 mb-1">During activity</p>
                                   <p className="text-sm font-medium">Water/hr: <span className="font-bold">{plan.duringActivity?.waterPerHour ?? 0} ml</span></p>
                                   <p className="text-sm font-medium">Sachets/hr: <span className="font-bold">{plan.duringActivity?.electrolytesPerHour ?? 0}</span></p>
-                                  <p className="text-sm font-medium">Total sachets: <span className="font-bold">{plan.duringActivity?.totalElectrolytes ?? 0}</span></p>
+                                  <p className="text-sm font-medium">Total sachets: <span className="font-bold">{duringTotal}</span></p>
                                 </div>
                                 {/* Post-activity */}
                                 <div className="rounded-lg border border-border bg-background p-3">
@@ -1416,7 +1549,8 @@ export default function Admin() {
                                 {plan.activeDataSources?.length > 0 && <span>Sources: {plan.activeDataSources.join(', ')}</span>}
                               </div>
                             </div>
-                          )}
+                            );
+                          })()}
 
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {pd.strava_snapshot && (

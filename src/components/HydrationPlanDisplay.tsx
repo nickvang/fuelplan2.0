@@ -313,13 +313,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           <Download className="w-4 h-4" />
           {t('home.saveImage')}
         </button>
-        <button
-          onClick={handleCopyToClipboard}
-          className="flex items-center justify-center gap-2 px-4 py-2.5 border border-gray-200 rounded-lg text-sm font-semibold text-[#0a0a0a] hover:bg-gray-50 transition-colors min-h-[48px]"
-        >
-          <Copy className="w-4 h-4" />
-          {t('result.copy')}
-        </button>
       </div>
 
       {/* ── 6. Expandable sections ── */}
@@ -761,7 +754,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
               navigate('/login?returnTo=/&savePlan=true');
             }}
           >
-            {t('auth.signIn')}
+            {t('auth.goToAccount')}
           </Button>
         </Card>
       )}
