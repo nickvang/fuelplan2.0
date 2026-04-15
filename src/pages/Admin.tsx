@@ -67,6 +67,37 @@ export default function Admin() {
     setExpandedStrava(next);
   };
 
+  // Mass selection
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) next.delete(id); else next.add(id);
+    setSelectedIds(next);
+  };
+  const toggleSelectAll = () => {
+    if (selectedIds.size === filteredProfiles.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(filteredProfiles.map((p) => p.id)));
+    }
+  };
+  const massDelete = async () => {
+    if (selectedIds.size === 0) return;
+    if (!confirm(`Delete ${selectedIds.size} submission${selectedIds.size !== 1 ? 's' : ''}? This cannot be undone.`)) return;
+    try {
+      const { error } = await supabase
+        .from('hydration_profiles')
+        .delete()
+        .in('id', Array.from(selectedIds));
+      if (error) throw error;
+      setSelectedIds(new Set());
+      toast({ title: `${selectedIds.size} submissions deleted` });
+      await loadProfiles();
+    } catch (err: any) {
+      toast({ title: 'Delete failed', description: err.message, variant: 'destructive' });
+    }
+  };
+
   // Submission filters
   const [filterSearch, setFilterSearch] = useState('');
   const [filterDiscipline, setFilterDiscipline] = useState('');
@@ -1374,6 +1405,25 @@ export default function Admin() {
             </div>
           </div>
           <div className="p-4">
+            {/* Mass-delete toolbar */}
+            {selectedIds.size > 0 && (
+              <div className="flex items-center gap-3 mb-3 px-3 py-2 rounded-lg bg-destructive/10 border border-destructive/20">
+                <span className="text-sm font-medium text-destructive">{selectedIds.size} selected</span>
+                <button
+                  onClick={massDelete}
+                  className="flex items-center gap-1.5 px-3 py-1.5 rounded-md bg-destructive text-destructive-foreground text-xs font-semibold hover:bg-destructive/90 transition-colors"
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  Delete selected
+                </button>
+                <button
+                  onClick={() => setSelectedIds(new Set())}
+                  className="ml-auto text-xs text-muted-foreground hover:text-foreground"
+                >
+                  Clear selection
+                </button>
+              </div>
+            )}
             {loading ? (
               <p className="text-center text-muted-foreground py-8">Loading...</p>
             ) : profiles.length === 0 ? (
@@ -1382,16 +1432,33 @@ export default function Admin() {
               <p className="text-center text-muted-foreground py-8">No submissions match the current filters.</p>
             ) : (
               <div className="space-y-2">
+                {/* Select-all row */}
+                <div className="flex items-center gap-2 px-1 pb-1 border-b border-border">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.size === filteredProfiles.length && filteredProfiles.length > 0}
+                    onChange={toggleSelectAll}
+                    className="w-4 h-4 rounded border-border cursor-pointer"
+                  />
+                  <span className="text-xs text-muted-foreground">Select all ({filteredProfiles.length})</span>
+                </div>
                 {filteredProfiles.map((profile) => {
                   const pd = profile.profile_data || {};
                   const plan = profile.plan_data || {};
                   const isExpanded = expandedRows.has(profile.id);
 
                   return (
-                    <div key={profile.id} className="rounded-lg border border-border bg-card p-4 border-l-4 border-l-chrome hover:border-l-product-warm transition-colors shadow-sm">
+                    <div key={profile.id} className={`rounded-lg border bg-card p-4 border-l-4 transition-colors shadow-sm ${selectedIds.has(profile.id) ? 'border-destructive/40 border-l-destructive bg-destructive/5' : 'border-border border-l-chrome hover:border-l-product-warm'}`}>
                       <Collapsible open={isExpanded} onOpenChange={() => toggleRow(profile.id)}>
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-4 flex-1">
+                          <div className="flex items-center gap-3 flex-1">
+                            <input
+                              type="checkbox"
+                              checked={selectedIds.has(profile.id)}
+                              onChange={() => toggleSelect(profile.id)}
+                              onClick={(e) => e.stopPropagation()}
+                              className="w-4 h-4 rounded border-border cursor-pointer flex-shrink-0"
+                            />
                             <CollapsibleTrigger asChild>
                               <Button variant="ghost" size="sm" className="p-1 text-muted-foreground hover:text-foreground">
                                 {isExpanded ? <ChevronDown className="w-4 h-4" /> : <ChevronRight className="w-4 h-4" />}
@@ -1414,6 +1481,10 @@ export default function Admin() {
                               <div>
                                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Discipline</p>
                                 <p className="text-sm font-medium">{pd.disciplines?.[0] || '—'}</p>
+                              </div>
+                              <div>
+                                <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Race</p>
+                                <p className="text-sm font-medium truncate max-w-[140px]">{pd.raceName || pd.raceDistance || '—'}</p>
                               </div>
                               <div>
                                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Age / Sex</p>

@@ -33,6 +33,7 @@ const profileSchema = z.object({
   sleepQuality: z.number().min(0).max(10).optional(),
   restingHeartRate: z.number().min(30).max(200).optional(),
   primaryGoal: z.string().max(200).optional(),
+  raceName: z.string().max(200).optional(),
 }).strip();
 
 const planSchema = z.object({

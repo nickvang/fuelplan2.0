@@ -726,7 +726,12 @@ const Index = () => {
       try {
         // Validate and sanitize profile data before submission
         const validatedProfile = validateAndSanitizeProfile(completeProfile);
-        const profileToSave = { ...validatedProfile, ...(stravaSnapshot && { strava_snapshot: stravaSnapshot }), ...(garminSnapshot && { garmin_snapshot: garminSnapshot }) };
+        const profileToSave = {
+          ...validatedProfile,
+          ...(stravaSnapshot && { strava_snapshot: stravaSnapshot }),
+          ...(garminSnapshot && { garmin_snapshot: garminSnapshot }),
+          ...(selectedRace?.name && { raceName: selectedRace.name }),
+        };
 
         // Save profile data to backend with GDPR compliance
         const { data, error } = await supabase.functions.invoke('save-hydration-profile', {
