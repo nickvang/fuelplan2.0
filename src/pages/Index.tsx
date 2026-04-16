@@ -1191,15 +1191,17 @@ const Index = () => {
                           approval_prompt: 'auto',
                         });
 
+                        // Always use the standard web OAuth URL — the mobile/authorize endpoint
+                        // tries to open the Strava app which breaks the redirect flow on Safari iOS.
+                        const webUrl = `https://www.strava.com/oauth/authorize?${params.toString()}`;
+
                         if (isMobile) {
-                          // MOBILE: Strava's Universal Link endpoint (opens app if allowed)
-                          const mobileUrl = `https://www.strava.com/oauth/mobile/authorize?${params.toString()}`;
-                          window.location.href = mobileUrl;
+                          // MOBILE: full-page redirect — most reliable on Safari iOS
+                          window.location.href = webUrl;
                           return;
                         }
 
-                        // DESKTOP: web OAuth in popup with fallback
-                        const webUrl = `https://www.strava.com/oauth/authorize?${params.toString()}`;
+                        // DESKTOP: try popup first; Safari often blocks popups so fall back to redirect
                         const width = 500;
                         const height = 600;
                         const left = Math.round((window.screen.width - width) / 2);
@@ -1211,8 +1213,8 @@ const Index = () => {
                           `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
                         );
 
-                        if (!popup) {
-                          toast.info(t('strava.popupFallback'));
+                        if (!popup || popup.closed) {
+                          // Popup was blocked — fall back to full-page redirect
                           window.location.href = webUrl;
                           return;
                         }
@@ -1222,25 +1224,24 @@ const Index = () => {
                         const POPUP_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
                         if (stravaPollRef.current) clearInterval(stravaPollRef.current);
                         stravaPollRef.current = setInterval(() => {
-                          if (popup.closed) {
-                            clearInterval(stravaPollRef.current!);
-                            stravaPollRef.current = null;
-                            sessionStorage.removeItem('strava_use_popup');
-                            if (sessionStorage.getItem(STRAVA_PREFILL_KEY)) {
-                              applyStravaPrefill();
-                            } else {
-                              // Check for error stored by StravaCallback
-                              const errMsg = sessionStorage.getItem(STRAVA_ERROR_KEY) || localStorage.getItem(STRAVA_ERROR_KEY);
-                              sessionStorage.removeItem(STRAVA_ERROR_KEY);
-                              localStorage.removeItem(STRAVA_ERROR_KEY);
+                          try {
+                            if (popup.closed) {
+                              clearInterval(stravaPollRef.current!);
+                              stravaPollRef.current = null;
+                              sessionStorage.removeItem('strava_use_popup');
+                              if (localStorage.getItem(STRAVA_PREFILL_KEY) || sessionStorage.getItem(STRAVA_PREFILL_KEY)) {
+                                applyStravaPrefill();
+                              }
+                            } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
+                              clearInterval(stravaPollRef.current!);
+                              stravaPollRef.current = null;
+                              sessionStorage.removeItem('strava_use_popup');
+                              popup.close();
                             }
-                          } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
-                            clearInterval(stravaPollRef.current!);
-                            stravaPollRef.current = null;
-                            sessionStorage.removeItem('strava_use_popup');
-                            popup.close();
+                          } catch {
+                            // cross-origin access error means popup navigated to Strava — normal
                           }
-                        }, 300);
+                        }, 500);
                       }}
                     >
                       {stravaSnapshot ? t('strava.connected') : t('strava.connect')}
