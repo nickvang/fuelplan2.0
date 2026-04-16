@@ -382,11 +382,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 <div className="space-y-4">
                   {/* Stage Morning */}
                   <div className={`rounded-2xl border ${isQueenStage ? 'border-amber-400/60' : 'border-gray-200'} bg-card overflow-hidden`}>
-                    <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>1</span>
-                      <span className="text-[11px]">🌅</span>
-                      <p className={`text-[13px] font-bold uppercase tracking-wide ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Stage Morning</p>
-                      <p className="text-[11px] text-gray-400 ml-auto">2–3 hours before start</p>
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 min-w-0">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>1</span>
+                      <span className="text-[11px] shrink-0">🌅</span>
+                      <p className={`text-[13px] font-bold uppercase tracking-wide truncate min-w-0 ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Stage Morning</p>
+                      <p className="text-[11px] text-gray-400 ml-auto shrink-0">2–3h before start</p>
                     </div>
                     <div className="divide-y divide-gray-100">
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
@@ -416,11 +416,11 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     const showStageCourseBar = activeStage.distance_km >= 5 && stageSachetSchedule.length > 0;
                     return (
                       <div className="rounded-2xl border-2 border-gray-700 bg-zinc-900 text-white overflow-hidden shadow-xl">
-                        <div className="px-4 py-3 bg-zinc-800/80 border-b border-zinc-700 flex items-center gap-2">
-                          <span className="w-6 h-6 rounded-full bg-white text-[#0a0a0a] flex items-center justify-center text-[11px] font-bold">2</span>
-                          <span className="text-[11px]">🏃</span>
-                          <p className="text-[13px] font-bold uppercase tracking-wide text-white">During Stage {activeStage.day}</p>
-                          <p className="text-[11px] text-zinc-400 ml-auto">{activeStage.distance_km}km · ~{stageDuration}h</p>
+                        <div className="px-4 py-3 bg-zinc-800/80 border-b border-zinc-700 flex items-center gap-2 min-w-0">
+                          <span className="w-6 h-6 rounded-full bg-white text-[#0a0a0a] flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
+                          <span className="text-[11px] shrink-0">🏃</span>
+                          <p className="text-[13px] font-bold uppercase tracking-wide text-white truncate min-w-0">During Stage {activeStage.day}</p>
+                          <p className="text-[11px] text-zinc-400 ml-auto shrink-0">{activeStage.distance_km}km · ~{stageDuration}h</p>
                         </div>
                         <div className="p-3.5 space-y-3">
                           {showStageCourseBar && (
@@ -456,10 +456,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
 
                   {/* Post Stage */}
                   <div className={`rounded-2xl border ${isQueenStage ? 'border-amber-400/60' : 'border-gray-200'} bg-card overflow-hidden`}>
-                    <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2">
-                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>3</span>
-                      <span className="text-[11px]">🏁</span>
-                      <p className={`text-[13px] font-bold uppercase tracking-wide ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Post-Stage Recovery</p>
+                    <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 min-w-0">
+                      <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>3</span>
+                      <span className="text-[11px] shrink-0">🏁</span>
+                      <p className={`text-[13px] font-bold uppercase tracking-wide truncate min-w-0 ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Post-Stage Recovery</p>
                     </div>
                     <div className="divide-y divide-gray-100">
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
@@ -781,7 +781,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           showStickyBar ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        <div className="flex items-center justify-around h-16 px-4 max-w-[540px] mx-auto pb-[env(safe-area-inset-bottom)]">
+        <div className="flex items-center justify-around px-4 max-w-[540px] mx-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '64px' }}>
           <button
             onClick={handleSaveImage}
             disabled={isSharing}

@@ -25,7 +25,7 @@ export function PlanFooter({ onDeleteData, onExportData }: PlanFooterProps) {
       </div>
 
       {/* Links */}
-      <div className="flex items-center justify-center gap-4 text-[11px] text-gray-400">
+      <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-[11px] text-gray-400">
         <button
           onClick={onExportData}
           className="hover:text-blue-500 transition-colors underline"
