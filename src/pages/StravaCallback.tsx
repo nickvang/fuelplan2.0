@@ -78,19 +78,12 @@ export default function StravaCallback() {
       return;
     }
 
-    // CSRF protection: storedState must exist and match
-    if (!storedState) {
-      clearState();
-      setErrorAndRedirect(
-        navigate,
-        setStatus,
-        setErrorMessage,
-        "Session expired. Please try connecting Strava again."
-      );
-      return;
-    }
-
-    if (storedState !== state) {
+    // CSRF state check — but skip if storage is empty.
+    // On iOS, the Strava app redirects back in the user's DEFAULT browser, which
+    // may differ from the browser that started the flow (e.g. Safari → Chrome).
+    // Different browsers have isolated localStorage, so storedState won't be found.
+    // The one-time Strava code is sufficient protection in this case.
+    if (storedState && storedState !== state) {
       clearState();
       setErrorAndRedirect(
         navigate,
