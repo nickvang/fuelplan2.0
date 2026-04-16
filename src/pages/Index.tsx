@@ -1191,13 +1191,13 @@ const Index = () => {
                           approval_prompt: 'auto',
                         });
 
-                        // Always use the standard web OAuth URL — the mobile/authorize endpoint
-                        // tries to open the Strava app which breaks the redirect flow on Safari iOS.
                         const webUrl = `https://www.strava.com/oauth/authorize?${params.toString()}`;
 
                         if (isMobile) {
-                          // MOBILE: full-page redirect — most reliable on Safari iOS
-                          window.location.href = webUrl;
+                          // MOBILE: use the mobile/authorize endpoint so iOS opens the Strava app.
+                          // State is persisted in localStorage so it survives the app → Safari redirect.
+                          const mobileUrl = `https://www.strava.com/oauth/mobile/authorize?${params.toString()}`;
+                          window.location.href = mobileUrl;
                           return;
                         }
 
