@@ -83,6 +83,32 @@ export interface SachetMarker {
   timeStr: string;
 }
 
+export const computeGelSchedule = (
+  plan: HydrationPlan,
+  profile: HydrationProfile,
+  distanceKm: number,
+): SachetMarker[] => {
+  const gel = plan.energyGel;
+  if (!gel?.applicable || gel.phases.during <= 0 || gel.gelsPerHour <= 0) return [];
+
+  const totalMin = Math.round(profile.sessionDuration * 60);
+  const intervalMin = Math.round(60 / gel.gelsPerHour);
+  const startMin = 30; // always start at 30 min mark
+  const pacePerKm = distanceKm > 0 ? totalMin / distanceKm : 0;
+
+  const markers: SachetMarker[] = [];
+  let t = startMin;
+  while (markers.length < gel.phases.during && t <= totalMin - 5) {
+    const km = pacePerKm > 0 ? Math.round((t / pacePerKm) * 10) / 10 : 0;
+    const h = Math.floor(t / 60);
+    const m = t % 60;
+    const timeStr = h > 0 ? `${h}h ${m > 0 ? m + 'min' : ''}`.trim() : `${m} min`;
+    markers.push({ km, timeStr });
+    t += intervalMin;
+  }
+  return markers;
+};
+
 export const computeDuringSachetSchedule = (
   plan: HydrationPlan,
   profile: HydrationProfile,

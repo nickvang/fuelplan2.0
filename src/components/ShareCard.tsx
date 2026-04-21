@@ -1,4 +1,5 @@
-import { HydrationPlan, HydrationProfile } from '@/types/hydration';
+import { HydrationPlan, HydrationProfile, SUPPLME_ELECTROLYTE_SPEC, SUPPLME_GEL_SPEC } from '@/types/hydration';
+import { computeDuringSachetSchedule, computeGelSchedule } from '@/components/plan/planHelpers';
 
 interface SelectedRace {
   name: string;
@@ -85,9 +86,16 @@ export async function generateFuelPlanImage(
   ctx.fillRect(0, 0, W, H);
 
   // ── Derived data ──
+  // totalElectrolytes was missing from saved records before a schema fix —
+  // fall back to electrolytesPerHour × effective duration for old records.
+  const effectiveDur = Math.max(0, (profile.sessionDuration || 0) - 0.5);
+  const duringSachets =
+    plan.duringActivity.totalElectrolytes != null
+      ? plan.duringActivity.totalElectrolytes
+      : Math.round((plan.duringActivity.electrolytesPerHour || 0) * effectiveDur);
   const totalSachets =
     plan.preActivity.electrolytes +
-    plan.duringActivity.totalElectrolytes +
+    duringSachets +
     plan.postActivity.electrolytes;
   const totalFluid =
     plan.preActivity.water +
@@ -101,23 +109,11 @@ export async function generateFuelPlanImage(
     ? `${selectedRace.distance_km % 1 === 0 ? selectedRace.distance_km : selectedRace.distance_km.toFixed(1)} km`
     : `${distance} km`;
 
-  // Sachet markers for in-race
-  const sachetCount = Math.min(plan.duringActivity.totalElectrolytes, 6);
-  const inRaceSachets: { number: number; km: number }[] = [];
-  if (sachetCount > 0 && distance > 0) {
-    const totalMin = Math.round(profile.sessionDuration * 60);
-    const startOffset = Math.round(totalMin * 0.2);
-    const endCutoff = Math.max(0, totalMin - 20);
-    const usableWindow = Math.max(1, endCutoff - startOffset);
-    const rawInterval = sachetCount > 1 ? Math.round(usableWindow / (sachetCount - 1)) : usableWindow;
-    const interval = Math.max(rawInterval, 20);
-    const pacePerKm = totalMin / distance;
-    for (let i = 0; i < sachetCount; i++) {
-      const minuteMark = Math.min(startOffset + Math.round(interval * i), endCutoff);
-      const km = Math.round((minuteMark / pacePerKm) * 10) / 10;
-      inRaceSachets.push({ number: i + 1, km });
-    }
-  }
+  // Sachet + gel schedules using shared helpers (matches results page)
+  const sachetSchedule = computeDuringSachetSchedule(plan, profile, distance);
+  const gelSchedule = computeGelSchedule(plan, profile, distance);
+  const gel = plan.energyGel;
+  const gelIntervalMin = gel?.gelsPerHour > 0 ? Math.round(60 / gel.gelsPerHour) : 0;
 
   const PAD = 72;
   const CW = W - PAD * 2; // content width
@@ -138,6 +134,8 @@ export async function generateFuelPlanImage(
   if (profile.terrain) activityParts.push(profile.terrain);
   const activityLabel = activityParts.join('  /  ') || 'Activity';
   drawText(ctx, activityLabel.toUpperCase(), PAD, y, SANS('600', 16), LABEL_GRAY);
+  const targetStr = `TARGET  ·  ${formatDuration(profile.sessionDuration).slice(0, -3)}`;
+  drawText(ctx, targetStr, W - PAD, y, SANS('600', 16), LABEL_GRAY, 'right');
   y += 32;
 
   // ════════════════════════════════════════
@@ -149,14 +147,13 @@ export async function generateFuelPlanImage(
   y += 80;
 
   // ════════════════════════════════════════
-  // STATS GRID (4 columns)
+  // STATS GRID (3 columns)
   // ════════════════════════════════════════
-  const statW = Math.floor(CW / 4);
+  const statW = Math.floor(CW / 3);
   const stats = [
-    { label: 'DISTANCE', value: `${distance}`, unit: 'km' },
-    { label: 'TARGET TIME', value: formatDuration(profile.sessionDuration), unit: '' },
+    { label: 'ELECTROLYTE SACHETS', value: `${totalSachets}`, unit: '' },
     { label: 'FLUID LOSS', value: `${(safeNumber(plan.totalFluidLoss) / 1000).toFixed(1)}`, unit: 'L' },
-    { label: 'SACHETS', value: `${totalSachets}`, unit: 'total' },
+    { label: 'TOTAL SODIUM', value: `${totalSachets * SUPPLME_ELECTROLYTE_SPEC.sodium}`, unit: 'mg' },
   ];
 
   // Grid background
@@ -193,19 +190,60 @@ export async function generateFuelPlanImage(
   ctx.stroke();
 
   const sachetCols = [
-    { count: plan.preActivity.electrolytes, label: 'PRE-RACE', sub: 'T-2 h' },
-    { count: plan.duringActivity.totalElectrolytes, label: 'DURING', sub: plan.duringActivity.totalElectrolytes > 0 ? `at ${Math.round(distance / 2 * 10) / 10} km` : 'None' },
-    { count: plan.postActivity.electrolytes, label: 'POST-RACE', sub: 'at finish' },
+    { count: plan.preActivity.electrolytes, label: 'PRE-RACE' },
+    { count: duringSachets, label: 'DURING' },
+    { count: plan.postActivity.electrolytes, label: 'POST-RACE' },
   ];
 
   sachetCols.forEach((col, i) => {
     const cx = PAD + colW * i;
-    if (i > 0) drawLine(ctx, cx, y + 16, cx, y + 94, LIGHT_GRAY);
+    if (i > 0) drawLine(ctx, cx, y + 16, cx, y + 84, LIGHT_GRAY);
     drawText(ctx, `${col.count}`, cx + colW / 2, y + 16, SANS('700', 36), BLACK, 'center');
     drawText(ctx, col.label, cx + colW / 2, y + 60, SANS('600', 13), LABEL_GRAY, 'center');
-    drawText(ctx, col.sub, cx + colW / 2, y + 80, SANS('400', 13), LABEL_GRAY, 'center');
   });
-  y += 140;
+  y += 120;
+
+  // ════════════════════════════════════════
+  // ENERGY GEL SUMMARY (always shown)
+  // ════════════════════════════════════════
+  if (gel) {
+    const gelTotalLabel = gel.applicable ? `${gel.totalGels} total` : 'not required';
+    drawText(ctx, `ENERGY GEL SUMMARY  /  ${gelTotalLabel}`.toUpperCase(), PAD, y, SANS('600', 14), LABEL_GRAY);
+    y += 30;
+
+    ctx.fillStyle = '#f9fafb';
+    ctx.beginPath();
+    ctx.roundRect(PAD, y, CW, 100, 12);
+    ctx.fill();
+    ctx.strokeStyle = LIGHT_GRAY;
+    ctx.lineWidth = 1;
+    ctx.stroke();
+
+    if (gel.applicable) {
+      const carbsPerHour = profile.sessionDuration > 0 ? Math.round(gel.totalCarbsG / profile.sessionDuration) : 0;
+      const gelCols = [
+        { value: `${gel.totalGels}`, label: 'TOTAL GELS' },
+        { value: `${gel.totalCarbsG}g`, label: 'TOTAL CARBS' },
+        { value: `${carbsPerHour}g`, label: 'CARBS / HR' },
+        { value: `${gel.totalKcal}`, label: 'FUEL KCAL' },
+      ];
+      const gelColW = Math.floor(CW / 4);
+      gelCols.forEach((col, i) => {
+        const cx = PAD + gelColW * i;
+        if (i > 0) drawLine(ctx, cx, y + 16, cx, y + 84, LIGHT_GRAY);
+        drawText(ctx, col.value, cx + gelColW / 2, y + 16, SANS('700', 30), BLACK, 'center');
+        drawText(ctx, col.label, cx + gelColW / 2, y + 60, SANS('600', 12), LABEL_GRAY, 'center');
+      });
+    } else {
+      drawText(ctx, gel.timing, PAD + CW / 2, y + 40, SANS('400', 16), GRAY, 'center');
+    }
+
+    y += 120;
+
+    // Gel specs line
+    drawText(ctx, `${SUPPLME_GEL_SPEC.carbsPerGel}g carbohydrates  ·  ${SUPPLME_GEL_SPEC.ratioLabel} ratio Glucose to Fructose  ·  Liposomal technology`, PAD, y, SANS('400', 15), LABEL_GRAY);
+    y += 40;
+  }
 
   // ════════════════════════════════════════
   // 48-HOUR PROTOCOL
@@ -247,36 +285,87 @@ export async function generateFuelPlanImage(
 
   // Phase 1: Day Before
   drawPhase('T-24 hours', 'Day Before', [
-    ['Water throughout the day', '2-3 L'],
-    ['With dinner', '500 ml'],
+    ['Water throughout the day', '2-3 L water'],
+    ['With dinner', '500 ml water'],
   ]);
 
   // Phase 2: Race Morning
   drawPhase('Race morning', 'Race Morning', [
-    ['-3h: Wake up', `${plan.preActivity.water}ml + breakfast`],
-    ['-2h: Pre-load', `200ml + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`],
+    ['-3h: Wake up', `${plan.preActivity.water}ml water + breakfast`],
+    ['-2h: Pre-load', `200ml water + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`],
     ['-30min: Final', 'Sips only'],
   ]);
 
-  // Phase 3: During Race
+  // Phase 3: During Race (drawn manually to support sub-section headers)
   if (!isSwimOnly) {
-    const duringRows: [string, string][] = [];
-    // Show sachet markers when available (formula decides count, no duration gate)
-    for (const s of inRaceSachets) {
-      duringRows.push([`Sachet #${s.number}`, `km ${s.km}`]);
+    // Phase dot
+    ctx.beginPath();
+    ctx.arc(dotX, y + 10, 8, 0, Math.PI * 2);
+    ctx.strokeStyle = LIGHT_GRAY;
+    ctx.lineWidth = 2;
+    ctx.stroke();
+
+    // Time label + phase name
+    drawText(ctx, 'RACE START', contentX, y, SANS('600', 13), LABEL_GRAY);
+    y += 22;
+    drawText(ctx, 'During Race', contentX, y, SANS('700', 24), BLACK);
+    y += 38;
+
+    // ── ELECTROLYTE SACHET sub-section ──
+    if (duringSachets > 0) {
+      drawText(ctx, 'ELECTROLYTE SACHET', contentX, y, SANS('800', 16), BLACK);
+      y += 30;
+      const maxSachets = Math.min(sachetSchedule.length, 6);
+      for (let i = 0; i < maxSachets; i++) {
+        const s = sachetSchedule[i];
+        const right = s.km > 0 ? `${s.timeStr} · km ${Math.round(s.km)}` : s.timeStr;
+        drawText(ctx, `Sachet #${i + 1}`, contentX, y, SANS('400', 18), GRAY);
+        drawText(ctx, right, W - PAD, y, SANS('600', 18), BLACK, 'right');
+        y += 32;
+      }
+      if (duringSachets > 6) {
+        drawText(ctx, `+${duringSachets - 6} more sachets`, contentX, y, SANS('400', 18), GRAY);
+        drawText(ctx, 'Spread evenly', W - PAD, y, SANS('600', 18), BLACK, 'right');
+        y += 32;
+      }
+      y += 8;
     }
-    if (plan.duringActivity.totalElectrolytes > 6) {
-      duringRows.push([`+${plan.duringActivity.totalElectrolytes - 6} more sachets`, 'Spread evenly']);
+
+    // ── ENERGY GEL sub-section ──
+    if (gel?.applicable && gel.phases.during > 0) {
+      drawText(ctx, 'ENERGY GEL', contentX, y, SANS('800', 16), BLACK);
+      y += 30;
+      const maxGels = Math.min(gelSchedule.length, 6);
+      for (let i = 0; i < maxGels; i++) {
+        const g = gelSchedule[i];
+        const right = g.km > 0 ? `${g.timeStr} · km ${Math.round(g.km)}` : g.timeStr;
+        drawText(ctx, `Gel #${i + 1}`, contentX, y, SANS('400', 18), GRAY);
+        drawText(ctx, right, W - PAD, y, SANS('600', 18), BLACK, 'right');
+        y += 32;
+      }
+      if (gel.phases.during > 6) {
+        drawText(ctx, `+${gel.phases.during - 6} more gels`, contentX, y, SANS('400', 18), GRAY);
+        drawText(ctx, gelIntervalMin > 0 ? `1 every ${gelIntervalMin} min` : 'Spread evenly', W - PAD, y, SANS('600', 18), BLACK, 'right');
+        y += 32;
+      }
+      y += 8;
     }
-    duringRows.push(['Water per hour', `${safeNumber(plan.duringActivity.waterPerHour)}ml`]);
-    drawPhase('Race start', 'During Race', duringRows);
+
+    // Water per hour
+    drawText(ctx, 'Water per hour', contentX, y, SANS('400', 18), GRAY);
+    drawText(ctx, `${safeNumber(plan.duringActivity.waterPerHour)}ml water`, W - PAD, y, SANS('600', 18), BLACK, 'right');
+    y += 32;
+
+    // Vertical connector to next phase
+    drawLine(ctx, lineX, y - 32 * (duringSachets > 0 ? 1 : 0) - 50, lineX, y + 10, LIGHT_GRAY);
+    y += 28;
   }
 
   // Phase 4: Recovery
   drawPhase('Finish line', 'Recovery', [
-    ['0h: Immediately', `500ml + ${safeNumber(plan.postActivity.electrolytes)} sachet${safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}`],
-    ['1-2h: Recover', '250ml + protein meal'],
-    ['2-6h: Rehydrate', '750ml, pale urine'],
+    ['0h: Immediately', `500ml water + ${safeNumber(plan.postActivity.electrolytes)} sachet${safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}`],
+    ['1-2h: Recover', '250ml water + protein meal'],
+    ['2-6h: Rehydrate', '750ml water, pale urine'],
   ], true);
 
   // ════════════════════════════════════════

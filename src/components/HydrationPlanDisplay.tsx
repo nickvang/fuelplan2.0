@@ -13,12 +13,12 @@ import { generateFuelPlanImage } from '@/components/ShareCard';
 import { Download, Copy, Mail } from 'lucide-react';
 
 
+import { SUPPLME_ELECTROLYTE_SPEC, SUPPLME_GEL_SPEC } from '@/types/hydration';
 import { parseDistanceKm, safeNumber, buildActivityLabel, computeTotalSachets, formatHoursAsTime, computeDuringSachetSchedule } from '@/components/plan/planHelpers';
 import { CourseDistanceBar } from '@/components/plan/CourseDistanceBar';
-import { SachetSummaryCard } from '@/components/plan/SachetSummaryCard';
+import { SupplmeSummaryCard } from '@/components/plan/SupplmeSummaryCard';
 import { ProtocolCheatSheet } from '@/components/plan/ProtocolCheatSheet';
 import { TimelineSection } from '@/components/plan/TimelineSection';
-import { ProductCTA } from '@/components/plan/ProductCTA';
 import { PlanFooter } from '@/components/plan/PlanFooter';
 
 interface HydrationPlanDisplayProps {
@@ -187,9 +187,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   // Build shareable text summary
   const buildShareText = useCallback(() => {
     const sport = profile.disciplines?.[0] || 'Activity';
-    const pre = `Pre: ${plan.preActivity.water}ml + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`;
-    const during = `During: ${safeNumber(plan.duringActivity.waterPerHour)}ml/hr${plan.duringActivity.totalElectrolytes > 0 ? ` + ${plan.duringActivity.totalElectrolytes} sachet${plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''}` : ''}`;
-    const post = `Post: ${safeNumber(plan.postActivity.water)}ml + ${safeNumber(plan.postActivity.electrolytes)} sachet${safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}`;
+    const pre = `Pre: ${plan.preActivity.water}ml water + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`;
+    const during = `During: ${safeNumber(plan.duringActivity.waterPerHour)}ml water/hr${plan.duringActivity.totalElectrolytes > 0 ? ` + ${plan.duringActivity.totalElectrolytes} sachet${plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''}` : ''}`;
+    const post = `Post: ${safeNumber(plan.postActivity.water)}ml water + ${safeNumber(plan.postActivity.electrolytes)} sachet${safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}`;
     return `My ${sport} hydration plan: ${pre}. ${during}. ${post}. Generated at fuelplan.supplme.dk`;
   }, [plan, profile]);
 
@@ -238,30 +238,57 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   return (
     <div className="max-w-[540px] mx-auto px-4 sm:px-5 py-6 pb-24 sm:pb-8 space-y-6 animate-in fade-in duration-500">
 
-      {/* ── 1. Logo + activity label ── */}
+      {/* ── 1. Logo + activity label + target time ── */}
       <div className="flex items-center justify-between" ref={heroRef}>
         <span className="text-2xl font-black tracking-[0.15em] text-[#050505] uppercase">SUPPLME</span>
-        <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 text-right truncate">
-          {activityLabel}
-        </p>
+        <div className="flex flex-col items-end gap-0.5">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 truncate">
+            {activityLabel}
+          </p>
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+            {stageRaceTotals ? 'Total Time' : t('result.targetTime')} · {formatHoursAsTime(displayDuration).slice(0, -3)}
+          </p>
+        </div>
       </div>
 
       {/* ── 2. Hero numbers — above the fold ── */}
       <div>
         <div className="grid grid-cols-3 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-white py-3 sm:py-4 px-1 sm:px-2 text-center">
+          <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
             <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets}</p>
-            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Sachets' : t('result.sachets')}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5 leading-tight">Electrolyte<br className="sm:hidden" /> Sachets</p>
           </div>
-          <div className="bg-white py-3 sm:py-4 px-1 sm:px-2 text-center">
+          <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
             <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{(safeNumber(displayFluidLoss) / 1000).toFixed(1)}<span className="text-base sm:text-lg font-bold">L</span></p>
-            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Loss' : t('result.fluidLoss')}</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Loss' : t('result.fluidLoss')}</p>
           </div>
-          <div className="bg-white py-3 sm:py-4 px-1 sm:px-2 text-center">
-            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{formatHoursAsTime(displayDuration).slice(0, -3)}</p>
-            <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Time' : t('result.targetTime')}</p>
+          <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
+            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets * SUPPLME_ELECTROLYTE_SPEC.sodium}<span className="text-base sm:text-lg font-bold">mg</span></p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">Total Sodium</p>
           </div>
         </div>
+
+        {/* Gel summary row — shown when energy gel is part of the plan */}
+        {plan.energyGel?.applicable && (
+          <div className="mt-px grid grid-cols-4 gap-px overflow-hidden rounded-b-lg" style={{ background: '#111' }}>
+            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
+              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalGels}</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Energy Gels</p>
+            </div>
+            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
+              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalCarbsG}<span className="text-sm font-bold">g</span></p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Total Carbs</p>
+            </div>
+            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
+              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{Math.round(plan.energyGel.totalCarbsG / displayDuration)}<span className="text-sm font-bold">g</span></p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Carbs/hr</p>
+            </div>
+            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
+              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalKcal}</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Fuel kcal</p>
+            </div>
+          </div>
+        )}
 
         <div className="flex flex-wrap gap-2 mt-3">
           {hasStrava && (
@@ -292,16 +319,16 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
         </div>
       </div>
 
-      {/* ── 3. Sachet split — Pre / During / Post ── */}
-      <SachetSummaryCard
+      {/* ── 3. Combined electrolyte + gel summary with shop button ── */}
+      <SupplmeSummaryCard
         plan={plan}
+        profile={profile}
         distanceKm={distanceKm}
         sessionDuration={profile.sessionDuration}
         stageRaceTotals={stageRaceTotals ?? undefined}
       />
 
-      {/* ── 4. Cheat sheet — screenshot-able card ── */}
-      <ProtocolCheatSheet plan={plan} profile={profile} />
+
 
       {/* ── 5. Save / copy actions ── */}
       <div className="flex items-center gap-2">
@@ -384,18 +411,17 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className={`rounded-2xl border ${isQueenStage ? 'border-amber-400/60' : 'border-gray-200'} bg-card overflow-hidden`}>
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 min-w-0">
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>1</span>
-                      <span className="text-[11px] shrink-0">🌅</span>
                       <p className={`text-[13px] font-bold uppercase tracking-wide truncate min-w-0 ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Stage Morning</p>
                       <p className="text-[11px] text-gray-400 ml-auto shrink-0">2–3h before start</p>
                     </div>
                     <div className="divide-y divide-gray-100">
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
                         <span className="text-[13px] text-gray-600">-3h: Wake-up water</span>
-                        <span className="text-[13px] font-semibold text-[#0a0a0a]">{plan.preActivity.water}ml</span>
+                        <span className="text-[13px] font-semibold text-[#0a0a0a]">{plan.preActivity.water}ml water</span>
                       </div>
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
                         <span className="text-[13px] text-gray-600">-2h: Pre-load sachet</span>
-                        <span className="text-[13px] font-semibold text-[#0a0a0a]">{plan.preActivity.electrolytes} sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''} + 300ml</span>
+                        <span className="text-[13px] font-semibold text-[#0a0a0a]">{plan.preActivity.electrolytes} sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''} + 300ml water</span>
                       </div>
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
                         <span className="text-[13px] text-gray-600">-30min: Final sips</span>
@@ -418,7 +444,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       <div className="rounded-2xl border-2 border-gray-700 bg-zinc-900 text-white overflow-hidden shadow-xl">
                         <div className="px-4 py-3 bg-zinc-800/80 border-b border-zinc-700 flex items-center gap-2 min-w-0">
                           <span className="w-6 h-6 rounded-full bg-white text-[#0a0a0a] flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
-                          <span className="text-[11px] shrink-0">🏃</span>
                           <p className="text-[13px] font-bold uppercase tracking-wide text-white truncate min-w-0">During Stage {activeStage.day}</p>
                           <p className="text-[11px] text-zinc-400 ml-auto shrink-0">{activeStage.distance_km}km · ~{stageDuration}h</p>
                         </div>
@@ -441,13 +466,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                           )}
                           <div className="flex justify-between items-center">
                             <span className="text-[13px] text-gray-300">Water per hour</span>
-                            <span className="text-[13px] font-semibold text-white">{stageWaterPerHour}ml</span>
+                            <span className="text-[13px] font-semibold text-white">{stageWaterPerHour}ml water</span>
                           </div>
                         </div>
                         <div className="px-3.5 py-2.5 bg-zinc-800/60 border-t border-zinc-700 space-y-0.5">
                           <p className="text-[11px] text-zinc-300">Sip every 10–15 min at aid stations. Small, consistent sips keep your stomach settled.</p>
                           {isQueenStage && (
-                            <p className="text-[11px] text-amber-300 italic">⚠️ Queen Stage: Extra long effort increases hyponatremia risk if you drink plain water without sodium. Never skip sachets.</p>
+                            <p className="text-[11px] text-amber-300 italic">Queen Stage: Extra long effort increases hyponatremia risk if you drink plain water without sodium. Never skip sachets.</p>
                           )}
                         </div>
                       </div>
@@ -458,7 +483,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className={`rounded-2xl border ${isQueenStage ? 'border-amber-400/60' : 'border-gray-200'} bg-card overflow-hidden`}>
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 min-w-0">
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>3</span>
-                      <span className="text-[11px] shrink-0">🏁</span>
                       <p className={`text-[13px] font-bold uppercase tracking-wide truncate min-w-0 ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Post-Stage Recovery</p>
                     </div>
                     <div className="divide-y divide-gray-100">
@@ -468,12 +492,12 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       </div>
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
                         <span className="text-[13px] text-gray-600">+30m: Recover</span>
-                        <span className="text-[13px] font-semibold text-[#0a0a0a]">1 sachet + 300ml</span>
+                        <span className="text-[13px] font-semibold text-[#0a0a0a]">1 sachet + 300ml water</span>
                       </div>
                       <div className="flex justify-between items-center px-4 py-3 border-l-4 border-primary bg-primary/10">
                         <span className="text-[13px] text-gray-600">Evening</span>
                         <span className="text-[13px] font-semibold text-[#0a0a0a]">
-                          {isLastStage ? '🎉 You finished!' : 'Pre-load for tomorrow'}
+                          {isLastStage ? 'You finished!' : 'Pre-load for tomorrow'}
                         </span>
                       </div>
                     </div>
@@ -509,11 +533,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         </div>
                         <div className="flex justify-between items-center px-3.5 py-3">
                           <span className="text-[13px] text-gray-600">With dinner</span>
-                          <span className="text-[13px] font-semibold text-[#0a0a0a]">500 ml</span>
+                          <span className="text-[13px] font-semibold text-[#0a0a0a]">500 ml water</span>
                         </div>
-                      </div>
-                      <div className="px-3.5 py-2.5 bg-gray-50 border-t border-gray-200">
-                        <p className="text-[11px] text-gray-500">Choose sodium-rich meals to support pre-loading</p>
                       </div>
                     </div>
                   </div>
@@ -618,6 +639,30 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         <span>4000ml+</span>
                       </div>
                     </div>
+                    {plan.energyGel && (
+                      <div className="space-y-1">
+                        <div className="flex justify-between text-[12px]">
+                          <span className="font-semibold text-[#0a0a0a]">Energy Gels</span>
+                          <span className="text-gray-400 font-mono">
+                            {plan.energyGel.applicable
+                              ? `${plan.energyGel.totalGels} gel${plan.energyGel.totalGels !== 1 ? 's' : ''} · ${plan.energyGel.gelsPerHour}/hr`
+                              : 'Not required'}
+                          </span>
+                        </div>
+                        <div className="relative h-2.5 bg-gray-100 rounded-full overflow-hidden">
+                          <div
+                            className="h-full rounded-full bg-[#0a0a0a] transition-all duration-500"
+                            style={{ width: plan.energyGel.applicable ? `${Math.min(100, Math.max(5, (plan.energyGel.totalGels / 8) * 100))}%` : '0%' }}
+                          />
+                          <div className="absolute left-1/2 top-0 bottom-0 w-px bg-gray-300" />
+                        </div>
+                        <div className="flex justify-between text-[10px] text-gray-400">
+                          <span>0</span>
+                          <span>~4 avg</span>
+                          <span>8+</span>
+                        </div>
+                      </div>
+                    )}
                   </div>
 
                   {aiInsights.risk_factors && (
@@ -698,6 +743,23 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                 )}
 
+                {/* Energy Gel rationale */}
+                {plan.energyGel && (
+                  <div className="space-y-1.5">
+                    <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
+                      Why {plan.energyGel.applicable ? `${plan.energyGel.totalGels} energy gel${plan.energyGel.totalGels !== 1 ? 's' : ''}` : 'no energy gel required'}
+                    </p>
+                    <p className="text-[12px] text-gray-600 leading-relaxed">
+                      {plan.energyGel.pubmedBasis}
+                    </p>
+                    {plan.energyGel.applicable && (
+                      <p className="text-[12px] text-gray-600 leading-relaxed">
+                        Total carbohydrate: <span className="font-medium text-[#0a0a0a]">{plan.energyGel.totalCarbsG}g</span> ({plan.energyGel.totalKcal} kcal). Each SUPPLME Liquid Energy Gel delivers 32g carbs in a 2:1 glucose:fructose ratio, utilising both SGLT1 and GLUT5 transporters for absorption up to ~90g CHO/hr.
+                      </p>
+                    )}
+                  </div>
+                )}
+
                 {/* Safety check */}
                 <div className="space-y-1.5">
                   <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">Safety check</p>
@@ -707,8 +769,8 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     <p className={mgOverLimit ? 'text-amber-700' : 'text-gray-600'}>
                       NIH supplemental Mg limit: 350mg/day —{' '}
                       {mgOverLimit
-                        ? `⚠ ${totalMg - 350}mg over limit. This is offset by sweat Mg losses (~4mg/L × ${Math.round(plan.totalFluidLoss / 1000 * 10) / 10}L fluid loss = ~${Math.round(4 * plan.totalFluidLoss / 1000)}mg lost), but space sachets as planned.`
-                        : `✓ within limit`}
+                        ? `${totalMg - 350}mg over limit. This is offset by sweat Mg losses (~4mg/L × ${Math.round(plan.totalFluidLoss / 1000 * 10) / 10}L fluid loss = ~${Math.round(4 * plan.totalFluidLoss / 1000)}mg lost), but space sachets as planned.`
+                        : `within limit`}
                     </p>
                   </div>
                 </div>
@@ -721,6 +783,10 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       'Sawka et al. ACSM Position Stand. Med Sci Sports Exerc. 2007;39(2):377–390',
                       'Thomas et al. Academy of Nutrition and Dietetics Position Paper. J Acad Nutr Diet. 2016',
                       'NIH Office of Dietary Supplements — Magnesium: Upper Tolerable Intake Level 350mg/day (supplemental)',
+                      ...(plan.energyGel?.applicable ? [
+                        'Jeukendrup AE. A step towards personalized sports nutrition: carbohydrate intake during exercise. Sports Med. 2014;44(S1):25–33. PMID 24791914',
+                        'Burke LM et al. Carbohydrates for training and competition. J Sports Sci. 2011;29(S1):S17–27. PMID 21660838',
+                      ] : []),
                     ].map((ref, i) => (
                       <li key={i} className="text-[11px] text-gray-400">{ref}</li>
                     ))}
@@ -732,9 +798,6 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           );
         })()}
       </Accordion>
-
-      {/* ── 7. Product CTA — always visible ── */}
-      <ProductCTA />
 
       {/* ── 8. Auth prompt ── */}
       {!user && (
@@ -762,6 +825,38 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       {user && (
         <p className="text-center text-xs text-gray-400">{t('auth.planSaved')}</p>
       )}
+
+      {/* ── Shop card ── */}
+      <div className="border border-gray-200 rounded-lg overflow-hidden">
+        <div className="px-4 py-4 text-center space-y-1.5">
+          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">SUPPLME</p>
+          <p className="text-sm font-bold text-[#0a0a0a]">Liquid Electrolyte Sachet</p>
+          <p className="text-[12px] text-gray-500">
+            30ml sachets &middot; {SUPPLME_ELECTROLYTE_SPEC.sodium}mg Sodium &middot; {SUPPLME_ELECTROLYTE_SPEC.potassium}mg Potassium &middot; {SUPPLME_ELECTROLYTE_SPEC.magnesium}mg Mg
+          </p>
+          {plan.energyGel && (
+            <>
+              <p className="text-sm font-bold text-[#0a0a0a] pt-1">Energy Gel</p>
+              <p className="text-[12px] text-gray-500">
+                {SUPPLME_GEL_SPEC.carbsPerGel}g carbohydrates &middot; {SUPPLME_GEL_SPEC.ratioLabel} ratio Glucose to Fructose
+              </p>
+              <p className="text-[12px] text-gray-500">
+                Liposomal technology
+              </p>
+            </>
+          )}
+        </div>
+        <div className="px-4 pb-4">
+          <a
+            href="https://www.supplme.com/collections/supplme-products"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex w-full items-center justify-center gap-2 min-h-[48px] bg-[#0a0a0a] text-white rounded-lg text-sm font-semibold hover:bg-[#1a1a1a] transition-colors touch-manipulation"
+          >
+            Buy
+          </a>
+        </div>
+      </div>
 
       {/* Retake */}
       <div className="flex justify-center">

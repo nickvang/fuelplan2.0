@@ -605,6 +605,17 @@ export default function Admin() {
     const pd = profile.profile_data || {};
     const plan = profile.plan_data || {};
     const aiInsights = plan.aiInsights;
+    // totalElectrolytes was missing from saved records before a schema fix —
+    // fall back to electrolytesPerHour × effective duration for old records.
+    const effectiveDurPdf = Math.max(0, (pd.sessionDuration || 0) - 0.5);
+    const pdfDuringSachets: number =
+      plan.duringActivity?.totalElectrolytes != null
+        ? plan.duringActivity.totalElectrolytes
+        : Math.round((plan.duringActivity?.electrolytesPerHour || 0) * effectiveDurPdf);
+    const pdfIntervalMin =
+      plan.duringActivity?.electrolytesPerHour > 0
+        ? Math.round(60 / plan.duringActivity.electrolytesPerHour)
+        : 0;
 
     const doc = new jsPDF();
     const pageWidth = doc.internal.pageSize.width;
@@ -765,7 +776,11 @@ export default function Admin() {
     doc.text(`Water per hour: ${plan.duringActivity?.waterPerHour || 0} ml`, margin + 5, y);
 
     y += 8;
-    doc.text(`Supplme Sachets: ${plan.duringActivity?.electrolytesPerHour || 0} sachet${(plan.duringActivity?.electrolytesPerHour || 0) !== 1 ? 's' : ''}`, margin + 5, y);
+    doc.text(
+      `Supplme Sachets: ${pdfDuringSachets} sachet${pdfDuringSachets !== 1 ? 's' : ''} total` +
+      (pdfIntervalMin > 0 ? ` (1 every ${pdfIntervalMin} min)` : ''),
+      margin + 5, y
+    );
 
     y += 15;
     doc.setTextColor(0, 0, 0);

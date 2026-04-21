@@ -2,6 +2,229 @@ import { HydrationProfile, HydrationPlan, SUPPLME_ELECTROLYTE_SPEC, SACHET_SAFET
 import { getTriathlonSegmentPlan } from '@/utils/triathlonCalculator';
 import { activityCommonSenseGate } from '@/utils/activityGate';
 
+// ── Energy Gel helpers ────────────────────────────────────────────────────────
+
+function parsePaceToMinPerKm(s: string): number | null {
+  if (!s) return null;
+  const colonMatch = s.match(/(\d{1,2}):(\d{2})/);
+  if (colonMatch) {
+    const mins = parseInt(colonMatch[1], 10);
+    const secs = parseInt(colonMatch[2], 10);
+    if (secs < 60) return mins + secs / 60;
+  }
+  const decimalMatch = s.match(/(\d+\.\d+)/);
+  if (decimalMatch) {
+    const v = parseFloat(decimalMatch[1]);
+    if (v > 2 && v < 15) return v;
+  }
+  return null;
+}
+
+function getIntensityScore(profile: HydrationProfile): { score: 0 | 1 | 2; source: string } {
+  // 1. Race always = hard
+  if (profile.hasUpcomingRace === true || (profile.raceDistance && profile.raceDistance.trim() !== '')) {
+    return { score: 2, source: 'race selected' };
+  }
+
+  // 2. HR profile
+  const discipline = (profile.disciplines?.[0] || '').toLowerCase();
+  const hrProfile = (profile as any).hrProfile as Record<string, { average?: number }> | undefined;
+  const avgHR = hrProfile?.[discipline]?.average;
+  if (typeof avgHR === 'number' && avgHR >= 80 && avgHR <= 220 && profile.age > 0) {
+    const estMax = 220 - profile.age;
+    const pct = avgHR / estMax;
+    if (pct >= 0.82) return { score: 2, source: `HR ${avgHR}bpm = ${Math.round(pct * 100)}% max (hard)` };
+    if (pct >= 0.68) return { score: 1, source: `HR ${avgHR}bpm = ${Math.round(pct * 100)}% max (moderate)` };
+    return { score: 0, source: `HR ${avgHR}bpm = ${Math.round(pct * 100)}% max (easy)` };
+  }
+
+  // 3. Running pace
+  if (discipline === 'running') {
+    const paceStr = profile.avgPace || profile.goalTime || '';
+    const pace = parsePaceToMinPerKm(paceStr);
+    if (pace !== null) {
+      if (pace < 4.75) return { score: 2, source: `pace ${paceStr} < 4:45/km (hard)` };
+      if (pace < 6.0) return { score: 1, source: `pace ${paceStr} < 6:00/km (moderate)` };
+      return { score: 0, source: `pace ${paceStr} ≥ 6:00/km (easy)` };
+    }
+  }
+
+  // 4. Primary goal
+  if (profile.primaryGoal === 'recovery') return { score: 0, source: 'goal: recovery' };
+  if (profile.primaryGoal === 'performance') return { score: 2, source: 'goal: performance' };
+
+  // 5. Default
+  return { score: 1, source: 'default (moderate)' };
+}
+
+function calculateGelPlan(profile: HydrationProfile): HydrationPlan['energyGel'] {
+  const GEL_CARBS = 32;
+  const GEL_KCAL = 128;
+  const duration = Number(profile.sessionDuration) || 1;
+  const discipline = (profile.disciplines?.[0] || '').toLowerCase();
+
+  const makeResult = (
+    totalGels: number,
+    gelsPerHour: number,
+    timing: string,
+    phases: { preMatch: number; during: number; halftime: number },
+    applicable: boolean,
+    intensitySource: string,
+    pubmedBasis: string,
+    pmids: string[]
+  ): HydrationPlan['energyGel'] => ({
+    totalGels,
+    gelsPerHour,
+    totalCarbsG: totalGels * GEL_CARBS,
+    totalKcal: totalGels * GEL_KCAL,
+    timing,
+    phases,
+    applicable,
+    sport: discipline,
+    intensitySource,
+    pubmedBasis,
+    pmids,
+  });
+
+  // Swimming
+  if (discipline === 'swimming') {
+    return makeResult(
+      0, 0,
+      'Energy gels cannot be taken during swimming. No gel needed for this session.',
+      { preMatch: 0, during: 0, halftime: 0 },
+      false,
+      'sport: swimming',
+      'Carbohydrate gels are not practical during competitive swimming due to breathing mechanics and water immersion. For pool-based sessions under 90 min standard carbohydrate loading is sufficient.',
+      ['24791914']
+    );
+  }
+
+  // Football
+  if (discipline === 'football') {
+    return makeResult(
+      2, 0,
+      '1 gel 15 min before warm-up · 1 gel at half-time · take each with 150–200ml water',
+      { preMatch: 1, during: 0, halftime: 1 },
+      true,
+      'sport: football protocol',
+      'CHO gel pre-match and at half-time delays glycogen depletion and maintains sprint capacity in the second half. Supported by randomised crossover trials in intermittent high-intensity shuttle running (PMID 18046054) and CHO strategies in team sports (PMID 26115589).',
+      ['18046054', '26115589']
+    );
+  }
+
+  // Padel
+  if (discipline === 'padel') {
+    const midGels = duration >= 1.25 ? 1 : 0;
+    const total = 1 + midGels;
+    const timing = midGels > 0
+      ? '1 gel 15 min before play · 1 gel at 60–75 min mark · take with 150–200ml water'
+      : '1 gel 15 min before play · take with 150–200ml water';
+    return makeResult(
+      total, 0,
+      timing,
+      { preMatch: 1, during: midGels, halftime: 0 },
+      true,
+      'sport: padel protocol',
+      'Pre-exercise CHO priming optimises glycogen availability for high-intensity intermittent efforts. A mid-match gel sustains blood glucose for matches exceeding 75 min (Jeukendrup, Sports Med 2014, PMID 24791914).',
+      ['24791914']
+    );
+  }
+
+  // Triathlon — adjust effective duration by removing swim fraction
+  let effectiveDuration = duration;
+  if (discipline === 'triathlon') {
+    const rd = (profile.raceDistance || '').toLowerCase();
+    let swimFraction = 0.15;
+    if (rd.includes('ironman') || rd.includes('140')) swimFraction = 0.10;
+    else if (rd.includes('70.3') || rd.includes('half')) swimFraction = 0.13;
+    else if (rd.includes('olympic')) swimFraction = 0.18;
+    effectiveDuration = duration * (1 - swimFraction);
+  }
+
+  // General logic (running, cycling, triathlon after adjustment)
+  if (effectiveDuration < 0.75) {
+    return makeResult(
+      0, 0,
+      'No energy gel needed for sessions under 45 minutes. Endogenous glycogen stores are sufficient.',
+      { preMatch: 0, during: 0, halftime: 0 },
+      false,
+      'duration < 45 min',
+      'For exercise under ~45 min, exogenous carbohydrate provides no measurable performance benefit as muscle glycogen stores are not limiting (Jeukendrup, Sports Med 2014, PMID 24791914).',
+      ['24791914']
+    );
+  }
+
+  if (effectiveDuration >= 0.75 && effectiveDuration < 1.25) {
+    const { score: intensityScore, source: intensitySource } = getIntensityScore(profile);
+    const applicable = intensityScore >= 2;
+    const totalGels = applicable ? 1 : 0;
+    const timing = applicable
+      ? '1 gel at 30–45 min mark · take with 150–200ml water'
+      : 'Optional: 1 gel at 45 min for high-intensity or race efforts only.';
+    return makeResult(
+      totalGels, totalGels,
+      timing,
+      { preMatch: 0, during: totalGels, halftime: 0 },
+      applicable,
+      intensitySource,
+      applicable
+        ? `For race-intensity or high-effort sessions of 45–75 min, a single CHO gel at 30–45 min helps maintain power output and delays fatigue. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`
+        : `At moderate intensity and under 75 min, a gel is optional. If this becomes a race or high-intensity effort, consider 1 gel at 45 min. (Jeukendrup, Sports Med 2014, PMID 24791914)`,
+      ['24791914', '21660838']
+    );
+  }
+
+  // >= 1.25h
+  const { score: intensityScore, source: intensitySource } = getIntensityScore(profile);
+
+  let gelsPerHour: number;
+  if (effectiveDuration <= 2.5 && intensityScore === 2) {
+    gelsPerHour = 2;
+  } else if (effectiveDuration <= 2.5 && intensityScore < 2) {
+    gelsPerHour = 1;
+  } else if (effectiveDuration > 2.5 && intensityScore === 0) {
+    gelsPerHour = 1;
+  } else {
+    gelsPerHour = 2;
+  }
+
+  const startOffset = effectiveDuration > 2 ? 0.5 : 0.25;
+  const gelableHours = Math.max(0, effectiveDuration - startOffset);
+  const totalGels = Math.max(gelsPerHour > 0 ? 1 : 0, Math.round(gelsPerHour * gelableHours));
+
+  const intervalMin = gelsPerHour <= 1 ? 60 : 30;
+  const triathlonNote = discipline === 'triathlon' ? ' · Bike and run legs only — not during swim' : '';
+  const timing = `1 gel every ${intervalMin} min · start at ${gelsPerHour <= 1 ? '30–45' : '30'} min mark · take with 150–200ml water${triathlonNote}`;
+
+  let pubmedBasis: string;
+  let pmids: string[];
+  if (effectiveDuration <= 2.5 && intensityScore < 2) {
+    pubmedBasis = `At moderate intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour (32g CHO) maintains blood glucose and spares glycogen. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Stellingwerff & Cox, Appl Physiol Nutr Metab 2014, PMID 25970669)`;
+    pmids = ['24791914', '25970669'];
+  } else if (effectiveDuration <= 2.5 && intensityScore === 2) {
+    pubmedBasis = `At race/hard intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/h) maximises carbohydrate oxidation via dual-transporter 2:1 glucose:fructose blend. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`;
+    pmids = ['24791914', '16521844'];
+  } else if (effectiveDuration > 2.5 && intensityScore === 0) {
+    pubmedBasis = `At easy intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour provides sufficient exogenous CHO to supplement fat oxidation and maintain glycogen. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914)`;
+    pmids = ['24791914'];
+  } else {
+    pubmedBasis = `At moderate-to-hard intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/h) is recommended. The 2:1 glucose:fructose ratio maximises intestinal absorption up to ~90g CHO/h. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, J Sports Sci 2011, PMID 21660838)`;
+    pmids = ['24791914', '21660838'];
+  }
+
+  return makeResult(
+    totalGels, gelsPerHour,
+    timing,
+    { preMatch: 0, during: totalGels, halftime: 0 },
+    totalGels > 0,
+    intensitySource,
+    pubmedBasis,
+    pmids
+  );
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+
 export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchData?: any): HydrationPlan {
   if (import.meta.env.DEV) {
     console.log('🧮 Advanced hydration calculation starting...', {
@@ -1069,6 +1292,7 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
       sodiumAdjustPct: Math.round((profile.calibration.sodium_coefficient * profile.calibration.sodium_loss_modifier - 1) * 100),
       giCeilingReduced: profile.calibration.gi_tolerance_ceiling_ml_hr < 800,
     } : undefined,
+    energyGel: calculateGelPlan(profile),
     scientificReferences: [
       {
         pmid: '17277604',
@@ -1141,6 +1365,30 @@ export function calculateHydrationPlan(profile: HydrationProfile, rawSmartWatchD
         title: 'Water and sodium intake habits and status of ultra-endurance athletes.',
         citation: 'Nutr Metab Insights. 2013 Jan 6;6:13-27',
         url: 'https://pubmed.ncbi.nlm.nih.gov/23320854/'
+      },
+      {
+        pmid: '24791914',
+        title: 'A step towards personalized sports nutrition: carbohydrate intake during exercise.',
+        citation: 'Jeukendrup A. Sports Med. 2014;44 Suppl 1:S25-33.',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/24791914/'
+      },
+      {
+        pmid: '21660838',
+        title: 'Carbohydrates for training and competition.',
+        citation: 'Burke LM et al. J Sports Sci. 2011;29 Suppl 1:S17-27.',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/21660838/'
+      },
+      {
+        pmid: '16521844',
+        title: 'Effect of carbohydrate intake on half-marathon performance of well-trained runners.',
+        citation: 'Burke LM et al. Int J Sport Nutr Exerc Metab. 2005;15(5):514-28.',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/16521844/'
+      },
+      {
+        pmid: '18046054',
+        title: 'Carbohydrate-gel supplementation and endurance performance during intermittent high-intensity shuttle running.',
+        citation: 'Malone JK et al. Int J Sport Nutr Exerc Metab. 2007;17(6):589-97.',
+        url: 'https://pubmed.ncbi.nlm.nih.gov/18046054/'
       }
     ]
   };

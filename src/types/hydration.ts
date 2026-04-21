@@ -7,6 +7,17 @@ export const SUPPLME_ELECTROLYTE_SPEC = {
   magnesium: 100,
 } as const;
 
+/** Supplme Liquid Energy Gel – single source of truth for product composition. */
+export const SUPPLME_GEL_SPEC = {
+  carbsPerGel: 32,
+  glucosePerGel: 21,
+  fructosePerGel: 11,
+  ratioLabel: '2:1',
+  volumeMl: 40,
+  kcalPerGel: 128,
+  delivery: 'liposomal',
+} as const;
+
 /**
  * Medically-grounded sachet safety limits.
  * - NIH UL for supplemental Mg = 350mg/day. Each sachet = 100mg Mg.
@@ -209,6 +220,19 @@ export interface HydrationPlan {
     water: number;
     electrolytes: number;
     timing: string;
+  };
+  energyGel: {
+    totalGels: number;
+    gelsPerHour: number;
+    totalCarbsG: number;
+    totalKcal: number;
+    timing: string;
+    phases: { preMatch: number; during: number; halftime: number };
+    applicable: boolean;
+    sport: string;
+    intensitySource: string;
+    pubmedBasis: string;
+    pmids: string[];
   };
   totalFluidLoss: number;
   recommendations: string[];

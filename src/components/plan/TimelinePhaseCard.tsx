@@ -10,7 +10,7 @@ interface TimelinePhaseCardProps {
 
 export function TimelinePhaseCard({ timeLabel, phaseName, isActive = false, isLast = false, children }: TimelinePhaseCardProps) {
   return (
-    <div className="relative pl-10 pb-8">
+    <div className="relative pl-8 sm:pl-10 pb-8">
       {/* Vertical line */}
       {!isLast && (
         <div className="absolute left-[11px] top-6 bottom-0 w-px bg-gray-200" />

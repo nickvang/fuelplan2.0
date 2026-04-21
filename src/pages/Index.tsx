@@ -815,16 +815,17 @@ const Index = () => {
     const marathonProfile: Partial<HydrationProfile> = {
       disciplines: ['Running'],
       terrain: 'road',
-      raceDistance: 'Marathon',
-      sessionDuration: 3.5,
+      raceDistance: 'Copenhagen Marathon',
+      sessionDuration: 3.75, // ~3h45m realistic finish
       hasUpcomingRace: true,
-      upcomingEvents: 'Marathon',
+      upcomingEvents: 'Copenhagen Marathon',
       age: 35,
       sex: 'male',
       height: 178,
       weight: 72,
-      trainingTempRange: { min: 15, max: 22 },
-      humidity: 50,
+      trainingTempRange: { min: 13, max: 17 }, // Copenhagen May conditions
+      raceTempRange: { min: 13, max: 17 },
+      humidity: 70,
       altitude: 'sea-level',
       sunExposure: 'partial',
       windConditions: 'calm',
@@ -955,7 +956,7 @@ const Index = () => {
                 className="text-xs text-muted-foreground hover:text-foreground"
                 onClick={goToMarathonResultsDev}
               >
-                Dev: Marathon results
+                Dev: Copenhagen Marathon
               </Button>
             )}
             <LanguageSwitcher />
