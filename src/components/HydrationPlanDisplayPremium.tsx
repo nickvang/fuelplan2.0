@@ -3,6 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Droplets, TrendingUp, Activity, Zap, Award, Shield } from 'lucide-react';
 import supplmeLogo from '@/assets/supplme-logo-sort.svg';
+import { useLanguage } from '@/contexts/LanguageContext';
 
 interface Props {
   plan: HydrationPlan;
@@ -11,6 +12,7 @@ interface Props {
 }
 
 export function HydrationPlanDisplayPremium({ plan, profile, hasSmartWatchData }: Props) {
+  const { t } = useLanguage();
   const isRaceDay = profile.raceDistance && profile.raceDistance.length > 0;
   
   return (
@@ -24,7 +26,7 @@ export function HydrationPlanDisplayPremium({ plan, profile, hasSmartWatchData }
             AI + SMARTWATCH VERIFIED
           </Badge>
         )}
-        <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">Precision Hydration Plan</h1>
+        <h1 className="text-3xl sm:text-5xl font-black uppercase tracking-tight">{t('result.precisionHydrationPlan')}</h1>
         <p className="text-muted-foreground text-base sm:text-lg">Scientific. Personal. Performance-Driven.</p>
       </div>
 
@@ -44,7 +46,7 @@ export function HydrationPlanDisplayPremium({ plan, profile, hasSmartWatchData }
       {/* 3-Phase Protocol */}
       <div className="space-y-5 sm:space-y-8">
         <div className="text-center">
-          <h2 className="text-2xl sm:text-4xl font-black uppercase mb-2">Performance Protocol</h2>
+          <h2 className="text-2xl sm:text-4xl font-black uppercase mb-2">{t('result.performanceProtocol')}</h2>
           <p className="text-muted-foreground text-sm sm:text-base">PRE / DURING / POST</p>
         </div>
 
@@ -120,7 +122,7 @@ export function HydrationPlanDisplayPremium({ plan, profile, hasSmartWatchData }
       {/* Key Insights */}
       <Card className="bg-muted/30 border-0">
         <div className="p-5 sm:p-8 space-y-4">
-          <h3 className="text-xl sm:text-2xl font-black uppercase mb-3 sm:mb-4">Key Insights</h3>
+          <h3 className="text-xl sm:text-2xl font-black uppercase mb-3 sm:mb-4">{t('result.keyInsights')}</h3>
           {plan.recommendations.map((rec, i) => (
             <div key={i} className="flex gap-3 items-start">
               <TrendingUp className="w-5 h-5 text-primary mt-0.5 flex-shrink-0" />
@@ -133,10 +135,10 @@ export function HydrationPlanDisplayPremium({ plan, profile, hasSmartWatchData }
       {/* Training vs Race Day Explanation */}
       <Card className="bg-gradient-athletic border-0 shadow-bold">
         <div className="p-5 sm:p-8 space-y-4 text-primary-foreground">
-          <h3 className="text-xl sm:text-2xl font-black uppercase">Training vs Race Day</h3>
+          <h3 className="text-xl sm:text-2xl font-black uppercase">{t('result.trainingVsRaceDay')}</h3>
           <div className="space-y-3 text-sm leading-relaxed opacity-90">
-            <p><strong>TRAINING:</strong> Flexibility allowed. You can underhydrate, do low-carb days, stress your system. Training is where you test products, find your limits, build resilience. Perfect precision isn't required.</p>
-            <p><strong>RACE DAY:</strong> Everything changes. Intensity spikes, sweat rate increases 15-25%, sodium loss accelerates dramatically, gut sensitivity rises. Your margin for error shrinks to near zero. Dehydration hits harder and earlier at race pace. This demands precise sodium replacement (65-80% of sweat loss), strict timing (never wait until thirsty), pre-loading with sodium, and zero experimentation.</p>
+            <p>{t('result.trainingNote')}</p>
+            <p>{t('result.raceDayNote')}</p>
           </div>
         </div>
       </Card>

@@ -33,7 +33,7 @@ interface HydrationPlanDisplayProps {
 }
 
 export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfile, onReset, onFullReset, hasSmartWatchData = false, hasStrava = false, rawSmartWatchData, version }: HydrationPlanDisplayProps) {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const { user } = useAuth();
   const navigate = useNavigate();
   const { selectedRace } = useRace();
@@ -197,7 +197,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     setIsSharing(true);
     try {
       toast({ title: t('result.generatingImageTitle'), description: t('result.generatingImageDescription') });
-      const blob = await generateFuelPlanImage(plan, profile, distanceKm, selectedRace);
+      const blob = await generateFuelPlanImage(plan, profile, distanceKm, selectedRace, language);
       const url = URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.download = `supplme-plan-${distanceKm}km.png`;
@@ -264,28 +264,28 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           </div>
           <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
             <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets * SUPPLME_ELECTROLYTE_SPEC.sodium}<span className="text-base sm:text-lg font-bold">mg</span></p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">Total Sodium</p>
+            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{t('result.totalSodium')}</p>
           </div>
         </div>
 
         {/* Gel summary row — shown when energy gel is part of the plan */}
         {plan.energyGel?.applicable && (
-          <div className="mt-px grid grid-cols-4 gap-px overflow-hidden rounded-b-lg" style={{ background: '#111' }}>
+          <div className="mt-px grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-b-lg" style={{ background: '#111' }}>
             <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
               <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalGels}</p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Energy Gels</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.energyGels')}</p>
             </div>
             <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
               <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalCarbsG}<span className="text-sm font-bold">g</span></p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Total Carbs</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.totalCarbs')}</p>
             </div>
             <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
               <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{Math.round(plan.energyGel.totalCarbsG / displayDuration)}<span className="text-sm font-bold">g</span></p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Carbs/hr</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.carbsPerHour')}</p>
             </div>
             <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
               <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalKcal}</p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>Fuel kcal</p>
+              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.fuelKcal')}</p>
             </div>
           </div>
         )}
@@ -365,7 +365,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
                   }`}
                 >
-                  Day Before
+                  {t('result.dayBefore')}
                 </button>
                 {stageRaceStages.map((stage) => (
                   <button
@@ -411,7 +411,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   <div className={`rounded-2xl border ${isQueenStage ? 'border-amber-400/60' : 'border-gray-200'} bg-card overflow-hidden`}>
                     <div className="px-4 py-3 border-b border-gray-100 flex items-center gap-2 min-w-0">
                       <span className={`w-6 h-6 rounded-full flex items-center justify-center text-[11px] font-bold text-white shrink-0 ${isQueenStage ? 'bg-amber-500' : 'bg-[#0a0a0a]'}`}>1</span>
-                      <p className={`text-[13px] font-bold uppercase tracking-wide truncate min-w-0 ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>Stage Morning</p>
+                      <p className={`text-[13px] font-bold uppercase tracking-wide truncate min-w-0 ${isQueenStage ? 'text-amber-700' : 'text-[#0a0a0a]'}`}>{t('result.stageMorning')}</p>
                       <p className="text-[11px] text-gray-400 ml-auto shrink-0">2–3h before start</p>
                     </div>
                     <div className="divide-y divide-gray-100">
@@ -444,7 +444,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                       <div className="rounded-2xl border-2 border-gray-700 bg-zinc-900 text-white overflow-hidden shadow-xl">
                         <div className="px-4 py-3 bg-zinc-800/80 border-b border-zinc-700 flex items-center gap-2 min-w-0">
                           <span className="w-6 h-6 rounded-full bg-white text-[#0a0a0a] flex items-center justify-center text-[11px] font-bold shrink-0">2</span>
-                          <p className="text-[13px] font-bold uppercase tracking-wide text-white truncate min-w-0">During Stage {activeStage.day}</p>
+                          <p className="text-[13px] font-bold uppercase tracking-wide text-white truncate min-w-0">{t('result.duringStage', { day: activeStage.day })}</p>
                           <p className="text-[11px] text-zinc-400 ml-auto shrink-0">{activeStage.distance_km}km · ~{stageDuration}h</p>
                         </div>
                         <div className="p-3.5 space-y-3">
@@ -472,7 +472,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                         <div className="px-3.5 py-2.5 bg-zinc-800/60 border-t border-zinc-700 space-y-0.5">
                           <p className="text-[11px] text-zinc-300">Sip every 10–15 min at aid stations. Small, consistent sips keep your stomach settled.</p>
                           {isQueenStage && (
-                            <p className="text-[11px] text-amber-300 italic">Queen Stage: Extra long effort increases hyponatremia risk if you drink plain water without sodium. Never skip sachets.</p>
+                            <p className="text-[11px] text-amber-300 italic">{t('result.queenStageWarning')}</p>
                           )}
                         </div>
                       </div>
@@ -524,7 +524,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                   </div>
                   <div className="flex-1 pb-3">
                     <p className="text-[10px] font-semibold uppercase tracking-widest text-gray-400 mb-1">T-24 hours</p>
-                    <p className="text-[15px] font-bold text-[#0a0a0a] mb-2">Day Before</p>
+                    <p className="text-[15px] font-bold text-[#0a0a0a] mb-2">{t('result.dayBefore')}</p>
                     <div className="border border-gray-200 rounded-lg overflow-hidden">
                       <div className="divide-y divide-gray-100">
                         <div className="flex justify-between items-center px-3.5 py-3">
@@ -642,7 +642,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                     {plan.energyGel && (
                       <div className="space-y-1">
                         <div className="flex justify-between text-[12px]">
-                          <span className="font-semibold text-[#0a0a0a]">Energy Gels</span>
+                          <span className="font-semibold text-[#0a0a0a]">{t('result.energyGels')}</span>
                           <span className="text-gray-400 font-mono">
                             {plan.energyGel.applicable
                               ? `${plan.energyGel.totalGels} gel${plan.energyGel.totalGels !== 1 ? 's' : ''} · ${plan.energyGel.gelsPerHour}/hr`
@@ -711,7 +711,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           return (
             <AccordionItem value="scientific-basis" className="border border-gray-200 rounded-lg overflow-hidden">
               <AccordionTrigger className="hover:no-underline px-4 py-3">
-                <p className="text-[13px] font-bold text-[#0a0a0a]">Scientific Basis</p>
+                <p className="text-[13px] font-bold text-[#0a0a0a]">{t('result.scientificBasis')}</p>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4 space-y-4">
 
@@ -830,13 +830,13 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
       <div className="border border-gray-200 rounded-lg overflow-hidden">
         <div className="px-4 py-4 text-center space-y-1.5">
           <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">SUPPLME</p>
-          <p className="text-sm font-bold text-[#0a0a0a]">Liquid Electrolyte Sachet</p>
+          <p className="text-sm font-bold text-[#0a0a0a]">{t('result.liquidElectrolyteSachet')}</p>
           <p className="text-[12px] text-gray-500">
             30ml sachets &middot; {SUPPLME_ELECTROLYTE_SPEC.sodium}mg Sodium &middot; {SUPPLME_ELECTROLYTE_SPEC.potassium}mg Potassium &middot; {SUPPLME_ELECTROLYTE_SPEC.magnesium}mg Mg
           </p>
           {plan.energyGel && (
             <>
-              <p className="text-sm font-bold text-[#0a0a0a] pt-1">Energy Gel</p>
+              <p className="text-sm font-bold text-[#0a0a0a] pt-1">{t('result.energyGelProduct')}</p>
               <p className="text-[12px] text-gray-500">
                 {SUPPLME_GEL_SPEC.carbsPerGel}g carbohydrates &middot; {SUPPLME_GEL_SPEC.ratioLabel} ratio Glucose to Fructose
               </p>

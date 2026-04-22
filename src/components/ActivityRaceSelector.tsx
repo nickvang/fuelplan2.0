@@ -174,7 +174,7 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
           <p className="text-sm font-semibold text-foreground">Pace per discipline</p>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-3 md:gap-4">
             <div className="space-y-2">
-              <Label htmlFor="ar-swimPace">Swim Pace</Label>
+              <Label htmlFor="ar-swimPace">{t('activity.swimPace')}</Label>
               <Input
                 id="ar-swimPace"
                 value={profile.swimPace || ''}
@@ -188,7 +188,7 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
               <p className="text-xs text-muted-foreground">Min:sec per 100m</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ar-bikeSpeed">Bike Speed</Label>
+              <Label htmlFor="ar-bikeSpeed">{t('activity.bikeSpeed')}</Label>
               <Input
                 id="ar-bikeSpeed"
                 value={profile.bikeSpeed || profile.bikePower || ''}
@@ -202,7 +202,7 @@ export function ActivityRaceSelector({ profile, onUpdateProfile, onApplyRace }: 
               <p className="text-xs text-muted-foreground">Average speed in km/h</p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ar-runPace">Run Pace</Label>
+              <Label htmlFor="ar-runPace">{t('activity.runPace')}</Label>
               <Input
                 id="ar-runPace"
                 value={profile.runPace || ''}
