@@ -20,14 +20,64 @@ function parsePaceToMinPerKm(s: string): number | null {
   return null;
 }
 
+function parseGoalTimeToMinutes(s: string): number | null {
+  if (!s) return null;
+  // H:MM:SS or HH:MM:SS
+  const hmsMatch = s.match(/^(\d{1,2}):(\d{2}):(\d{2})$/);
+  if (hmsMatch) {
+    return parseInt(hmsMatch[1], 10) * 60 + parseInt(hmsMatch[2], 10) + parseInt(hmsMatch[3], 10) / 60;
+  }
+  // H:MM (e.g. "1:30" = 90 min) or MM:SS (e.g. "45:00" = 45 min)
+  // Rule: first segment ≤ 9 → treat as H:MM; ≥ 10 → treat as MM:SS
+  const mmssMatch = s.match(/^(\d{1,2}):(\d{2})$/);
+  if (mmssMatch) {
+    const first = parseInt(mmssMatch[1], 10);
+    const second = parseInt(mmssMatch[2], 10);
+    if (first <= 9) return first * 60 + second;       // H:MM
+    return first + second / 60;                        // MM:SS
+  }
+  return null;
+}
+
+function raceDistanceKm(raceDistance: string): number | null {
+  const d = raceDistance.toLowerCase().trim();
+  if (d.includes('100 mile') || d.includes('100mile') || d.includes('100m') && d.includes('mile')) return 160.93;
+  if (d.includes('50 mile') || d.includes('50mile')) return 80.47;
+  if (d.includes('100k') || d.includes('100 k') || d.includes('100km')) return 100;
+  if (d.includes('50k') || d.includes('50 k') || d.includes('50km')) return 50;
+  if ((d.includes('marathon') && !d.includes('half')) || d.includes('42')) return 42.195;
+  if (d.includes('half') || d.includes('21')) return 21.0975;
+  if (d.includes('10k') || d.includes('10 k') || d.includes('10km')) return 10;
+  if (d.includes('5k') || d.includes('5 k') || d.includes('5km')) return 5;
+  return null;
+}
+
+function isUltraDistance(raceDistance: string, sessionDurationHours: number): boolean {
+  if (sessionDurationHours >= 6) return true;
+  const distKm = raceDistanceKm(raceDistance || '');
+  return distKm !== null && distKm >= 50;
+}
+
+function formatPace(minPerKm: number): string {
+  const mins = Math.floor(minPerKm);
+  const secs = String(Math.round((minPerKm % 1) * 60)).padStart(2, '0');
+  return `${mins}:${secs}/km`;
+}
+
 function getIntensityScore(profile: HydrationProfile): { score: 0 | 1 | 2; source: string } {
-  // 1. Race always = hard
-  if (profile.hasUpcomingRace === true || (profile.raceDistance && profile.raceDistance.trim() !== '')) {
-    return { score: 2, source: 'race selected' };
+  const discipline = (profile.disciplines?.[0] || '').toLowerCase();
+  const isRace = profile.hasUpcomingRace === true || (profile.raceDistance && profile.raceDistance.trim() !== '');
+
+  // 0. Ultra distance — always cap at moderate regardless of race flag or pace
+  // Ultras are run at 55–75% VO2max; prescribing 3 gels/hr risks GI distress
+  if (isUltraDistance(profile.raceDistance || '', Number(profile.sessionDuration) || 0)) {
+    const label = raceDistanceKm(profile.raceDistance || '') !== null
+      ? profile.raceDistance
+      : `${profile.sessionDuration}hr session`;
+    return { score: 1, source: `ultra (${label}) — capped at moderate (55–75% VO2max)` };
   }
 
-  // 2. HR profile
-  const discipline = (profile.disciplines?.[0] || '').toLowerCase();
+  // 1. HR profile — most direct measure
   const hrProfile = (profile as any).hrProfile as Record<string, { average?: number }> | undefined;
   const avgHR = hrProfile?.[discipline]?.average;
   if (typeof avgHR === 'number' && avgHR >= 80 && avgHR <= 220 && profile.age > 0) {
@@ -38,15 +88,59 @@ function getIntensityScore(profile: HydrationProfile): { score: 0 | 1 | 2; sourc
     return { score: 0, source: `HR ${avgHR}bpm = ${Math.round(pct * 100)}% max (easy)` };
   }
 
-  // 3. Running pace
-  if (discipline === 'running') {
-    const paceStr = profile.avgPace || profile.goalTime || '';
-    const pace = parsePaceToMinPerKm(paceStr);
-    if (pace !== null) {
-      if (pace < 4.75) return { score: 2, source: `pace ${paceStr} < 4:45/km (hard)` };
-      if (pace < 6.0) return { score: 1, source: `pace ${paceStr} < 6:00/km (moderate)` };
-      return { score: 0, source: `pace ${paceStr} ≥ 6:00/km (easy)` };
+  // 2. Cycling speed (km/h)
+  if (discipline === 'cycling') {
+    const speedKmh = parseFloat(String((profile as any).bikeSpeed || ''));
+    if (speedKmh > 0) {
+      if (speedKmh >= 35) return { score: 2, source: `bike speed ${speedKmh} km/h ≥ 35 (hard)` };
+      if (speedKmh >= 28) return { score: 1, source: `bike speed ${speedKmh} km/h 28–35 (moderate)` };
+      return { score: 0, source: `bike speed ${speedKmh} km/h < 28 (easy)` };
     }
+  }
+
+  // 3. Triathlon race distance — intensity by format
+  if (discipline === 'triathlon') {
+    const rd = (profile.raceDistance || '').toLowerCase();
+    // Ironman already caught by ultra gate above
+    if (rd.includes('70.3') || rd.includes('half')) {
+      // 70.3 defaults to moderate — 4–6hr aerobic-controlled effort
+      // Override to hard only if bikeSpeed or goalTime indicates a fast performance
+      const speedKmh = parseFloat(String((profile as any).bikeSpeed || ''));
+      if (speedKmh >= 35) return { score: 2, source: `70.3 with bike speed ${speedKmh} km/h (hard)` };
+      return { score: 1, source: '70.3 triathlon — default moderate (aerobic-controlled effort)' };
+    }
+    if (rd.includes('sprint') || rd.includes('olympic')) {
+      return { score: 2, source: `${rd} triathlon — high-intensity race format (hard)` };
+    }
+  }
+
+  // 4. Running pace — direct avgPace or derived from goalTime + raceDistance
+  const derivedPace = (() => {
+    if (profile.avgPace) {
+      const p = parsePaceToMinPerKm(profile.avgPace);
+      if (p) return { pace: p, label: `avg pace ${profile.avgPace}` };
+    }
+    if (profile.goalTime && profile.raceDistance) {
+      const totalMin = parseGoalTimeToMinutes(profile.goalTime);
+      const distKm = raceDistanceKm(profile.raceDistance);
+      if (totalMin && distKm) {
+        const p = totalMin / distKm;
+        return { pace: p, label: `goal ${profile.goalTime} over ${profile.raceDistance} = ${formatPace(p)}` };
+      }
+    }
+    return null;
+  })();
+
+  if (derivedPace) {
+    const { pace, label } = derivedPace;
+    if (pace < 4.75) return { score: 2, source: `${label} < 4:45/km (hard)` };
+    if (pace < 6.0)  return { score: 1, source: `${label} < 6:00/km (moderate)` };
+    return { score: 0, source: `${label} ≥ 6:00/km (easy)` };
+  }
+
+  // 5. Race with no pace/speed data — default to hard
+  if (isRace) {
+    return { score: 2, source: 'race selected (no pace data)' };
   }
 
   // 4. Primary goal
@@ -142,6 +236,8 @@ function calculateGelPlan(profile: HydrationProfile): HydrationPlan['energyGel']
   }
 
   // General logic (running, cycling, triathlon after adjustment)
+
+  // < 45 min — no gels needed
   if (effectiveDuration < 0.75) {
     return makeResult(
       0, 0,
@@ -154,66 +250,66 @@ function calculateGelPlan(profile: HydrationProfile): HydrationPlan['energyGel']
     );
   }
 
-  if (effectiveDuration >= 0.75 && effectiveDuration < 1.25) {
+  // 45–90 min: target 30–45g CHO/hr (1–2 gels/hr)
+  if (effectiveDuration >= 0.75 && effectiveDuration < 1.5) {
     const { score: intensityScore, source: intensitySource } = getIntensityScore(profile);
-    const applicable = intensityScore >= 2;
-    const totalGels = applicable ? 1 : 0;
-    const timing = applicable
-      ? '1 gel at 30–45 min mark · take with 150–200ml water'
-      : 'Optional: 1 gel at 45 min for high-intensity or race efforts only.';
+    const gelsPerHour = intensityScore >= 2 ? 2 : 1;
+    const totalGels = intensityScore >= 2 ? 2 : 1;
+    const timing = intensityScore >= 2
+      ? '1 gel at 30 min · 1 gel at 60 min · take each with 150–200ml water'
+      : '1 gel at 30–45 min mark · take with 150–200ml water';
+    const pubmedBasis = intensityScore >= 2
+      ? `At race/hard intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/hr) sits at the top of the 30–45g/hr range for sub-90 min efforts. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`
+      : `At moderate intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour (32g CHO) delivers 30–45g CHO/hr, maintaining blood glucose without overloading the gut. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914)`;
     return makeResult(
-      totalGels, totalGels,
+      totalGels, gelsPerHour,
       timing,
       { preMatch: 0, during: totalGels, halftime: 0 },
-      applicable,
+      true,
       intensitySource,
-      applicable
-        ? `For race-intensity or high-effort sessions of 45–75 min, a single CHO gel at 30–45 min helps maintain power output and delays fatigue. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`
-        : `At moderate intensity and under 75 min, a gel is optional. If this becomes a race or high-intensity effort, consider 1 gel at 45 min. (Jeukendrup, Sports Med 2014, PMID 24791914)`,
-      ['24791914', '21660838']
+      pubmedBasis,
+      intensityScore >= 2 ? ['24791914', '16521844'] : ['24791914']
     );
   }
 
-  // >= 1.25h
+  // >= 90 min: target 60–90g CHO/hr (2–3 gels/hr); trained athletes up to 90–120g/hr
   const { score: intensityScore, source: intensitySource } = getIntensityScore(profile);
 
-  let gelsPerHour: number;
-  if (effectiveDuration <= 2.5 && intensityScore === 2) {
-    gelsPerHour = 2;
-  } else if (effectiveDuration <= 2.5 && intensityScore < 2) {
-    gelsPerHour = 1;
-  } else if (effectiveDuration > 2.5 && intensityScore === 0) {
-    gelsPerHour = 1;
-  } else {
-    gelsPerHour = 2;
-  }
+  const isCyclingBased = discipline === 'cycling' || discipline === 'triathlon';
+
+  // Cycling/triathlon: less GI impact → raise moderate ceiling to 3 gels/hr (96g CHO/hr)
+  //   easy (0) → 2 gels/hr, moderate/hard (1–2) → 3 gels/hr
+  // Running: easy/moderate (0–1) → 2 gels/hr, hard (2) → 3 gels/hr
+  const gelsPerHour = isCyclingBased
+    ? (intensityScore === 0 ? 2 : 3)
+    : (intensityScore === 2 ? 3 : 2);
 
   const startOffset = effectiveDuration > 2 ? 0.5 : 0.25;
   const gelableHours = Math.max(0, effectiveDuration - startOffset);
-  const duringGels = Math.max(gelsPerHour > 0 ? 1 : 0, Math.round(gelsPerHour * gelableHours));
+  const duringGels = Math.max(1, Math.round(gelsPerHour * gelableHours));
 
-  // Add a pre-race gel for race/hard intensity to achieve target CHO/hr across the full event
+  // Pre-race gel for race/hard intensity to hit target CHO/hr from the gun
   const preMatchGel = intensityScore === 2 ? 1 : 0;
   const totalGels = preMatchGel + duringGels;
 
-  const intervalMin = gelsPerHour <= 1 ? 60 : 30;
+  const intervalMin = gelsPerHour === 3 ? 20 : 30;
   const triathlonNote = discipline === 'triathlon' ? ' · Bike and run legs only — not during swim' : '';
-  const timing = `1 gel every ${intervalMin} min · start at ${gelsPerHour <= 1 ? '30–45' : '30'} min mark · take with 150–200ml water${triathlonNote}`;
+  const timing = `1 gel every ${intervalMin} min · start at 30 min mark · take with 150–200ml water${triathlonNote}`;
 
   let pubmedBasis: string;
   let pmids: string[];
-  if (effectiveDuration <= 2.5 && intensityScore < 2) {
-    pubmedBasis = `At moderate intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour (32g CHO) maintains blood glucose and spares glycogen. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Stellingwerff & Cox, Appl Physiol Nutr Metab 2014, PMID 25970669)`;
-    pmids = ['24791914', '25970669'];
-  } else if (effectiveDuration <= 2.5 && intensityScore === 2) {
-    pubmedBasis = `At race/hard intensity over ${Math.round(effectiveDuration * 60)} min, a pre-race gel plus 2 gels/hour achieves the target CHO delivery rate across the full event. The 2:1 glucose:fructose blend maximises carbohydrate oxidation. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`;
-    pmids = ['24791914', '16521844'];
-  } else if (effectiveDuration > 2.5 && intensityScore === 0) {
-    pubmedBasis = `At easy intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour provides sufficient exogenous CHO to supplement fat oxidation and maintain glycogen. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914)`;
+  if (isCyclingBased && intensityScore === 0) {
+    pubmedBasis = `At easy cycling intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/hr) covers baseline exogenous CHO needs. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914)`;
     pmids = ['24791914'];
+  } else if (isCyclingBased && intensityScore === 1) {
+    pubmedBasis = `At moderate cycling intensity over ${Math.round(effectiveDuration * 60)} min, 3 gels/hour (96g CHO/hr) is achievable — cycling's reduced GI stress allows higher absorption than running, supporting the upper end of the 90–120g/hr ceiling with a 2:1 glucose:fructose blend. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Currell & Jeukendrup, Med Sci Sports Exerc 2008, PMID 18202575)`;
+    pmids = ['24791914', '18202575'];
+  } else if (intensityScore < 2) {
+    pubmedBasis = `At easy/moderate intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/hr) is within the 60–90g CHO/hr target for efforts over 90 min. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Stellingwerff & Cox, Appl Physiol Nutr Metab 2014, PMID 25970669)`;
+    pmids = ['24791914', '25970669'];
   } else {
-    pubmedBasis = `At moderate-to-hard intensity over ${Math.round(effectiveDuration * 60)} min, a pre-race gel plus 2 gels/hour achieves the recommended CHO delivery. The 2:1 glucose:fructose ratio maximises intestinal absorption up to ~90g CHO/h. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, J Sports Sci 2011, PMID 21660838)`;
-    pmids = ['24791914', '21660838'];
+    pubmedBasis = `At race/hard intensity over ${Math.round(effectiveDuration * 60)} min, a pre-race gel plus 3 gels/hour delivers ~96g CHO/hr — within the 90–120g/hr ceiling for trained athletes using 2:1 or 1:0.8 glucose-to-fructose blends to maximise intestinal absorption. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`;
+    pmids = ['24791914', '16521844'];
   }
 
   return makeResult(
