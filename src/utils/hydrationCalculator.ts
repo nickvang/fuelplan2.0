@@ -190,7 +190,11 @@ function calculateGelPlan(profile: HydrationProfile): HydrationPlan['energyGel']
 
   const startOffset = effectiveDuration > 2 ? 0.5 : 0.25;
   const gelableHours = Math.max(0, effectiveDuration - startOffset);
-  const totalGels = Math.max(gelsPerHour > 0 ? 1 : 0, Math.round(gelsPerHour * gelableHours));
+  const duringGels = Math.max(gelsPerHour > 0 ? 1 : 0, Math.round(gelsPerHour * gelableHours));
+
+  // Add a pre-race gel for race/hard intensity to achieve target CHO/hr across the full event
+  const preMatchGel = intensityScore === 2 ? 1 : 0;
+  const totalGels = preMatchGel + duringGels;
 
   const intervalMin = gelsPerHour <= 1 ? 60 : 30;
   const triathlonNote = discipline === 'triathlon' ? ' · Bike and run legs only — not during swim' : '';
@@ -202,20 +206,20 @@ function calculateGelPlan(profile: HydrationProfile): HydrationPlan['energyGel']
     pubmedBasis = `At moderate intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour (32g CHO) maintains blood glucose and spares glycogen. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Stellingwerff & Cox, Appl Physiol Nutr Metab 2014, PMID 25970669)`;
     pmids = ['24791914', '25970669'];
   } else if (effectiveDuration <= 2.5 && intensityScore === 2) {
-    pubmedBasis = `At race/hard intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/h) maximises carbohydrate oxidation via dual-transporter 2:1 glucose:fructose blend. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`;
+    pubmedBasis = `At race/hard intensity over ${Math.round(effectiveDuration * 60)} min, a pre-race gel plus 2 gels/hour achieves the target CHO delivery rate across the full event. The 2:1 glucose:fructose blend maximises carbohydrate oxidation. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, IJSNEM 2005, PMID 16521844)`;
     pmids = ['24791914', '16521844'];
   } else if (effectiveDuration > 2.5 && intensityScore === 0) {
     pubmedBasis = `At easy intensity over ${Math.round(effectiveDuration * 60)} min, 1 gel/hour provides sufficient exogenous CHO to supplement fat oxidation and maintain glycogen. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914)`;
     pmids = ['24791914'];
   } else {
-    pubmedBasis = `At moderate-to-hard intensity over ${Math.round(effectiveDuration * 60)} min, 2 gels/hour (64g CHO/h) is recommended. The 2:1 glucose:fructose ratio maximises intestinal absorption up to ~90g CHO/h. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, J Sports Sci 2011, PMID 21660838)`;
+    pubmedBasis = `At moderate-to-hard intensity over ${Math.round(effectiveDuration * 60)} min, a pre-race gel plus 2 gels/hour achieves the recommended CHO delivery. The 2:1 glucose:fructose ratio maximises intestinal absorption up to ~90g CHO/h. Intensity source: ${intensitySource}. (Jeukendrup, Sports Med 2014, PMID 24791914; Burke et al, J Sports Sci 2011, PMID 21660838)`;
     pmids = ['24791914', '21660838'];
   }
 
   return makeResult(
     totalGels, gelsPerHour,
     timing,
-    { preMatch: 0, during: totalGels, halftime: 0 },
+    { preMatch: preMatchGel, during: duringGels, halftime: 0 },
     totalGels > 0,
     intensitySource,
     pubmedBasis,

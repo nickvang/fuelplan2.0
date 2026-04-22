@@ -70,6 +70,11 @@ export function EnergyGelSection({ plan }: EnergyGelSectionProps) {
               >
                 When to take
               </p>
+              {gel.phases.preMatch > 0 && (
+                <p className="text-sm font-medium text-white leading-relaxed">
+                  1 gel 15 min before start · take with 150ml water
+                </p>
+              )}
               <p className="text-sm font-medium text-white leading-relaxed">
                 {gel.timing}
               </p>

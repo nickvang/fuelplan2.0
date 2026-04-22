@@ -63,10 +63,10 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
                 <span className="text-[13px] text-gray-600 min-w-0 shrink">-30min: Final</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a] shrink-0">Sips only</span>
               </div>
-              {gelApplicable && isFootball && gel.phases.preMatch > 0 && (
+              {gelApplicable && gel.phases.preMatch > 0 && (
                 <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3 bg-[#111]/5 border-l-4 border-[#111]">
                   <span className="text-[13px] text-gray-700 min-w-0 shrink font-medium">-15min: Energy gel</span>
-                  <PillBadge>{gel.phases.preMatch} energy gel</PillBadge>
+                  <PillBadge>{gel.phases.preMatch} energy gel{gel.phases.preMatch !== 1 ? 's' : ''} + 150ml water</PillBadge>
                 </div>
               )}
             </div>

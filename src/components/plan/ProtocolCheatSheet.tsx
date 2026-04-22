@@ -33,9 +33,9 @@ export function ProtocolCheatSheet({ plan, profile }: ProtocolCheatSheetProps) {
               <p className="text-[13px] text-[#0a0a0a] leading-snug">
                 {plan.preActivity.water}ml water + {plan.preActivity.electrolytes} electrolyte sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''}, 2h before start
               </p>
-              {gelApplicable && isFootball && gel.phases.preMatch > 0 && (
+              {gelApplicable && gel.phases.preMatch > 0 && (
                 <p className="text-[13px] text-[#0a0a0a] leading-snug">
-                  + {gel.phases.preMatch} energy gel{gel.phases.preMatch !== 1 ? 's' : ''} 15 min before warm-up
+                  + {gel.phases.preMatch} energy gel{gel.phases.preMatch !== 1 ? 's' : ''} 15 min before {isFootball ? 'warm-up' : 'start'} · with 150ml water
                 </p>
               )}
             </div>

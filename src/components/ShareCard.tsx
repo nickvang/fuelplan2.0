@@ -290,11 +290,15 @@ export async function generateFuelPlanImage(
   ]);
 
   // Phase 2: Race Morning
-  drawPhase('Race morning', 'Race Morning', [
+  const raceMorningRows: [string, string][] = [
     ['-3h: Wake up', `${plan.preActivity.water}ml water + breakfast`],
     ['-2h: Pre-load', `200ml water + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`],
-    ['-30min: Final', 'Sips only'],
-  ]);
+  ];
+  if (gel?.applicable && gel.phases.preMatch > 0) {
+    raceMorningRows.push(['-15min: Energy gel', `${gel.phases.preMatch} gel + 150ml water`]);
+  }
+  raceMorningRows.push(['-30min: Final', 'Sips only']);
+  drawPhase('Race morning', 'Race Morning', raceMorningRows);
 
   // Phase 3: During Race (drawn manually to support sub-section headers)
   if (!isSwimOnly) {
