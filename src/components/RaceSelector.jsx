@@ -172,7 +172,7 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
       </Card>
 
       {/* Certified races */}
-      <div className="space-y-2 max-h-[320px] overflow-y-auto pr-1">
+      <div className="space-y-2">
         {filteredRaces.map((race) => {
           const isSelected = selectedRaceId === race.id;
           const maxTemp = race.typical_temp_c?.max ?? race.typical_temp_c?.min ?? 0;
