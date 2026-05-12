@@ -40,7 +40,26 @@
       "WebFetch(domain:www.suunto.com)",
       "WebFetch(domain:www.finishers.com)",
       "Bash(git commit:*)",
-      "Bash(npx vercel:*)"
+      "Bash(npx vercel:*)",
+      "Bash(git checkout:*)",
+      "Bash(git add:*)",
+      "Bash(git cherry-pick:*)",
+      "Bash(git stash:*)",
+      "Bash(git branch:*)",
+      "WebFetch(domain:www.transylvania100k.com)",
+      "WebFetch(domain:itra.run)",
+      "WebFetch(domain:www.runna.com)",
+      "WebFetch(domain:races.runna.com)",
+      "Bash(node:*)",
+      "Bash(node_modules/.bin/esbuild --version)",
+      "Bash(node_modules/.bin/esbuild src/pages/Index.tsx --bundle=false --loader=tsx)",
+      "Bash(node_modules/.bin/esbuild src/pages/Index.tsx --bundle=false --loader:.tsx=tsx)",
+      "Bash(curl -s -o /dev/null -w \"%{http_code} %{url_effective}\" https://supplme.app)",
+      "Bash(curl -s https://supplme.app)",
+      "Bash(curl -sL -o /dev/null -w \"%{http_code} %{url_effective}\\\\n\" https://supplme.app)",
+      "Bash(curl -sL https://supplme.app)",
+      "Bash(curl -sL https://www.supplme.app)",
+      "Bash(curl -sL \"https://www.supplme.app/assets/index-Q0m4abQX.js\")"
     ]
   }
 }

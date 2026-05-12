@@ -11,7 +11,7 @@ interface TimelineSectionProps {
 }
 
 const PillBadge = ({ children, inverted = false }: { children: React.ReactNode; inverted?: boolean }) => (
-  <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold tracking-wide ${
+  <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded text-[11px] font-bold tracking-wide shrink-0 ${
     inverted ? 'bg-white text-[#0a0a0a]' : 'bg-[#0a0a0a] text-white'
   }`}>
     {children}
@@ -53,10 +53,11 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
                 <span className="text-[13px] text-gray-600 min-w-0 shrink">-3h: Wake up</span>
                 <span className="text-[13px] font-semibold text-[#0a0a0a] shrink-0 text-right">{plan.preActivity.water}ml water + breakfast</span>
               </div>
-              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
-                <span className="text-[13px] text-gray-600 min-w-0 shrink">-2h: Pre-load</span>
-                <span className="text-[13px] font-semibold text-[#0a0a0a] flex items-center gap-1.5">
-                  200ml water + <PillBadge>{plan.preActivity.electrolytes} electrolyte sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''}</PillBadge>
+              <div className="flex flex-wrap justify-between items-center gap-x-2 gap-y-1.5 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 shrink-0">-2h: Pre-load</span>
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[13px] font-semibold text-[#0a0a0a]">200ml water +</span>
+                  <PillBadge>{plan.preActivity.electrolytes} sachet{plan.preActivity.electrolytes !== 1 ? 's' : ''}</PillBadge>
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
@@ -205,10 +206,18 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
                     </div>
                   )}
 
-                  {/* Water */}
-                  <div className="flex justify-between items-center pt-1 border-t border-gray-800">
-                    <span className="text-[13px] text-gray-300">Water per hour</span>
-                    <span className="text-[13px] font-semibold text-white">{safeNumber(plan.duringActivity.waterPerHour)}ml</span>
+                  {/* Water + Carbs per hour */}
+                  <div className="pt-1 border-t border-gray-800 space-y-2">
+                    <div className="flex justify-between items-center">
+                      <span className="text-[13px] text-gray-300">Water per hour</span>
+                      <span className="text-[13px] font-semibold text-white">{safeNumber(plan.duringActivity.waterPerHour)}ml</span>
+                    </div>
+                    {gelApplicable && gel.gelsPerHour > 0 && (
+                      <div className="flex justify-between items-center">
+                        <span className="text-[13px] text-gray-300">Carbs per hour</span>
+                        <span className="text-[13px] font-semibold text-white">{Math.round(gel.gelsPerHour * 32)}g</span>
+                      </div>
+                    )}
                   </div>
                 </div>
 
@@ -221,10 +230,11 @@ export function TimelineSection({ plan, profile, distanceKm, isSwimming, isTriat
         <TimelinePhaseCard timeLabel="Finish line" phaseName="Recovery" isLast>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="divide-y divide-gray-100">
-              <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">
-                <span className="text-[13px] text-gray-600 min-w-0 shrink">0h: Immediately</span>
-                <span className="text-[13px] font-semibold text-[#0a0a0a] flex items-center gap-1.5">
-                  500ml water + <PillBadge>{safeNumber(plan.postActivity.electrolytes)} electrolyte sachet{safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}</PillBadge>
+              <div className="flex flex-wrap justify-between items-center gap-x-2 gap-y-1.5 px-3 sm:px-3.5 py-3">
+                <span className="text-[13px] text-gray-600 shrink-0">0h: Immediately</span>
+                <span className="flex items-center gap-1.5 flex-wrap">
+                  <span className="text-[13px] font-semibold text-[#0a0a0a]">500ml water +</span>
+                  <PillBadge>{safeNumber(plan.postActivity.electrolytes)} sachet{safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}</PillBadge>
                 </span>
               </div>
               <div className="flex justify-between items-center gap-2 px-3 sm:px-3.5 py-3">

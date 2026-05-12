@@ -51,7 +51,7 @@ const PrivacyPolicy = () => {
           <h2 className="text-xl font-semibold">{isDA ? '3. Formål med behandling' : '3. Purpose of Processing'}</h2>
           <p>{isDA
             ? 'Vi behandler dine personoplysninger til to klart adskilte formål, som hver kræver separat samtykke: (1) For at generere din personlige hydrationsplan — dette er kerneservicen og kræver både generelt samtykke og samtykke til helbredsdata. Retsgrundlag: Art. 6(1)(a) og Art. 9(2)(a). (2) For at forbedre FuelPlan-algoritmen med anonymiserede, ikke-identificerbare data — dette er valgfrit og kræver separat samtykke. Retsgrundlag: Art. 6(1)(a).'
-            : 'We process your personal data for two distinct purposes, each requiring separate consent: (1) To generate your personalised hydration plan — this is the core service and requires both general and health data consent. Legal basis: Art. 6(1)(a) and Art. 9(2)(a). (2) To improve the FuelPlan algorithm with anonymised, non-identifiable data — this is optional and requires separate consent. Legal basis: Art. 6(1)(a).'}</p>
+            : 'We process your personal data for two distinct purposes, each requiring separate consent: (1) To generate your personalised fuel plan — this is the core service and requires both general and health data consent. Legal basis: Art. 6(1)(a) and Art. 9(2)(a). (2) To improve the FuelPlan algorithm with anonymised, non-identifiable data — this is optional and requires separate consent. Legal basis: Art. 6(1)(a).'}</p>
         </section>
 
         <section className="space-y-3">

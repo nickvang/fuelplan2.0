@@ -874,7 +874,7 @@ export default function Admin() {
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(0, 0, 0);
-      doc.text('RACE DAY HYDRATION PLAN', pageWidth / 2, y, { align: 'center' });
+      doc.text('RACE DAY FUEL PLAN', pageWidth / 2, y, { align: 'center' });
       y += 7;
       doc.setFontSize(10);
       doc.setFont('helvetica', 'normal');

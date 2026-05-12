@@ -191,7 +191,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
     const pre = `Pre: ${plan.preActivity.water}ml water + ${plan.preActivity.electrolytes} sachet${plan.preActivity.electrolytes !== 1 ? 's' : ''}`;
     const during = `During: ${safeNumber(plan.duringActivity.waterPerHour)}ml water/hr${plan.duringActivity.totalElectrolytes > 0 ? ` + ${plan.duringActivity.totalElectrolytes} sachet${plan.duringActivity.totalElectrolytes !== 1 ? 's' : ''}` : ''}`;
     const post = `Post: ${safeNumber(plan.postActivity.water)}ml water + ${safeNumber(plan.postActivity.electrolytes)} sachet${safeNumber(plan.postActivity.electrolytes) !== 1 ? 's' : ''}`;
-    return `My ${sport} hydration plan: ${pre}. ${during}. ${post}. Generated at fuelplan.supplme.dk`;
+    return `My ${sport} fuel plan: ${pre}. ${during}. ${post}. Generated at fuelplan.supplme.dk`;
   }, [plan, profile]);
 
   const handleSaveImage = async () => {
@@ -294,7 +294,7 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
             {[
               [`${plan.energyGel.totalGels}×`, 'GEL SACHETS'],
               [`${plan.energyGel.totalCarbsG}g`, 'TOTAL CARBS'],
-              [String(plan.energyGel.totalKcal), 'KCAL'],
+              [`${Math.round(plan.energyGel.gelsPerHour * 32)}g`, 'CARBS / HR'],
             ].map(([n,l],i)=>(
               <div key={i} className={`p-3 ${i?'border-l border-black/10':''}`}>
                 <div className="font-display font-bold text-[28px] leading-none tabular-nums text-[#0A0A0A]">{n}</div>

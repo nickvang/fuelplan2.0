@@ -1349,7 +1349,7 @@ const Index = () => {
                     className="mt-0.5 shrink-0 accent-[#0A0A0A]"
                   />
                   <span className="text-[12px] text-[#2E2E2E] leading-relaxed">
-                    I consent to Supplme processing my personal data (age, sex, weight, height, training history) for the purpose of generating a personalised hydration plan, in accordance with the{' '}
+                    I consent to Supplme processing my personal data (age, sex, weight, height, training history) for the purpose of generating a personalised fuel plan, in accordance with the{' '}
                     <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#0A0A0A]">Privacy Policy</a>.
                     I understand I can withdraw consent and request deletion of my data at any time.
                   </span>

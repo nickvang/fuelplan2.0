@@ -80,12 +80,12 @@ export function FullHydrationPlanProtocol({ plan, profile, variant = 'user', hid
     <div className={wrapperClass}>
       <h4 className={headingClass}>
         <Zap className="w-4 h-4" />
-        {variant === 'admin' ? 'FULL HYDRATION PLAN' : 'Full hydration plan'}
+        {variant === 'admin' ? 'FULL FUEL PLAN' : 'Full fuel plan'}
       </h4>
 
       {!hasPlan && (
         <p className={isAdmin ? 'text-sm text-zinc-500 py-4' : 'text-sm text-muted-foreground py-4'}>
-          No hydration plan data for this submission.
+          No fuel plan data for this submission.
         </p>
       )}
 

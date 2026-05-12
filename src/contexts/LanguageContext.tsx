@@ -35,7 +35,7 @@ export const translations = {
     
     // Version Selection
     'version.select': 'Choose your path',
-    'version.intro': 'Your personalized hydration plan. When to drink, how much water, and how many Supplme sachets. Science-backed. Choose how deep you go.',
+    'version.intro': 'Your personalized fuel plan. When to drink, how much water, and how many Supplme sachets. Science-backed. Choose how deep you go.',
     'version.recommend': 'We recommend Pro',
     'version.recommendBadge': 'Recommended',
     'version.simple.title': 'Quick',

@@ -19,7 +19,7 @@ export function PlanHeroSection({ plan, profile, distanceKm, hasStrava, selected
         {activityLabel}
       </p>
       <h1 className="text-[26px] font-bold leading-tight text-[#0a0a0a]">
-        Your Race Day Hydration Plan
+        Your Race Day Fuel Plan
       </h1>
 
       {/* 4-stat grid */}

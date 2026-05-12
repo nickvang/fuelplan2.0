@@ -14,7 +14,7 @@ export function PlanFooter({ onDeleteData, onExportData }: PlanFooterProps) {
       <div className="text-[11px] text-gray-400 leading-relaxed space-y-2">
         <p className="font-semibold text-gray-500 uppercase tracking-wide">{t('disclaimer.medicalTitle')}</p>
         <p>
-          This hydration plan is generated using AI and scientific research for educational and informational purposes only.
+          This fuel plan is generated using AI and scientific research for educational and informational purposes only.
           It is not a substitute for professional medical advice, diagnosis, or treatment.
           Always consult with a qualified healthcare provider before making changes to your hydration strategy.
         </p>
