@@ -1158,7 +1158,7 @@ const Index = () => {
 
             {/* Silver stat band */}
             <div className="grid grid-cols-3 bg-[#CBD0D6] mt-7">
-              {[['12','Studies'],['90s','Build time'],['500mg','Sodium/dose']].map(([n,l],i)=>(
+              {[['32g','Carbs/gel'],['90s','Build time'],['500mg','Sodium/dose']].map(([n,l],i)=>(
                 <div key={i} className={`px-3 py-3.5 ${i>0?'border-l border-black/10':''}`}>
                   <div className="font-display font-bold text-[28px] leading-none tracking-tight tabular-nums text-[#0A0A0A]">{n}</div>
                   <div className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#0A0A0A]/55 mt-1">{l}</div>
