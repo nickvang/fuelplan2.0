@@ -30,6 +30,7 @@ import { toast } from 'sonner';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, ListOrdered, X } from 'lucide-react';
 import supplmeLogo from '@/assets/supplme-logo-sort.svg';
+import { SupplmeIcon, SupplmeWordmark } from '@/components/SupplmeBrandAssets';
 import { STRAVA_PREFILL_KEY, STRAVA_STATE_KEY, STRAVA_ERROR_KEY } from './StravaCallback';
 import { GARMIN_STATE_KEY, GARMIN_PREFILL_KEY, GARMIN_CODE_VERIFIER_KEY, GARMIN_ERROR_KEY } from './GarminCallback';
 
@@ -849,6 +850,114 @@ const Index = () => {
     }
   };
 
+  // OAuth trigger handlers — extracted from hidden div for clean JSX
+  const handleStravaOAuthClick = useCallback(() => {
+    const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
+    const redirectBase = typeof window !== 'undefined'
+      ? (window.location.hostname.endsWith('supplme.app') ? 'https://supplme.app' : window.location.origin)
+      : '';
+    const redirectUri = redirectBase ? `${redirectBase}/strava-callback` : '';
+    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!clientId || !redirectUri) return;
+    const state = generateStravaState();
+    sessionStorage.setItem(STRAVA_STATE_KEY, state);
+    localStorage.setItem(STRAVA_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
+    const params = new URLSearchParams({
+      client_id: String(clientId),
+      response_type: 'code',
+      redirect_uri: redirectUri,
+      scope: 'read,profile:read_all,activity:read_all',
+      state,
+      approval_prompt: 'auto',
+    });
+    const webUrl = `https://www.strava.com/oauth/authorize?${params.toString()}`;
+    if (isMobile) {
+      window.location.href = `https://www.strava.com/oauth/mobile/authorize?${params.toString()}`;
+      return;
+    }
+    const width = 500, height = 600;
+    const left = Math.round((window.screen.width - width) / 2);
+    const top = Math.round((window.screen.height - height) / 2);
+    const popup = window.open(webUrl, 'strava-auth', `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`);
+    if (!popup || popup.closed) { window.location.href = webUrl; return; }
+    sessionStorage.setItem('strava_use_popup', '1');
+    const startTime = Date.now();
+    const POPUP_TIMEOUT_MS = 5 * 60 * 1000;
+    if (stravaPollRef.current) clearInterval(stravaPollRef.current);
+    stravaPollRef.current = setInterval(() => {
+      try {
+        if (popup.closed) {
+          clearInterval(stravaPollRef.current!);
+          stravaPollRef.current = null;
+          sessionStorage.removeItem('strava_use_popup');
+          if (localStorage.getItem(STRAVA_PREFILL_KEY) || sessionStorage.getItem(STRAVA_PREFILL_KEY)) {
+            applyStravaPrefill();
+          }
+        } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
+          clearInterval(stravaPollRef.current!);
+          stravaPollRef.current = null;
+          sessionStorage.removeItem('strava_use_popup');
+          popup.close();
+        }
+      } catch { /* cross-origin access error = popup navigated to Strava, normal */ }
+    }, 500);
+  }, [applyStravaPrefill]);
+
+  const handleGarminOAuthClick = useCallback(async () => {
+    const garminClientId = import.meta.env.VITE_GARMIN_CLIENT_ID;
+    const redirectBase = typeof window !== 'undefined'
+      ? (window.location.hostname.endsWith('supplme.app') ? 'https://supplme.app' : window.location.origin)
+      : '';
+    const garminRedirectUri = redirectBase ? `${redirectBase}/garmin-callback` : '';
+    const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+    if (!garminClientId || !garminRedirectUri) return;
+    const state = generateStravaState();
+    const { verifier, challenge } = await generatePKCE();
+    sessionStorage.setItem(GARMIN_STATE_KEY, state);
+    localStorage.setItem(GARMIN_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
+    localStorage.setItem(GARMIN_CODE_VERIFIER_KEY, verifier);
+    const params = new URLSearchParams({
+      response_type: 'code',
+      client_id: String(garminClientId),
+      code_challenge: challenge,
+      code_challenge_method: 'S256',
+      redirect_uri: garminRedirectUri,
+      state,
+      scope: 'GHS_DAILIES GHS_ACTIVITIES GHS_BODY_COMPOSITIONS GHS_USER_PROFILE',
+    });
+    const authUrl = `https://connect.garmin.com/oauth2Confirm?${params.toString()}`;
+    if (isMobile) { window.location.href = authUrl; return; }
+    const width = 500, height = 600;
+    const left = Math.round((window.screen.width - width) / 2);
+    const top = Math.round((window.screen.height - height) / 2);
+    const popup = window.open(authUrl, 'garmin-auth', `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`);
+    if (!popup) { toast.info(t('garmin.popupFallback')); window.location.href = authUrl; return; }
+    sessionStorage.setItem('garmin_use_popup', '1');
+    const startTime = Date.now();
+    const POPUP_TIMEOUT_MS = 5 * 60 * 1000;
+    if (garminPollRef.current) clearInterval(garminPollRef.current);
+    garminPollRef.current = setInterval(() => {
+      if (popup.closed) {
+        clearInterval(garminPollRef.current!);
+        garminPollRef.current = null;
+        sessionStorage.removeItem('garmin_use_popup');
+        if (sessionStorage.getItem(GARMIN_PREFILL_KEY)) {
+          applyGarminPrefill();
+        } else {
+          const errMsg = sessionStorage.getItem(GARMIN_ERROR_KEY) || localStorage.getItem(GARMIN_ERROR_KEY);
+          sessionStorage.removeItem(GARMIN_ERROR_KEY);
+          localStorage.removeItem(GARMIN_ERROR_KEY);
+          void errMsg; // consumed for side-effect
+        }
+      } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
+        clearInterval(garminPollRef.current!);
+        garminPollRef.current = null;
+        sessionStorage.removeItem('garmin_use_popup');
+        popup.close();
+      }
+    }, 300);
+  }, [applyGarminPrefill, t]);
+
   console.log('[Index] render path: isGenerating=', isGenerating, 'showPlan=', showPlan, 'step=', step);
 
   // Authenticated users with showHome → LoggedInHome (skipped during questionnaire/plan flow)
@@ -936,55 +1045,51 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen min-w-0 bg-background relative overflow-x-hidden pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6 pb-[max(2rem,env(safe-area-inset-bottom))] sm:pb-12 px-3 sm:px-4 md:px-6">
-      {/* Athletic background pattern */}
-      <div className="absolute inset-0 opacity-[0.02]">
-        <div className="absolute inset-0" style={{
-          backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 35px, currentColor 35px, currentColor 36px)',
-        }}></div>
-      </div>
+    <div className={`min-h-screen min-w-0 relative overflow-x-hidden pb-[max(2rem,env(safe-area-inset-bottom))] ${step === 0 ? 'bg-white' : 'bg-background pt-[max(0.75rem,env(safe-area-inset-top))] sm:pt-6'}`}>
 
-      <div className="max-w-2xl mx-auto min-w-0 space-y-6 sm:space-y-8 relative z-10">
-        {/* Header - Shows on all steps */}
-        <div className="text-center">
-          <div className="flex justify-end items-center gap-2 mb-2">
-            {import.meta.env.DEV && step === 0 && (
-              <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="text-xs text-muted-foreground hover:text-foreground"
-                onClick={goToMarathonResultsDev}
-              >
-                Dev: Copenhagen Marathon
-              </Button>
-            )}
-            <LanguageSwitcher />
+      <div className={`mx-auto min-w-0 relative z-10 ${step === 0 ? 'max-w-[540px]' : 'max-w-2xl px-3 sm:px-4 md:px-6 space-y-4 sm:space-y-6'}`}>
+        {/* Brand Header — step 0 */}
+        {step === 0 && (
+          <header className="flex justify-between items-center px-5 pt-[52px] pb-4 border-b border-black/10">
+            <div className="flex items-center gap-2.5">
+              <SupplmeIcon size={22} />
+              <SupplmeWordmark height={14} />
+            </div>
+            <div className="flex items-center gap-3">
+              {import.meta.env.DEV && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  className="text-xs text-muted-foreground hover:text-foreground"
+                  onClick={goToMarathonResultsDev}
+                >
+                  Dev: Marathon
+                </Button>
+              )}
+              <span className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099]">FUEL / V2</span>
+            </div>
+          </header>
+        )}
+
+        {/* Existing header — steps 1+ */}
+        {step > 0 && (
+          <div className="text-center px-3 sm:px-4 pt-4">
+            <div className="flex justify-end items-center gap-2 mb-2">
+              <LanguageSwitcher />
+            </div>
+            <img src={supplmeLogo} alt="Supplme" className="h-16 sm:h-20 mx-auto max-w-full w-auto" />
           </div>
-          <img src={supplmeLogo} alt="Supplme" className="h-20 sm:h-24 md:h-32 mx-auto max-w-full w-auto" />
-          <div className="space-y-1 mt-3 px-1">
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold tracking-tight text-foreground">
-              {t('app.title')}
-            </h1>
-            {step === 0 && (
-              <p className="text-sm sm:text-base text-muted-foreground max-w-md mx-auto leading-relaxed">
-                {t('app.subtitle')}
-              </p>
-            )}
-          </div>
-        </div>
+        )}
 
         {/* Welcome banner for logged-in users */}
         {user && !welcomeBannerDismissed && step === 0 && (
-          <div className="flex items-center justify-between gap-3 px-4 py-3 border border-gray-200 rounded-lg bg-gray-50">
-            <p className="text-[13px] text-[#0a0a0a]">
+          <div className="flex items-center justify-between gap-3 px-5 py-3 border-b border-black/10 bg-[#F7F8F9]">
+            <p className="font-mono text-[9px] tracking-[1.4px] text-[#8A9099] uppercase">
               {t('home.welcomeBack', { name: user.user_metadata?.full_name || user.email?.split('@')[0] || '' })}
             </p>
-            <button
-              onClick={() => setWelcomeBannerDismissed(true)}
-              className="text-gray-400 hover:text-[#0a0a0a] p-1 shrink-0"
-            >
-              <X className="w-4 h-4" />
+            <button onClick={() => setWelcomeBannerDismissed(true)} className="text-[#8A9099] hover:text-[#0A0A0A] p-1 shrink-0">
+              <X className="w-3.5 h-3.5" />
             </button>
           </div>
         )}
@@ -997,29 +1102,25 @@ const Index = () => {
           onChange={(e) => setHoneypot(e.target.value)}
           tabIndex={-1}
           autoComplete="off"
-          style={{
-            position: 'absolute',
-            left: '-9999px',
-            width: '1px',
-            height: '1px',
-            opacity: 0,
-          }}
+          style={{ position: 'absolute', left: '-9999px', width: '1px', height: '1px', opacity: 0 }}
           aria-hidden="true"
         />
 
-        {/* Progress - simplified 3-step UX layer */}
-        {!isAnalyzing && (
-          <ProgressBar currentStep={uiStep} totalSteps={uiTotalSteps} />
+        {/* Progress bar — only for steps 1+ */}
+        {!isAnalyzing && step > 0 && (
+          <div className="px-3 sm:px-4 pt-2">
+            <ProgressBar currentStep={uiStep} totalSteps={uiTotalSteps} />
+          </div>
         )}
 
         {/* Analyzing Indicator */}
         {isAnalyzing && (
-          <div id="generating-view" className="athletic-card bg-primary/5 border-primary/20 rounded-xl p-6 animate-fade-in">
+          <div id="generating-view" className="mx-5 mt-6 border border-black/10 p-6 animate-fade-in">
             <div className="flex items-center justify-center gap-4">
-              <div className="animate-spin rounded-full h-8 w-8 border-3 border-primary border-t-transparent shimmer"></div>
+              <div className="animate-spin rounded-full h-6 w-6 border-2 border-[#0A0A0A] border-t-transparent"></div>
               <div className="space-y-1">
-                <p className="font-bold text-lg text-primary uppercase tracking-wide">{t('analyzing.title')}</p>
-                <p className="text-sm text-muted-foreground font-medium">
+                <p className="font-display font-semibold text-[16px] uppercase tracking-wide text-[#0A0A0A]">{t('analyzing.title')}</p>
+                <p className="font-mono text-[9px] tracking-[1.2px] text-[#8A9099]">
                   {t('analyzing.processing').replace('{count}', smartwatchData.length.toString())}
                 </p>
               </div>
@@ -1027,80 +1128,134 @@ const Index = () => {
           </div>
         )}
 
-
         {/* Validation Warnings */}
         {validationWarnings.length > 0 && step > 0 && (
-          <div className="space-y-2">
+          <div className="px-3 sm:px-4 space-y-2">
             {validationWarnings.map((warning, index) => (
               <ValidationWarning key={index} message={warning} />
             ))}
           </div>
         )}
 
-        {/* STEP 0: Data Source Selection */}
+        {/* STEP 0: Brand On-Brand Design */}
         {step === 0 && !isAnalyzing && (
-          <div id="step-0-content" key="step-0" className="animate-in fade-in duration-300 space-y-4">
-            {profilePreFilled && (
-              <div className="flex items-center justify-between bg-muted/50 rounded-lg px-4 py-2 text-sm">
-                <span className="text-muted-foreground">{t('auth.savedProfileBadge')}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  size="sm"
-                  className="text-xs"
-                  onClick={() => setProfilePreFilled(false)}
-                >
-                  {t('auth.editProfile')}
-                </Button>
-              </div>
-            )}
-            <div className="py-2 sm:py-4 space-y-4">
-              <DataSourceSelector
-                selectedSource={dataSource}
-                onSelectSource={(source) => {
-                  setDataSource(source);
-                  if (source === 'strava' && !stravaSnapshot) {
-                    document.getElementById('strava-connect-trigger')?.click();
-                  } else if (source === 'garmin' && !garminSnapshot) {
-                    document.getElementById('garmin-connect-trigger')?.click();
-                  }
-                }}
-                consentGiven={consentGiven}
-                onConsentChange={(consent) => setConsentGiven(consent)}
-                healthConsentGiven={healthConsentGiven}
-                onHealthConsentChange={(v) => setHealthConsentGiven(v)}
-                algorithmConsentGiven={algorithmConsentGiven}
-                onAlgorithmConsentChange={(v) => setAlgorithmConsentGiven(v)}
-                stravaConnected={!!stravaSnapshot}
-                garminConnected={!!garminSnapshot}
-                onStravaConnect={() => document.getElementById('strava-connect-trigger')?.click()}
-                onGarminConnect={() => document.getElementById('garmin-connect-trigger')?.click()}
-                hasStravaConfig={!!import.meta.env.VITE_STRAVA_CLIENT_ID}
-                hasGarminConfig={!!import.meta.env.VITE_GARMIN_CLIENT_ID}
-                smartwatchFiles={smartwatchData}
-                onSmartWatchFilesChange={setSmartWatchData}
-                profile={profile}
-                onUpdateProfile={updateProfile}
-              />
+          <div id="step-0-content" key="step-0" className="animate-in fade-in duration-300 pb-10">
 
-              {/* Strava age field — shown after connect because Strava doesn't share DOB */}
-              {stravaSnapshot && (
-                <div className={`border rounded-lg p-4 space-y-3 ${profile.age ? 'border-border bg-muted/30' : 'border-orange-200 dark:border-orange-800 bg-orange-50 dark:bg-orange-950/30'}`}>
-                  {!profile.age && (
-                    <div>
-                      <p className="text-sm font-semibold text-foreground">{t('strava.ageRequired')}</p>
-                      <p className="text-xs text-muted-foreground mt-0.5">{t('strava.ageRequiredHint')}</p>
+            {/* Hero headline */}
+            <div className="px-5 pt-8">
+              <p className="font-mono text-[9px] tracking-[2.2px] text-[#8A9099] uppercase mb-3">
+                For your next personal best
+              </p>
+              <h1 className="font-display font-semibold text-[58px] leading-[0.92] tracking-tight uppercase text-[#0A0A0A]">
+                Your<br/>
+                <span className="text-[#CBD0D6]">Personalized</span><br/>
+                Fuel Plan.
+              </h1>
+              <p className="text-[14px] leading-[1.5] text-[#2E2E2E] mt-4 max-w-xs">
+                A personalised hydration + carb protocol built from your Strava data.
+              </p>
+            </div>
+
+            {/* Silver stat band */}
+            <div className="grid grid-cols-3 bg-[#CBD0D6] mt-7">
+              {[['12','Studies'],['90s','Build time'],['500mg','Sodium/dose']].map(([n,l],i)=>(
+                <div key={i} className={`px-3 py-3.5 ${i>0?'border-l border-black/10':''}`}>
+                  <div className="font-display font-bold text-[28px] leading-none tracking-tight tabular-nums text-[#0A0A0A]">{n}</div>
+                  <div className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#0A0A0A]/55 mt-1">{l}</div>
+                </div>
+              ))}
+            </div>
+
+            {/* Connect section */}
+            <div className="px-5 mt-7">
+              <div className="flex justify-between font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2.5">
+                <span>01 / Connect</span>
+                <span>3 steps</span>
+              </div>
+
+              {/* Strava CTA */}
+              <button
+                type="button"
+                className="w-full bg-[#FC4C02] text-white px-4 py-4 flex justify-between items-center"
+                onClick={() => {
+                  setDataSource('strava');
+                  if (!stravaSnapshot) document.getElementById('strava-connect-trigger')?.click();
+                }}
+              >
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                  <svg viewBox="0 0 24 24" className="w-5 h-5 shrink-0" fill="white">
+                    <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116zM7.298 10.172h3.066L12 5.492l1.636 4.68h3.066L12 0z"/>
+                  </svg>
+                  <div>
+                    <div className="font-mono text-[9px] tracking-[1.5px] uppercase opacity-50">
+                      {stravaSnapshot ? 'Connected' : 'Recommended'}
                     </div>
+                    <div className="font-display font-semibold text-[20px] uppercase tracking-wide whitespace-nowrap">
+                      {stravaSnapshot ? 'Continue with Strava' : 'Continue with Strava'}
+                    </div>
+                  </div>
+                </div>
+                <span className="font-mono text-[10px] opacity-50 shrink-0 ml-3">{stravaSnapshot ? '✓' : '→'}</span>
+              </button>
+
+              {/* Secondary options */}
+              <div className="grid grid-cols-2 gap-3 mt-3">
+                <button
+                  type="button"
+                  className={`border py-3.5 px-4 font-mono text-[10px] tracking-[1.5px] uppercase transition-colors flex items-center justify-center gap-2 ${dataSource === 'manual' && smartwatchData.length > 0 ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white' : 'border-black/20 bg-white text-[#0A0A0A] hover:border-[#0A0A0A] hover:bg-[#F7F8F9]'}`}
+                  onClick={() => {
+                    setDataSource('manual');
+                    document.getElementById('smartwatch-files')?.click();
+                  }}
+                >
+                  <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 shrink-0" fill="currentColor"><path d="M.5 9.9a.5.5 0 0 1 .5.5v2.5a1 1 0 0 0 1 1h12a1 1 0 0 0 1-1v-2.5a.5.5 0 0 1 1 0v2.5a2 2 0 0 1-2 2H2a2 2 0 0 1-2-2v-2.5a.5.5 0 0 1 .5-.5z"/><path d="M7.646 1.146a.5.5 0 0 1 .708 0l3 3a.5.5 0 0 1-.708.708L8.5 2.707V11.5a.5.5 0 0 1-1 0V2.707L5.354 4.854a.5.5 0 1 1-.708-.708l3-3z"/></svg>
+                  Upload .FIT
+                </button>
+                <button
+                  type="button"
+                  className={`border py-3.5 px-4 font-mono text-[10px] tracking-[1.5px] uppercase transition-colors flex items-center justify-center gap-2 ${dataSource === 'manual' && smartwatchData.length === 0 ? 'border-[#0A0A0A] bg-[#0A0A0A] text-white' : 'border-black/20 bg-white text-[#0A0A0A] hover:border-[#0A0A0A] hover:bg-[#F7F8F9]'}`}
+                  onClick={() => setDataSource('manual')}
+                >
+                  <svg viewBox="0 0 16 16" className="w-3.5 h-3.5 shrink-0" fill="currentColor"><path d="M12.854.146a.5.5 0 0 0-.707 0L10.5 1.793 14.207 5.5l1.647-1.646a.5.5 0 0 0 0-.708l-3-3zm.646 6.061L9.793 2.5 3.293 9H3.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.5h.5a.5.5 0 0 1 .5.5v.207l6.5-6.5zm-7.468 7.468A.5.5 0 0 1 6 13.5V13h-.5a.5.5 0 0 1-.5-.5V12h-.5a.5.5 0 0 1-.5-.5V11h-.5a.5.5 0 0 1-.5-.5V10h-.5a.499.499 0 0 1-.175-.032l-.179.178a.5.5 0 0 0-.11.168l-2 5a.5.5 0 0 0 .65.65l5-2a.5.5 0 0 0 .168-.11l.178-.178z"/></svg>
+                  Enter manually
+                </button>
+              </div>
+            </div>
+
+            {/* Strava connected — data preview */}
+            {stravaSnapshot && (
+              <div className="mt-7 px-5">
+                <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2.5">
+                  Pulled from Strava
+                </p>
+                <div className="border border-black/10">
+                  {[
+                    ['Weight & sex','PROFILE'],
+                    ['Resting HR / zones','HRV'],
+                    ['Training load', profile.sessionDuration ? `~${Math.round(profile.sessionDuration*10)/10}h avg` : '—'],
+                    ['Typical pace', profile.runPace || profile.avgPace || '—'],
+                  ].map(([k,v],i)=>(
+                    <div key={i} className={`flex justify-between items-center px-3.5 py-3 ${i?'border-t border-black/10':''}`}>
+                      <span className="text-[13.5px] font-medium text-[#0A0A0A]">{k}</span>
+                      <span className="font-mono text-[9px] text-[#8A9099] tracking-[1.2px] whitespace-nowrap">{v}</span>
+                    </div>
+                  ))}
+                </div>
+
+                {/* Age field — Strava doesn't share DOB */}
+                <div className={`mt-3 border p-3.5 ${profile.age ? 'border-black/10' : 'border-orange-300 bg-orange-50'}`}>
+                  {!profile.age && (
+                    <p className="font-mono text-[9px] tracking-[1.2px] text-orange-600 uppercase mb-2">{t('strava.ageRequired')}</p>
                   )}
                   <div className="flex items-center gap-3">
-                    <Label htmlFor="strava-birth-year" className="text-sm shrink-0">Born in</Label>
-                    <Input
+                    <span className="font-mono text-[9px] tracking-[1.2px] text-[#8A9099] uppercase shrink-0">Born in</span>
+                    <input
                       id="strava-birth-year"
                       type="number"
                       min={1920}
                       max={new Date().getFullYear() - 10}
-                      placeholder="e.g. 1990"
-                      className="w-32"
+                      placeholder="1990"
+                      className="w-24 border border-black/10 px-2 py-1 font-mono text-[11px] bg-white focus:outline-none focus:border-black/30"
                       value={stravaBirthYearInput}
                       onChange={(e) => {
                         setStravaBirthYearInput(e.target.value);
@@ -1111,792 +1266,172 @@ const Index = () => {
                       }}
                     />
                     {profile.age && (
-                      <span className="text-xs text-muted-foreground">Age: {profile.age}</span>
+                      <span className="font-mono text-[9px] text-[#8A9099]">Age: {profile.age}</span>
                     )}
                   </div>
                 </div>
-              )}
+              </div>
+            )}
 
-              {/* Strava data completeness banner — hidden */}
-              {false && stravaSnapshot && (
-                <div className="border border-border/50 rounded-lg p-3 space-y-2 text-xs">
-                  <div className="flex items-start gap-2">
-                    <span className="text-green-600 dark:text-green-400 font-semibold shrink-0">✓ {t('strava.capturedFrom')}:</span>
-                    <span className="text-muted-foreground">
-                      {[
-                        profile.weight && 'weight',
-                        profile.sex && 'sex',
-                        (profile.disciplines?.length || 0) > 0 && 'disciplines',
-                        profile.sessionDuration && 'session length',
-                        (profile.avgPace || profile.runPace) && 'training pace',
-                      ].filter(Boolean).join(' · ') || '—'}
-                    </span>
-                  </div>
-                  <div className="flex items-start gap-2">
-                    <span className="text-amber-600 dark:text-amber-400 font-semibold shrink-0">✎ {t('strava.stillNeeded')}:</span>
-                    <span className="text-muted-foreground">
-                      {[
-                        !profile.age && 'age',
-                        'sweat rate',
-                        'sweat saltiness',
-                      ].filter(Boolean).join(' · ')}
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Hidden OAuth triggers - preserves existing Strava/Garmin OAuth popup logic */}
-              <div className="hidden">
-              <div className="bg-muted/40 p-3 sm:p-4 rounded-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-md bg-[#FC4C02] flex items-center justify-center" aria-hidden>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor" role="img" aria-label="Strava">
-                      <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116h-5.002zM12 0L7.298 10.172h3.066L12 5.492l1.636 4.68h3.066L12 0z" />
-                    </svg>
-                  </span>
-                  <p className="text-xs sm:text-sm font-medium text-foreground">
-                    {t('strava.title')} <span className="text-muted-foreground">({t('common.optional')})</span>
-                  </p>
-                </div>
-                <p className="text-xs text-muted-foreground mb-2">{t('strava.description')}</p>
-                {(() => {
-                  const clientId = import.meta.env.VITE_STRAVA_CLIENT_ID;
-                  const redirectBase =
-                    typeof window !== 'undefined'
-                      ? (window.location.hostname.endsWith('supplme.app') ? 'https://supplme.app' : window.location.origin)
-                      : '';
-                  const redirectUri = redirectBase ? `${redirectBase}/strava-callback` : '';
-                  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                  const hasStravaConfig = !!clientId && !!redirectUri;
-
-                  return hasStravaConfig ? (
-                    <Button
-                      id="strava-connect-trigger"
-                      type="button"
-                      variant="outline"
-                      className="w-full sm:w-auto border-orange-500/50 text-orange-600 dark:text-orange-400 hover:bg-orange-500/10 hover:border-orange-500/70"
-                      onClick={() => {
-                        const state = generateStravaState();
-
-                        // Store state in both sessionStorage and localStorage
-                        // sessionStorage is per-window, so popups can't read it — localStorage is needed for desktop popup flow too
-                        sessionStorage.setItem(STRAVA_STATE_KEY, state);
-                        localStorage.setItem(STRAVA_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
-
-                        const params = new URLSearchParams({
-                          client_id: String(clientId),
-                          response_type: 'code',
-                          redirect_uri: redirectUri,
-                          scope: 'read,profile:read_all,activity:read_all',
-                          state,
-                          approval_prompt: 'auto',
-                        });
-
-                        const webUrl = `https://www.strava.com/oauth/authorize?${params.toString()}`;
-
-                        if (isMobile) {
-                          // MOBILE: use the mobile/authorize endpoint so iOS opens the Strava app.
-                          // State is persisted in localStorage so it survives the app → Safari redirect.
-                          const mobileUrl = `https://www.strava.com/oauth/mobile/authorize?${params.toString()}`;
-                          window.location.href = mobileUrl;
-                          return;
-                        }
-
-                        // DESKTOP: try popup first; Safari often blocks popups so fall back to redirect
-                        const width = 500;
-                        const height = 600;
-                        const left = Math.round((window.screen.width - width) / 2);
-                        const top = Math.round((window.screen.height - height) / 2);
-
-                        const popup = window.open(
-                          webUrl,
-                          'strava-auth',
-                          `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
-                        );
-
-                        if (!popup || popup.closed) {
-                          // Popup was blocked — fall back to full-page redirect
-                          window.location.href = webUrl;
-                          return;
-                        }
-
-                        sessionStorage.setItem('strava_use_popup', '1');
-                        const startTime = Date.now();
-                        const POPUP_TIMEOUT_MS = 5 * 60 * 1000; // 5 minutes
-                        if (stravaPollRef.current) clearInterval(stravaPollRef.current);
-                        stravaPollRef.current = setInterval(() => {
-                          try {
-                            if (popup.closed) {
-                              clearInterval(stravaPollRef.current!);
-                              stravaPollRef.current = null;
-                              sessionStorage.removeItem('strava_use_popup');
-                              if (localStorage.getItem(STRAVA_PREFILL_KEY) || sessionStorage.getItem(STRAVA_PREFILL_KEY)) {
-                                applyStravaPrefill();
-                              }
-                            } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
-                              clearInterval(stravaPollRef.current!);
-                              stravaPollRef.current = null;
-                              sessionStorage.removeItem('strava_use_popup');
-                              popup.close();
-                            }
-                          } catch {
-                            // cross-origin access error means popup navigated to Strava — normal
-                          }
-                        }, 500);
+            {/* Manual entry body fields */}
+            {dataSource === 'manual' && !stravaSnapshot && (
+              <div className="mt-7 px-5">
+                <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2.5">Your body data</p>
+                <div className="border border-black/10 divide-y divide-black/10">
+                  {/* Age */}
+                  <div className="flex justify-between items-center px-3.5 py-3">
+                    <span className="text-[13.5px] font-medium">Year of birth</span>
+                    <input
+                      type="number" min={1920} max={new Date().getFullYear()-10} placeholder="1990"
+                      className="w-24 border border-black/10 px-2 py-1 font-mono text-[11px] bg-white text-right focus:outline-none focus:border-black/30"
+                      value={stravaBirthYearInput}
+                      onChange={(e) => {
+                        setStravaBirthYearInput(e.target.value);
+                        const year = parseInt(e.target.value,10);
+                        if (year>=1920 && year<=new Date().getFullYear()-10) updateProfile({ age: new Date().getFullYear()-year });
                       }}
-                    >
-                      {stravaSnapshot ? t('strava.connected') : t('strava.connect')}
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">{t('strava.notConfigured')}</span>
-                  );
-                })()}
-                {stravaSnapshot && (
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('strava.connected')}</p>
-                )}
-              </div>
-
-              {/* Card 2: Connect with Garmin */}
-              <div className="bg-muted/40 p-3 sm:p-4 rounded-xl">
-                <div className="flex items-center gap-2 mb-1">
-                  <span className="flex-shrink-0 w-7 h-7 rounded-md bg-[#007CC3] flex items-center justify-center" aria-hidden>
-                    <svg viewBox="0 0 24 24" className="w-4 h-4 text-white" fill="currentColor" role="img" aria-label="Garmin">
-                      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm-1-13h2v6h-2zm0 8h2v2h-2z" />
-                    </svg>
-                  </span>
-                  <p className="text-xs sm:text-sm font-medium text-foreground">
-                    {t('garmin.title')} <span className="text-muted-foreground">({t('common.optional')})</span>
-                  </p>
+                    />
+                  </div>
+                  {/* Sex */}
+                  <div className="flex justify-between items-center px-3.5 py-3">
+                    <span className="text-[13.5px] font-medium">Sex</span>
+                    <div className="flex gap-px bg-black/10">
+                      {(['male','female'] as ('male'|'female')[]).map(s=>(
+                        <button key={s} type="button"
+                          onClick={()=>updateProfile({ sex: s })}
+                          className={`px-3 py-1 font-mono text-[9px] tracking-[1.2px] uppercase ${profile.sex===s?'bg-[#0A0A0A] text-white':'bg-white text-[#0A0A0A]'}`}
+                        >{s}</button>
+                      ))}
+                    </div>
+                  </div>
+                  {/* Weight */}
+                  <div className="flex justify-between items-center px-3.5 py-3">
+                    <span className="text-[13.5px] font-medium">Weight (kg)</span>
+                    <input
+                      type="number" min={30} max={200} placeholder="70"
+                      className="w-20 border border-black/10 px-2 py-1 font-mono text-[11px] bg-white text-right focus:outline-none focus:border-black/30"
+                      value={profile.weight || ''}
+                      onChange={(e)=>updateProfile({ weight: parseFloat(e.target.value)||undefined })}
+                    />
+                  </div>
+                  {/* Height */}
+                  <div className="flex justify-between items-center px-3.5 py-3">
+                    <span className="text-[13.5px] font-medium">Height (cm)</span>
+                    <input
+                      type="number" min={100} max={250} placeholder="175"
+                      className="w-20 border border-black/10 px-2 py-1 font-mono text-[11px] bg-white text-right focus:outline-none focus:border-black/30"
+                      value={profile.height || ''}
+                      onChange={(e)=>updateProfile({ height: parseFloat(e.target.value)||undefined })}
+                    />
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground mb-2">{t('garmin.description')}</p>
-                {(() => {
-                  const garminClientId = import.meta.env.VITE_GARMIN_CLIENT_ID;
-                  const redirectBase =
-                    typeof window !== 'undefined'
-                      ? (window.location.hostname.endsWith('supplme.app') ? 'https://supplme.app' : window.location.origin)
-                      : '';
-                  const garminRedirectUri = redirectBase ? `${redirectBase}/garmin-callback` : '';
-                  const isMobile = typeof navigator !== 'undefined' && /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-                  const hasGarminConfig = !!garminClientId && !!garminRedirectUri;
-
-                  return hasGarminConfig ? (
-                    <Button
-                      id="garmin-connect-trigger"
-                      type="button"
-                      variant="outline"
-                      className="w-full sm:w-auto border-blue-500/50 text-blue-600 dark:text-blue-400 hover:bg-blue-500/10 hover:border-blue-500/70"
-                      onClick={async () => {
-                        const state = generateStravaState();
-                        const { verifier, challenge } = await generatePKCE();
-
-                        sessionStorage.setItem(GARMIN_STATE_KEY, state);
-                        localStorage.setItem(GARMIN_STATE_KEY, JSON.stringify({ state, ts: Date.now() }));
-                        // Store code_verifier in localStorage (survives popup boundary)
-                        localStorage.setItem(GARMIN_CODE_VERIFIER_KEY, verifier);
-
-                        const params = new URLSearchParams({
-                          response_type: 'code',
-                          client_id: String(garminClientId),
-                          code_challenge: challenge,
-                          code_challenge_method: 'S256',
-                          redirect_uri: garminRedirectUri,
-                          state,
-                          scope: 'GHS_DAILIES GHS_ACTIVITIES GHS_BODY_COMPOSITIONS GHS_USER_PROFILE',
-                        });
-
-                        const authUrl = `https://connect.garmin.com/oauth2Confirm?${params.toString()}`;
-
-                        if (isMobile) {
-                          window.location.href = authUrl;
-                          return;
-                        }
-
-                        const width = 500;
-                        const height = 600;
-                        const left = Math.round((window.screen.width - width) / 2);
-                        const top = Math.round((window.screen.height - height) / 2);
-
-                        const popup = window.open(
-                          authUrl,
-                          'garmin-auth',
-                          `width=${width},height=${height},left=${left},top=${top},scrollbars=yes,resizable=yes`
-                        );
-
-                        if (!popup) {
-                          toast.info(t('garmin.popupFallback'));
-                          window.location.href = authUrl;
-                          return;
-                        }
-
-                        sessionStorage.setItem('garmin_use_popup', '1');
-                        const startTime = Date.now();
-                        const POPUP_TIMEOUT_MS = 5 * 60 * 1000;
-                        if (garminPollRef.current) clearInterval(garminPollRef.current);
-                        garminPollRef.current = setInterval(() => {
-                          if (popup.closed) {
-                            clearInterval(garminPollRef.current!);
-                            garminPollRef.current = null;
-                            sessionStorage.removeItem('garmin_use_popup');
-                            if (sessionStorage.getItem(GARMIN_PREFILL_KEY)) {
-                              applyGarminPrefill();
-                            } else {
-                              const errMsg = sessionStorage.getItem(GARMIN_ERROR_KEY) || localStorage.getItem(GARMIN_ERROR_KEY);
-                              sessionStorage.removeItem(GARMIN_ERROR_KEY);
-                              localStorage.removeItem(GARMIN_ERROR_KEY);
-                            }
-                          } else if (Date.now() - startTime > POPUP_TIMEOUT_MS) {
-                            clearInterval(garminPollRef.current!);
-                            garminPollRef.current = null;
-                            sessionStorage.removeItem('garmin_use_popup');
-                            popup.close();
-                          }
-                        }, 300);
-                      }}
-                    >
-                      {garminSnapshot ? t('garmin.connected') : t('garmin.connect')}
-                    </Button>
-                  ) : (
-                    <span className="text-xs text-muted-foreground">{t('garmin.notConfigured')}</span>
-                  );
-                })()}
-                {garminSnapshot && (
-                  <p className="text-xs text-green-600 dark:text-green-400 mt-2 font-medium">{t('garmin.connected')}</p>
-                )}
               </div>
+            )}
 
-              {/* Card 3: Upload Smartwatch Data */}
-              <div className="bg-muted/40 p-3 sm:p-4 rounded-xl">
-                <Label htmlFor="smartwatch-files" className="text-xs sm:text-sm font-medium">
-                  {t('upload.title')} <span className="text-muted-foreground">({t('common.optional')})</span>
-                </Label>
-                <p className="text-xs text-muted-foreground mt-1">{t('upload.description')}</p>
-                <div className="mt-2 space-y-2">
+            {/* GDPR consent */}
+            <div className="mt-7 px-5">
+              <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-3">Data & Consent</p>
+              <div className="border border-black/10 p-4 space-y-4">
+                {/* Accept all */}
+                <button
+                  type="button"
+                  onClick={() => { setConsentGiven(true); setHealthConsentGiven(true); setAlgorithmConsentGiven(true); }}
+                  className="w-full border border-[#0A0A0A] py-2.5 font-mono text-[10px] tracking-[1.5px] uppercase text-[#0A0A0A] hover:bg-[#0A0A0A] hover:text-white transition-colors"
+                >
+                  Accept all
+                </button>
+                {/* Main consent */}
+                <label className="flex items-start gap-3 cursor-pointer">
                   <input
-                    id="smartwatch-files"
-                    type="file"
-                    multiple
-                    accept=".fit,.csv,.json,.xml,.txt"
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length > 0) setSmartWatchData(prev => [...prev, ...files]);
-                      e.target.value = '';
-                    }}
-                    className="sr-only"
-                    aria-label={t('upload.title')}
-                  />
-                  <label
-                    htmlFor="smartwatch-files"
-                    className="flex items-center justify-between gap-4 min-h-[48px] px-4 py-3 rounded-lg border-2 border-border/50 bg-background cursor-pointer hover:border-border focus-within:ring-2 focus-within:ring-primary/20 focus-within:border-primary transition-colors"
-                  >
-                    <span className="text-sm font-medium text-foreground shrink-0">{t('smartwatch.chooseFiles')}</span>
-                    <span className="text-sm text-muted-foreground truncate text-right">
-                      {smartwatchData.length > 0 ? t('smartwatch.filesChosen').replace('{count}', smartwatchData.length.toString()) : t('smartwatch.noFileChosen')}
-                    </span>
-                  </label>
-                  <Button
-                    type="button"
-                    variant="outline"
-                    size="sm"
-                    className="text-xs h-9 border-border/50"
-                    onClick={() => document.getElementById('smartwatch-folder')?.click()}
-                  >
-                    {t('smartwatch.uploadFolder')}
-                  </Button>
-                  <input
-                    type="file"
-                    id="smartwatch-folder"
-                    // @ts-expect-error webkitdirectory
-                    webkitdirectory=""
-                    directory=""
-                    multiple
-                    onChange={(e) => {
-                      const files = Array.from(e.target.files || []);
-                      if (files.length > 0) setSmartWatchData(files);
-                      e.target.value = '';
-                    }}
-                    className="absolute opacity-0 w-0 h-0 pointer-events-none"
-                    aria-hidden
-                  />
-                </div>
-                {smartwatchData.length > 0 && (
-                  <p className="text-xs sm:text-sm text-green-600 dark:text-green-400 mt-2 font-medium flex flex-wrap items-center gap-2">
-                    {t('smartwatch.uploaded').replace('{count}', smartwatchData.length.toString())}
-                    <button type="button" onClick={() => setSmartWatchData([])} className="py-2.5 px-4 min-h-[44px] inline-flex items-center justify-center text-muted-foreground hover:text-foreground rounded-lg border border-border/50 touch-manipulation">{t('smartwatch.remove')}</button>
-                  </p>
-                )}
-                {/* Supported brands */}
-                <div className="mt-4 pt-3 border-t border-border/60">
-                  <p className="text-[11px] uppercase tracking-wider text-muted-foreground mb-2">Works with</p>
-                  <div className="flex flex-wrap items-center gap-x-4 gap-y-2">
-                    {['Garmin', 'Coros', 'Whoop', 'Oura', 'Apple Watch'].map((brand) => (
-                      <span key={brand} className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
-                        <svg viewBox="0 0 24 24" className="w-5 h-5 flex-shrink-0 text-muted-foreground/80" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
-                          <rect x="6" y="4" width="12" height="16" rx="2" ry="2" />
-                          <path d="M12 8v4l2 2" />
-                        </svg>
-                        {brand}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Card 3: Activity – Step 1/3: Select Sport & Event */}
-              <div className="bg-muted/40 p-3 sm:p-4 rounded-xl space-y-4">
-                <p className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
-                  Step 1 of 3 · Select Sport & Event
-                </p>
-                <div>
-                  <Label className="text-lg mb-4 block">{t('activity.primaryDiscipline')} *</Label>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    {t('activity.selectGuide')}
-                  </p>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-                    {[
-                      { value: 'Running', label: 'Run', icon: '🏃' },
-                      { value: 'Swimming', label: 'Swim', icon: '🏊' },
-                      { value: 'Cycling', label: 'Bike', icon: '🚴' },
-                      { value: 'Triathlon', label: 'Triathlon', icon: '🏅' },
-                    ].map((activity) => (
-                      <button
-                        key={activity.value}
-                        type="button"
-                        onClick={() => updateProfile({ disciplines: [activity.value], terrain: undefined })}
-                        className={`
-                          group relative flex flex-col items-center justify-center p-6 rounded-xl border-2 transition-all duration-300 hover:scale-105
-                          ${profile.disciplines?.[0] === activity.value
-                            ? 'border-primary bg-primary/10 shadow-xl shadow-primary/20 scale-105'
-                            : 'border-border/50 hover:border-primary/50 hover:bg-muted/50 hover:shadow-lg'
-                          }
-                        `}
-                      >
-                        <span className="text-5xl mb-3 transition-transform group-hover:scale-110">{activity.icon}</span>
-                        <span className={`text-sm font-bold uppercase tracking-wide transition-colors ${profile.disciplines?.[0] === activity.value ? 'text-primary' : 'text-foreground'
-                          }`}>
-                          {activity.label}
-                        </span>
-                        {profile.disciplines?.[0] === activity.value && (
-                          <div className="absolute top-3 right-3 w-6 h-6 bg-primary rounded-full flex items-center justify-center shadow-lg animate-scale-in">
-                            <span className="text-primary-foreground text-sm font-bold">✓</span>
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 to-transparent rounded-xl opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none" />
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* Terrain */}
-                {profile.disciplines?.[0] && (
-                  <div>
-                    <Label>
-                      {profile.disciplines?.[0] === 'Running' ? 'Running Terrain *' :
-                        profile.disciplines?.[0] === 'Swimming' ? 'Swimming Environment *' :
-                          profile.disciplines?.[0] === 'Cycling' ? 'Cycling Type *' :
-                            profile.disciplines?.[0] === 'Triathlon' ? 'Primary Terrain *' :
-                              'Terrain *'}
-                    </Label>
-                    <RadioGroup
-                      value={profile.terrain || ''}
-                      onValueChange={(value) => updateProfile({ terrain: value })}
-                      className="mt-3 space-y-3"
-                    >
-                      {profile.disciplines?.[0] === 'Running' && (
-                        <>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="road" id="terrain-road" />
-                            <Label htmlFor="terrain-road" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Road</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="treadmill" id="terrain-treadmill" />
-                            <Label htmlFor="terrain-treadmill" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Treadmill</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="trail" id="terrain-trail" />
-                            <Label htmlFor="terrain-trail" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Trail</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="gravel" id="terrain-gravel" />
-                            <Label htmlFor="terrain-gravel" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Gravel</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="track" id="terrain-track" />
-                            <Label htmlFor="terrain-track" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Track</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="mixed" id="terrain-mixed" />
-                            <Label htmlFor="terrain-mixed" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mixed</Label>
-                          </label>
-                        </>
-                      )}
-                      {profile.disciplines?.[0] === 'Swimming' && (
-                        <>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="indoor-pool" id="terrain-indoor-pool" />
-                            <Label htmlFor="terrain-indoor-pool" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Indoor Pool</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="outdoor-pool" id="terrain-outdoor-pool" />
-                            <Label htmlFor="terrain-outdoor-pool" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Outdoor Pool</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="ocean" id="terrain-ocean" />
-                            <Label htmlFor="terrain-ocean" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Ocean/Sea</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="lake" id="terrain-lake" />
-                            <Label htmlFor="terrain-lake" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Lake</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="river" id="terrain-river" />
-                            <Label htmlFor="terrain-river" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">River</Label>
-                          </label>
-                        </>
-                      )}
-                      {profile.disciplines?.[0] === 'Cycling' && (
-                        <>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="road-bike" id="terrain-road-bike" />
-                            <Label htmlFor="terrain-road-bike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Road Bike</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="mountain-bike" id="terrain-mountain-bike" />
-                            <Label htmlFor="terrain-mountain-bike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mountain Bike</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="gravel-bike" id="terrain-gravel-bike" />
-                            <Label htmlFor="terrain-gravel-bike" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Gravel Bike</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="cyclocross" id="terrain-cyclocross" />
-                            <Label htmlFor="terrain-cyclocross" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Cyclocross</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="mixed-cycling" id="terrain-mixed-cycling" />
-                            <Label htmlFor="terrain-mixed-cycling" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mixed</Label>
-                          </label>
-                        </>
-                      )}
-                      {profile.disciplines?.[0] === 'Triathlon' && (
-                        <>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="road-triathlon" id="terrain-road-triathlon" />
-                            <Label htmlFor="terrain-road-triathlon" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Road Triathlon</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="off-road-triathlon" id="terrain-off-road-triathlon" />
-                            <Label htmlFor="terrain-off-road-triathlon" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Off-Road/XTERRA</Label>
-                          </label>
-                          <label className="flex items-center space-x-3 p-3 rounded-lg border-2 border-border/30 hover:border-primary/50 hover:bg-muted/30 transition-all duration-300 cursor-pointer group">
-                            <RadioGroupItem value="mixed-triathlon" id="terrain-mixed-triathlon" />
-                            <Label htmlFor="terrain-mixed-triathlon" className="font-medium cursor-pointer flex-1 group-hover:text-primary transition-colors">Mixed</Label>
-                          </label>
-                        </>
-                      )}
-                    </RadioGroup>
-                  </div>
-                )}
-
-                {/* Race / Custom – Step 1: Enter race or choose custom */}
-                <div className="relative p-5 border-2 rounded-xl transition-all duration-300 border-primary bg-primary/10 shadow-lg shadow-primary/20">
-                  <div className="absolute -top-3 left-4 px-3 py-1 bg-primary text-primary-foreground text-xs font-bold rounded-full">
-                    ENTER RACE OR CUSTOM
-                  </div>
-
-                  {['Running', 'Cycling', 'Triathlon'].includes(profile.disciplines?.[0] || '') && (
-                    <div className="space-y-3">
-                      <RaceSelector
-                        sport={
-                          profile.disciplines?.[0] === 'Running'
-                            ? 'running'
-                            : profile.disciplines?.[0] === 'Cycling'
-                            ? 'cycling'
-                            : 'triathlon'
-                        }
-                        selectedRaceId={selectedRace?.id ?? null}
-                        onSelectRace={applyRaceToProfile}
-                      />
-                    </div>
-                  )}
-
-                  {/* Custom event details (shown and editable for both certified and custom) */}
-                  <div className="mt-4 space-y-3">
-                    <p className="text-xs font-semibold text-muted-foreground">
-                      {selectedRace
-                        ? 'You can still tweak any details below.'
-                        : 'Custom event: enter your own details.'}
-                    </p>
-                    <div className="space-y-2">
-                      <Label htmlFor="trainingDistance">
-                        {profile.disciplines?.[0] === 'Triathlon'
-                          ? 'Race type or distance (km) *'
-                          : 'Training / race distance (km) *'}
-                      </Label>
-                      <Input
-                        id="trainingDistance"
-                        value={profile.raceDistance || ''}
-                        onChange={(e) => updateProfile({ raceDistance: e.target.value })}
-                        placeholder={
-                          profile.disciplines?.[0] === 'Running'
-                            ? 'e.g., 10km, Half Marathon, Marathon'
-                            : profile.disciplines?.[0] === 'Cycling'
-                            ? 'e.g., 40km, 100km, 160km'
-                            : profile.disciplines?.[0] === 'Triathlon'
-                            ? 'e.g., Sprint, 70.3, Ironman'
-                            : 'e.g., 10km, 2h ride'
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="trainingGoalTime">Expected time (optional)</Label>
-                      <Input
-                        id="trainingGoalTime"
-                        value={profile.goalTime || ''}
-                        onChange={(e) => updateProfile({ goalTime: e.target.value })}
-                        placeholder="e.g., 1:30:00"
-                        className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="avgPace">
-                        Pace (optional)
-                      </Label>
-                      <Input
-                        id="avgPace"
-                        value={profile.avgPace || ''}
-                        onChange={(e) => updateProfile({ avgPace: e.target.value })}
-                        placeholder={
-                          profile.disciplines?.[0] === 'Running'
-                            ? 'e.g., 5:15/km'
-                            : profile.disciplines?.[0] === 'Cycling'
-                            ? 'e.g., 30 km/h'
-                            : 'e.g., 5:30/km'
-                        }
-                        className="bg-background text-foreground border-border placeholder:text-muted-foreground focus:border-primary focus:ring-primary"
-                      />
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="altitudeMeters">Altitude (m)</Label>
-                        <Input
-                          id="altitudeMeters"
-                          type="number"
-                          value={profile.altitudeMeters || ''}
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            const n = v === '' ? undefined : Number(v);
-                            let altitude: HydrationProfile['altitude'] = 'sea-level';
-                            if (typeof n === 'number' && !Number.isNaN(n)) {
-                              if (n > 2500) altitude = 'high';
-                              else if (n > 1000) altitude = 'moderate';
-                            }
-                            updateProfile({
-                              altitudeMeters: n as any,
-                              altitude,
-                            } as Partial<HydrationProfile>);
-                          }}
-                          placeholder="e.g., 5"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="raceTemp">Temperature (°C)</Label>
-                        <Input
-                          id="raceTemp"
-                          type="number"
-                          value={
-                            profile.raceTempRange &&
-                            profile.raceTempRange.min === profile.raceTempRange.max
-                              ? profile.raceTempRange.min
-                              : ''
-                          }
-                          onChange={(e) => {
-                            const v = e.target.value;
-                            if (v === '') {
-                              updateProfile({
-                                raceTempRange: undefined,
-                              } as Partial<HydrationProfile>);
-                              return;
-                            }
-                            const n = Number(v);
-                            if (!Number.isNaN(n)) {
-                              updateProfile({
-                                raceTempRange: { min: n, max: n },
-                                trainingTempRange: profile.trainingTempRange ?? { min: n, max: n },
-                              } as Partial<HydrationProfile>);
-                            }
-                          }}
-                          placeholder="e.g., 18"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Triathlon pace / duration */}
-                {profile.disciplines?.[0] === 'Triathlon' ? (
-                  <div className="space-y-6">
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="swimPace">Swim Pace</Label>
-                        <Input
-                          id="swimPace"
-                          value={profile.swimPace || ''}
-                          onChange={(e) => {
-                            const newProfile = { ...profile, swimPace: e.target.value };
-                            const duration = calculateTriathlonDuration(newProfile);
-                            updateProfile({ swimPace: e.target.value, ...(duration && { sessionDuration: duration }) });
-                          }}
-                          placeholder="e.g., 1:45/100m"
-                        />
-                        <p className="text-xs text-muted-foreground">Min:sec per 100m</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="bikeSpeed">Bike Speed</Label>
-                        <Input
-                          id="bikeSpeed"
-                          value={profile.bikeSpeed || profile.bikePower || ''}
-                          onChange={(e) => {
-                            const newProfile = { ...profile, bikeSpeed: e.target.value };
-                            const duration = calculateTriathlonDuration(newProfile);
-                            updateProfile({ bikeSpeed: e.target.value, ...(duration && { sessionDuration: duration }) });
-                          }}
-                          placeholder="e.g., 30 km/h"
-                        />
-                        <p className="text-xs text-muted-foreground">Average speed in km/h</p>
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor="runPace">Run Pace</Label>
-                        <Input
-                          id="runPace"
-                          value={profile.runPace || ''}
-                          onChange={(e) => {
-                            const newProfile = { ...profile, runPace: e.target.value };
-                            const duration = calculateTriathlonDuration(newProfile);
-                            updateProfile({ runPace: e.target.value, ...(duration && { sessionDuration: duration }) });
-                          }}
-                          placeholder="e.g., 5:30/km"
-                        />
-                        <p className="text-xs text-muted-foreground">Min:sec per km</p>
-                      </div>
-                    </div>
-                    {(() => {
-                      const breakdown = getTriathlonBreakdown(profile);
-                      if (breakdown) {
-                        const fmtDuration = (h: number) => {
-                          const hrs = Math.floor(h);
-                          const rm = (h - hrs) * 60;
-                          const mins = Math.floor(rm);
-                          const secs = Math.round((rm - mins) * 60);
-                          return `${String(hrs).padStart(2, '0')}:${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
-                        };
-                        return (
-                          <div className="space-y-3 py-4">
-                            <div className="text-center">
-                              <p className="text-sm text-muted-foreground mb-2">Total Estimated Time</p>
-                              <p className="text-4xl font-black text-primary">{fmtDuration(breakdown.total)}</p>
-                            </div>
-                            <div className="flex flex-wrap justify-center gap-2 text-xs">
-                              <span className="px-2 py-1 rounded-full bg-blue-500/10 text-blue-700 dark:text-blue-300">🏊 Swim {Math.round(breakdown.swim.duration * 60)}min</span>
-                              <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground">T1 {Math.round(breakdown.t1.duration * 60)}min</span>
-                              <span className="px-2 py-1 rounded-full bg-purple-500/10 text-purple-700 dark:text-purple-300">🚴 Bike {Math.round(breakdown.bike.duration * 60)}min</span>
-                              <span className="px-2 py-1 rounded-full bg-muted text-muted-foreground">T2 {Math.round(breakdown.t2.duration * 60)}min</span>
-                              <span className="px-2 py-1 rounded-full bg-orange-500/10 text-orange-700 dark:text-orange-300">🏃 Run {Math.round(breakdown.run.duration * 60)}min</span>
-                            </div>
-                          </div>
-                        );
-                      }
-                      return null;
-                    })()}
-                  </div>
-                ) : (
-                  <PaceDurationCalculator
-                    discipline={profile.disciplines?.[0] || 'Running'}
-                    raceDistance={profile.raceDistance}
-                    goalTime={profile.goalTime || undefined}
-                    currentPace={profile.avgPace}
-                    onPaceChange={(pace) => updateProfile({ avgPace: pace })}
-                    onDurationChange={(duration) => updateProfile({ sessionDuration: duration })}
-                  />
-                )}
-              </div>
-
-              {/* Privacy: accordion + consent */}
-              {/* Advanced data & consent (kept under a single container for a cleaner first screen) */}
-              <div className="bg-muted/40 p-3 sm:p-4 rounded-xl space-y-2">
-                <Accordion type="single" collapsible className="w-full">
-                  <AccordionItem value="gdpr" className="border-none">
-                    <AccordionTrigger className="text-xs sm:text-sm font-semibold py-3 min-h-[48px] hover:no-underline text-left touch-manipulation">
-                      {t('gdpr.short')} – {t('gdpr.compliance.title')}
-                    </AccordionTrigger>
-                    <AccordionContent className="text-xs text-muted-foreground space-y-2 pt-1">
-                      <p>{t('gdpr.ai.description')}</p>
-                      <p>{t('gdpr.compliance.intro')}</p>
-                      <ul className="list-disc pl-4 space-y-0.5">
-                        <li>{t('gdpr.dataCollection.text')}</li>
-                        <li>{t('gdpr.storage.text')}</li>
-                        <li>{t('gdpr.rights.text')}</li>
-                      </ul>
-                      <p className="pt-1">{t('gdpr.contact')}</p>
-                    </AccordionContent>
-                  </AccordionItem>
-                </Accordion>
-                <div className="flex items-start gap-3 pt-3 border-t border-border/50 min-h-[48px]">
-                  <Checkbox
-                    id="consent-plan"
+                    type="checkbox"
                     checked={consentGiven}
-                    onCheckedChange={(checked) => setConsentGiven(checked === true)}
-                    className="shrink-0 h-5 w-5 touch-manipulation mt-0.5"
+                    onChange={(e) => setConsentGiven(e.target.checked)}
+                    className="mt-0.5 shrink-0 accent-[#0A0A0A]"
                   />
-                  <label htmlFor="consent-plan" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 touch-manipulation select-none">
-                    {t('consent.planGeneration')}
-                  </label>
-                </div>
-                <div className="flex items-start gap-3 min-h-[48px]">
-                  <Checkbox
-                    id="consent-health"
+                  <span className="text-[12px] text-[#2E2E2E] leading-relaxed">
+                    I consent to Supplme processing my personal data (age, sex, weight, height, training history) for the purpose of generating a personalised hydration plan, in accordance with the{' '}
+                    <a href="/privacy" target="_blank" rel="noopener noreferrer" className="underline text-[#0A0A0A]">Privacy Policy</a>.
+                    I understand I can withdraw consent and request deletion of my data at any time.
+                  </span>
+                </label>
+                {/* Health data — Article 9 explicit consent */}
+                <label className="flex items-start gap-3 cursor-pointer">
+                  <input
+                    type="checkbox"
                     checked={healthConsentGiven}
-                    onCheckedChange={(checked) => setHealthConsentGiven(checked === true)}
-                    className="shrink-0 h-5 w-5 touch-manipulation mt-0.5"
+                    onChange={(e) => { setHealthConsentGiven(e.target.checked); setAlgorithmConsentGiven(e.target.checked); }}
+                    className="mt-0.5 shrink-0 accent-[#0A0A0A]"
                   />
-                  <label htmlFor="consent-health" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 touch-manipulation select-none">
-                    {t('consent.healthData')}
-                  </label>
-                </div>
-                <div className="flex items-start gap-3 min-h-[48px]">
-                  <Checkbox
-                    id="consent-algorithm"
-                    checked={algorithmConsentGiven}
-                    onCheckedChange={(checked) => setAlgorithmConsentGiven(checked === true)}
-                    className="shrink-0 h-5 w-5 touch-manipulation mt-0.5"
-                  />
-                  <label htmlFor="consent-algorithm" className="text-xs sm:text-sm font-medium cursor-pointer leading-snug py-0.5 flex-1 touch-manipulation select-none">
-                    {t('consent.algorithmImprovement')} <span className="text-muted-foreground font-normal">({t('common.optional')})</span>
-                  </label>
-                </div>
+                  <span className="text-[12px] text-[#2E2E2E] leading-relaxed">
+                    I explicitly consent to the processing of my health-related data (sweat rate, dietary habits, physiological indicators) as special category data under GDPR Article 9, solely to calculate my fuel and hydration protocol. This data is never sold or shared with third parties.
+                  </span>
+                </label>
               </div>
             </div>
-            </div>{/* end hidden OAuth triggers */}
 
-            {/* Next button for step 0 */}
-            <div className="pt-4 space-y-4">
-              <p className="text-center text-sm sm:text-base font-bold text-foreground/95 uppercase tracking-wide px-2 leading-snug break-words">
-                {t('home.hype')}
-              </p>
-              <Button
+            {/* Footer proof */}
+            <div className="px-5 mt-6 flex items-center justify-between">
+              <span className="font-mono text-[9px] text-[#8A9099] tracking-[1.4px] uppercase">Informed Sport Certified</span>
+              <span className="font-mono text-[9px] text-[#8A9099] tracking-[1.4px] uppercase">No Account</span>
+            </div>
+
+            {/* Step 0 CTA — proceed to questionnaire */}
+            <div className="px-5 mt-6">
+              <button
+                type="button"
                 onClick={handleNextStep}
                 disabled={!isStepValid()}
-                size="lg"
-                className="w-full min-h-[52px] sm:h-14 text-base sm:text-lg font-bold bg-primary text-primary-foreground hover:bg-primary/90 shadow-lg hover:shadow-xl transition-all duration-300 disabled:opacity-40 disabled:cursor-not-allowed active:scale-[0.99] gap-2 touch-manipulation rounded-xl"
+                className="w-full bg-[#0A0A0A] text-white px-4 py-4 flex justify-between items-center disabled:opacity-30 disabled:cursor-not-allowed"
               >
-                {t('common.next')}
-                <ArrowRight className="w-5 h-5" />
-              </Button>
+                <span className="font-display font-semibold text-[18px] uppercase tracking-wide">
+                  {dataSource === 'strava' && stravaSnapshot ? 'Build my plan' : dataSource === 'manual' ? 'Continue' : 'Get started'}
+                </span>
+                <span className="font-mono text-[10px] opacity-55 tracking-[1px]">STEP 1 OF 3 →</span>
+              </button>
             </div>
+
           </div>
         )}
+
+        {/* Hidden OAuth triggers — always rendered, hidden via CSS */}
+        <div className="hidden" aria-hidden="true">
+          <button
+            id="strava-connect-trigger"
+            type="button"
+            onClick={handleStravaOAuthClick}
+          />
+          <button
+            id="garmin-connect-trigger"
+            type="button"
+            onClick={() => { handleGarminOAuthClick(); }}
+          />
+          <input
+            id="smartwatch-files"
+            type="file"
+            multiple
+            accept=".fit,.csv,.json,.xml,.txt"
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length > 0) setSmartWatchData(prev => [...prev, ...files]);
+              e.target.value = '';
+            }}
+            className="sr-only"
+            aria-label={t('upload.title')}
+          />
+          <input
+            type="file"
+            id="smartwatch-folder"
+            multiple
+            onChange={(e) => {
+              const files = Array.from(e.target.files || []);
+              if (files.length > 0) setSmartWatchData(files);
+              e.target.value = '';
+            }}
+            className="absolute opacity-0 w-0 h-0 pointer-events-none"
+            aria-hidden="true"
+          />
+        </div>
+
 
         {/* STEP 1: Activity & Race + Environment */}
         {step === 1 && !isAnalyzing && (

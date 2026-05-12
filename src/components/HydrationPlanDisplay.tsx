@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useRace } from '@/contexts/RaceContext';
 import { generateFuelPlanImage } from '@/components/ShareCard';
 import { Download, Copy, Mail } from 'lucide-react';
+import { SupplmeIcon, SupplmeWordmark } from '@/components/SupplmeBrandAssets';
 
 
 import { SUPPLME_ELECTROLYTE_SPEC, SUPPLME_GEL_SPEC } from '@/types/hydration';
@@ -236,124 +237,127 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
   };
 
   return (
-    <div className="max-w-[540px] mx-auto px-4 sm:px-5 py-6 pb-24 sm:pb-8 space-y-6 animate-in fade-in duration-500">
+    <div className="max-w-[540px] mx-auto bg-white pb-24 sm:pb-8 animate-in fade-in duration-500" ref={heroRef}>
 
-      {/* ── 1. Logo + activity label + target time ── */}
-      <div className="flex items-center justify-between" ref={heroRef}>
-        <span className="text-2xl font-black tracking-[0.15em] text-[#050505] uppercase">SUPPLME</span>
-        <div className="flex flex-col items-end gap-0.5">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400 truncate">
-            {activityLabel}
-          </p>
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">
-            {stageRaceTotals ? 'Total Time' : t('result.targetTime')} · {formatHoursAsTime(displayDuration).slice(0, -3)}
-          </p>
+      {/* ── 1. Brand header ── */}
+      <header className="flex justify-between items-center px-5 pt-[52px] pb-4 border-b border-black/10">
+        <div className="flex items-center gap-2.5">
+          <SupplmeIcon size={22} />
+          <SupplmeWordmark height={14} />
         </div>
+        <div className="flex items-center gap-1.5">
+          <span className="w-[6px] h-[6px] rounded-full bg-[#2ecc71] inline-block" />
+          <span className="font-mono text-[9px] tracking-[1.4px] text-[#8A9099] whitespace-nowrap uppercase">Plan Ready</span>
+        </div>
+      </header>
+
+      {/* ── 2. Race label + headline ── */}
+      <div className="px-5 pt-[22px]">
+        <p className="font-mono text-[9px] tracking-[2px] text-[#8A9099] uppercase">
+          {activityLabel}{selectedRace?.name ? ` · ${selectedRace.name}` : ''} · {formatHoursAsTime(displayDuration).slice(0, -3)}
+        </p>
+        <h1 className="font-display font-semibold text-[46px] leading-[0.94] tracking-tight uppercase text-[#0A0A0A] mt-2.5">
+          Race-day<br/>protocol
+        </h1>
       </div>
 
-      {/* ── 2. Hero numbers — above the fold ── */}
-      <div>
-        <div className="grid grid-cols-3 gap-px bg-gray-200 border border-gray-200 rounded-lg overflow-hidden">
-          <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
-            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets}</p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5 leading-tight">Electrolyte<br className="sm:hidden" /> Sachets</p>
-          </div>
-          <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
-            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{(safeNumber(displayFluidLoss) / 1000).toFixed(1)}<span className="text-base sm:text-lg font-bold">L</span></p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{stageRaceTotals ? 'Total Loss' : t('result.fluidLoss')}</p>
-          </div>
-          <div className="bg-white py-3 sm:py-4 px-2 sm:px-3 text-center">
-            <p className="text-2xl sm:text-3xl font-black text-[#0a0a0a] tabular-nums">{displayTotalSachets * SUPPLME_ELECTROLYTE_SPEC.sodium}<span className="text-base sm:text-lg font-bold">mg</span></p>
-            <p className="text-[11px] font-semibold uppercase tracking-wide text-gray-400 mt-0.5">{t('result.totalSodium')}</p>
-          </div>
+      {/* ── 3. Hydration stat block (silver band) ── */}
+      <section className="px-5 pt-[22px]">
+        <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2">Hydration</p>
+        <div className="grid grid-cols-3 bg-[#CBD0D6]">
+          {[
+            [String(displayTotalSachets) + '×', 'ELECTROLYTE'],
+            [`${(safeNumber(displayFluidLoss)/1000).toFixed(1)}L`, 'FLUID LOSS'],
+            [`${displayTotalSachets * SUPPLME_ELECTROLYTE_SPEC.sodium}mg`, 'SODIUM'],
+          ].map(([n,l],i)=>(
+            <div key={i} className={`p-3 ${i?'border-l border-black/10':''}`}>
+              <div className="font-display font-bold text-[28px] leading-none tabular-nums text-[#0A0A0A]">{n}</div>
+              <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">{l}</div>
+            </div>
+          ))}
         </div>
-
-        {/* Gel summary row — shown when energy gel is part of the plan */}
-        {plan.energyGel?.applicable && (
-          <div className="mt-px grid grid-cols-2 sm:grid-cols-4 gap-px overflow-hidden rounded-b-lg" style={{ background: '#111' }}>
-            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
-              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalGels}</p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.energyGels')}</p>
-            </div>
-            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
-              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalCarbsG}<span className="text-sm font-bold">g</span></p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.totalCarbs')}</p>
-            </div>
-            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
-              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{Math.round(plan.energyGel.totalCarbsG / displayDuration)}<span className="text-sm font-bold">g</span></p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.carbsPerHour')}</p>
-            </div>
-            <div className="py-3 px-2 sm:px-3 text-center" style={{ background: '#1a1a1a' }}>
-              <p className="text-xl sm:text-2xl font-black tabular-nums text-white">{plan.energyGel.totalKcal}</p>
-              <p className="text-[10px] sm:text-[11px] font-semibold uppercase tracking-wide mt-0.5" style={{ color: '#888' }}>{t('result.fuelKcal')}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="flex flex-wrap gap-2 mt-3">
-          {hasStrava && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-orange-50 border border-orange-200">
-              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M15.387 17.944l-2.089-4.116h-3.065L15.387 24l5.15-10.172h-3.066l-2.084 4.116z" fill="#FC4C02" />
-                <path d="M7.778 13.828h3.065L5.613 0 0 13.828h3.065l2.548-4.765 2.165 4.765z" fill="#FC4C02" />
-              </svg>
-              <span className="text-[11px] font-bold tracking-wide text-orange-700">Enhanced with Strava</span>
-            </div>
-          )}
-
-          {plan.calibrationApplied && (
-            <div className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200">
-              <span className="text-[11px] font-bold tracking-wide text-[#0a0a0a]">
-                {t('result.personalizedBadge', { count: plan.calibrationApplied.dataPoints })}
-              </span>
-            </div>
-          )}
-          {plan.calibrationApplied && (plan.calibrationApplied.sodiumAdjustPct !== 0 || plan.calibrationApplied.giCeilingReduced) && (
-            <p className="text-[11px] text-gray-400 mt-1 w-full">
-              {plan.calibrationApplied.sodiumAdjustPct !== 0 &&
-                t('result.sodiumAdjusted', { pct: `${plan.calibrationApplied.sodiumAdjustPct >= 0 ? '+' : ''}${plan.calibrationApplied.sodiumAdjustPct}%` })}
-              {plan.calibrationApplied.sodiumAdjustPct !== 0 && plan.calibrationApplied.giCeilingReduced && ' · '}
-              {plan.calibrationApplied.giCeilingReduced && t('result.giAdjusted')}
-            </p>
-          )}
+        <div className="bg-[#0A0A0A] text-white px-3 py-2.5 flex justify-between">
+          <span className="font-mono text-[9px] tracking-[1.2px] opacity-55">
+            {hasStrava ? 'Strava calibrated' : 'Science-based'}
+          </span>
+          <span className="font-mono text-[10px] tabular-nums">
+            {plan.calibrationApplied ? `${plan.calibrationApplied.sodiumAdjustPct >= 0 ? '+' : ''}${plan.calibrationApplied.sodiumAdjustPct}% · ${plan.calibrationApplied.dataPoints} acts.` : 'ACSM protocol'}
+          </span>
         </div>
-      </div>
+      </section>
 
-      {/* ── 3. Combined electrolyte + gel summary with shop button ── */}
-      <SupplmeSummaryCard
-        plan={plan}
-        profile={profile}
-        distanceKm={distanceKm}
-        sessionDuration={profile.sessionDuration}
-        stageRaceTotals={stageRaceTotals ?? undefined}
-      />
+      {/* ── 4. Carbohydrates stat block ── */}
+      {plan.energyGel?.applicable && (
+        <section className="px-5 pt-4">
+          <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2">Carbohydrates</p>
+          <div className="grid grid-cols-3 border border-black/10">
+            {[
+              [`${plan.energyGel.totalGels}×`, 'GEL SACHETS'],
+              [`${plan.energyGel.totalCarbsG}g`, 'TOTAL CARBS'],
+              [String(plan.energyGel.totalKcal), 'KCAL'],
+            ].map(([n,l],i)=>(
+              <div key={i} className={`p-3 ${i?'border-l border-black/10':''}`}>
+                <div className="font-display font-bold text-[28px] leading-none tabular-nums text-[#0A0A0A]">{n}</div>
+                <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mt-1">{l}</div>
+              </div>
+            ))}
+          </div>
+          <div className="bg-[#F7F8F9] border border-t-0 border-black/10 px-3 py-2.5 flex justify-between">
+            <span className="font-mono text-[9px] text-[#8A9099]">2:1 fructose:glucose</span>
+            <span className="font-mono text-[9px] text-[#8A9099]">Liposomal delivery</span>
+          </div>
+        </section>
+      )}
 
-
-
-      {/* ── 5. Save / copy actions ── */}
-      <div className="flex items-center gap-2">
+      {/* ── 5. Save / share actions ── */}
+      <section className="px-5 pt-5">
         <button
           onClick={handleSaveImage}
           disabled={isSharing}
-          className="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-[#0a0a0a] text-white rounded-lg text-sm font-semibold hover:bg-[#1a1a1a] transition-colors min-h-[48px] disabled:opacity-50"
+          className="w-full bg-[#0A0A0A] text-white px-4 py-4 flex justify-between items-center disabled:opacity-50"
         >
-          <Download className="w-4 h-4" />
-          {t('home.saveImage')}
+          <span className="font-display font-semibold text-[18px] uppercase tracking-wide">Save plan</span>
+          <span className="font-mono text-[9px] opacity-55 tracking-[1px]">PNG · PDF</span>
         </button>
-      </div>
+        <div className="grid grid-cols-3 gap-px bg-black/10 mt-px">
+          {user?.email && (
+            <button
+              onClick={handleEmailPlan}
+              className="bg-white py-3 font-mono text-[9px] tracking-[1.5px] uppercase text-[#0A0A0A]"
+            >
+              Email
+            </button>
+          )}
+          <button
+            onClick={async () => {
+              try {
+                await navigator.share({ title: 'My FuelPlan', text: buildShareText() });
+              } catch { handleCopyToClipboard(); }
+            }}
+            className="bg-white py-3 font-mono text-[9px] tracking-[1.5px] uppercase text-[#0A0A0A]"
+          >
+            Share
+          </button>
+          <button
+            onClick={handleCopyToClipboard}
+            className="bg-white py-3 font-mono text-[9px] tracking-[1.5px] uppercase text-[#0A0A0A]"
+          >
+            Copy
+          </button>
+        </div>
+      </section>
 
-      {/* ── 6. Expandable sections ── */}
-      <Accordion
-        type="multiple"
-        defaultValue={isRacePlan ? ['race-day-protocol'] : []}
-        className="space-y-2"
-      >
-        {/* Race Day Protocol */}
-        <AccordionItem value="race-day-protocol" className="border border-gray-200 rounded-lg overflow-hidden">
-          <AccordionTrigger className="hover:no-underline px-4 py-3">
-            <p className="text-[13px] font-bold text-[#0a0a0a]">{t('result.raceDayProtocol')}</p>
-          </AccordionTrigger>
-          <AccordionContent className="px-4 pb-4 space-y-4">
+      {/* ── 6. Protocol timeline (direct, no accordion) ── */}
+      <section className="px-5 pt-7">
+        <div className="flex justify-between font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2.5">
+          <span>Protocol · chrono</span>
+          <span>{t('result.raceDayProtocol')}</span>
+        </div>
+        <div className="border border-black/10">
+          <div className="px-3.5 py-1.5 bg-[#0A0A0A]/85 font-mono text-[9px] tracking-[2px] font-semibold uppercase text-white">
+            Race day
+          </div>
+          <div className="px-4 py-4">
             {/* Stage race nav */}
             {isStageRace && (
               <nav className="flex flex-wrap gap-1.5">
@@ -552,23 +556,88 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
                 isTriathlon={isTriathlon}
               />
             )}
-          </AccordionContent>
-        </AccordionItem>
+          </div>{/* end protocol content */}
+        </div>{/* end border container */}
+      </section>{/* end protocol section */}
 
+      {/* Shop now CTA */}
+      <section className="px-5 pt-5">
+        <a
+          href="https://www.supplme.com/collections/supplme-products"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="block w-full bg-[#0A0A0A] text-white px-5 py-4 flex justify-between items-center"
+        >
+          <div>
+            <div className="font-mono text-[9px] tracking-[1.8px] text-white/50 uppercase mb-1">Get your sachets</div>
+            <div className="font-display font-semibold text-[20px] uppercase tracking-wide">Shop Supplme now</div>
+          </div>
+          <span className="font-mono text-[10px] opacity-50 tracking-[1px]">→</span>
+        </a>
+
+        {/* Product breakdown */}
+        <div className="grid grid-cols-2 gap-px bg-black/10 mt-px">
+          {/* Electrolyte sachet */}
+          <div className="bg-[#F7F8F9] px-4 py-4">
+            <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2.5">Electrolyte sachet</p>
+            <ul className="space-y-1.5">
+              {[
+                [`${SUPPLME_ELECTROLYTE_SPEC.sodium}mg`, 'Sodium'],
+                [`${SUPPLME_ELECTROLYTE_SPEC.potassium}mg`, 'Potassium'],
+                [`${SUPPLME_ELECTROLYTE_SPEC.magnesium}mg`, 'Magnesium'],
+                [`${SUPPLME_ELECTROLYTE_SPEC.chloride}mg`, 'Chloride'],
+                [`${SUPPLME_ELECTROLYTE_SPEC.citrate}mg`, 'Citrate'],
+              ].map(([val, label]) => (
+                <li key={label} className="flex justify-between items-baseline">
+                  <span className="text-[12px] text-[#2E2E2E]">{label}</span>
+                  <span className="font-mono text-[10px] text-[#0A0A0A] tabular-nums">{val}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {/* Energy gel */}
+          <div className="bg-[#F7F8F9] px-4 py-4">
+            <p className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase mb-2.5">Liquid energy gel</p>
+            <ul className="space-y-1.5">
+              {[
+                [`${SUPPLME_GEL_SPEC.carbsPerGel}g`, 'Carbohydrates'],
+                [`${SUPPLME_GEL_SPEC.glucosePerGel}g`, 'Glucose'],
+                [`${SUPPLME_GEL_SPEC.fructosePerGel}g`, 'Fructose'],
+                [`${SUPPLME_GEL_SPEC.kcalPerGel}`, 'kcal'],
+                [`${SUPPLME_GEL_SPEC.volumeMl}ml`, 'Volume'],
+              ].map(([val, label]) => (
+                <li key={label} className="flex justify-between items-baseline">
+                  <span className="text-[12px] text-[#2E2E2E]">{label}</span>
+                  <span className="font-mono text-[10px] text-[#0A0A0A] tabular-nums">{val}</span>
+                </li>
+              ))}
+            </ul>
+          </div>
+        </div>
+      </section>
+
+      {/* ── 7. Expandable details (AI insights + scientific basis) ── */}
+      <div className="px-5 pt-5">
+      <Accordion
+        type="multiple"
+        defaultValue={[]}
+        className="space-y-px"
+      >
         {/* AI Insights */}
         {version === 'pro' && (
-          <AccordionItem value="ai-insights" className="border border-gray-200 rounded-lg overflow-hidden">
-            <AccordionTrigger className="hover:no-underline px-4 py-3">
+          <AccordionItem value="ai-insights" className="border border-black/10 overflow-hidden">
+            <AccordionTrigger className="hover:no-underline px-4 py-3 bg-white">
               <div className="flex items-center gap-3 text-left w-full">
                 {loadingInsights && (
                   <span className="flex-shrink-0 w-4 h-4 flex items-center justify-center" aria-hidden>
-                    <span className="block w-3.5 h-3.5 rounded-full border-2 border-[#0a0a0a] border-t-transparent animate-spin" />
+                    <span className="block w-3.5 h-3.5 rounded-full border-2 border-[#0A0A0A] border-t-transparent animate-spin" />
                   </span>
                 )}
-                <p className="text-[13px] font-bold text-[#0a0a0a]">
+                <p className="font-display font-semibold text-[15px] uppercase tracking-wide text-[#0A0A0A]">
                   {t('result.aiInsights')}
                   {loadingInsights && (
-                    <span className="text-[11px] font-normal text-gray-400 ml-2 animate-pulse">{t('result.analyzing')}</span>
+                    <span className="font-mono text-[9px] font-normal text-[#8A9099] ml-2 animate-pulse">{t('result.analyzing')}</span>
                   )}
                 </p>
               </div>
@@ -709,9 +778,9 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           const saltLabel = profile.sweatSaltiness === 'high' ? 'high-sodium' : profile.sweatSaltiness === 'low' ? 'low-sodium' : 'typical';
           const mgOverLimit = totalMg > 350;
           return (
-            <AccordionItem value="scientific-basis" className="border border-gray-200 rounded-lg overflow-hidden">
-              <AccordionTrigger className="hover:no-underline px-4 py-3">
-                <p className="text-[13px] font-bold text-[#0a0a0a]">{t('result.scientificBasis')}</p>
+            <AccordionItem value="scientific-basis" className="border border-black/10 overflow-hidden">
+              <AccordionTrigger className="hover:no-underline px-4 py-3 bg-white">
+                <p className="font-display font-semibold text-[15px] uppercase tracking-wide text-[#0A0A0A]">{t('result.scientificBasis')}</p>
               </AccordionTrigger>
               <AccordionContent className="px-4 pb-4 space-y-4">
 
@@ -798,100 +867,72 @@ export function HydrationPlanDisplay({ plan: initialPlan, profile: initialProfil
           );
         })()}
       </Accordion>
+      </div>{/* end accordion wrapper div */}
 
       {/* ── 8. Auth prompt ── */}
       {!user && (
-        <Card className="p-4 text-center space-y-2 border-dashed border-gray-200">
-          <p className="text-sm font-medium text-[#0a0a0a]">{t('auth.savePlan')}</p>
-          <p className="text-xs text-gray-500">{t('auth.savePlanDescription')}</p>
-          <Button
-            variant="outline"
-            size="sm"
+        <div className="px-5 mt-5 border border-black/10 p-4 text-center">
+          <p className="font-display font-semibold text-[15px] uppercase tracking-wide text-[#0A0A0A]">{t('auth.savePlan')}</p>
+          <p className="font-mono text-[9px] text-[#8A9099] tracking-[1.2px] mt-1">{t('auth.savePlanDescription')}</p>
+          <button
             onClick={() => {
               try {
-                sessionStorage.setItem('supplme_pending_plan', JSON.stringify({
-                  profileData: initialProfile,
-                  planData: initialPlan,
-                }));
+                sessionStorage.setItem('supplme_pending_plan', JSON.stringify({ profileData: initialProfile, planData: initialPlan }));
               } catch { /* ignore */ }
               navigate('/login?returnTo=/&savePlan=true');
             }}
+            className="mt-3 px-4 py-2 bg-[#0A0A0A] text-white font-mono text-[9px] tracking-[1.5px] uppercase"
           >
             {t('auth.goToAccount')}
-          </Button>
-        </Card>
+          </button>
+        </div>
       )}
 
       {user && (
-        <p className="text-center text-xs text-gray-400">{t('auth.planSaved')}</p>
+        <p className="text-center font-mono text-[9px] text-[#8A9099] tracking-[1.2px] mt-5">{t('auth.planSaved')}</p>
       )}
 
-      {/* ── Shop card ── */}
-      <div className="border border-gray-200 rounded-lg overflow-hidden">
-        <div className="px-4 py-4 text-center space-y-1.5">
-          <p className="text-[11px] font-semibold uppercase tracking-widest text-gray-400">SUPPLME</p>
-          <p className="text-sm font-bold text-[#0a0a0a]">{t('result.liquidElectrolyteSachet')}</p>
-          <p className="text-[12px] text-gray-500">
-            30ml sachets &middot; {SUPPLME_ELECTROLYTE_SPEC.sodium}mg Sodium &middot; {SUPPLME_ELECTROLYTE_SPEC.potassium}mg Potassium &middot; {SUPPLME_ELECTROLYTE_SPEC.magnesium}mg Mg
-          </p>
-          {plan.energyGel && (
-            <>
-              <p className="text-sm font-bold text-[#0a0a0a] pt-1">{t('result.energyGelProduct')}</p>
-              <p className="text-[12px] text-gray-500">
-                {SUPPLME_GEL_SPEC.carbsPerGel}g carbohydrates &middot; {SUPPLME_GEL_SPEC.ratioLabel} ratio Glucose to Fructose
-              </p>
-              <p className="text-[12px] text-gray-500">
-                Liposomal technology
-              </p>
-            </>
-          )}
-        </div>
-        <div className="px-4 pb-4">
-          <a
-            href="https://www.supplme.com/collections/supplme-products"
-            target="_blank"
-            rel="noopener noreferrer"
-            className="flex w-full items-center justify-center gap-2 min-h-[48px] bg-[#0a0a0a] text-white rounded-lg text-sm font-semibold hover:bg-[#1a1a1a] transition-colors touch-manipulation"
-          >
-            Buy
-          </a>
-        </div>
+      {/* Citations footer */}
+      <div className="px-5 mt-6 font-mono text-[9px] tracking-[1.4px] text-[#8A9099] leading-[1.7]">
+        Sawka 2007 · Jeukendrup 2014 · ACSM · Informed Sport certified
       </div>
 
       {/* Retake */}
-      <div className="flex justify-center">
+      <div className="flex justify-center mt-5 pb-2">
         <button
           onClick={onFullReset ?? onReset}
-          className="text-[13px] font-semibold text-gray-500 hover:text-[#0a0a0a] transition-colors underline"
+          className="font-mono text-[9px] tracking-[1.5px] text-[#8A9099] hover:text-[#0A0A0A] transition-colors uppercase"
         >
           {t('result.retake')}
         </button>
       </div>
 
-      <PlanFooter onDeleteData={handleDeleteMyData} onExportData={handleExportMyData} />
+      <div className="px-5">
+        <PlanFooter onDeleteData={handleDeleteMyData} onExportData={handleExportMyData} />
+      </div>
 
       {/* ── Sticky mobile action bar — appears on scroll ── */}
       <div
-        className={`fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white border-t border-gray-200 shadow-[0_-2px_8px_rgba(0,0,0,0.06)] transition-transform duration-200 ${
+        className={`fixed bottom-0 left-0 right-0 z-50 sm:hidden bg-white border-t border-black/10 transition-transform duration-200 ${
           showStickyBar ? 'translate-y-0' : 'translate-y-full'
         }`}
       >
-        <div className="flex items-center justify-around px-4 max-w-[540px] mx-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '64px' }}>
+        <div className="flex items-center justify-around px-4 max-w-[540px] mx-auto" style={{ paddingBottom: 'env(safe-area-inset-bottom)', minHeight: '60px' }}>
           <button
             onClick={handleSaveImage}
             disabled={isSharing}
-            className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] text-black disabled:opacity-50"
+            className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] text-[#0A0A0A] disabled:opacity-50"
           >
             <Download className="w-5 h-5" />
-            <span className="text-[10px] font-medium">{t('home.saveImage')}</span>
+            <span className="font-mono text-[9px] tracking-[1px] uppercase">{t('home.saveImage')}</span>
           </button>
           {user?.email && (
             <button
               onClick={handleEmailPlan}
-              className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] text-black"
+              className="flex flex-col items-center justify-center gap-0.5 min-w-[64px] min-h-[48px] text-[#0A0A0A]"
             >
               <Mail className="w-5 h-5" />
-              <span className="text-[10px] font-medium">{t('home.emailPlan')}</span>
+              <span className="font-mono text-[9px] tracking-[1px] uppercase">{t('home.emailPlan')}</span>
             </button>
           )}
         </div>

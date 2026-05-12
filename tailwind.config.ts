@@ -13,7 +13,14 @@ export default {
       },
     },
     extend: {
+      fontFamily: {
+        display: ["'Barlow Condensed'", "'Arial Narrow'", "sans-serif"],
+        mono:    ["'JetBrains Mono'", "'SF Mono'", "monospace"],
+      },
       colors: {
+        silver:  '#CBD0D6',
+        'silver-dk': '#9AA2AB',
+        'off':   '#F7F8F9',
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
