@@ -10,8 +10,123 @@ import { generateFuelPlanImage } from '@/components/ShareCard';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import supplmeLogo from '@/assets/SUPPLME(r)hvid.svg';
+import { SupplmeIcon, SupplmeWordmark } from '@/components/SupplmeBrandAssets';
 import { jsPDF } from 'jspdf';
+
+function fmtDuration(hours: number) {
+  const h = Math.floor(hours);
+  const m = Math.round((hours - h) * 60);
+  return m > 0 ? `${h}h ${m}m` : `${h}h`;
+}
+
+function ActivityDetailCard({ activity }: { activity: any }) {
+  if (!activity) return null;
+  const distanceCounts = new Map<string, number>();
+  (activity.distances as string[]).forEach((d) => distanceCounts.set(d, (distanceCounts.get(d) || 0) + 1));
+  const sortedDistances = Array.from(distanceCounts.entries()).sort((a, b) => b[1] - a[1]);
+  return (
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div className="space-y-2">
+        <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">Mode</h4>
+        <div className="flex justify-between rounded-lg bg-secondary border border-border p-3">
+          <span className="text-xs text-muted-foreground">Race</span>
+          <span className="font-bold tabular-nums">{activity.raceDayCount}</span>
+        </div>
+        <div className="flex justify-between rounded-lg bg-secondary border border-border p-3">
+          <span className="text-xs text-muted-foreground">Training</span>
+          <span className="font-bold tabular-nums">{activity.trainingCount}</span>
+        </div>
+      </div>
+      <div className="md:col-span-2 space-y-2">
+        <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">Distances</h4>
+        <div className="grid grid-cols-2 gap-2">
+          {sortedDistances.slice(0, 8).map(([distance, count]) => (
+            <div key={distance} className="flex justify-between items-center rounded-lg bg-secondary border border-border px-3 py-2">
+              <span className="text-xs text-secondary-foreground truncate">{distance || '—'}</span>
+              <span className="text-xs tabular-nums text-muted-foreground">{count}x</span>
+            </div>
+          ))}
+          {sortedDistances.length === 0 && <p className="text-xs text-muted-foreground col-span-2">No distance data</p>}
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function FuelPlanResultCard({ plan, pd }: { plan: any; pd: any }) {
+  if (!plan?.preActivity) return null;
+  const effectiveDur = Math.max(0, (pd.sessionDuration || 0) - 0.5);
+  const duringTotal = plan.duringActivity?.totalElectrolytes
+    ?? Math.round((plan.duringActivity?.electrolytesPerHour || 0) * effectiveDur);
+  const gel = plan.energyGel;
+  const gelApplicable = gel?.applicable && gel?.totalGels > 0;
+  const carbsPerHour = gelApplicable && gel.gelsPerHour > 0 ? Math.round(gel.gelsPerHour * 32) : null;
+  const durLabel = fmtDuration(pd.sessionDuration || 0);
+  return (
+    <div className="mb-6 border border-black/10">
+      <div className="px-4 py-2 bg-[#CBD0D6] flex flex-wrap items-baseline gap-3">
+        <span className="font-mono text-[9px] tracking-[2px] uppercase font-semibold text-[#0A0A0A]">Fuel Plan Result</span>
+        {pd.disciplines?.[0] && <span className="font-mono text-[9px] text-[#0A0A0A]/60">{pd.disciplines.join(' / ')}</span>}
+        {(pd.raceDistance || pd.trainingDistance) && <span className="font-mono text-[9px] font-bold text-[#0A0A0A]">{pd.raceDistance || pd.trainingDistance}</span>}
+        {pd.hasUpcomingRace && <span className="font-mono text-[9px] uppercase tracking-wide text-[#0A0A0A]">· Race day</span>}
+        {pd.sessionDuration && <span className="font-mono text-[9px] text-[#0A0A0A]/60">{durLabel}</span>}
+      </div>
+      <div className="px-4 pt-3 pb-1">
+        <p className="font-mono text-[8.5px] tracking-[1.8px] uppercase text-[#8A9099]">Electrolytes</p>
+      </div>
+      <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-black/10 border-t border-black/10">
+        <div className="px-4 py-3">
+          <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mb-1">Fluid loss</div>
+          <div className="font-display font-bold text-[22px] leading-none tabular-nums text-[#0A0A0A]">{((plan.totalFluidLoss || 0) / 1000).toFixed(1)}L</div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mb-1">Pre-activity</div>
+          <div className="font-display font-bold text-[22px] leading-none tabular-nums text-[#0A0A0A]">{plan.preActivity.electrolytes}×</div>
+          <div className="font-mono text-[9px] text-[#8A9099] mt-0.5">{plan.preActivity.water}ml water</div>
+        </div>
+        <div className="px-4 py-3 bg-[#0A0A0A]">
+          <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-white/50 mb-1">During</div>
+          <div className="font-display font-bold text-[22px] leading-none tabular-nums text-white">{duringTotal}×</div>
+          <div className="font-mono text-[9px] text-white/50 mt-0.5">{plan.duringActivity?.electrolytesPerHour ?? 0}<span>/hr · </span>{plan.duringActivity?.waterPerHour ?? 0}<span>ml/hr</span></div>
+        </div>
+        <div className="px-4 py-3">
+          <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mb-1">Post-activity</div>
+          <div className="font-display font-bold text-[22px] leading-none tabular-nums text-[#0A0A0A]">{plan.postActivity?.electrolytes ?? 0}×</div>
+          <div className="font-mono text-[9px] text-[#8A9099] mt-0.5">{plan.postActivity?.water ?? 0}ml water</div>
+        </div>
+      </div>
+      {gelApplicable && (
+        <div className="border-t border-black/10">
+          <div className="px-4 pt-3 pb-1">
+            <p className="font-mono text-[8.5px] tracking-[1.8px] uppercase text-[#8A9099]">Carbohydrates</p>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 divide-x divide-black/10 border-t border-black/10">
+            <div className="px-4 py-3">
+              <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mb-1">Total gels</div>
+              <div className="font-display font-bold text-[22px] leading-none tabular-nums text-[#0A0A0A]">{gel.totalGels}×</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mb-1">Total carbs</div>
+              <div className="font-display font-bold text-[22px] leading-none tabular-nums text-[#0A0A0A]">{gel.totalCarbsG}g</div>
+            </div>
+            <div className="px-4 py-3 bg-[#0A0A0A]">
+              <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-white/50 mb-1">Carbs / hr</div>
+              <div className="font-display font-bold text-[22px] leading-none tabular-nums text-white">{carbsPerHour}g</div>
+            </div>
+            <div className="px-4 py-3">
+              <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#8A9099] mb-1">Total kcal</div>
+              <div className="font-display font-bold text-[22px] leading-none tabular-nums text-[#0A0A0A]">{gel.totalKcal}</div>
+            </div>
+          </div>
+        </div>
+      )}
+      <div className="flex flex-wrap gap-3 px-4 py-2.5 border-t border-black/10 bg-[#F7F8F9]">
+        {plan.confidenceScore != null && <span className="font-mono text-[9px] text-[#8A9099]">Confidence: {plan.confidenceScore}<span>/5</span></span>}
+        {plan.activeDataSources?.length > 0 && <span className="font-mono text-[9px] text-[#8A9099]">Sources: {plan.activeDataSources.join(', ')}</span>}
+      </div>
+    </div>
+  );
+}
 import { PieChart, Pie, Cell, ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend } from 'recharts';
 
 interface HydrationProfileData {
@@ -1075,56 +1190,53 @@ export default function Admin() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground p-4 sm:p-6">
+    <div className="min-h-screen bg-white text-[#0A0A0A] p-4 sm:p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-border pb-4 border-l-4 border-l-product-warm">
-          <div className="flex items-center gap-3 pl-1">
-            <img src={supplmeLogo} alt="Supplme" className="h-12 opacity-95" />
-            <div>
-              <h1 className="text-xl font-semibold tracking-tight">Data Center</h1>
-              <p className="text-xs text-muted-foreground">User submissions & product development</p>
-            </div>
+        <header className="flex justify-between items-center pb-4 border-b border-black/10">
+          <div className="flex items-center gap-2.5">
+            <SupplmeIcon size={22} />
+            <SupplmeWordmark height={14} />
+            <span className="font-mono text-[9px] tracking-[1.8px] text-[#8A9099] uppercase ml-3">Admin / Data Center</span>
           </div>
-          <Button onClick={handleLogout} variant="outline" size="sm" className="gap-2 border-border text-muted-foreground hover:bg-secondary hover:border-destructive/30 hover:text-destructive">
-            <LogOut className="w-4 h-4" />
+          <button onClick={handleLogout} className="font-mono text-[9px] tracking-[1.5px] uppercase text-[#8A9099] hover:text-[#0A0A0A] border border-black/10 px-3 py-1.5 transition-colors flex items-center gap-1.5">
+            <LogOut className="w-3 h-3" />
             Logout
-          </Button>
-        </div>
+          </button>
+        </header>
 
         {/* Key metrics strip */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-6 gap-3">
-          <div className="rounded-lg bg-card border border-product-warm/20 p-4 border-l-4 border-l-product-warm shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Submissions</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5 text-product-warm">{stats.total}</p>
+        <div className="grid grid-cols-3 sm:grid-cols-6 bg-[#CBD0D6]">
+          <div className="px-4 py-3.5">
+            <div className="font-display font-bold text-[26px] leading-none tabular-nums text-[#0A0A0A]">{stats.total}</div>
+            <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">Submissions</div>
           </div>
-          <div className="rounded-lg bg-card border border-product-warm/20 p-4 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Smartwatch</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5 text-product-warm">{stats.withSmartwatch}</p>
+          <div className="px-4 py-3.5 border-l border-black/10">
+            <div className="font-display font-bold text-[26px] leading-none tabular-nums text-[#0A0A0A]">{stats.withSmartwatch}</div>
+            <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">Smartwatch</div>
           </div>
-          <div className="rounded-lg bg-card border border-border p-4 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg fluid loss</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5">{(stats.avgFluidLossMl / 1000).toFixed(1)}<span className="text-sm font-normal text-muted-foreground"> L</span></p>
+          <div className="px-4 py-3.5 border-l border-black/10">
+            <div className="font-display font-bold text-[26px] leading-none tabular-nums text-[#0A0A0A]">{(stats.avgFluidLossMl / 1000).toFixed(1)}L</div>
+            <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">Avg fluid loss</div>
           </div>
-          <div className="rounded-lg bg-card border border-border p-4 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg sachets/hr</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.avgElectrolytesPerHour}<span className="text-sm font-normal text-muted-foreground"></span></p>
+          <div className="px-4 py-3.5 border-l border-black/10">
+            <div className="font-display font-bold text-[26px] leading-none tabular-nums text-[#0A0A0A]">{stats.avgElectrolytesPerHour}</div>
+            <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">Avg sachets/hr</div>
           </div>
-          <div className="rounded-lg bg-card border border-brand-red/20 p-4 border-l-4 border-l-brand-red/50 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg Na loss/hr</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5 text-brand-red">{stats.avgSodiumLossPerHourMg}<span className="text-sm font-normal text-muted-foreground"> mg</span></p>
+          <div className="px-4 py-3.5 border-l border-black/10">
+            <div className="font-display font-bold text-[26px] leading-none tabular-nums text-[#0A0A0A]">{stats.avgSodiumLossPerHourMg}mg</div>
+            <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">Avg Na loss/hr</div>
           </div>
-          <div className="rounded-lg bg-card border border-border p-4 shadow-sm">
-            <p className="text-[10px] uppercase tracking-wider text-muted-foreground">Avg age</p>
-            <p className="text-2xl font-bold tabular-nums mt-0.5">{stats.averageAge}<span className="text-sm font-normal text-muted-foreground"> yrs</span></p>
+          <div className="px-4 py-3.5 border-l border-black/10">
+            <div className="font-display font-bold text-[26px] leading-none tabular-nums text-[#0A0A0A]">{stats.averageAge}y</div>
+            <div className="font-mono text-[8.5px] tracking-[1.2px] uppercase text-[#0A0A0A]/55 mt-1">Avg age</div>
           </div>
         </div>
 
         {/* Accounts & Retention */}
-        <div className="rounded-xl border border-border border-t-4 border-t-brand-green bg-card overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-border">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-brand-green">Accounts & Retention</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Registered users, activation, and repeat-use</p>
+        <div className="border border-black/10 overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#0A0A0A]">
+            <h2 className="font-mono text-[9px] tracking-[2px] uppercase text-white font-semibold">Accounts & Retention</h2>
           </div>
           <div className="p-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
             {/* Stat cards */}
@@ -1176,10 +1288,9 @@ export default function Admin() {
         </div>
 
         {/* Product development */}
-        <div className="rounded-xl border border-border border-t-4 border-t-product-warm bg-card overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-border bg-product-warm-muted">
-            <h2 className="text-sm font-semibold uppercase tracking-wider text-product-warm">Product development</h2>
-            <p className="text-xs text-muted-foreground mt-0.5">Hydration, sweat & electrolyte insights for Supplme</p>
+        <div className="border border-black/10 overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#0A0A0A]">
+            <h2 className="font-mono text-[9px] tracking-[2px] uppercase text-white font-semibold">Product Development</h2>
           </div>
           <div className="p-4 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-7 gap-4">
             <div className="rounded-lg bg-secondary border border-product-warm/15 p-3">
@@ -1315,40 +1426,7 @@ export default function Admin() {
                   Close
                 </Button>
               </div>
-              {(() => {
-                const activity = stats.activityStats.find(a => a.activity === selectedActivity);
-                if (!activity) return null;
-                const distanceCounts = new Map<string, number>();
-                activity.distances.forEach((d: string) => distanceCounts.set(d, (distanceCounts.get(d) || 0) + 1));
-                const sortedDistances = Array.from(distanceCounts.entries()).sort((a, b) => b[1] - a[1]);
-                return (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">Mode</h4>
-                      <div className="flex justify-between rounded-lg bg-secondary border border-border p-3">
-                        <span className="text-xs text-muted-foreground">Race</span>
-                        <span className="font-bold tabular-nums">{activity.raceDayCount}</span>
-                      </div>
-                      <div className="flex justify-between rounded-lg bg-secondary border border-border p-3">
-                        <span className="text-xs text-muted-foreground">Training</span>
-                        <span className="font-bold tabular-nums">{activity.trainingCount}</span>
-                      </div>
-                    </div>
-                    <div className="md:col-span-2 space-y-2">
-                      <h4 className="text-[10px] uppercase tracking-wider text-muted-foreground">Distances</h4>
-                      <div className="grid grid-cols-2 gap-2">
-                        {sortedDistances.slice(0, 8).map(([distance, count]) => (
-                          <div key={distance} className="flex justify-between items-center rounded-lg bg-secondary border border-border px-3 py-2">
-                            <span className="text-xs text-secondary-foreground truncate">{distance || '—'}</span>
-                            <span className="text-xs tabular-nums text-muted-foreground">{count}x</span>
-                          </div>
-                        ))}
-                        {sortedDistances.length === 0 && <p className="text-xs text-muted-foreground col-span-2">No distance data</p>}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })()}
+              <ActivityDetailCard activity={stats.activityStats.find(a => a.activity === selectedActivity)} />
             </div>
           )}
         </div>
@@ -1364,13 +1442,13 @@ export default function Admin() {
           </Button>
         </div>
 
-        <div className="rounded-xl border border-border border-t-4 border-t-primary bg-card overflow-hidden shadow-sm">
-          <div className="px-4 py-3 border-b border-border bg-secondary">
+        <div className="border border-black/10 overflow-hidden">
+          <div className="px-4 py-2.5 bg-[#0A0A0A]">
             <div className="flex items-center justify-between">
               <div>
-                <h2 className="text-sm font-semibold uppercase tracking-wider">User submissions</h2>
-                <p className="text-xs text-muted-foreground mt-0.5">
-                  {hasActiveFilters ? `${filteredProfiles.length} of ${profiles.length}` : profiles.length} submission{profiles.length !== 1 ? 's' : ''} — expand row to see full hydration plan.
+                <h2 className="font-mono text-[9px] tracking-[2px] uppercase text-white font-semibold">User Submissions</h2>
+                <p className="font-mono text-[8px] tracking-[1px] uppercase text-white/40 mt-0.5">
+                  {hasActiveFilters ? `${filteredProfiles.length} of ${profiles.length}` : profiles.length} submission{profiles.length !== 1 ? 's' : ''} — expand to see full fuel plan
                 </p>
               </div>
               {hasActiveFilters && (
@@ -1564,79 +1642,9 @@ export default function Admin() {
                           </div>
                         </div>
 
-                        <CollapsibleContent className="mt-4 pt-4 border-t border-border">
-                          {/* ── Hydration Plan Result (exact user view) ── */}
-                          {plan.preActivity && (() => {
-                            // totalElectrolytes was missing from the save schema before the fix —
-                            // fall back to electrolytesPerHour × effective duration for old records
-                            const effectiveDur = Math.max(0, (pd.sessionDuration || 0) - 0.5);
-                            const duringTotal = plan.duringActivity?.totalElectrolytes
-                              ?? Math.round((plan.duringActivity?.electrolytesPerHour || 0) * effectiveDur);
-                            return (
-                            <div className="mb-6 p-4 rounded-xl border border-border bg-secondary/50">
-                              <div className="flex flex-wrap items-baseline gap-3 mb-3">
-                                <p className="text-xs font-semibold uppercase tracking-wider text-product-warm">Hydration Plan Result</p>
-                                {pd.disciplines?.[0] && (
-                                  <span className="text-xs text-muted-foreground">{pd.disciplines.join(' / ')}</span>
-                                )}
-                                {(pd.raceDistance || pd.trainingDistance) && (
-                                  <span className="text-xs font-medium tabular-nums">{pd.raceDistance || pd.trainingDistance}</span>
-                                )}
-                                {pd.hasUpcomingRace && (
-                                  <Badge variant="secondary" className="text-[10px] bg-brand-red/10 text-brand-red border-brand-red/20">Race day</Badge>
-                                )}
-                                {pd.goalTime && (
-                                  <span className="text-xs text-muted-foreground">Goal: {pd.goalTime}</span>
-                                )}
-                                {pd.sessionDuration && (
-                                  <span className="text-xs text-muted-foreground">{(() => { const h = Math.floor(pd.sessionDuration); const m = Math.round((pd.sessionDuration - h) * 60); return m > 0 ? `${h}h ${m}m` : `${h}h`; })()}</span>
-                                )}
-                              </div>
-                              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 mb-4">
-                                {/* Total fluid loss */}
-                                <div className="rounded-lg border border-border bg-background p-3 text-center">
-                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Total fluid loss</p>
-                                  <p className="text-2xl font-bold tabular-nums">{((plan.totalFluidLoss || 0) / 1000).toFixed(1)}<span className="text-sm font-normal text-muted-foreground"> L</span></p>
-                                </div>
-                                {/* Pre-activity */}
-                                <div className="rounded-lg border border-border bg-background p-3">
-                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Pre-activity</p>
-                                  <p className="text-sm font-medium">Water: <span className="font-bold">{plan.preActivity.water} ml</span></p>
-                                  <p className="text-sm font-medium">Sachets: <span className="font-bold">{plan.preActivity.electrolytes}x</span></p>
-                                </div>
-                                {/* During activity */}
-                                <div className="rounded-lg border border-foreground bg-foreground text-background p-3">
-                                  <p className="text-[10px] uppercase tracking-wider opacity-60 mb-1">During activity</p>
-                                  <p className="text-sm font-medium">Water/hr: <span className="font-bold">{plan.duringActivity?.waterPerHour ?? 0} ml</span></p>
-                                  <p className="text-sm font-medium">Sachets/hr: <span className="font-bold">{plan.duringActivity?.electrolytesPerHour ?? 0}</span></p>
-                                  <p className="text-sm font-medium">Total sachets: <span className="font-bold">{duringTotal}</span></p>
-                                </div>
-                                {/* Post-activity */}
-                                <div className="rounded-lg border border-border bg-background p-3">
-                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Post-activity</p>
-                                  <p className="text-sm font-medium">Water: <span className="font-bold">{plan.postActivity?.water ?? 0} ml</span></p>
-                                  <p className="text-sm font-medium">Sachets: <span className="font-bold">{plan.postActivity?.electrolytes ?? 0}x</span></p>
-                                </div>
-                              </div>
-                              {/* Recommendations */}
-                              {plan.recommendations?.length > 0 && (
-                                <div className="mb-3">
-                                  <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">Recommendations</p>
-                                  <ul className="space-y-0.5">
-                                    {plan.recommendations.map((rec: string, i: number) => (
-                                      <li key={i} className="text-xs flex gap-1.5"><span className="text-muted-foreground">·</span>{rec}</li>
-                                    ))}
-                                  </ul>
-                                </div>
-                              )}
-                              {/* Confidence & Sources */}
-                              <div className="flex flex-wrap gap-3 text-[11px] text-muted-foreground">
-                                {plan.confidenceScore != null && <span>Confidence: {plan.confidenceScore}/5</span>}
-                                {plan.activeDataSources?.length > 0 && <span>Sources: {plan.activeDataSources.join(', ')}</span>}
-                              </div>
-                            </div>
-                            );
-                          })()}
+                        <CollapsibleContent className="mt-4 pt-4 border-t border-black/10">
+                          {/* ── Fuel Plan Result ── */}
+                          <FuelPlanResultCard plan={plan} pd={pd} />
 
                           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                             {pd.strava_snapshot && (
@@ -1749,12 +1757,7 @@ export default function Admin() {
                               <div className="space-y-1 text-sm text-foreground">
                                 {pd.disciplines && pd.disciplines.length > 0 && <p><span className="text-muted-foreground">Disciplines:</span> {pd.disciplines.join(', ')}</p>}
                                 {pd.terrain != null && pd.terrain !== '' && <p><span className="text-muted-foreground">Terrain:</span> {pd.terrain}</p>}
-                                {pd.sessionDuration != null && <p><span className="text-muted-foreground">Duration:</span> {(() => {
-                                  const hours = pd.sessionDuration || 0;
-                                  const h = Math.floor(hours);
-                                  const m = Math.round((hours - h) * 60);
-                                  return m > 0 ? `${h}h ${m}m` : `${h}h`;
-                                })()}</p>}
+                                {pd.sessionDuration != null && <p><span className="text-muted-foreground">Duration:</span> {fmtDuration(pd.sessionDuration || 0)}</p>}
                                 {pd.indoorOutdoor && <p><span className="text-muted-foreground">Location:</span> {pd.indoorOutdoor}</p>}
                                 {pd.raceDistance != null && pd.raceDistance !== '' && <p><span className="text-muted-foreground">Race distance:</span> {pd.raceDistance}</p>}
                                 {pd.trainingDistance != null && pd.trainingDistance !== '' && <p><span className="text-muted-foreground">Training distance:</span> {pd.trainingDistance}</p>}
@@ -1768,7 +1771,7 @@ export default function Admin() {
                                 {pd.runPace != null && pd.runPace !== '' && <p><span className="text-muted-foreground">Run pace:</span> {pd.runPace}</p>}
                                 {pd.elevationGain != null && <p><span className="text-muted-foreground">Elevation:</span> {pd.elevationGain} m</p>}
                                 {pd.longestSession != null && <p><span className="text-muted-foreground">Longest session:</span> {pd.longestSession} h</p>}
-                                {pd.trainingFrequency != null && <p><span className="text-muted-foreground">Frequency:</span> {pd.trainingFrequency}/week</p>}
+                                {pd.trainingFrequency != null && <p><span className="text-muted-foreground">Frequency:</span> {pd.trainingFrequency}<span>/week</span></p>}
                               </div>
                             </div>
 
@@ -1867,7 +1870,7 @@ export default function Admin() {
                                 <h4 className="font-semibold text-sm text-muted-foreground">Sleep & recovery</h4>
                                 <div className="space-y-1 text-sm text-foreground">
                                   {pd.sleepHours != null && <p><span className="text-muted-foreground">Sleep:</span> {pd.sleepHours} h</p>}
-                                  {pd.sleepQuality != null && <p><span className="text-muted-foreground">Sleep quality:</span> {pd.sleepQuality}/10</p>}
+                                  {pd.sleepQuality != null && <p><span className="text-muted-foreground">Sleep quality:</span> {pd.sleepQuality}<span>/10</span></p>}
                                   {pd.weeklyVolume != null && <p><span className="text-muted-foreground">Weekly volume:</span> {pd.weeklyVolume} h</p>}
                                 </div>
                               </div>
