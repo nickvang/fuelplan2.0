@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Mont-Rose by UTMB</name>
+    <desc>Distance: 90 km | Elevation gain: 6500 m | Profile: extreme | Surface: trail | Typical date: July | High-alpine race around the Monte Rosa massif above Zermatt. Glaciated terrain, technical ridgelines, and views of the Matterhorn. Consistently above 3000m.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="45.9766" lon="7.8167">
+    <ele>1620</ele>
+    <name>Mont-Rose by UTMB — Start</name>
+    <desc>Distance: 90 km | Elevation gain: 6500 m | Profile: extreme | Surface: trail | Typical date: July | High-alpine race around the Monte Rosa massif above Zermatt. Glaciated terrain, technical ridgelines, and views of the Matterhorn. Consistently above 3000m.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

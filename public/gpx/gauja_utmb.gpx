@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Gauja by UTMB</name>
+    <desc>Distance: 50 km | Elevation gain: 800 m | Profile: hilly | Surface: trail | Typical date: August | Trails through Gauja National Park — Latvia&apos;s largest national park. Sandstone cliffs, river valleys, and Baltic forest. Unique low-relief nordic trail running.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="57.153" lon="24.8549">
+    <ele>50</ele>
+    <name>Gauja by UTMB — Start</name>
+    <desc>Distance: 50 km | Elevation gain: 800 m | Profile: hilly | Surface: trail | Typical date: August | Trails through Gauja National Park — Latvia&apos;s largest national park. Sandstone cliffs, river valleys, and Baltic forest. Unique low-relief nordic trail running.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

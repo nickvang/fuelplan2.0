@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Torrencial by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 5500 m | Profile: mountainous | Surface: trail | Typical date: June | Patagonian Andes mountain trail in Chilean lake district. Glacial rivers, ancient lenga beech forests, and dramatic Andean peaks. Cool, unpredictable weather typical of Patagonia.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="-43.1833" lon="-71.8667">
+    <ele>350</ele>
+    <name>Torrencial by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 5500 m | Profile: mountainous | Surface: trail | Typical date: June | Patagonian Andes mountain trail in Chilean lake district. Glacial rivers, ancient lenga beech forests, and dramatic Andean peaks. Cool, unpredictable weather typical of Patagonia.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

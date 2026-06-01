@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>X-Trail by UTMB</name>
+    <desc>Distance: 50 km | Elevation gain: 1800 m | Profile: hilly | Surface: trail | Typical date: March | Tropical trail race in southern Vietnam. Jungle trails, river crossings, and hot humid conditions near Ho Chi Minh City.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="10.8231" lon="106.6297">
+    <ele>100</ele>
+    <name>X-Trail by UTMB — Start</name>
+    <desc>Distance: 50 km | Elevation gain: 1800 m | Profile: hilly | Surface: trail | Typical date: March | Tropical trail race in southern Vietnam. Jungle trails, river crossings, and hot humid conditions near Ho Chi Minh City.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

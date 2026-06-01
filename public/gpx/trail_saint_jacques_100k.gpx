@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Grand Trail du Saint-Jacques - 100K</name>
+    <desc>Distance: 139 km | Elevation gain: 5800 m | Profile: mountainous | Surface: trail | Typical date: June | Flagship 100K. Along sections of the Camino de Santiago pilgrimage route. Volcanic Auvergne terrain, historic trails, and UNESCO-listed cathedral finish at Le Puy-en-Velay. 6 Running Stones.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="45.0437" lon="3.8849">
+    <ele>630</ele>
+    <name>Grand Trail du Saint-Jacques - 100K — Start</name>
+    <desc>Distance: 139 km | Elevation gain: 5800 m | Profile: mountainous | Surface: trail | Typical date: June | Flagship 100K. Along sections of the Camino de Santiago pilgrimage route. Volcanic Auvergne terrain, historic trails, and UNESCO-listed cathedral finish at Le Puy-en-Velay. 6 Running Stones.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

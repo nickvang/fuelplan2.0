@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Puerto Vallarta by UTMB</name>
+    <desc>Distance: 80 km | Elevation gain: 4200 m | Profile: mountainous | Surface: trail | Typical date: April | From Pacific coast jungle to the Sierra Madre Occidental mountains above Puerto Vallarta. Tropical dry forest transitions to cloud forest and dramatic canyon terrain.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="20.6534" lon="-105.2253">
+    <ele>50</ele>
+    <name>Puerto Vallarta by UTMB — Start</name>
+    <desc>Distance: 80 km | Elevation gain: 4200 m | Profile: mountainous | Surface: trail | Typical date: April | From Pacific coast jungle to the Sierra Madre Occidental mountains above Puerto Vallarta. Tropical dry forest transitions to cloud forest and dramatic canyon terrain.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

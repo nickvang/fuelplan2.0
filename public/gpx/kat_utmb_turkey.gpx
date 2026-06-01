@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>KAT by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 5800 m | Profile: extreme | Surface: trail | Typical date: August | Through the Karadeniz Alps (Pontic Mountains) on Turkey&apos;s Black Sea coast. Lush tea plantations, high alpine meadows (yayla), and remote ridgelines above the Black Sea.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="41.0201" lon="40.5234">
+    <ele>500</ele>
+    <name>KAT by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 5800 m | Profile: extreme | Surface: trail | Typical date: August | Through the Karadeniz Alps (Pontic Mountains) on Turkey&apos;s Black Sea coast. Lush tea plantations, high alpine meadows (yayla), and remote ridgelines above the Black Sea.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

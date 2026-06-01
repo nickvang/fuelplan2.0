@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Paraty by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 5000 m | Profile: mountainous | Surface: trail | Typical date: September | Through the Serra da Bocaina mountains near the historic town of Paraty. Atlantic rainforest (Mata Atlântica), coastal mountains, and colonial cobblestone streets.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="-23.2177" lon="-44.7131">
+    <ele>10</ele>
+    <name>Paraty by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 5000 m | Profile: mountainous | Surface: trail | Typical date: September | Through the Serra da Bocaina mountains near the historic town of Paraty. Atlantic rainforest (Mata Atlântica), coastal mountains, and colonial cobblestone streets.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

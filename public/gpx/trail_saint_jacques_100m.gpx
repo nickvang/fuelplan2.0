@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Ultra du Saint-Jacques - 100M</name>
+    <desc>Distance: 170 km | Elevation gain: 7800 m | Profile: extreme | Surface: trail | Typical date: June | Flagship 100-mile ultra. The ultimate challenge of Trail du Saint-Jacques — extended loop around the pilgrimage routes of the Auvergne. Volcanic plateaus, gorges, and high ridge crossings. 10 Running Stones.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="45.0437" lon="3.8849">
+    <ele>630</ele>
+    <name>Ultra du Saint-Jacques - 100M — Start</name>
+    <desc>Distance: 170 km | Elevation gain: 7800 m | Profile: extreme | Surface: trail | Typical date: June | Flagship 100-mile ultra. The ultimate challenge of Trail du Saint-Jacques — extended loop around the pilgrimage routes of the Auvergne. Volcanic plateaus, gorges, and high ridge crossings. 10 Running Stones.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

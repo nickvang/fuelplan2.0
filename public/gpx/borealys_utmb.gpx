@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Borealys by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 4000 m | Profile: mountainous | Surface: trail | Typical date: August | Through the Laurentian Mountains and boreal forest of Quebec. Dense Canadian forest, rocky outcrops, and river crossings north of Quebec City.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="46.8139" lon="-71.208">
+    <ele>200</ele>
+    <name>Borealys by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 4000 m | Profile: mountainous | Surface: trail | Typical date: August | Through the Laurentian Mountains and boreal forest of Quebec. Dense Canadian forest, rocky outcrops, and river crossings north of Quebec City.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

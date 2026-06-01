@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Les Chibottes - 20K</name>
+    <desc>Distance: 20 km | Elevation gain: 750 m | Profile: hilly | Surface: trail | Typical date: June | Shorter trail race set amid the volcanic hills and Auvergne countryside around Le Puy-en-Velay. An accessible entry point to the Saint-Jacques spirit.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="45.0437" lon="3.8849">
+    <ele>630</ele>
+    <name>Les Chibottes - 20K — Start</name>
+    <desc>Distance: 20 km | Elevation gain: 750 m | Profile: hilly | Surface: trail | Typical date: June | Shorter trail race set amid the volcanic hills and Auvergne countryside around Le Puy-en-Velay. An accessible entry point to the Saint-Jacques spirit.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

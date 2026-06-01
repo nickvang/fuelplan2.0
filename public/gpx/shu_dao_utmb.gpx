@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Shu Dao by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 4800 m | Profile: mountainous | Surface: trail | Typical date: November | Along the ancient Shu Road (Shu Dao) through the Qinling-Daba mountains of northern Sichuan. Historic trade route turned technical mountain trail.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="32.4356" lon="105.844">
+    <ele>500</ele>
+    <name>Shu Dao by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 4800 m | Profile: mountainous | Surface: trail | Typical date: November | Along the ancient Shu Road (Shu Dao) through the Qinling-Daba mountains of northern Sichuan. Historic trade route turned technical mountain trail.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

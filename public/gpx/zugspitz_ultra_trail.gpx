@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Zugspitz Ultra Trail by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 5800 m | Profile: extreme | Surface: trail | Typical date: June | High-alpine loop around Germany&apos;s highest peak, the Zugspitze (2962m). Crosses the Austrian-German border with demanding ascents above 2500m. Stunning limestone Wetterstein terrain.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="47.4043" lon="10.927">
+    <ele>1000</ele>
+    <name>Zugspitz Ultra Trail by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 5800 m | Profile: extreme | Surface: trail | Typical date: June | High-alpine loop around Germany&apos;s highest peak, the Zugspitze (2962m). Crosses the Austrian-German border with demanding ascents above 2500m. Stunning limestone Wetterstein terrain.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

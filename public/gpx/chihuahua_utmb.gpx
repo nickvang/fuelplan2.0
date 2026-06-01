@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Chihuahua by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 5200 m | Profile: extreme | Surface: trail | Typical date: October | Through the Copper Canyon (Barrancas del Cobre) — deeper than the Grand Canyon. Tarahumara (Rarámuri) indigenous trail running culture. Dramatic canyon descent and climb.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="27.2167" lon="-107.9167">
+    <ele>500</ele>
+    <name>Chihuahua by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 5200 m | Profile: extreme | Surface: trail | Typical date: October | Through the Copper Canyon (Barrancas del Cobre) — deeper than the Grand Canyon. Tarahumara (Rarámuri) indigenous trail running culture. Dramatic canyon descent and climb.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

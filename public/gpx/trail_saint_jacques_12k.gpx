@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Le 12 du Dolaizon</name>
+    <desc>Distance: 12 km | Elevation gain: 420 m | Profile: rolling | Surface: trail | Typical date: June | Fun 12km trail run along the Dolaizon river valley near Le Puy-en-Velay. Open to all levels, perfect introduction to trail running at the Saint-Jacques festival.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="45.0437" lon="3.8849">
+    <ele>630</ele>
+    <name>Le 12 du Dolaizon — Start</name>
+    <desc>Distance: 12 km | Elevation gain: 420 m | Profile: rolling | Surface: trail | Typical date: June | Fun 12km trail run along the Dolaizon river valley near Le Puy-en-Velay. Open to all levels, perfect introduction to trail running at the Saint-Jacques festival.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

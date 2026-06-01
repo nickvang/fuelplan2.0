@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Ushuaia by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 4800 m | Profile: mountainous | Surface: trail | Typical date: March | The world&apos;s southernmost UTMB race in Tierra del Fuego. Beech forests (lenga), glacial valleys, and exposed Andean ridgelines above the Beagle Channel. Extremely unpredictable weather.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="-54.8019" lon="-68.303">
+    <ele>50</ele>
+    <name>Ushuaia by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 4800 m | Profile: mountainous | Surface: trail | Typical date: March | The world&apos;s southernmost UTMB race in Tierra del Fuego. Beech forests (lenga), glacial valleys, and exposed Andean ridgelines above the Beagle Channel. Extremely unpredictable weather.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

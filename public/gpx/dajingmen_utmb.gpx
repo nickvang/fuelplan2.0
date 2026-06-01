@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Dajingmen by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 4500 m | Profile: mountainous | Surface: trail | Typical date: September | Through the mountains of Hubei Province in central China. Forested ridgelines, river gorges, and traditional rural landscapes.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="30.8439" lon="112.2">
+    <ele>400</ele>
+    <name>Dajingmen by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 4500 m | Profile: mountainous | Surface: trail | Typical date: September | Through the mountains of Hubei Province in central China. Forested ridgelines, river gorges, and traditional rural landscapes.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

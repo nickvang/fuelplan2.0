@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Snowbasin by UTMB</name>
+    <desc>Distance: 50 km | Elevation gain: 3000 m | Profile: mountainous | Surface: trail | Typical date: September | High-altitude race at Snowbasin ski resort in Utah&apos;s Wasatch Range. Alpine meadows, rocky ridgelines, and sweeping views of the Great Salt Lake valley.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="41.2157" lon="-111.8571">
+    <ele>1980</ele>
+    <name>Snowbasin by UTMB — Start</name>
+    <desc>Distance: 50 km | Elevation gain: 3000 m | Profile: mountainous | Surface: trail | Typical date: September | High-altitude race at Snowbasin ski resort in Utah&apos;s Wasatch Range. Alpine meadows, rocky ridgelines, and sweeping views of the Great Salt Lake valley.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

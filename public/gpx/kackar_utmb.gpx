@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Kackar by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 6200 m | Profile: extreme | Surface: trail | Typical date: September | Deep into the Kaçkar Mountains (Pontic Alps) — Turkey&apos;s most dramatic alpine range. Glacial lakes, high passes up to 3900m, and remote Hemşin valley culture.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="40.8833" lon="41.1167">
+    <ele>500</ele>
+    <name>Kackar by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 6200 m | Profile: extreme | Surface: trail | Typical date: September | Deep into the Kaçkar Mountains (Pontic Alps) — Turkey&apos;s most dramatic alpine range. Glacial lakes, high passes up to 3900m, and remote Hemşin valley culture.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

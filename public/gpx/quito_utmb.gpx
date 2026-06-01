@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Quito by UTMB</name>
+    <desc>Distance: 100 km | Elevation gain: 5500 m | Profile: extreme | Surface: trail | Typical date: August | High-altitude Andean trail race above Quito (2850m). Traverses the Pichincha volcano slopes and surrounding cloud forest. Significant altitude challenge throughout.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="-0.1807" lon="-78.4678">
+    <ele>2850</ele>
+    <name>Quito by UTMB — Start</name>
+    <desc>Distance: 100 km | Elevation gain: 5500 m | Profile: extreme | Surface: trail | Typical date: August | High-altitude Andean trail race above Quito (2850m). Traverses the Pichincha volcano slopes and surrounding cloud forest. Significant altitude challenge throughout.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

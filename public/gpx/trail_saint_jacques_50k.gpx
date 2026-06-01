@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Trail du Saint-Jacques - 50K</name>
+    <desc>Distance: 55 km | Elevation gain: 2100 m | Profile: mountainous | Surface: trail | Typical date: June | UTMB World Series qualifier. Point-to-point mountain trail from Monistrol d&apos;Allier to the UNESCO World Heritage cathedral at Le Puy-en-Velay, following the ancient Santiago de Compostela pilgrimage route. 2 Running Stones. Max race time 11h30.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="45.0432" lon="3.8853">
+    <ele>565</ele>
+    <name>Trail du Saint-Jacques - 50K — Start</name>
+    <desc>Distance: 55 km | Elevation gain: 2100 m | Profile: mountainous | Surface: trail | Typical date: June | UTMB World Series qualifier. Point-to-point mountain trail from Monistrol d&apos;Allier to the UNESCO World Heritage cathedral at Le Puy-en-Velay, following the ancient Santiago de Compostela pilgrimage route. 2 Running Stones. Max race time 11h30.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

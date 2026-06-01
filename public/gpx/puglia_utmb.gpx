@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Puglia by UTMB</name>
+    <desc>Distance: 50 km | Elevation gain: 900 m | Profile: hilly | Surface: trail | Typical date: October | Through the Valle d&apos;Itria and Trulli country of Puglia. Olive groves, limestone karst, and whitewashed trulli villages in the heel of Italy.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="40.7844" lon="17.2394">
+    <ele>400</ele>
+    <name>Puglia by UTMB — Start</name>
+    <desc>Distance: 50 km | Elevation gain: 900 m | Profile: hilly | Surface: trail | Typical date: October | Through the Valle d&apos;Itria and Trulli country of Puglia. Olive groves, limestone karst, and whitewashed trulli villages in the heel of Italy.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<gpx version="1.1" creator="supplme.app"
+  xmlns="http://www.topografix.com/GPX/1/1"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+  xsi:schemaLocation="http://www.topografix.com/GPX/1/1 http://www.topografix.com/GPX/1/1/gpx.xsd">
+  <metadata>
+    <name>Xiamen by UTMB</name>
+    <desc>Distance: 50 km | Elevation gain: 2000 m | Profile: hilly | Surface: trail | Typical date: March | Mountain trails above the coastal city of Xiamen. Subtropical forest, granite peaks, and sea views in Fujian Province.</desc>
+    <link href="https://supplme.app"><text>Supplme</text></link>
+  </metadata>
+  <wpt lat="24.4798" lon="118.0894">
+    <ele>50</ele>
+    <name>Xiamen by UTMB — Start</name>
+    <desc>Distance: 50 km | Elevation gain: 2000 m | Profile: hilly | Surface: trail | Typical date: March | Mountain trails above the coastal city of Xiamen. Subtropical forest, granite peaks, and sea views in Fujian Province.</desc>
+    <sym>Flag</sym>
+  </wpt>
+</gpx>
