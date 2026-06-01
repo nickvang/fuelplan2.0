@@ -4,7 +4,8 @@ import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Search, PencilLine, MapPin } from 'lucide-react';
+import { Search, PencilLine, MapPin, Map } from 'lucide-react';
+import { RaceTrackMap } from '@/components/RaceTrackMap';
 
 function useUserLocation() {
   const [location, setLocation] = useState(null);
@@ -70,6 +71,7 @@ const tempChipClasses = (maxTemp) => {
 
 export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
   const [query, setQuery] = useState('');
+  const [mapOpenId, setMapOpenId] = useState(null);
   const userLocation = useUserLocation();
 
   const isSearching = query.trim().length > 0;
@@ -245,12 +247,39 @@ export function RaceSelector({ sport, selectedRaceId, onSelectRace }) {
                     </span>
                   </div>
                 </div>
-                {isSelected && (
-                  <span className="mt-1 inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold shrink-0">
-                    ✓
-                  </span>
-                )}
+                <div className="flex flex-col items-end gap-2 shrink-0">
+                  {isSelected && (
+                    <span className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-primary text-primary-foreground text-xs font-bold">
+                      ✓
+                    </span>
+                  )}
+                  {race.gpx_path && (
+                    <button
+                      type="button"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setMapOpenId(mapOpenId === race.id ? null : race.id);
+                      }}
+                      className={`inline-flex items-center gap-1 px-2 py-1 rounded-lg text-[11px] font-medium transition-colors border ${
+                        mapOpenId === race.id
+                          ? 'bg-primary/10 border-primary/40 text-primary'
+                          : 'bg-muted/60 border-border/40 text-muted-foreground hover:text-foreground hover:border-primary/30'
+                      }`}
+                      title="Toggle course map"
+                    >
+                      <Map className="w-3 h-3" />
+                      {mapOpenId === race.id ? 'Hide map' : 'Course'}
+                    </button>
+                  )}
+                </div>
               </div>
+
+              {/* GPX map panel */}
+              {mapOpenId === race.id && (
+                <div className="mt-3 animate-in fade-in slide-in-from-top-1 duration-200">
+                  <RaceTrackMap race={race} />
+                </div>
+              )}
             </Card>
           );
         })}
