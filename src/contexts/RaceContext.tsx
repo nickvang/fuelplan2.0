@@ -25,6 +25,7 @@ export interface Race {
   notes?: string;
   swim_distance_km: number | null;
   swim_type: 'ocean' | 'lake' | 'river' | 'pool' | 'fjord' | null;
+  gpx_path?: string;
 }
 
 interface RaceContextType {
